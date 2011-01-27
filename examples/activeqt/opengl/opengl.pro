@@ -10,7 +10,7 @@ HEADERS	 = glbox.h \
 SOURCES	 = glbox.cpp \
 	   globjwin.cpp \
 	   main.cpp
-RC_FILE	 = $$QT_SOURCE_TREE/src/activeqt/control/qaxserver.rc
+RC_FILE	 = $$QT.activeqt.sources/control/qaxserver.rc
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/activeqt/opengl

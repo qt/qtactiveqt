@@ -5,7 +5,7 @@ CONFIG	+= qt warn_off qaxserver
 
 SOURCES	 = main.cpp menus.cpp
 HEADERS	 = menus.h
-RC_FILE	 = $$QT_SOURCE_TREE/src/activeqt/control/qaxserver.rc
+RC_FILE	 = $$QT.activeqt.sources/control/qaxserver.rc
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/activeqt/menus

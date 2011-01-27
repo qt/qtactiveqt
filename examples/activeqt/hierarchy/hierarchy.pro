@@ -6,8 +6,8 @@ contains(CONFIG, static):DEFINES += QT_NODLL
 
 SOURCES	 = objects.cpp main.cpp
 HEADERS	 = objects.h
-RC_FILE	 = $$QT_SOURCE_TREE/src/activeqt/control/qaxserver.rc
-DEF_FILE = $$QT_SOURCE_TREE/src/activeqt/control/qaxserver.def
+RC_FILE	 = $$QT.activeqt.sources/control/qaxserver.rc
+DEF_FILE = $$QT.activeqt.sources/control/qaxserver.def
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/activeqt/hierarchy
