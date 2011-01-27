@@ -4,7 +4,7 @@ TARGET   = ActiveQt
 CONFIG += qt_install_headers
 SYNCQT.HEADER_FILES = qaxaggregated.h qaxbindable.h qaxfactory.h
 SYNCQT.HEADER_CLASSES = ../../../include/ActiveQt/QAxAggregated ../../../include/ActiveQt/QAxBindable ../../../include/ActiveQt/QAxFactory ../../../include/ActiveQt/QAxClass 
-include(../../qt_install.pri)
+include($$QT_SOURCE_TREE/src/qt_install.pri)
 
 TARGET   = QAxServer
 
@@ -14,8 +14,10 @@ TARGET   = QAxServer
    }
 }
 
+INCLUDEPATH *= $$QT.activeqt.includes
+
 CONFIG  += qt warn_off staticlib
-QTDIR_build:DESTDIR  = $$QT_BUILD_TREE\\lib
+DESTDIR  = $$QT.activeqt.libs
 
 DEFINES	+= QAX_SERVER
 win32-g++*:DEFINES += QT_NEEDS_QMAIN

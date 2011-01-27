@@ -14,8 +14,8 @@ FORMS	 = mainwindow.ui invokemethod.ui changeproperties.ui ambientproperties.ui 
 RC_FILE	 = testcon.rc
 
 win32-borland {
-    QMAKE_POST_LINK = -midl $$QT_SOURCE_TREE/tools/activeqt/testcon/testcon.idl
+    QMAKE_POST_LINK = -midl $$QT.activeqt.sources/../../tools/testcon/testcon.idl
 } else {
-    !win32-g++*:QMAKE_POST_LINK = midl $$QT_SOURCE_TREE/tools/activeqt/testcon/testcon.idl && move testcon.tlb $(TARGETDIR)
+    !win32-g++*:QMAKE_POST_LINK = midl $$QT.activeqt.sources/../../tools/testcon/testcon.idl && move testcon.tlb $(TARGETDIR)
 
 }

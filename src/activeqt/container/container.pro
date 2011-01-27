@@ -4,7 +4,7 @@ TARGET   = ActiveQt
 CONFIG += qt_install_headers
 SYNCQT.HEADER_FILES = qaxbase.h qaxobject.h qaxscript.h qaxselect.h qaxwidget.h
 SYNCQT.HEADER_CLASSES = ../../../include/ActiveQt/QAxBase ../../../include/ActiveQt/QAxObject ../../../include/ActiveQt/QAxScriptEngine ../../../include/ActiveQt/QAxScript ../../../include/ActiveQt/QAxScriptManager ../../../include/ActiveQt/QAxSelect ../../../include/ActiveQt/QAxWidget
-include(../../qt_install.pri)
+include($$QT_SOURCE_TREE/src/qt_install.pri)
 
 TARGET   = QAxContainer
 
@@ -14,8 +14,10 @@ TARGET   = QAxContainer
     }
 }
 
+INCLUDEPATH *= $$QT.activeqt.includes
+
 CONFIG  += qt warn_on staticlib
-QTDIR_build:DESTDIR  = $$QT_BUILD_TREE/lib
+DESTDIR  = $$QT.activeqt.libs
 
 LIBS    += -lole32 -loleaut32
 !wince*:LIBS    += -luser32 -lgdi32 -ladvapi32
