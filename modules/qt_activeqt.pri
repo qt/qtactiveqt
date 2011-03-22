@@ -9,6 +9,7 @@ QT.activeqt.includes = $$QT_MODULE_INCLUDE_BASE $$QT_MODULE_INCLUDE_BASE/ActiveQ
 QT.activeqt.private_includes = $$QT_MODULE_INCLUDE_BASE/ActiveQt/private
 QT.activeqt.sources = $$QT_MODULE_BASE/src/activeqt
 QT.activeqt.libs = $$QT_MODULE_LIB_BASE
+QT.activeqt.plugins = $$QT_MODULE_PLUGIN_BASE
 QT.activeqt.imports = $$QT_MODULE_IMPORT_BASE
 QT.activeqt.depends = gui
 QT.activeqt.DEFINES = QT_ACTIVEQT_LIB
