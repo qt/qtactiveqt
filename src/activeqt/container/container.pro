@@ -16,6 +16,7 @@ TARGET   = QAxContainer
 
 INCLUDEPATH *= $$QT.activeqt.includes
 
+QT += core-private gui-private
 CONFIG  += qt warn_on staticlib
 DESTDIR  = $$QT.activeqt.libs
 
