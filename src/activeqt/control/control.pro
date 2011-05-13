@@ -16,6 +16,7 @@ TARGET   = QAxServer
 
 INCLUDEPATH *= $$QT.activeqt.includes
 
+QT += core-private gui-private
 CONFIG  += qt warn_off staticlib
 DESTDIR  = $$QT.activeqt.libs
 
