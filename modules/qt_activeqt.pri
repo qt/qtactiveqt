@@ -1,6 +1,6 @@
-QT.activeqt.VERSION = 4.8.0
-QT.activeqt.MAJOR_VERSION = 4
-QT.activeqt.MINOR_VERSION = 8
+QT.activeqt.VERSION = 5.0.0
+QT.activeqt.MAJOR_VERSION = 5
+QT.activeqt.MINOR_VERSION = 0
 QT.activeqt.PATCH_VERSION = 0
 
 QT.activeqt.name = ActiveQt
