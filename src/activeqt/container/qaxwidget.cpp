@@ -459,7 +459,16 @@ static Qt::KeyboardModifiers translateModifierState(int s)
 
 static QAbstractEventDispatcher::EventFilter previous_filter = 0;
 #if QT_VERSION >= 0x050000
-#error "Fix QAbstractEventDispatcher::setEventFilter"
+/* FIXME Implement QAbstractEventDispatcher's event filtering mechanism properly as done in QObject::install/removeEventFilter
+ * to enable a reliable chain of event filters living in different DLLs, from which filters can be removed at arbitrary times.
+ * Not possible with the current API which requires a newly installed event filter to call the
+ * previous event filter - if the previous event filter is unloaded, then the later event filter trying to call it will crash the
+ * process. */
+#  ifdef Q_CC_MSVC
+#    pragma message ("Fix QAbstractEventDispatcher::setEventFilter")
+#  else
+#    warning "Fix QAbstractEventDispatcher::setEventFilter"
+#  endif
 #endif
 #if defined(Q_WS_WINCE)
 static int filter_ref = 0;
