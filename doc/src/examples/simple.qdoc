@@ -99,18 +99,18 @@
 
     The simple ActiveX control is embedded using the \c <object> tag.
 
-    \snippet doc/src/examples/activeqt/simple-demo.qdocinc 0
+    \snippet doc/src/examples/simple-demo.qdocinc 0
 
     A simple HTML button is connected to the ActiveQt's about() slot.
 
-    \snippet doc/src/examples/activeqt/simple-demo.qdocinc 1
+    \snippet doc/src/examples/simple-demo.qdocinc 1
 
     A second ActiveX control - the standard Calendar Control - is instantiated
 
-    \snippet doc/src/examples/activeqt/simple-demo.qdocinc 2
+    \snippet doc/src/examples/simple-demo.qdocinc 2
 
     Events from the ActiveX controls are handled using both Visual Basic Script
     and JavaScript.
 
-    \snippet doc/src/examples/activeqt/simple-demo.qdocinc 3
+    \snippet doc/src/examples/simple-demo.qdocinc 3
 */
