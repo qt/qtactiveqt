@@ -29,7 +29,7 @@
     \page qaxserver-demo-multiple.html
     \title Two Simple Qt Widgets
 
-    \input examples/activeqt/multiple-demo.qdocinc
+    \input examples/multiple-demo.qdocinc
 */
 
 /*!
@@ -66,5 +66,5 @@
     WebBrowser to support ActiveX controls, and scripting to be
     enabled.
 
-    \snippet examples/activeqt/multiple-demo.qdocinc 0
+    \snippet examples/multiple-demo.qdocinc 0
 */
