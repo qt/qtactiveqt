@@ -4,7 +4,7 @@ TARGET   = ActiveQt
 CONFIG += qt_install_headers
 SYNCQT.HEADER_FILES = qaxaggregated.h qaxbindable.h qaxfactory.h
 SYNCQT.HEADER_CLASSES = ../../../include/ActiveQt/QAxAggregated ../../../include/ActiveQt/QAxBindable ../../../include/ActiveQt/QAxFactory ../../../include/ActiveQt/QAxClass 
-include($$QT_SOURCE_TREE/src/qt_install.pri)
+load(qt_installs)
 
 TARGET   = QAxServer
 
