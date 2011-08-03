@@ -221,7 +221,7 @@ public:
             QStringList::Iterator it; \
 
 #define QAXCLASS(Class) \
-            factory = new QAxClass<Class>(typeLibID(), appID()); \
+            factory = new QAxClass<Class>(typeLibID().toString(), appID().toString()); \
             qRegisterMetaType<Class*>(#Class"*"); \
             keys = factory->featureList(); \
             for (it = keys.begin(); it != keys.end(); ++it) { \
@@ -231,7 +231,7 @@ public:
             }\
 
 #define QAXTYPE(Class) \
-            factory = new QAxClass<Class>(typeLibID(), appID()); \
+            factory = new QAxClass<Class>(typeLibID().toString(), appID().toString()); \
             qRegisterMetaType<Class*>(#Class"*"); \
             keys = factory->featureList(); \
             for (it = keys.begin(); it != keys.end(); ++it) { \
