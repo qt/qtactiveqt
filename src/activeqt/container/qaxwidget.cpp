@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 #include "qaxwidget.h"
+#include "../shared/qaxutils_p.h"
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
@@ -191,7 +192,9 @@ public:
             return OLE_E_NOT_INPLACEACTIVE;
 
         RECT rcPos = { host->x(), host->y(), host->x()+host->width(), host->y()+host->height() };
-        return m_spOleObject->DoVerb(index, 0, this, 0, host->winId(), &rcPos);
+        return m_spOleObject->DoVerb(index, 0, this, 0,
+                                     hwndForWidget(host),
+                                     &rcPos);
     }
 
     // IUnknown
@@ -486,14 +489,15 @@ bool axc_FilterProc(void *m)
         QAxWidget *ax = 0;
         QAxHostWidget *host = 0;
         while (!host && hwnd) {
-            QWidget *widget = QWidget::find(hwnd);
+            // FIXME: 4.10.2011: Does this still work?
+            QWidget *widget = QWidget::find(reinterpret_cast<WId>(hwnd));
             if (widget && widget->inherits("QAxHostWidget"))
                 host = qobject_cast<QAxHostWidget*>(widget);
             hwnd = ::GetParent(hwnd);
         }
         if (host)
             ax = qobject_cast<QAxWidget*>(host->parentWidget());
-        if (ax && msg->hwnd != host->winId()) {
+        if (ax && msg->hwnd != hwndForWidget(host)) {
             if (message >= WM_KEYFIRST && message <= WM_KEYLAST) {
                 QAxClientSite *site = host->clientSite();
                 site->eventTranslated = true; // reset in QAxClientSite::TranslateAccelerator
@@ -702,7 +706,9 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
 
         RECT rcPos = { host->x(), host->y(), host->x()+sizehint.width(), host->y()+sizehint.height() };
 
-        hr = m_spOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, 0, (IOleClientSite*)this, 0, host->winId(), &rcPos);
+        hr = m_spOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, 0, (IOleClientSite*)this, 0,
+                                   hwndForWidget(host),
+                                   &rcPos);
 
         if (!m_spOleControl)
             m_spOleObject->QueryInterface(IID_IOleControl, (void**)&m_spOleControl);
@@ -1009,7 +1015,7 @@ HRESULT WINAPI QAxClientSite::TranslateAccelerator(LPMSG lpMsg, DWORD /*grfModif
         // if the request is coming from an out-of-proc server or a non ActiveQt server,
         // we send the message to the host window. This will make sure this key event
         // comes to Qt for processing.
-        SendMessage(host->winId(), lpMsg->message, lpMsg->wParam, lpMsg->lParam);
+        SendMessage(hwndForWidget(host), lpMsg->message, lpMsg->wParam, lpMsg->lParam);
         if (ActiveQtDetected && !fromInProcServer) {
             // ActiveQt based servers will need further processing of the event
             // (eg. <SPACE> key for a checkbox), so we return false.
@@ -1044,7 +1050,7 @@ HRESULT WINAPI QAxClientSite::GetWindow(HWND *phwnd)
     if (!phwnd)
         return E_POINTER;
 
-    *phwnd = host->winId();
+    *phwnd = hwndForWidget(host);
     return S_OK;
 }
 
@@ -1100,14 +1106,15 @@ HRESULT WINAPI QAxClientSite::GetWindowContext(IOleInPlaceFrame **ppFrame, IOleI
     QueryInterface(IID_IOleInPlaceFrame, (void**)ppFrame);
     QueryInterface(IID_IOleInPlaceUIWindow, (void**)ppDoc);
 
-    ::GetClientRect(host->winId(), lprcPosRect);
-    ::GetClientRect(host->winId(), lprcClipRect);
+    const HWND hwnd = hwndForWidget(host);
+    ::GetClientRect(hwnd, lprcPosRect);
+    ::GetClientRect(hwnd, lprcClipRect);
 
     lpFrameInfo->cb = sizeof(OLEINPLACEFRAMEINFO);
     lpFrameInfo->fMDIApp = false;
     lpFrameInfo->haccel = 0;
     lpFrameInfo->cAccelEntries = 0;
-    lpFrameInfo->hwndFrame = widget ? widget->window()->winId() : 0;
+    lpFrameInfo->hwndFrame = widget ? hwnd : 0;
 
     return S_OK;
 }
@@ -1386,7 +1393,7 @@ HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND
         menuItemMap.clear();
     }
 
-    OleSetMenuDescriptor(holemenu, widget ? widget->window()->winId() : 0, m_menuOwner, this, m_spInPlaceActiveObject);
+    OleSetMenuDescriptor(holemenu, widget ? hwndForWidget(widget) : 0, m_menuOwner, this, m_spInPlaceActiveObject);
     return S_OK;
 #endif
 }
@@ -1443,7 +1450,7 @@ extern Q_GUI_EXPORT bool qt_win_ignoreNextMouseReleaseEvent;
 
 HRESULT WINAPI QAxClientSite::EnableModeless(BOOL fEnable)
 {
-    EnableWindow(host->window()->winId(), fEnable);
+    EnableWindow(hwndForWidget(host), fEnable);
 
     if (!fEnable) {
         if (!QApplicationPrivate::isBlockedByModal(host))
@@ -1452,7 +1459,8 @@ HRESULT WINAPI QAxClientSite::EnableModeless(BOOL fEnable)
         if (QApplicationPrivate::isBlockedByModal(host))
             QApplicationPrivate::leaveModal(host);
     }
-    qt_win_ignoreNextMouseReleaseEvent = false;
+    // FIXME 4.10.2011: No longer exists  in Lighthouse.
+    // qt_win_ignoreNextMouseReleaseEvent = false;
     return S_OK;
 }
 
@@ -1589,7 +1597,7 @@ HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
     m_spActiveView->UIActivate(TRUE);
 
     RECT rect;
-    GetClientRect(widget->winId(), &rect);
+    GetClientRect(hwndForWidget(widget), &rect);
     m_spActiveView->SetRect(&rect);
     m_spActiveView->Show(TRUE);
 
@@ -1686,7 +1694,7 @@ void QAxHostWidget::resizeObject()
     // document server - talk to view?
     if (axhost->m_spActiveView) {
         RECT rect;
-        GetClientRect(winId(), &rect);
+        GetClientRect(hwndForWidget(this), &rect);
         axhost->m_spActiveView->SetRect(&rect);
 
         return;
@@ -1716,6 +1724,7 @@ void QAxHostWidget::showEvent(QShowEvent *)
 
 bool QAxHostWidget::winEvent(MSG *msg, long *result)
 {
+    // FIXME: 4.10.2011: no longer implemented
     if (axhost && axhost->inPlaceObjectWindowless) {
         Q_ASSERT(axhost->m_spInPlaceObject);
         IOleInPlaceObjectWindowless *windowless = (IOleInPlaceObjectWindowless*)axhost->m_spInPlaceObject;
@@ -1725,7 +1734,8 @@ bool QAxHostWidget::winEvent(MSG *msg, long *result)
         if (hres == S_OK)
             return true;
     }
-    return QWidget::winEvent(msg, result);
+    // QWidget::winEvent(msg, result);
+    return false;
 }
 
 bool QAxHostWidget::event(QEvent *e)
@@ -1736,14 +1746,16 @@ bool QAxHostWidget::event(QEvent *e)
             killTimer(setFocusTimer);
             setFocusTimer = 0;
             RECT rcPos = { x(), y(), x()+size().width(), y()+size().height() };
-            axhost->m_spOleObject->DoVerb(OLEIVERB_UIACTIVATE, 0, (IOleClientSite*)axhost, 0, winId(), &rcPos);
+            axhost->m_spOleObject->DoVerb(OLEIVERB_UIACTIVATE, 0, (IOleClientSite*)axhost, 0,
+                                          hwndForWidget(this),
+                                          &rcPos);
             if (axhost->m_spActiveView)
                 axhost->m_spActiveView->UIActivate(TRUE);
         }
         break;
     case QEvent::WindowBlocked:
-        if (IsWindowEnabled(winId())) {
-            EnableWindow(winId(), false);
+        if (IsWindowEnabled(hwndForWidget(this))) {
+            EnableWindow(hwndForWidget(this), false);
             if (axhost && axhost->m_spInPlaceActiveObject) {
                 axhost->inPlaceModelessEnabled = false;
                 axhost->m_spInPlaceActiveObject->EnableModeless(false);
@@ -1751,8 +1763,8 @@ bool QAxHostWidget::event(QEvent *e)
         }
         break;
     case QEvent::WindowUnblocked:
-        if (!IsWindowEnabled(winId())) {
-            EnableWindow(winId(), true);
+        if (!IsWindowEnabled(hwndForWidget(this))) {
+            EnableWindow(hwndForWidget(this), true);
             if (axhost && axhost->m_spInPlaceActiveObject) {
                 axhost->inPlaceModelessEnabled = true;
                 axhost->m_spInPlaceActiveObject->EnableModeless(true);
@@ -1826,7 +1838,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     QPixmap pm(size());
     pm.fill();
 
-    HBITMAP hBmp = pm.toWinHBITMAP();
+    HBITMAP hBmp = qaxPixmapToWinHBITMAP(pm);
     HDC hBmp_hdc = CreateCompatibleDC(qt_win_display_dc());
     HGDIOBJ old_hBmp = SelectObject(hBmp_hdc, hBmp);
 
@@ -1840,7 +1852,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     view->Release();
 
     QPainter painter(this);
-    painter.drawPixmap(0, 0, QPixmap::fromWinHBITMAP(hBmp));
+    painter.drawPixmap(0, 0, qaxPixmapFromWinHBITMAP(hBmp));
 
     SelectObject(hBmp_hdc, old_hBmp);
     DeleteObject(hBmp);

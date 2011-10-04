@@ -143,6 +143,9 @@ void DocuWindow::save()
 
 void DocuWindow::print()
 {
+#ifdef QT_NO_PRINTER
+    Q_UNIMPLEMENTED();
+#else
     QPrinter printer;
     if (printer.printerName().isEmpty()) {
 	statusBar()->showMessage(tr("No printer installed"), 2000);
@@ -156,6 +159,7 @@ void DocuWindow::print()
     }
 
     browser->document()->print(&printer);
+#endif
 }
 
 QT_END_NAMESPACE

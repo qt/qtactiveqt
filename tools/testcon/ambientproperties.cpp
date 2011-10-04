@@ -41,7 +41,7 @@
 
 #include "ambientproperties.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 QT_BEGIN_NAMESPACE
 

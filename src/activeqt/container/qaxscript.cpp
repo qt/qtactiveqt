@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 #include "qaxscript.h"
+#include "../shared/qaxutils_p.h"
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
@@ -346,7 +347,7 @@ HRESULT WINAPI QAxScriptSite::GetWindow(HWND *phwnd)
     if (!w)
         return E_FAIL;
     
-    *phwnd = w->winId();
+    *phwnd = hwndForWidget(w);
     return S_OK;
 }
 
@@ -362,7 +363,7 @@ HRESULT WINAPI QAxScriptSite::EnableModeless(BOOL fEnable)
     if (!w)
         return E_FAIL;
     
-    EnableWindow(w->winId(), fEnable);
+    EnableWindow(hwndForWidget(w), fEnable);
     return S_OK;
 }
 

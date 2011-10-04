@@ -42,7 +42,7 @@
 #define QAXWIDGET_H
 
 #include <ActiveQt/qaxbase.h>
-#include <QtGui/qwidget.h>
+#include <QtWidgets/QWidget>
 
 QT_BEGIN_HEADER
 

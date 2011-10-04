@@ -2,6 +2,7 @@ TEMPLATE = app
 TARGET	 = simpleax
 
 CONFIG	+= qt warn_off qaxserver
+QT += widgets
 
 SOURCES	 = main.cpp
 RC_FILE	 = $$QT.activeqt.sources/control/qaxserver.rc

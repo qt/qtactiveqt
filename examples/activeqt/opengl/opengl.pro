@@ -3,7 +3,7 @@ TARGET	 = openglax
 
 CONFIG	+= qt warn_off qaxserver
 
-QT += opengl
+QT += widgets opengl
 
 HEADERS	 = glbox.h \
 	   globjwin.h
