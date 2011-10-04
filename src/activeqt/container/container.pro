@@ -2,6 +2,7 @@ TEMPLATE = lib
 
 TARGET   = ActiveQt
 CONFIG += qt_install_headers
+
 SYNCQT.HEADER_FILES = qaxbase.h qaxobject.h qaxscript.h qaxselect.h qaxwidget.h
 SYNCQT.HEADER_CLASSES = ../../../include/ActiveQt/QAxBase ../../../include/ActiveQt/QAxObject ../../../include/ActiveQt/QAxScriptEngine ../../../include/ActiveQt/QAxScript ../../../include/ActiveQt/QAxScriptManager ../../../include/ActiveQt/QAxSelect ../../../include/ActiveQt/QAxWidget
 load(qt_installs)
@@ -16,7 +17,8 @@ TARGET   = QAxContainer
 
 INCLUDEPATH *= $$QT.activeqt.includes
 
-QT += core-private gui-private
+QT += core-private gui gui-private widgets widgets-private
+
 CONFIG  += qt warn_on staticlib
 DESTDIR  = $$QT.activeqt.libs
 
@@ -30,7 +32,8 @@ HEADERS =   ../control/qaxaggregated.h \
             qaxobject.h \
             qaxscript.h \
             qaxselect.h \
-            ../shared/qaxtypes.h
+            ../shared/qaxtypes.h \
+            ../shared/qaxutils_p.h
 
 SOURCES =   qaxbase.cpp \
             qaxdump.cpp \
@@ -39,6 +42,7 @@ SOURCES =   qaxbase.cpp \
             qaxscript.cpp \
             qaxscriptwrapper.cpp \
             qaxselect.cpp \
-            ../shared/qaxtypes.cpp
+            ../shared/qaxtypes.cpp \
+            ../shared/qaxutils.cpp
 
 FORMS =     qaxselect.ui

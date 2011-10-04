@@ -2,6 +2,8 @@ TEMPLATE = lib
 TARGET	 = wrapperax
 
 CONFIG	+= qt warn_off qaxserver dll
+QT += widgets
+
 contains(CONFIG, static):DEFINES += QT_NODLL
 
 SOURCES	 = main.cpp
