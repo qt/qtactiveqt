@@ -1,6 +1,8 @@
 TEMPLATE = app
 CONFIG  += qaxserver
 
+QT += widgets
+
 # Input
 SOURCES += main.cpp
 

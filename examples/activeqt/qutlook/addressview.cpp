@@ -41,7 +41,7 @@
 //! [0]
 #include "addressview.h"
 #include "msoutl.h"
-#include <QtGui>
+#include <QtWidgets>
 
 class AddressBookModel : public QAbstractListModel
 {

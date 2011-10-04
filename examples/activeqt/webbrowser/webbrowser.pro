@@ -1,6 +1,7 @@
 TEMPLATE = app
 
 CONFIG += qaxcontainer
+QT += widgets
 
 QTDIR_build:REQUIRES = shared
 

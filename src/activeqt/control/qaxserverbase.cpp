@@ -68,6 +68,7 @@
 #include "qaxaggregated.h"
 
 #include "../shared/qaxtypes.h"
+#include "../shared/qaxutils_p.h"
 
 #if defined Q_CC_GNU
 #   include <w32api.h>
@@ -781,11 +782,12 @@ bool qax_winEventFilter(void *message)
 	return false;
 
     bool ret = false;
-    QWidget *aqt = QWidget::find(pMsg->hwnd);
+    QWidget *aqt = QWidget::find(reinterpret_cast<WId>(pMsg->hwnd));
     if (!aqt)
 	return ret;
 
-    HWND baseHwnd = ::GetParent(aqt->winId());
+    // FIXME: 4.10.211: was '::GetParent(hwndForWidget(aqt));'
+    HWND baseHwnd = hwndForWidget(aqt);
     QAxServerBase *axbase = 0;
     while (!axbase && baseHwnd) {
 #ifdef GWLP_USERDATA
@@ -1292,10 +1294,11 @@ bool QAxServerBase::internalCreate()
 
     internalBind();
     if (isWidget) {
+        // FIXME: 4.10.2011 Does this work with the parent's HWND?
         if (!stayTopLevel) {
             QEvent e(QEvent::EmbeddingControl);
             QApplication::sendEvent(qt.widget, &e);
-            ::SetWindowLong(qt.widget->winId(), GWL_STYLE, WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+            ::SetWindowLong(hwndForWidget(qt.widget), GWL_STYLE, WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
         }
         qt.widget->setAttribute(Qt::WA_QuitOnClose, false);
         qt.widget->move(0, 0);
@@ -1388,17 +1391,19 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
         case WM_QUERYENDSESSION:
         case WM_DESTROY:
             // save the window handle
+            // FIXME: 4.10.2011 Does this work with the parent's HWND?
             if (that->qt.widget) {
                 that->qt.widget->hide();
-                ::SetParent(that->qt.widget->winId(), 0);
+                ::SetParent(hwndForWidget(that->qt.widget), 0);
             }
 	    break;
 
         case WM_SHOWWINDOW:
 	    if(wParam) {
 	        that->internalCreate();
+            // FIXME: 4.10.2011 Does this work with the parent's HWND?
 	        if (!that->stayTopLevel) {
-		    ::SetParent(that->qt.widget->winId(), that->m_hWnd);
+            ::SetParent(hwndForWidget(that->qt.widget), that->m_hWnd);
 		    that->qt.widget->raise();
 		    that->qt.widget->move(0, 0);
 	        }
@@ -1823,12 +1828,13 @@ void QAxServerBase::updateMask()
 	return;
 
     QRegion rgn = qt.widget->mask();
-    HRGN hrgn = rgn.handle();
+    HRGN hrgn = qaxHrgnFromQRegion(rgn);
 
     // Since SetWindowRegion takes ownership
     HRGN wr = CreateRectRgn(0,0,0,0);
     CombineRgn(wr, hrgn, 0, RGN_COPY);
     SetWindowRgn(m_hWnd, wr, true);
+    DeleteObject(hrgn);
 }
 
 static bool checkHRESULT(HRESULT hres)
@@ -3165,7 +3171,7 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG lindex, void *pvAspect, 
         ::LPtoDP(hicTargetDev, (LPPOINT)&rc, 2);
 
     QPixmap pm = QPixmap::grabWidget(qt.widget);
-    HBITMAP hbm = pm.toWinHBITMAP();
+    HBITMAP hbm = qaxPixmapToWinHBITMAP(pm);
     HDC hdc = CreateCompatibleDC(0);
     SelectObject(hdc, hbm);
     ::StretchBlt(hdcDraw, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hdc, 0, 0,pm.width(), pm.height(), SRCCOPY);
@@ -3598,8 +3604,9 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
                 state |= Qt::AltModifier;
 
             int key = pMsg->wParam;
-            if (!(key >= 'A' && key <= 'Z') && !(key >= '0' && key <= '9'))
-                key = qt_translateKeyCode(pMsg->wParam);
+            // FIXME 4.10.2011: No longer exists in Lighthouse.
+            // if (!(key >= 'A' && key <= 'Z') && !(key >= '0' && key <= '9'))
+            //    key = qt_translateKeyCode(pMsg->wParam);
 
             QKeyEvent override(QEvent::ShortcutOverride, key, (Qt::KeyboardModifiers)state);
             override.ignore();
@@ -3673,7 +3680,8 @@ HRESULT WINAPI QAxServerBase::EnableModeless(BOOL fEnable)
     if (!isWidget)
 	return S_OK;
 
-    EnableWindow(qt.widget->winId(), fEnable);
+    // FIXME: 4.10.2011 Does this work with the parent's HWND?
+    EnableWindow(hwndForWidget(qt.widget), fEnable);
     return S_OK;
 }
 
@@ -4422,10 +4430,11 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
         if (PeekMessage(&msg, 0, WM_USER+3078, WM_USER+3078, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+            // FIXME: 4.10.2011 Does this work with the parent's HWND?
             QWidget *modalWidget = QApplication::activeModalWidget();
             if (modalWidget && modalWidget->isVisible() && modalWidget->isEnabled() 
-                && !IsWindowEnabled(modalWidget->effectiveWinId()))
-                EnableWindow(modalWidget->effectiveWinId(), TRUE);
+                && !IsWindowEnabled(hwndForWidget(modalWidget)))
+                EnableWindow(hwndForWidget(modalWidget), TRUE);
         }
         break;
         }

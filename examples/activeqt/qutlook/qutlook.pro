@@ -2,6 +2,7 @@
 TEMPLATE = app
 TARGET	 = qutlook
 CONFIG	+= qaxcontainer
+QT += widgets
 
 TYPELIBS = $$system(dumpcpp -getfile {00062FFF-0000-0000-C000-000000000046})
 #! [0]

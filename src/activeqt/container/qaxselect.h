@@ -41,7 +41,7 @@
 #ifndef QAXSELECT_H
 #define QAXSELECT_H
 
-#include <QtGui/qdialog.h>
+#include <QtWidgets/QDialog>
 
 #ifndef QT_NO_WIN_ACTIVEQT
 #include "ui_qaxselect.h"

@@ -2,6 +2,8 @@ TEMPLATE = lib
 
 TARGET   = ActiveQt
 CONFIG += qt_install_headers
+QT += widgets
+
 SYNCQT.HEADER_FILES = qaxaggregated.h qaxbindable.h qaxfactory.h
 SYNCQT.HEADER_CLASSES = ../../../include/ActiveQt/QAxAggregated ../../../include/ActiveQt/QAxBindable ../../../include/ActiveQt/QAxFactory ../../../include/ActiveQt/QAxClass 
 load(qt_installs)
@@ -30,7 +32,8 @@ win32-g++*:LIBS += -luuid
 HEADERS =   qaxaggregated.h \
             qaxbindable.h \
             qaxfactory.h \
-            ../shared/qaxtypes.h
+            ../shared/qaxtypes.h \
+            ../shared/qaxutils_p.h
 
 SOURCES =   qaxserver.cpp \
             qaxserverbase.cpp \
@@ -39,4 +42,5 @@ SOURCES =   qaxserver.cpp \
             qaxservermain.cpp \
             qaxserverdll.cpp \
             qaxmain.cpp \
-            ../shared/qaxtypes.cpp
+            ../shared/qaxtypes.cpp \
+            ../shared/qaxutils.cpp
