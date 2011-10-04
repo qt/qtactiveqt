@@ -217,7 +217,7 @@ DocumentList *Application::documents() const
 
 void Application::setVisible(bool on)
 {
-    ui->setShown(on);
+    ui->setVisible(on);
 }
 
 bool Application::isVisible() const

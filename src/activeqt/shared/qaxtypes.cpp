@@ -42,6 +42,7 @@
 #include <olectl.h>
 
 #include "qaxtypes.h"
+#include "qaxutils_p.h"
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
@@ -141,10 +142,12 @@ static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
     desc.picType = PICTYPE_BITMAP;
     
     desc.bmp.hbitmap = 0;
-    desc.bmp.hpal = QColormap::hPal();
+    /* FIXME 4.10.2011: was "desc.bmp.hpal = QColormap::hPal();", but
+     * with Lighthouse, QColormap no longer has a handle. */
+    desc.bmp.hpal = 0;
     
     if (!pixmap.isNull()) {
-        desc.bmp.hbitmap = pixmap.toWinHBITMAP();
+        desc.bmp.hbitmap = qaxPixmapToWinHBITMAP(pixmap);
         Q_ASSERT(desc.bmp.hbitmap);
     }
 
@@ -172,7 +175,7 @@ static QPixmap IPictureToQPixmap(IPicture *ipic)
     if (!hbm)
         return QPixmap();
 
-    return QPixmap::fromWinHBITMAP(hbm);
+    return qaxPixmapFromWinHBITMAP(hbm);
 }
 
 static QDateTime DATEToQDateTime(DATE ole)
@@ -215,13 +218,14 @@ static DATE QDateTimeToDATE(const QDateTime &dt)
 
 QColor OLEColorToQColor(uint col)
 {
-#if defined(Q_OS_WINCE)
-    return QColor(GetBValue(col),GetGValue(col),GetRValue(col));
-#else
+    Q_UNIMPLEMENTED();
+    return QColor();
+/*  FIXME: 4.10.2011:
     COLORREF cref;
     OleTranslateColor(col, QColormap::hPal(), &cref);
     return QColor(GetRValue(cref),GetGValue(cref),GetBValue(cref));
-#endif
+
+*/
 }
 
 /*

@@ -41,7 +41,7 @@
 
 #include "changeproperties.h"
 
-#include <QtGui>
+#include <QtWidgets>
 #include <qt_windows.h>
 #include <ActiveQt/ActiveQt>
 
