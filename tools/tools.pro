@@ -4,5 +4,6 @@ CONFIG	+= ordered
 
 SUBDIRS = dumpdoc \
           dumpcpp \
-          testcon
+          testcon \
+          idc
 
