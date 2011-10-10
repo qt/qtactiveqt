@@ -19,3 +19,6 @@ win32-borland {
     !win32-g++*:QMAKE_POST_LINK = midl $$QT.activeqt.sources/../../tools/testcon/testcon.idl && move testcon.tlb $(TARGETDIR)
 
 }
+
+target.path = $$[QT_INSTALL_BINS]
+INSTALLS += target
