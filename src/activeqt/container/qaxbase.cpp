@@ -4415,7 +4415,7 @@ void *qax_createObjectWrapper(int metaType, IUnknown *iface)
     if (!iface)
         return 0;
 
-    QAxObject *object = (QAxObject*)QMetaType::construct(metaType, 0);
+    QAxObject *object = (QAxObject*)QMetaType::create(metaType, 0);
     QAxBasePrivate *d = object->d;
 
     d->ptr = iface;
