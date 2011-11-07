@@ -68,6 +68,36 @@
 
 QT_BEGIN_NAMESPACE
 
+static inline HRESULT Invoke(IDispatch *disp,
+                             DISPID dispIdMember,
+                             REFIID riid,
+                             LCID lcid,
+                             DWORD wFlags,
+                             DISPPARAMS *pDispParams,
+                             VARIANT *pVarResult,
+                             EXCEPINFO *pExcepInfo,
+                             unsigned int *puArgErr)
+{
+    if ((wFlags & DISPATCH_PROPERTYPUT) &&
+        pDispParams &&
+        pDispParams->cArgs == 1 &&
+        pDispParams->cNamedArgs == 1 &&
+        pDispParams->rgdispidNamedArgs &&
+        *pDispParams->rgdispidNamedArgs == DISPID_PROPERTYPUT &&
+        pDispParams->rgvarg) {
+        VARTYPE vt = pDispParams->rgvarg->vt;
+
+        if (vt == VT_UNKNOWN || vt == VT_DISPATCH || (vt & VT_ARRAY) || (vt & VT_BYREF)) {
+            HRESULT hr = disp->Invoke(dispIdMember, riid, lcid, (wFlags & ~DISPATCH_PROPERTYPUT) | DISPATCH_PROPERTYPUTREF,
+                                      pDispParams, pVarResult, pExcepInfo, puArgErr);
+            if (SUCCEEDED(hr))
+                return hr;
+        }
+    }
+
+    return disp->Invoke(dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+}
+
 /*
     \internal
     \class QAxMetaObject
@@ -2371,7 +2401,9 @@ QByteArray MetaObjectGenerator::createPrototype(FUNCDESC *funcdesc, ITypeInfo *t
     const QByteArray hresult("HRESULT");
     // get function prototype
     type = guessTypes(funcdesc->elemdescFunc.tdesc, typeinfo, function);
-    if ((type.isEmpty() || type == hresult) && funcdesc->invkind == INVOKE_PROPERTYPUT && funcdesc->lprgelemdescParam) {
+    if ((type.isEmpty() || type == hresult) &&
+        (funcdesc->invkind == INVOKE_PROPERTYPUT || funcdesc->invkind == INVOKE_PROPERTYPUTREF) &&
+        funcdesc->lprgelemdescParam) {
         type = guessTypes(funcdesc->lprgelemdescParam->tdesc, typeinfo, function);
     }
 
@@ -2413,7 +2445,8 @@ QByteArray MetaObjectGenerator::createPrototype(FUNCDESC *funcdesc, ITypeInfo *t
 
     if (!prototype.isEmpty()) {
         if (prototype.endsWith(',')) {
-            if (funcdesc->invkind == INVOKE_PROPERTYPUT && p == funcdesc->cParams) {
+            if ((funcdesc->invkind == INVOKE_PROPERTYPUT || funcdesc->invkind == INVOKE_PROPERTYPUTREF) &&
+                p == funcdesc->cParams) {
                 TYPEDESC tdesc = funcdesc->lprgelemdescParam[p-1].tdesc;
                 QByteArray ptype = guessTypes(tdesc, typeinfo, function);
                 prototype += ptype;
@@ -2484,6 +2517,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
         switch(funcdesc->invkind) {
         case INVOKE_PROPERTYGET: // property
         case INVOKE_PROPERTYPUT:
+        case INVOKE_PROPERTYPUTREF:
             if (funcdesc->cParams - funcdesc->cParamsOpt <= 1) {
                 bool dontBreak = false;
                 // getter with non-default-parameters -> fall through to function handling
@@ -2526,11 +2560,13 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
                         break;
 
                     // generate setter slot
-                    if (funcdesc->invkind == INVOKE_PROPERTYPUT && hasProperty(function)) {
+                    if ((funcdesc->invkind == INVOKE_PROPERTYPUT || funcdesc->invkind == INVOKE_PROPERTYPUTREF) &&
+                        hasProperty(function)) {
                         addSetterSlot(function);
                         break;
                     }
-                } else if (funcdesc->invkind == INVOKE_PROPERTYPUT && hasProperty(function)) {
+                } else if ((funcdesc->invkind == INVOKE_PROPERTYPUT || funcdesc->invkind == INVOKE_PROPERTYPUTREF) &&
+                           hasProperty(function)) {
                     addSetterSlot(function);
                     // more parameters -> function handling
                     if (funcdesc->cParams > 1)
@@ -2539,7 +2575,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
                 if (!dontBreak)
                     break;
             }
-            if (funcdesc->invkind == INVOKE_PROPERTYPUT) {
+            if (funcdesc->invkind == INVOKE_PROPERTYPUT || funcdesc->invkind == INVOKE_PROPERTYPUTREF) {
                 // remove the typename guessed for property setters
                 // its done only for setter's with more than one parameter.
                 if (funcdesc->cParams - funcdesc->cParamsOpt > 1) {
@@ -3503,7 +3539,7 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
             params.rgdispidNamedArgs = 0;
             params.rgvarg = 0;
 
-            hres = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &arg, &excepinfo, 0);
+            hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &arg, &excepinfo, 0);
 
             // map result VARIANTARG to void*
             uint type = QVariant::Int;
@@ -3552,7 +3588,7 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
                 break;
             }
         }
-        hres = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &params, 0, &excepinfo, &argerr);
+        hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &params, 0, &excepinfo, &argerr);
         clearVARIANT(&arg);
         break;
 
@@ -3650,7 +3686,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     memset(&excepinfo, 0, sizeof(excepinfo));
 
     WORD wFlags = isProperty ? DISPATCH_PROPERTYPUT : DISPATCH_METHOD | DISPATCH_PROPERTYGET;
-    hres = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, wFlags, &params, &ret, &excepinfo, &argerr);
+    hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, wFlags, &params, &ret, &excepinfo, &argerr);
 
     // get return value
     if (hres == S_OK && ret.vt != VT_EMPTY)
@@ -3950,7 +3986,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     memset(&excepinfo, 0, sizeof(excepinfo));
     UINT argerr = 0;
 
-    HRESULT hres = disp->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, disptype, &params, res, &excepinfo, &argerr);
+    HRESULT hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, disptype, &params, res, &excepinfo, &argerr);
 
     if (disptype == (DISPATCH_METHOD|DISPATCH_PROPERTYGET) && hres == S_OK && varc) {
         for (int i = 0; i < varc; ++i)
