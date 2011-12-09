@@ -82,11 +82,11 @@ MainWindow::MainWindow(QWidget *parent)
     debuglog = logDebug;
     oldDebugHandler = qInstallMsgHandler(redirectDebugOutput);
     QHBoxLayout *layout = new QHBoxLayout(Workbase);
-    workspace = new QWorkspace(Workbase);
-    layout->addWidget(workspace);
+    mdiArea = new QMdiArea(Workbase);
+    layout->addWidget(mdiArea);
     layout->setMargin(0);
 
-    connect(workspace, SIGNAL(windowActivated(QWidget*)), this, SLOT(updateGUI()));
+    connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(updateGUI()));
     connect(actionFileExit, SIGNAL(triggered()), qApp, SLOT(quit()));
 }
 
@@ -96,22 +96,38 @@ MainWindow::~MainWindow()
     debuglog = 0;
 }
 
+QAxWidget *MainWindow::activeAxWidget() const
+{
+    if (const QMdiSubWindow *activeSubWindow = mdiArea->currentSubWindow())
+        return qobject_cast<QAxWidget*>(activeSubWindow->widget());
+    return 0;
+}
+
+QList<QAxWidget *> MainWindow::axWidgets() const
+{
+    QList<QAxWidget *> result;
+    foreach (const QMdiSubWindow *subWindow, mdiArea->subWindowList())
+        if (QAxWidget *axWidget = qobject_cast<QAxWidget *>(subWindow->widget()))
+            result.push_back(axWidget);
+    return result;
+}
 
 void MainWindow::on_actionFileNew_triggered()
 {
     QAxSelect select(this);
     if (select.exec()) {
-        QAxWidget *container = new QAxWidget(workspace);
-        container->setAttribute(Qt::WA_DeleteOnClose);
+        QAxWidget *container = new QAxWidget;
+        mdiArea->addSubWindow(container);
         container->setControl(select.clsid());
-	container->setObjectName(container->windowTitle());
-        workspace->addWindow(container);
+        container->setObjectName(container->windowTitle());
         container->show();
     }
     updateGUI();
 }
 
-void MainWindow::on_actionFileLoad_triggered()
+void MainWindow::on_actionFileLoad_tri()
+{
+    ggered()
 {
     QString fname = QFileDialog::getOpenFileName(this, tr("Load"), QString(), QLatin1String("*.qax"));
     if (fname.isEmpty())
@@ -123,13 +139,13 @@ void MainWindow::on_actionFileLoad_triggered()
 	return;
     }
 
-    QAxWidget *container = new QAxWidget(workspace);
-    workspace->addWindow(container);
-    
+    QAxWidget *container = new QAxWidget(mdiArea);
+    container->setObjectName(container->windowTitle());
+
     QDataStream d(&file);
     d >> *container;
 
-    container->setObjectName(container->windowTitle());
+    mdiArea->addSubWindow(container);
     container->show();
 
     updateGUI();
@@ -137,7 +153,7 @@ void MainWindow::on_actionFileLoad_triggered()
 
 void MainWindow::on_actionFileSave_triggered()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
@@ -157,7 +173,7 @@ void MainWindow::on_actionFileSave_triggered()
 
 void MainWindow::on_actionContainerSet_triggered()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
@@ -169,7 +185,7 @@ void MainWindow::on_actionContainerSet_triggered()
 
 void MainWindow::on_actionContainerClear_triggered()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (container)
 	container->clear();
     updateGUI();
@@ -179,7 +195,7 @@ void MainWindow::on_actionContainerProperties_triggered()
 {
     if (!dlgAmbient) {
 	dlgAmbient = new AmbientProperties(this);
-	dlgAmbient->setControl(workspace);
+        dlgAmbient->setControl(mdiArea);
     }
     dlgAmbient->show();
 }
@@ -187,7 +203,7 @@ void MainWindow::on_actionContainerProperties_triggered()
 
 void MainWindow::on_actionControlInfo_triggered()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
@@ -198,7 +214,7 @@ void MainWindow::on_actionControlInfo_triggered()
 
 void MainWindow::on_actionControlProperties_triggered()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
@@ -212,7 +228,7 @@ void MainWindow::on_actionControlProperties_triggered()
 
 void MainWindow::on_actionControlMethods_triggered()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
@@ -226,7 +242,7 @@ void MainWindow::on_VerbMenu_aboutToShow()
 {
     VerbMenu->clear();
 
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
@@ -242,7 +258,7 @@ void MainWindow::on_VerbMenu_aboutToShow()
 
 void MainWindow::on_VerbMenu_triggered(QAction *action)
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
@@ -251,34 +267,30 @@ void MainWindow::on_VerbMenu_triggered(QAction *action)
 
 void MainWindow::on_actionControlDocumentation_triggered()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
     
-    QString docu = container->generateDocumentation();
+    const QString docu = container->generateDocumentation();
     if (docu.isEmpty())
 	return;
 
-    DocuWindow *docwindow = new DocuWindow(docu, workspace, container);
-    workspace->addWindow(docwindow);
+    DocuWindow *docwindow = new DocuWindow(docu);
+    QMdiSubWindow *subWindow = mdiArea->addSubWindow(docwindow);
+    subWindow->setWindowTitle(DocuWindow::tr("%1 - Documentation").arg(container->windowTitle()));
     docwindow->show();
 }
 
-
 void MainWindow::on_actionControlPixmap_triggered()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
-	return;
+        return;
 
-    QPixmap pm = QPixmap::grabWidget(container);
-
-    QLabel *label = new QLabel(workspace);
-    label->setAttribute(Qt::WA_DeleteOnClose);
-    label->setPixmap(pm);
-    label->setWindowTitle(tr("%1 - Pixmap").arg(container->windowTitle()));
-
-    workspace->addWindow(label);
+    QLabel *label = new QLabel;
+    label->setPixmap(QPixmap::grabWidget(container));
+    QMdiSubWindow *subWindow = mdiArea->addSubWindow(label);
+    subWindow->setWindowTitle(tr("%1 - Pixmap").arg(container->windowTitle()));
     label->show();
 }
 
@@ -317,21 +329,16 @@ void MainWindow::on_actionScriptingLoad_triggered()
     QString file = QFileDialog::getOpenFileName(this, tr("Open Script"), QString(), QAxScriptManager::scriptFileFilter());
 
     if (file.isEmpty())
-	return;
+    return;
 
     if (!scripts) {
 	scripts = new QAxScriptManager(this);
 	scripts->addObject(this);
     }
 
-    QWidgetList widgets = workspace->windowList();
-    QWidgetList::Iterator it(widgets.begin());
-    while (it != widgets.end()) {
-	QAxBase *ax = (QAxBase*)(*it)->qt_metacast("QAxBase");
-	++it;
-	if (!ax)
-	    continue;
-	scripts->addObject(ax);
+    foreach (QAxWidget *axWidget, axWidgets()) {
+        QAxBase *ax = axWidget;
+        scripts->addObject(ax);
     }
 
     QAxScript *script = scripts->load(file, file);
@@ -348,7 +355,7 @@ void MainWindow::on_actionScriptingLoad_triggered()
 
 void MainWindow::updateGUI()
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
 
     bool hasControl = container && !container->isNull();
     actionFileNew->setEnabled(true);
@@ -367,14 +374,8 @@ void MainWindow::updateGUI()
     if (dlgProperties)
 	dlgProperties->setControl(hasControl ? container : 0);
 
-    QWidgetList list = workspace->windowList();
-    QWidgetList::Iterator it = list.begin();
-    while (it != list.end()) {
-	QWidget *container = *it;
-
-	QAxWidget *ax = qobject_cast<QAxWidget*>(container);
-	if (ax) {
-	    container->disconnect(SIGNAL(signal(QString,int,void*)));
+    foreach (QAxWidget *container, axWidgets()) {
+        container->disconnect(SIGNAL(signal(QString,int,void*)));
 	    if (actionLogSignals->isChecked())
 		connect(container, SIGNAL(signal(QString,int,void*)), this, SLOT(logSignal(QString,int,void*)));
 
@@ -387,15 +388,11 @@ void MainWindow::updateGUI()
 		connect(container, SIGNAL(propertyChanged(QString)), this, SLOT(logPropertyChanged(QString)));
 	    container->blockSignals(actionFreezeEvents->isChecked());
 	}
-
-	++it;
-    }
 }
-
 
 void MainWindow::logPropertyChanged(const QString &prop)
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
@@ -405,7 +402,7 @@ void MainWindow::logPropertyChanged(const QString &prop)
 
 void MainWindow::logSignal(const QString &signal, int argc, void *argv)
 {
-    QAxWidget *container = qobject_cast<QAxWidget*>(workspace->activeWindow());
+    QAxWidget *container = activeAxWidget();
     if (!container)
         return;
 
