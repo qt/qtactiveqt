@@ -101,12 +101,9 @@ static const char *fileprint[] = {
 };
 
 
-DocuWindow::DocuWindow(const QString& docu, QWidget *parent, QWidget *source)
+DocuWindow::DocuWindow(const QString& docu, QWidget *parent)
     : QMainWindow(parent)
 {
-    setAttribute(Qt::WA_DeleteOnClose);
-    setWindowTitle(tr("%1 - Documentation").arg(source->windowTitle()));
-
     browser = new QTextBrowser(this);
     browser->setHtml(docu);
 

@@ -70,31 +70,38 @@ void AmbientProperties::setControl(QWidget *widget)
 
 void AmbientProperties::on_buttonBackground_clicked()
 {
-    QColor c = QColorDialog::getColor(backSample->palette().color(backSample->backgroundRole()), this);
-    QPalette p = backSample->palette(); p.setColor(backSample->backgroundRole(), c); backSample->setPalette(p);
-    p = container->palette(); p.setColor(container->backgroundRole(), c); container->setPalette(p);
+    const QColor c = QColorDialog::getColor(backSample->palette().color(backSample->backgroundRole()), this);
+    QPalette p = backSample->palette();
+    p.setColor(backSample->backgroundRole(), c);
+    backSample->setPalette(p);
 
-    if (QWorkspace *ws = qobject_cast<QWorkspace*>(container)) {
-	QWidgetList list( ws->windowList() );
-	for (int i = 0; i < list.count(); ++i) {
-	    QWidget *widget = list.at(i);
-	    p = widget->palette(); p.setColor(widget->backgroundRole(), c); widget->setPalette(p);
+    p = container->palette();
+    p.setColor(container->backgroundRole(), c);
+    container->setPalette(p);
+
+    foreach (QWidget *widget, mdiAreaWidgets()) {
+        p = widget->palette();
+        p.setColor(widget->backgroundRole(), c);
+        widget->setPalette(p);
 	}
-    }
 }
 
 void AmbientProperties::on_buttonForeground_clicked()
 {
-    QColor c = QColorDialog::getColor(foreSample->palette().color(foreSample->backgroundRole()), this);
-    QPalette p = foreSample->palette(); p.setColor(foreSample->backgroundRole(), c); foreSample->setPalette(p);
-    p = container->palette(); p.setColor(container->foregroundRole(), c); container->setPalette(p);
+    const QColor c = QColorDialog::getColor(foreSample->palette().color(foreSample->backgroundRole()), this);
 
-    if (QWorkspace *ws = qobject_cast<QWorkspace*>(container)) {
-	QWidgetList list( ws->windowList() );
-	for (int i = 0; i < list.count(); ++i) {
-	    QWidget *widget = list.at(i);
-	    p = widget->palette(); p.setColor(widget->foregroundRole(), c); widget->setPalette(p);
-	}
+    QPalette p = foreSample->palette();
+    p.setColor(foreSample->backgroundRole(), c);
+    foreSample->setPalette(p);
+
+    p = container->palette();
+    p.setColor(container->foregroundRole(), c);
+    container->setPalette(p);
+
+    foreach (QWidget *widget, mdiAreaWidgets()) {
+        p = widget->palette();
+        p.setColor(widget->foregroundRole(), c);
+        widget->setPalette(p);
     }
 }
 
@@ -107,19 +114,23 @@ void AmbientProperties::on_buttonFont_clicked()
     fontSample->setFont( f );
     container->setFont( f );
 
-    if (QWorkspace *ws = qobject_cast<QWorkspace*>(container)) {
-	QWidgetList list( ws->windowList() );
-	for (int i = 0; i < list.count(); ++i) {
-	    QWidget *widget = list.at(i);
-	    widget->setFont( f );
-	}
-    }
+    foreach (QWidget *widget, mdiAreaWidgets())
+        widget->setFont( f );
 }
 
 void AmbientProperties::on_buttonEnabled_toggled(bool on)
 {
     enabledSample->setEnabled( on );
     container->setEnabled( on );
+}
+
+QWidgetList AmbientProperties::mdiAreaWidgets() const
+{
+    QWidgetList result;
+    if (QMdiArea *mdiArea = qobject_cast<QMdiArea*>(container))
+        foreach (QMdiSubWindow *subWindow, mdiArea->subWindowList())
+            result.push_back(subWindow->widget());
+    return result;
 }
 
 QT_END_NAMESPACE

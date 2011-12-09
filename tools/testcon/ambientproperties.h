@@ -63,6 +63,8 @@ public slots:
     void on_buttonEnabled_toggled(bool on);
 
 private:
+    QWidgetList mdiAreaWidgets() const;
+
     QWidget *container;
 };
 

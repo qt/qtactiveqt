@@ -50,8 +50,8 @@ class InvokeMethod;
 class ChangeProperties;
 class AmbientProperties;
 class QAxScriptManager;
-
-class QWorkspace;
+class QAxWidget;
+class QMdiArea;
 
 QT_END_NAMESPACE
 
@@ -85,11 +85,14 @@ protected slots:
     void on_actionScriptingRun_triggered();
 
 private:
+    QAxWidget *activeAxWidget() const;
+    QList<QAxWidget *> axWidgets() const;
+
     InvokeMethod *dlgInvoke;
     ChangeProperties *dlgProperties;
     AmbientProperties *dlgAmbient;
     QAxScriptManager *scripts;
-    QWorkspace *workspace;
+    QMdiArea *mdiArea;
 
     QtMsgHandler oldDebugHandler;
 
