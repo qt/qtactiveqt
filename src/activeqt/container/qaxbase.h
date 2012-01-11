@@ -57,7 +57,7 @@ QT_MODULE(ActiveQt)
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
-struct QUuid;
+class QUuid;
 class QAxEventSink;
 class QAxObject;
 class QAxBasePrivate;
