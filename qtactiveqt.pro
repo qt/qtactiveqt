@@ -11,10 +11,7 @@ activeqt_examples.subdir = $$IN_PWD/examples
 activeqt_examples.target = sub-examples
 activeqt_examples.depends = activeqt_src
 
-win32-g++* {
-    message("ActiveQt cannot be built with MinGW - skipping")
-}
-else:win32 {
+win32 {
     SUBDIRS = activeqt_src \
               activeqt_tools \
               activeqt_examples
