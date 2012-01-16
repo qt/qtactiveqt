@@ -503,7 +503,7 @@ public:
 
             const QMetaProperty metaProp = meta->property(meta->indexOfProperty(propname));
             void *argv[] = {0, var.data()};
-            if (metaProp.type() == QVariant::LastType)
+            if (metaProp.type() == QVariant::Type(QMetaType::QVariant) || metaProp.type() == QVariant::LastType)
                 argv[1] = &var;
 
             // emit the "changed" signal
@@ -3534,7 +3534,7 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
                 qvar = *(int*)v[0];
                 proptype = 0;
             } else {
-                if (t == QVariant::LastType) {
+                if (t == QVariant::Type(QMetaType::QVariant) || t == QVariant::LastType) {
                     qvar = *(QVariant*)v[0];
                     proptype = 0;
                 } else if (t == QVariant::UserType) {

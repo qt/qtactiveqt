@@ -511,7 +511,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             const QList<QVariant> list = qvar.toList();
             const int count = list.count();
             VARTYPE vt = VT_VARIANT;
-            QVariant::Type listType = QVariant::LastType; // == QVariant
+            QVariant::Type listType = QVariant::Type(QMetaType::QVariant);
             if (!typeName.isEmpty() && typeName.startsWith("QList<")) {
                 const QByteArray listTypeName = typeName.mid(6, typeName.length() - 7); // QList<int> -> int
                 listType = QVariant::nameToType(listTypeName);
@@ -582,7 +582,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 array = SafeArrayCreateVector(vt, 0, count);
                 for (LONG index = 0; index < count; ++index) {
                     QVariant elem = list.at(index);
-                    if (listType != QVariant::LastType)
+                    if (listType != QVariant::Type(QMetaType::QVariant))
                         elem.convert(listType);
                     VariantInit(&variant);
                     QVariantToVARIANT(elem, variant, elem.typeName());
@@ -820,7 +820,7 @@ bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeN
     if (!data)
         return true;
 
-    if (type == QVariant::LastType || (type == 0 && typeName == "QVariant")) {
+    if (type == QMetaType::QVariant || type == QVariant::LastType || (type == 0 && typeName == "QVariant")) {
         *(QVariant*)data = var;
         return true;
     }
@@ -1384,7 +1384,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
         if (typeName != "QVariant")
             proptype = QVariant::nameToType(typeName);
     }
-    if (proptype != QVariant::LastType && proptype != QVariant::Invalid && var.type() != proptype) {
+    if (proptype != QVariant::Type(QMetaType::QVariant) && proptype != QVariant::LastType && proptype != QVariant::Invalid && var.type() != proptype) {
         if (var.canConvert(proptype)) {
             QVariant oldvar = var;
             if (oldvar.convert(proptype))
