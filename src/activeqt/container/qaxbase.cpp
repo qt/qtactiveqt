@@ -3154,6 +3154,8 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     // put the metaobject together
     metaobj->d.data = int_data;
     metaobj->d.extradata = 0;
+    metaobj->d.static_metacall = 0;
+    metaobj->d.relatedMetaObjects = 0;
     metaobj->d.stringdata = string_data;
     metaobj->d.superdata = parentObject;
 
