@@ -3186,6 +3186,8 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     metaobj->d.data = int_data;
     metaobj->d.extradata = 0;
     metaobj->d.stringdata = reinterpret_cast<const QByteArrayData *>(string_data);
+    metaobj->d.static_metacall = 0;
+    metaobj->d.relatedMetaObjects = 0;
     metaobj->d.superdata = parentObject;
 
     if (d)
