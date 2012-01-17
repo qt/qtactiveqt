@@ -82,13 +82,9 @@ QT_BEGIN_NAMESPACE
     \sa QAxBase, QAxWidget, QAxScript, {ActiveQt Framework}
 */
 
-const QMetaObjectExtraData QAxObject::staticMetaObjectExtraData = {
-    0,  qt_static_metacall
-};
-
 const QMetaObject QAxObject::staticMetaObject = {
     { &QObject::staticMetaObject, qt_meta_stringdata_QAxBase.data,
-      qt_meta_data_QAxBase, &staticMetaObjectExtraData }
+      qt_meta_data_QAxBase, qt_static_metacall, 0, 0 }
 };
 
 /*!
