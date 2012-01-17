@@ -1921,13 +1921,9 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     \sa QAxBase, QAxObject, QAxScript, {ActiveQt Framework}
 */
 
-const QMetaObjectExtraData QAxWidget::staticMetaObjectExtraData = {
-    0, qt_static_metacall
-};
-
 const QMetaObject QAxWidget::staticMetaObject = {
     { &QWidget::staticMetaObject, qt_meta_stringdata_QAxBase.data,
-      qt_meta_data_QAxBase, &staticMetaObjectExtraData }
+      qt_meta_data_QAxBase, qt_static_metacall, 0, 0 }
 };
 
 /*!
