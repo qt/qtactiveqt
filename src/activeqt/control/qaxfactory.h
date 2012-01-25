@@ -299,6 +299,18 @@ QT_END_NAMESPACE
 #ifndef Q_COM_METATYPE_DECLARED
 #define Q_COM_METATYPE_DECLARED
 
+QT_BEGIN_NAMESPACE namespace QtPrivate {
+template <> struct IsPointerToTypeDerivedFromQObject<IUnknown*> {
+    enum { Value = false };
+};
+} QT_END_NAMESPACE
+
+QT_BEGIN_NAMESPACE namespace QtPrivate {
+template <> struct IsPointerToTypeDerivedFromQObject<IDispatch*> {
+    enum { Value = false };
+};
+} QT_END_NAMESPACE
+
 Q_DECLARE_METATYPE(IUnknown*)
 Q_DECLARE_METATYPE(IDispatch*)
 
