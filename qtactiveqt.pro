@@ -13,8 +13,9 @@ activeqt_examples.depends = activeqt_src
 
 win32 {
     SUBDIRS = activeqt_src \
-              activeqt_tools \
-              activeqt_examples
+              activeqt_tools
+# fixme: Examples cause asserts in idc due to metaobject changes.
+#              activeqt_examples
 }
 else {
     message("ActiveQt is a Windows-only module - will not be built")
