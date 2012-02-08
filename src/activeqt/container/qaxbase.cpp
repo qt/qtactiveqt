@@ -3517,8 +3517,6 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
 
     case QMetaObject::WriteProperty:
         {
-            QVariant::Type t = (QVariant::Type)prop.type();
-
             DISPID dispidNamed = DISPID_PROPERTYPUT;
             params.cArgs = 1;
             params.cNamedArgs = 1;
@@ -3534,15 +3532,14 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
                 qvar = *(int*)v[0];
                 proptype = 0;
             } else {
-                if (t == QVariant::Type(QMetaType::QVariant) || t == QVariant::LastType) {
+                int typeId = prop.userType();
+                if (typeId == int(QMetaType::QVariant)) {
                     qvar = *(QVariant*)v[0];
                     proptype = 0;
-                } else if (t == QVariant::UserType) {
-                    qvar = QVariant(qRegisterMetaType<void*>(prop.typeName()), (void**)v[0]);
-//                    qvar.setValue(*(void**)v[0], prop.typeName());
                 } else {
-                    proptype = d->metaObject()->propertyType(propname);
-                    qvar = QVariant(t, v[0]);
+                    qvar = QVariant(typeId, v[0]);
+                    if (typeId < QMetaType::User)
+                        proptype = d->metaObject()->propertyType(propname);
                 }
             }
 
