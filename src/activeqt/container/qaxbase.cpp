@@ -4398,11 +4398,12 @@ QVariant QAxBase::asVariant() const
         else if (d->ptr)
             qvar.setValue(d->ptr);
     } else {
-        cn = cn.mid(cn.lastIndexOf(':') + 1);
+        cn = cn.mid(cn.lastIndexOf(':') + 1) + '*';
         QObject *object = qObject();
-        if (QMetaType::type(cn))
-            qvar = QVariant(qRegisterMetaType<QObject*>(cn + '*'), &object);
-//            qvar.setValue(qObject(), cn + '*');
+        int typeId = QMetaType::type(cn);
+        if (!typeId)
+            typeId = qRegisterMetaType<QObject *>(cn);
+        qvar = QVariant(typeId, &object);
     }
 
     return qvar;

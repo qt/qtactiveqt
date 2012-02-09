@@ -90,8 +90,9 @@ QAxFactory *qAxFactory()
         // register all types with metatype system as pointers
         QStringList keys(qax_factory->featureList());
         for (int i = 0; i < keys.count(); ++i) {
-            QString key(keys.at(i));
-            qRegisterMetaType((key + QLatin1Char('*')).toLatin1(), (void**)0);
+            QByteArray pointerType = keys.at(i).toLatin1() + '*';
+            if (!QMetaType::type(pointerType.constData()))
+                qRegisterMetaType<void *>(pointerType);
         }
     }
     return qax_factory;
@@ -493,8 +494,8 @@ static const char* const type_map[][2] =
 
 static QByteArray convertTypes(const QByteArray &qtype, bool *ok)
 {
-    qRegisterMetaType("IDispatch*", (void**)0);
-    qRegisterMetaType("IUnknown*", (void**)0);
+    qRegisterMetaType<IDispatch *>("IDispatch*");
+    qRegisterMetaType<IUnknown *>("IUnknown*");
 
     *ok = false;
     
@@ -1195,10 +1196,12 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
             QByteArray cleanType = qax_clean_type(*key, mo).toLatin1();
             out << "\tcoclass " << cleanType << ';' << endl;
             subtypes.append(cleanType);
-            qRegisterMetaType(cleanType, (void**)0);
+            if (!QMetaType::type(cleanType))
+                qRegisterMetaType<void *>(cleanType);
             cleanType += '*';
             subtypes.append(cleanType);
-            qRegisterMetaType(cleanType, (void**)0);
+            if (!QMetaType::type(cleanType))
+                qRegisterMetaType<void *>(cleanType);
         }
     }
     out << endl;
