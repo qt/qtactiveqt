@@ -1111,7 +1111,11 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                 if (iface) {
                     QObject *qObj = iface->qObject();
                     iface->Release();
-                    var = QVariant(qRegisterMetaType<QObject*>(qObj ? QByteArray(qObj->metaObject()->className()) + '*' : typeName), &qObj);
+                    QByteArray pointerType = qObj ? QByteArray(qObj->metaObject()->className()) + '*' : typeName;
+                    int pointerTypeId = QMetaType::type(pointerType);
+                    if (!pointerTypeId)
+                        pointerTypeId = qRegisterMetaType<QObject *>(pointerType);
+                    var = QVariant(pointerTypeId, &qObj);
                 } else
 #endif
                 {
