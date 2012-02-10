@@ -1296,11 +1296,11 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
         declOut << "}" << endl;
         declOut << endl;
 
-        // partial template specialization for qMetaTypeConstructHelper
+        // partial template specialization for qMetaTypeCreateHelper
         for (int t = 0; t < subtypes.count(); ++t) {
             QByteArray subType(subtypes.at(t));
             declOut << "template<>" << endl;
-            declOut << "inline void *qMetaTypeConstructHelper(const " << libName << "::" << subType << " *t)" << endl;
+            declOut << "inline void *qMetaTypeCreateHelper<" << libName << "::" << subType << " >(const void *t)" << endl;
             declOut << "{ Q_ASSERT(!t); return new " << libName << "::" << subType << "; }" << endl;
             declOut << endl;
         }
