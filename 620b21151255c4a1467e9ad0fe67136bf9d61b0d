@@ -1,0 +1,6 @@
+Sanity-Review+1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Code-Review+2: Friedemann Kleint <Friedemann.Kleint@nokia.com>
+Code-Review+2: João Abecasis <joao.abecasis@nokia.com>
+Reviewed-on: http://codereview.qt-project.org/15778
+Project: qt/qtactiveqt
+Branch: refs/heads/master
