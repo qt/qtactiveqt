@@ -114,7 +114,7 @@ protected:
     
 private:
     QAxScript *script;
-    unsigned long ref;
+    LONG ref;
 };
 
 /*
@@ -130,7 +130,7 @@ QAxScriptSite::QAxScriptSite(QAxScript *s)
 */
 ULONG WINAPI QAxScriptSite::AddRef()
 {
-    return ++ref;
+    return InterlockedIncrement(&ref);
 }
 
 /*
@@ -138,11 +138,11 @@ ULONG WINAPI QAxScriptSite::AddRef()
 */
 ULONG WINAPI QAxScriptSite::Release()
 {
-    if (!--ref) {
+    LONG refCount = InterlockedDecrement(&ref);
+    if (!refCount)
         delete this;
-        return 0;
-    }
-    return ref;
+
+    return refCount;
 }
 
 /*
