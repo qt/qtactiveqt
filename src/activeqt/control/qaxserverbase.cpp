@@ -173,26 +173,18 @@ public:
 	if (m_outerUnknown)
 	    return m_outerUnknown->AddRef();
 
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = ++ref;
-	LeaveCriticalSection(&refCountSection);
-
-	return r;
+        return InterlockedIncrement(&ref);
     }
     unsigned long WINAPI Release()
     {
     	if (m_outerUnknown)
 	    return m_outerUnknown->Release();
 
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = --ref;
-	LeaveCriticalSection(&refCountSection);
+        LONG refCount = InterlockedDecrement(&ref);
+        if (!refCount)
+            delete this;
 
-	if (!r) {
-	    delete this;
-	    return 0;
-	}
-	return r;
+        return refCount;
     }
     HRESULT WINAPI QueryInterface(REFIID iid, void **iface);
     HRESULT InternalQueryInterface(REFIID iid, void **iface);
@@ -393,7 +385,7 @@ private:
     CRITICAL_SECTION refCountSection;
     CRITICAL_SECTION createWindowSection;
 
-    unsigned long ref;
+    LONG ref;
     unsigned long ole_ref;
 
     QString class_name;
@@ -436,23 +428,15 @@ public:
 // IUnknown
     unsigned long WINAPI AddRef()
     {
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = ++ref;
-	LeaveCriticalSection(&refCountSection);
-
-	return r;
+        return InterlockedIncrement(&ref);
     }
     unsigned long WINAPI Release()
     {
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = --ref;
-	LeaveCriticalSection(&refCountSection);
+        LONG refCount = InterlockedDecrement(&ref);
+        if (!refCount)
+            delete this;
 
-	if (!r) {
-	    delete this;
-	    return 0;
-	}
-	return r;
+        return refCount;
     }
     HRESULT WINAPI QueryInterface(REFIID iid, void **iface)
     {
@@ -470,7 +454,7 @@ public:
 private:
     QAxServerBase *object;
     IUnknown *m_outerUnknown;
-    unsigned long ref;
+    LONG ref;
 
     CRITICAL_SECTION refCountSection;
     CRITICAL_SECTION createWindowSection;
@@ -521,22 +505,15 @@ public:
 
     unsigned long __stdcall AddRef()
     {
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = ++ref;
-	LeaveCriticalSection(&refCountSection);
-	return ++r;
+        return InterlockedIncrement(&ref);
     }
     unsigned long __stdcall Release()
     {
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = --ref;
-	LeaveCriticalSection(&refCountSection);
+        LONG refCount = InterlockedDecrement(&ref);
+        if (!refCount)
+            delete this;
 
-	if (!r) {
-	    delete this;
-	    return 0;
-	}
-	return r;
+        return refCount;
     }
     STDMETHOD(QueryInterface)(REFIID iid, void **iface)
     {
@@ -595,7 +572,7 @@ public:
 private:
     CRITICAL_SECTION refCountSection;
 
-    unsigned long ref;
+    LONG ref;
 };
 
 /*
@@ -635,22 +612,15 @@ public:
 
     unsigned long __stdcall AddRef()
     {
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = ++ref;
-	LeaveCriticalSection(&refCountSection);
-	return r;
+        return InterlockedIncrement(&ref);
     }
     unsigned long __stdcall Release()
     {
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = --ref;
-	LeaveCriticalSection(&refCountSection);
+        LONG refCount = InterlockedDecrement(&ref);
+        if (!refCount)
+            delete this;
 
-	if (!r) {
-	    delete this;
-	    return 0;
-	}
-	return r;
+        return refCount;
     }
     STDMETHOD(QueryInterface)(REFIID iid, void **iface)
     {
@@ -761,7 +731,7 @@ private:
     Iterator it;
 
     CRITICAL_SECTION refCountSection;
-    unsigned long ref;
+    LONG ref;
 };
 
 // callback for DLL server to hook into non-Qt eventloop
@@ -841,22 +811,15 @@ public:
     // IUnknown
     unsigned long WINAPI AddRef()
     {
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = ++ref;
-	LeaveCriticalSection(&refCountSection);
-	return ++r;
+        return InterlockedIncrement(&ref);
     }
     unsigned long WINAPI Release()
     {
-	EnterCriticalSection(&refCountSection);
-	unsigned long r = --ref;
-	LeaveCriticalSection(&refCountSection);
+        LONG refCount = InterlockedDecrement(&ref);
+        if (!refCount)
+            delete this;
 
-	if (!r) {
-	    delete this;
-	    return 0;
-	}
-	return r;
+        return refCount;
     }
     HRESULT WINAPI QueryInterface(REFIID iid, LPVOID *iface)
     {
@@ -984,7 +947,7 @@ public:
 
 protected:
     CRITICAL_SECTION refCountSection;
-    unsigned long ref;
+    LONG ref;
     bool licensed;
     QString classKey;
 };
