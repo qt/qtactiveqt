@@ -36,10 +36,10 @@
     consists of three classes:
 
     \list
-    \o QAxFactory defines a factory for the creation of COM objects.
-    \o QAxBindable provides an interface between the Qt widget and the 
+    \li QAxFactory defines a factory for the creation of COM objects.
+    \li QAxBindable provides an interface between the Qt widget and the
        COM object.
-    \o QAxAggregated can be subclassed to implement additional COM interfaces.
+    \li QAxAggregated can be subclassed to implement additional COM interfaces.
     \endlist
 
     Some \l{ActiveQt Examples}{example implementations} of ActiveX
@@ -76,13 +76,13 @@
     required build steps to the build system:
 
     \list
-    \o Link the binary against \c qaxserver.lib instead of \c qtmain.lib
-    \o Call the \l idc tool to generate an IDL file for the COM server
-    \o Compile the IDL into a type library using the MIDL tool (part of the
+    \li Link the binary against \c qaxserver.lib instead of \c qtmain.lib
+    \li Call the \l idc tool to generate an IDL file for the COM server
+    \li Compile the IDL into a type library using the MIDL tool (part of the
     compiler installation)
-    \o Attach the resulting type library as a binary resource to the server
+    \li Attach the resulting type library as a binary resource to the server
     binary (again using the \l idc tool)
-    \o Register the server
+    \li Register the server
     \endlist
 
     To skip the post-processing step, also set the \c qaxserver_no_postlink
@@ -126,11 +126,11 @@
     server has to meet some requirements:
 
     \list
-    \o All controls exposed can be created with nothing but a QApplication
+    \li All controls exposed can be created with nothing but a QApplication
     instance being present
-    \o The initial linking of the server includes a temporary type 
+    \li The initial linking of the server includes a temporary type
     library resource
-    \o All dependencies required to run the server are in the system path 
+    \li All dependencies required to run the server are in the system path
     (or in the path used by the calling environment; note that Visual 
     Studio has its own set of environment variables listed in the
     Tools|Options|Directories dialog).
@@ -228,47 +228,47 @@
 
     \table
     \header
-    \o Qt data type
-    \o COM property
+    \li Qt data type
+    \li COM property
     \row
-    \o bool
-    \o VARIANT_BOOL
+    \li bool
+    \li VARIANT_BOOL
     \row
-    \o QString
-    \o BSTR
+    \li QString
+    \li BSTR
     \row
-    \o int
-    \o int
+    \li int
+    \li int
     \row
-    \o uint
-    \o unsigned int
+    \li uint
+    \li unsigned int
     \row
-    \o double
-    \o double
+    \li double
+    \li double
     \row
-    \o \l qlonglong
-    \o CY
+    \li \l qlonglong
+    \li CY
     \row
-    \o \l qulonglong
-    \o CY
+    \li \l qulonglong
+    \li CY
     \row
-    \o QColor
-    \o OLE_COLOR
+    \li QColor
+    \li OLE_COLOR
     \row
-    \o QDate
-    \o DATE
+    \li QDate
+    \li DATE
     \row
-    \o QDateTime
-    \o DATE
+    \li QDateTime
+    \li DATE
     \row
-    \o QTime
-    \o DATE
+    \li QTime
+    \li DATE
     \row
-    \o QFont
-    \o IFontDisp*
+    \li QFont
+    \li IFontDisp*
     \row
-    \o QPixmap
-    \o IPictureDisp*
+    \li QPixmap
+    \li IPictureDisp*
     \footnote
     COM cannot marshal IPictureDisp accross process boundaries,
     so QPixmap properties cannot be called for out-of-process servers. You
@@ -278,132 +278,132 @@
     Q150034 \endlink for more information.
     \endfootnote
     \row
-    \o QVariant
-    \o VARIANT
+    \li QVariant
+    \li VARIANT
     \row
-    \o QVariantList (same as QList\<QVariant\>)
-    \o SAFEARRAY(VARIANT)
+    \li QVariantList (same as QList\<QVariant\>)
+    \li SAFEARRAY(VARIANT)
     \row
-    \o QStringList
-    \o SAFEARRAY(BSTR)
+    \li QStringList
+    \li SAFEARRAY(BSTR)
     \row
-    \o QByteArray
-    \o SAFEARRAY(BYTE)
+    \li QByteArray
+    \li SAFEARRAY(BYTE)
     \row
-    \o QRect
-    \o User defined type
+    \li QRect
+    \li User defined type
     \row
-    \o QSize
-    \o User defined type
+    \li QSize
+    \li User defined type
     \row
-    \o QPoint
-    \o User defined type
+    \li QPoint
+    \li User defined type
     \endtable
 
     The Qt data types that are supported for parameters in signals and
     slots are:
     \table
     \header
-    \o Qt data type
-    \o COM parameter
+    \li Qt data type
+    \li COM parameter
     \row
-    \o bool
-    \o [in] VARIANT_BOOL
+    \li bool
+    \li [in] VARIANT_BOOL
     \row
-    \o bool&
-    \o [in, out] VARIANT_BOOL*
+    \li bool&
+    \li [in, out] VARIANT_BOOL*
     \row
-    \o QString, const QString&
-    \o [in] BSTR
+    \li QString, const QString&
+    \li [in] BSTR
     \row
-    \o QString&
-    \o [in, out] BSTR*
+    \li QString&
+    \li [in, out] BSTR*
     \row
-    \o QString&
-    \o [in, out] BSTR*
+    \li QString&
+    \li [in, out] BSTR*
     \row
-    \o int
-    \o [in] int
+    \li int
+    \li [in] int
     \row
-    \o int&
-    \o [in,out] int
+    \li int&
+    \li [in,out] int
     \row
-    \o uint
-    \o [in] unsigned int
+    \li uint
+    \li [in] unsigned int
     \row
-    \o uint&
-    \o [in, out] unsigned int*
+    \li uint&
+    \li [in, out] unsigned int*
     \row
-    \o double
-    \o [in] double
+    \li double
+    \li [in] double
     \row
-    \o double&
-    \o [in, out] double*
+    \li double&
+    \li [in, out] double*
     \row
-    \o QColor, const QColor&
-    \o [in] OLE_COLOR
+    \li QColor, const QColor&
+    \li [in] OLE_COLOR
     \row
-    \o QColor&
-    \o [in, out] OLE_COLOR*
+    \li QColor&
+    \li [in, out] OLE_COLOR*
     \row
-    \o QDate, const QDate&
-    \o [in] DATE
+    \li QDate, const QDate&
+    \li [in] DATE
     \row
-    \o QDate&
-    \o [in, out] DATE*
+    \li QDate&
+    \li [in, out] DATE*
     \row
-    \o QDateTime, const QDateTime&
-    \o [in] DATE
+    \li QDateTime, const QDateTime&
+    \li [in] DATE
     \row
-    \o QDateTime&
-    \o [in, out] DATE*
+    \li QDateTime&
+    \li [in, out] DATE*
     \row
-    \o QFont, const QFont&
-    \o [in] IFontDisp*
+    \li QFont, const QFont&
+    \li [in] IFontDisp*
     \row
-    \o QFont&
-    \o [in, out] IFontDisp**
+    \li QFont&
+    \li [in, out] IFontDisp**
     \row
-    \o QPixmap, const QPixmap&
-    \o [in] IPictureDisp*
+    \li QPixmap, const QPixmap&
+    \li [in] IPictureDisp*
     \row
-    \o QPixmap&
-    \o [in, out] IPictureDisp**
+    \li QPixmap&
+    \li [in, out] IPictureDisp**
     \row
-    \o QList\<QVariant\>, const QList\<QVariant\>&
-    \o [in] SAFEARRAY(VARIANT)
+    \li QList\<QVariant\>, const QList\<QVariant\>&
+    \li [in] SAFEARRAY(VARIANT)
     \row
-    \o QList\<QVariant\>&
-    \o [in, out] SAFEARRAY(VARIANT)*
+    \li QList\<QVariant\>&
+    \li [in, out] SAFEARRAY(VARIANT)*
     \row
-    \o QStringList, const QStringList&
-    \o [in] SAFEARRAY(BSTR)
+    \li QStringList, const QStringList&
+    \li [in] SAFEARRAY(BSTR)
     \row
-    \o QStringList&
-    \o [in, out] SAFEARRAY(BSTR)*
+    \li QStringList&
+    \li [in, out] SAFEARRAY(BSTR)*
     \row
-    \o QByteArray, const QByteArray&
-    \o [in] SAFEARRAY(BYTE)
+    \li QByteArray, const QByteArray&
+    \li [in] SAFEARRAY(BYTE)
     \row
-    \o QByteArray&
-    \o [in, out] SAFEARRAY(BYTE)*
+    \li QByteArray&
+    \li [in, out] SAFEARRAY(BYTE)*
     \row
-    \o QObject*
-    \o [in] IDispatch*
+    \li QObject*
+    \li [in] IDispatch*
     \row
-    \o QRect&
+    \li QRect&
     \footnote
     OLE needs to marshal user defined types by reference (ByRef), and cannot 
     marshal them by value (ByVal). This is why const-references and object
     parameters are not supported for QRect, QSize and QPoint.
     \endfootnote
-    \o [in, out] struct QRect (user defined)
+    \li [in, out] struct QRect (user defined)
     \row
-    \o QSize&
-    \o [in, out] struct QSize (user defined)
+    \li QSize&
+    \li [in, out] struct QSize (user defined)
     \row
-    \o QPoint&
-    \o [in, out] struct QPoint (user defined)
+    \li QPoint&
+    \li [in, out] struct QPoint (user defined)
     \endtable
 
     Also supported are exported enums and flags (see Q_ENUMS() and
@@ -485,11 +485,11 @@
     If the ActiveX server is an executable, the following command line
     options are supported:
     \table
-    \header \o Option \o Result
-    \row \o \c -regserver \o Registers the server in the system registry
-    \row \o \c -unregserver \o Unregisters the server from the system registry
-    \row \o \c -activex \o Starts the application as an ActiveX server
-    \row \o \c{-dumpidl <file> -version x.y} \o Writes the server's IDL to the
+    \header \li Option \li Result
+    \row \li \c -regserver \li Registers the server in the system registry
+    \row \li \c -unregserver \li Unregisters the server from the system registry
+    \row \li \c -activex \li Starts the application as an ActiveX server
+    \row \li \c{-dumpidl <file> -version x.y} \li Writes the server's IDL to the
     specified file. The type library will have version x.y
     \endtable
 
@@ -616,14 +616,14 @@
     ActiveQt. Note that some clients support only in-process controls.
 
     \list
-    \o Internet Explorer
-    \o Microsoft ActiveX Control Test Container
-    \o Microsoft Visual Studio 6.0
-    \o Microsoft Visual Studio.NET/2003
-    \o Microsoft Visual Basic 6.0
-    \o MFC- and ATL-based containers
-    \o Sybase PowerBuilder
-    \o ActiveQt based containers
+    \li Internet Explorer
+    \li Microsoft ActiveX Control Test Container
+    \li Microsoft Visual Studio 6.0
+    \li Microsoft Visual Studio.NET/2003
+    \li Microsoft Visual Basic 6.0
+    \li MFC- and ATL-based containers
+    \li Sybase PowerBuilder
+    \li ActiveQt based containers
     \endlist
 
     Microsoft Office applications are supported, but you need to register
@@ -637,8 +637,8 @@
     following client applications.
 
     \list
-    \o Borland C++ Builder (Versions 5 and 6)
-    \o Borland Delphi
+    \li Borland C++ Builder (Versions 5 and 6)
+    \li Borland Delphi
     \endlist
 
     \section2 Typical Runtime Errors
@@ -686,76 +686,76 @@
 
     \table
     \header
-    \o Key
-    \o Meaning of value
+    \li Key
+    \li Meaning of value
     \row
-    \o Version
-    \o The version of the class (1.0 is default)
+    \li Version
+    \li The version of the class (1.0 is default)
     \row
-    \o Description
-    \o A string describing the class.
+    \li Description
+    \li A string describing the class.
     \row
-    \o ClassID
-    \o The class ID.
+    \li ClassID
+    \li The class ID.
        You must reimplement QAxFactory::classID if not specified.
     \row
-    \o InterfaceID
-    \o The interface ID. 
+    \li InterfaceID
+    \li The interface ID.
        You must reimplement QAxFactory::interfaceID if not specified.
     \row
-    \o EventsID
-    \o The event interface ID.
+    \li EventsID
+    \li The event interface ID.
        No signals are exposed as COM events if not specified.
     \row
-    \o DefaultProperty
-    \o The property specified represents the default property of this class.
+    \li DefaultProperty
+    \li The property specified represents the default property of this class.
        Ie. the default property of a push button would be "text".
     \row
-    \o DefaultSignal
-    \o The signal specified respresents the default signal of this class.
+    \li DefaultSignal
+    \li The signal specified respresents the default signal of this class.
        Ie. the default signal of a push button would be "clicked".
     \row
-    \o LicenseKey
-    \o Object creation requires the specified license key. The key can be
+    \li LicenseKey
+    \li Object creation requires the specified license key. The key can be
        empty to require a licensed machine. By default classes are not
        licensed. Also see the following section.
     \row
-    \o StockEvents
-    \o Objects expose stock events if value is "yes".
+    \li StockEvents
+    \li Objects expose stock events if value is "yes".
        See \l QAxFactory::hasStockEvents()
     \row
-    \o ToSuperClass
-    \o Objects expose functionality of all super-classes up to and
+    \li ToSuperClass
+    \li Objects expose functionality of all super-classes up to and
        including the class name in value.
        See \l QAxFactory::exposeToSuperClass()
     \row
-    \o Insertable
-    \o If the value is "yes" the class is registered to be "Insertable" 
+    \li Insertable
+    \li If the value is "yes" the class is registered to be "Insertable"
        and will be listed in OLE 2 containers (ie. Microsoft Office). This 
        attribute is not be set by default.
     \row
-    \o Aggregatable
-    \o If the value is "no" the class does not support aggregation. By 
+    \li Aggregatable
+    \li If the value is "no" the class does not support aggregation. By
        default aggregation is supported.
     \row
-    \o Creatable
-    \o If the value is "no" the class cannot be created by the client,
+    \li Creatable
+    \li If the value is "no" the class cannot be created by the client,
        and is only available through the API of another class (ie. the
        class is a sub-type).
     \row
-    \o RegisterObject
-    \o If the value is "yes" objects of this class are registered with
+    \li RegisterObject
+    \li If the value is "yes" objects of this class are registered with
        OLE and accessible from the running object table (ie. clients
        can connect to an already running instance of this class). This
        attribute is only supported in out-of-process servers.
     \row
-    \o MIME
-    \o The object can handle data and files of the format specified in the 
+    \li MIME
+    \li The object can handle data and files of the format specified in the
        value. The value has the format mime:extension:description. Multiple 
        formats are separated by a semicolon.
     \row
-    \o CoClassAlias
-    \o The classname used in the generated IDL and in the registry. This is
+    \li CoClassAlias
+    \li The classname used in the generated IDL and in the registry. This is
        esp. useful for C++ classes that live in a namespace - by default, 
        ActiveQt just removes the "::" to make the IDL compile.
     \endtable

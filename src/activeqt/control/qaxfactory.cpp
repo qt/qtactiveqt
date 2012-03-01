@@ -324,14 +324,14 @@ bool QAxFactory::stayTopLevel(const QString &key) const
     Reimplement this function to return true if the ActiveX control
     \a key should support the standard ActiveX events
     \list
-    \i Click
-    \i DblClick
-    \i KeyDown
-    \i KeyPress
-    \i KeyUp
-    \i MouseDown
-    \i MouseUp
-    \i MouseMove
+    \li Click
+    \li DblClick
+    \li KeyDown
+    \li KeyPress
+    \li KeyUp
+    \li MouseDown
+    \li MouseUp
+    \li MouseMove
     \endlist
 
     The default implementation interprets \a key as the class name,

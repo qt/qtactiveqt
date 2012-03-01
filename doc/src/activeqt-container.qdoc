@@ -44,11 +44,11 @@
 
     The module consists of six classes
     \list 1
-    \o QAxBase is an abstract class that provides an API to initialize 
+    \li QAxBase is an abstract class that provides an API to initialize
        and access a COM object or ActiveX control.
-    \o QAxObject provides a QObject that wraps a COM object.
-    \o QAxWidget is a QWidget that wraps an ActiveX control.
-    \o QAxScriptManager, QAxScript and QAxScriptEngine provide an 
+    \li QAxObject provides a QObject that wraps a COM object.
+    \li QAxWidget is a QWidget that wraps an ActiveX control.
+    \li QAxScriptManager, QAxScript and QAxScriptEngine provide an
        interface to the Windows Script Host.
     \endlist
 
@@ -115,10 +115,10 @@
     There are four ways to call APIs on the COM object:
 
     \list
-    \o Generating a C++ namespace
-    \o Call-by-name
-    \o Through a script engine
-    \o Using the native COM interfaces
+    \li Generating a C++ namespace
+    \li Call-by-name
+    \li Through a script engine
+    \li Using the native COM interfaces
     \endlist
 
     \section2 Generating a C++ Namespace
