@@ -67,8 +67,6 @@ static inline QWindow *windowForWidget(QWidget *widget)
 
 HWND hwndForWidget(QWidget *widget)
 {
-    QWindow *window = widget->windowHandle();
-    return static_cast<HWND> (QGuiApplication::platformNativeInterface()->nativeResourceForWindow("handle", window));
     if (QWindow *window = windowForWidget(widget))
         return static_cast<HWND> (QGuiApplication::platformNativeInterface()->nativeResourceForWindow("handle", window));
     return 0;

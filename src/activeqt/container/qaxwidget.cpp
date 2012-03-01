@@ -192,9 +192,8 @@ public:
             return OLE_E_NOT_INPLACEACTIVE;
 
         RECT rcPos = { host->x(), host->y(), host->x()+host->width(), host->y()+host->height() };
-        // FIXME: 4.10.2011 Does this work with the parent's HWND?
         return m_spOleObject->DoVerb(index, 0, this, 0,
-                                     hwndForWidget(host),
+                                     (HWND)host->winId(),
                                      &rcPos);
     }
 
@@ -293,17 +292,17 @@ public:
     }
     STDMETHOD(ReleaseDC)(HDC hDC)
     {
-        ::ReleaseDC(widget->winId(), hDC);
+        ::ReleaseDC((HWND)widget->winId(), hDC);
         return S_OK;
     }
     STDMETHOD(InvalidateRect)(LPCRECT pRect, BOOL fErase)
     {
-        ::InvalidateRect(host->winId(), pRect, fErase);
+        ::InvalidateRect((HWND)host->winId(), pRect, fErase);
         return S_OK;
     }
     STDMETHOD(InvalidateRgn)(HRGN hRGN, BOOL fErase)
     {
-        ::InvalidateRgn(host->winId(), hRGN, fErase);
+        ::InvalidateRgn((HWND)host->winId(), hRGN, fErase);
         return S_OK;
     }
     STDMETHOD(ScrollRect)(int /*dx*/, int /*dy*/, LPCRECT /*pRectScroll*/, LPCRECT /*pRectClip*/)
@@ -498,8 +497,7 @@ bool axc_FilterProc(void *m)
         }
         if (host)
             ax = qobject_cast<QAxWidget*>(host->parentWidget());
-        // FIXME: 4.10.2011 Does this work with the parent's HWND?
-        if (ax && msg->hwnd != hwndForWidget(host)) {
+        if (ax && msg->hwnd != (HWND)host->winId()) {
             if (message >= WM_KEYFIRST && message <= WM_KEYLAST) {
                 QAxClientSite *site = host->clientSite();
                 site->eventTranslated = true; // reset in QAxClientSite::TranslateAccelerator
@@ -709,9 +707,8 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
 
         RECT rcPos = { host->x(), host->y(), host->x()+sizehint.width(), host->y()+sizehint.height() };
 
-        // FIXME: 4.10.2011 Does this work with the parent's HWND?
         hr = m_spOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, 0, (IOleClientSite*)this, 0,
-                                   hwndForWidget(host),
+                                   (HWND)host->winId(),
                                    &rcPos);
 
         if (!m_spOleControl)
@@ -1019,8 +1016,7 @@ HRESULT WINAPI QAxClientSite::TranslateAccelerator(LPMSG lpMsg, DWORD /*grfModif
         // if the request is coming from an out-of-proc server or a non ActiveQt server,
         // we send the message to the host window. This will make sure this key event
         // comes to Qt for processing.
-        // FIXME: 4.10.2011 Does this work with the parent's HWND?
-        SendMessage(hwndForWidget(host), lpMsg->message, lpMsg->wParam, lpMsg->lParam);
+        SendMessage((HWND)host->winId(), lpMsg->message, lpMsg->wParam, lpMsg->lParam);
         if (ActiveQtDetected && !fromInProcServer) {
             // ActiveQt based servers will need further processing of the event
             // (eg. <SPACE> key for a checkbox), so we return false.
@@ -1055,7 +1051,7 @@ HRESULT WINAPI QAxClientSite::GetWindow(HWND *phwnd)
     if (!phwnd)
         return E_POINTER;
 
-    *phwnd = hwndForWidget(host);
+    *phwnd = (HWND)host->winId();
     return S_OK;
 }
 
@@ -1108,11 +1104,10 @@ HRESULT WINAPI QAxClientSite::GetWindowContext(IOleInPlaceFrame **ppFrame, IOleI
     if (!ppFrame || !ppDoc || !lprcPosRect || !lprcClipRect || !lpFrameInfo)
         return E_POINTER;
 
-    // FIXME: 4.10.2011 Does this work with the parent's HWND?
     QueryInterface(IID_IOleInPlaceFrame, (void**)ppFrame);
     QueryInterface(IID_IOleInPlaceUIWindow, (void**)ppDoc);
 
-    const HWND hwnd = hwndForWidget(host);
+    const HWND hwnd = (HWND)host->winId();
     ::GetClientRect(hwnd, lprcPosRect);
     ::GetClientRect(hwnd, lprcClipRect);
 
@@ -1400,7 +1395,6 @@ HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND
         menuItemMap.clear();
     }
 
-    // FIXME: 4.10.2011: Parent's HWND required, should work.
     OleSetMenuDescriptor(holemenu, widget ? hwndForWidget(widget) : 0, m_menuOwner, this, m_spInPlaceActiveObject);
     return S_OK;
 #endif
@@ -1458,7 +1452,6 @@ extern Q_GUI_EXPORT bool qt_win_ignoreNextMouseReleaseEvent;
 
 HRESULT WINAPI QAxClientSite::EnableModeless(BOOL fEnable)
 {
-    // FIXME: 4.10.2011 Does this work with the parent's HWND?
     EnableWindow(hwndForWidget(host), fEnable);
 
     if (!fEnable) {
@@ -1605,9 +1598,8 @@ HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
 
     m_spActiveView->UIActivate(TRUE);
 
-    // FIXME: 4.10.2011 Does this work with the parent's HWND?
     RECT rect;
-    GetClientRect(hwndForWidget(widget), &rect);
+    GetClientRect((HWND)widget->winId(), &rect);
     m_spActiveView->SetRect(&rect);
     m_spActiveView->Show(TRUE);
 
@@ -1704,7 +1696,7 @@ void QAxHostWidget::resizeObject()
     // document server - talk to view?
     if (axhost->m_spActiveView) {
         RECT rect;
-        GetClientRect(hwndForWidget(this), &rect);
+        GetClientRect((HWND)winId(), &rect);
         axhost->m_spActiveView->SetRect(&rect);
 
         return;
@@ -1756,18 +1748,16 @@ bool QAxHostWidget::event(QEvent *e)
             killTimer(setFocusTimer);
             setFocusTimer = 0;
             RECT rcPos = { x(), y(), x()+size().width(), y()+size().height() };
-            // FIXME: 4.10.2011 Does this work with the parent's HWND?
             axhost->m_spOleObject->DoVerb(OLEIVERB_UIACTIVATE, 0, (IOleClientSite*)axhost, 0,
-                                          hwndForWidget(this),
-                                          &rcPos);
+                (HWND)winId(),
+                &rcPos);
             if (axhost->m_spActiveView)
                 axhost->m_spActiveView->UIActivate(TRUE);
         }
         break;
     case QEvent::WindowBlocked:
-        // FIXME: 4.10.2011 Does this work with the parent's HWND?
-        if (IsWindowEnabled(hwndForWidget(this))) {
-            EnableWindow(hwndForWidget(this), false);
+        if (IsWindowEnabled((HWND)winId())) {
+            EnableWindow((HWND)winId(), false);
             if (axhost && axhost->m_spInPlaceActiveObject) {
                 axhost->inPlaceModelessEnabled = false;
                 axhost->m_spInPlaceActiveObject->EnableModeless(false);
@@ -1775,9 +1765,8 @@ bool QAxHostWidget::event(QEvent *e)
         }
         break;
     case QEvent::WindowUnblocked:
-        // FIXME: 4.10.2011 Does this work with the parent's HWND?
-        if (!IsWindowEnabled(hwndForWidget(this))) {
-            EnableWindow(hwndForWidget(this), true);
+        if (!IsWindowEnabled((HWND)winId())) {
+            EnableWindow((HWND)winId(), true);
             if (axhost && axhost->m_spInPlaceActiveObject) {
                 axhost->inPlaceModelessEnabled = true;
                 axhost->m_spInPlaceActiveObject->EnableModeless(true);
