@@ -49,9 +49,9 @@
     Qt's ActiveX and COM support allows Qt for Windows developers to:
 
     \list 1
-    \o Access and use ActiveX controls and COM objects provided by any 
+    \li Access and use ActiveX controls and COM objects provided by any 
     ActiveX server in their Qt applications.
-    \o Make their Qt applications available as COM servers, with
+    \li Make their Qt applications available as COM servers, with
     any number of Qt objects and widgets as COM objects and ActiveX 
     controls.
     \endlist
@@ -62,11 +62,11 @@
     The ActiveQt framework consists of two modules:
 
     \list
-    \o The \l{Using ActiveX controls and COM in Qt}{QAxContainer}
+    \li The \l{Using ActiveX controls and COM in Qt}{QAxContainer}
        module is a static library implementing QObject and QWidget subclasses,
        QAxObject and QAxWidget, that act as containers for COM objects and
        ActiveX controls.
-    \o The \l{Building ActiveX servers in Qt}{QAxServer}
+    \li The \l{Building ActiveX servers in Qt}{QAxServer}
        module is a static library that implements
        functionality for in-process and executable COM servers. This
        module provides the QAxAggregated, QAxBindable and QAxFactory

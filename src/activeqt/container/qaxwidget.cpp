@@ -2239,13 +2239,13 @@ void QAxWidget::connectNotify(const char *)
 
     \table
     \header
-    \i WM_SYSKEYDOWN
-    \i WM_SYSKEYUP
-    \i WM_KEYDOWN
+    \li WM_SYSKEYDOWN
+    \li WM_SYSKEYUP
+    \li WM_KEYDOWN
     \row
-    \i All keycodes
-    \i VK_MENU
-    \i VK_TAB, VK_DELETE and all non-arrow-keys in combination with VK_SHIFT,
+    \li All keycodes
+    \li VK_MENU
+    \li VK_TAB, VK_DELETE and all non-arrow-keys in combination with VK_SHIFT,
        VK_CONTROL or VK_MENU
     \endtable
 

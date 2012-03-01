@@ -1341,14 +1341,14 @@ class HackWidget : public QWidget
     Message handler. \a hWnd is always the ActiveX widget hosting the Qt widget.
     \a uMsg is handled as follows
     \list
-    \i WM_CREATE The ActiveX control is created
-    \i WM_DESTROY The QWidget is destroyed
-    \i WM_SHOWWINDOW The QWidget is parented into the ActiveX window
-    \i WM_PAINT The QWidget is updated
-    \i WM_SIZE The QWidget is resized to the new size
-    \i WM_SETFOCUS and
-    \i WM_KILLFOCUS The client site is notified about the focus transfer
-    \i WM_MOUSEACTIVATE The ActiveX is activated
+    \li WM_CREATE The ActiveX control is created
+    \li WM_DESTROY The QWidget is destroyed
+    \li WM_SHOWWINDOW The QWidget is parented into the ActiveX window
+    \li WM_PAINT The QWidget is updated
+    \li WM_SIZE The QWidget is resized to the new size
+    \li WM_SETFOCUS and
+    \li WM_KILLFOCUS The client site is notified about the focus transfer
+    \li WM_MOUSEACTIVATE The ActiveX is activated
     \endlist
 
     The semantics of \a wParam and \a lParam depend on the value of \a uMsg.

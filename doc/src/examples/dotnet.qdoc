@@ -98,7 +98,7 @@
     or \c {examples/dotnet/wrapper/wrapper.sln} into the IDE and run
     the solution.
 
-    \bold{Remark:} You will notice that in the generated code the following line is
+    \b{Remark:} You will notice that in the generated code the following line is
     commented out:
 
     \snippet doc/src/snippets/code/doc_src_examples_activeqt_dotnet.qdoc 0

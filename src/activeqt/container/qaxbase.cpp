@@ -726,105 +726,105 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     type that is used in the prototype of signals and slots for out-parameters.
     \table
     \header
-    \i COM type
-    \i Qt property
-    \i in-parameter
-    \i out-parameter
+    \li COM type
+    \li Qt property
+    \li in-parameter
+    \li out-parameter
     \row
-    \i VARIANT_BOOL
-    \i bool
-    \i bool
-    \i bool&
+    \li VARIANT_BOOL
+    \li bool
+    \li bool
+    \li bool&
     \row
-    \i BSTR
-    \i QString
-    \i const QString&
-    \i QString&
+    \li BSTR
+    \li QString
+    \li const QString&
+    \li QString&
     \row
-    \i char, short, int, long
-    \i int
-    \i int
-    \i int&
+    \li char, short, int, long
+    \li int
+    \li int
+    \li int&
     \row
-    \i uchar, ushort, uint, ulong
-    \i uint
-    \i uint
-    \i uint&
+    \li uchar, ushort, uint, ulong
+    \li uint
+    \li uint
+    \li uint&
     \row
-    \i float, double
-    \i double
-    \i double
-    \i double&
+    \li float, double
+    \li double
+    \li double
+    \li double&
     \row
-    \i DATE
-    \i QDateTime
-    \i const QDateTime&
-    \i QDateTime&
+    \li DATE
+    \li QDateTime
+    \li const QDateTime&
+    \li QDateTime&
     \row
-    \i CY
-    \i qlonglong
-    \i qlonglong
-    \i qlonglong&
+    \li CY
+    \li qlonglong
+    \li qlonglong
+    \li qlonglong&
     \row
-    \i OLE_COLOR
-    \i QColor
-    \i const QColor&
-    \i QColor&
+    \li OLE_COLOR
+    \li QColor
+    \li const QColor&
+    \li QColor&
     \row
-    \i SAFEARRAY(VARIANT)
-    \i QList\<QVariant\>
-    \i const QList\<QVariant\>&
-    \i QList\<QVariant\>&
+    \li SAFEARRAY(VARIANT)
+    \li QList\<QVariant\>
+    \li const QList\<QVariant\>&
+    \li QList\<QVariant\>&
     \row
-    \i SAFEARRAY(int), SAFEARRAY(double), SAFEARRAY(Date)
-    \i QList\<QVariant\>
-    \i const QList\<QVariant\>&
-    \i QList\<QVariant\>&
+    \li SAFEARRAY(int), SAFEARRAY(double), SAFEARRAY(Date)
+    \li QList\<QVariant\>
+    \li const QList\<QVariant\>&
+    \li QList\<QVariant\>&
     \row
-    \i SAFEARRAY(BYTE)
-    \i QByteArray
-    \i const QByteArray&
-    \i QByteArray&
+    \li SAFEARRAY(BYTE)
+    \li QByteArray
+    \li const QByteArray&
+    \li QByteArray&
     \row
-    \i SAFEARRAY(BSTR)
-    \i QStringList
-    \i const QStringList&
-    \i QStringList&
+    \li SAFEARRAY(BSTR)
+    \li QStringList
+    \li const QStringList&
+    \li QStringList&
     \row
-    \i VARIANT
-    \i type-dependent
-    \i const QVariant&
-    \i QVariant&
+    \li VARIANT
+    \li type-dependent
+    \li const QVariant&
+    \li QVariant&
     \row
-    \i IFontDisp*
-    \i QFont
-    \i const QFont&
-    \i QFont&
+    \li IFontDisp*
+    \li QFont
+    \li const QFont&
+    \li QFont&
     \row
-    \i IPictureDisp*
-    \i QPixmap
-    \i const QPixmap&
-    \i QPixmap&
+    \li IPictureDisp*
+    \li QPixmap
+    \li const QPixmap&
+    \li QPixmap&
     \row
-    \i IDispatch*
-    \i QAxObject*
-    \i \c QAxBase::asVariant()
-    \i QAxObject* (return value)
+    \li IDispatch*
+    \li QAxObject*
+    \li \c QAxBase::asVariant()
+    \li QAxObject* (return value)
     \row
-    \i IUnknown*
-    \i QAxObject*
-    \i \c QAxBase::asVariant()
-    \i QAxObject* (return value)
+    \li IUnknown*
+    \li QAxObject*
+    \li \c QAxBase::asVariant()
+    \li QAxObject* (return value)
     \row
-    \i SCODE, DECIMAL
-    \i \e unsupported
-    \i \e unsupported
-    \i \e unsupported
+    \li SCODE, DECIMAL
+    \li \e unsupported
+    \li \e unsupported
+    \li \e unsupported
     \row
-    \i VARIANT* (Since Qt 4.5)
-    \i \e unsupported
-    \i \e QVariant&
-    \i \e QVariant&
+    \li VARIANT* (Since Qt 4.5)
+    \li \e unsupported
+    \li \e QVariant&
+    \li \e QVariant&
     \endtable
 
     Supported are also enumerations, and typedefs to supported types.
@@ -965,16 +965,16 @@ QAxMetaObject *QAxBase::internalMetaObject() const
     to initialize the control on a remote machine, to initialize a
     licensed control or to connect to a running object:
     \list
-    \i To initialize the control on a different machine use the following
+    \li To initialize the control on a different machine use the following
     pattern:
 
     \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 11
 
-    \i To initialize a licensed control use the following pattern:
+    \li To initialize a licensed control use the following pattern:
 
     \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 12
 
-    \i To connect to an already running object use the following pattern:
+    \li To connect to an already running object use the following pattern:
 
     \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 13
 
