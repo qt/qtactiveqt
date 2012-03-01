@@ -56,22 +56,9 @@
 
 QT_BEGIN_NAMESPACE
 
-static inline QWindow *windowForWidget(QWidget *widget)
-{
-    if (QWindow *window = widget->windowHandle())
-        return window;
-    if (QWidget *nativeParent = widget->nativeParentWidget())
-        return nativeParent->windowHandle();
-    return 0;
-}
-
 HWND hwndForWidget(QWidget *widget)
 {
-    QWindow *window = widget->windowHandle();
-    return static_cast<HWND> (QGuiApplication::platformNativeInterface()->nativeResourceForWindow("handle", window));
-    if (QWindow *window = windowForWidget(widget))
-        return static_cast<HWND> (QGuiApplication::platformNativeInterface()->nativeResourceForWindow("handle", window));
-    return 0;
+    return (HWND)widget->winId();
 }
 
 // Code courtesy of the Windows platform plugin (see pixmaputils.cpp/h).
