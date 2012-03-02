@@ -401,7 +401,7 @@ public:
             Q_ASSERT(index != -1);
             const QMetaMethod signal = meta->method(index);
             Q_ASSERT(signal.methodType() == QMetaMethod::Signal);
-            Q_ASSERT(signame == signal.signature());
+            Q_ASSERT(signame == signal.methodSignature());
             // verify parameter count
             int pcount = axmeta->numParameter(signame);
             int argcount = pDispParams->cArgs;
@@ -3190,7 +3190,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     // put the metaobject together
     metaobj->d.data = int_data;
     metaobj->d.extradata = 0;
-    metaobj->d.stringdata = string_data;
+    metaobj->d.stringdata = reinterpret_cast<const QByteArrayData *>(string_data);
     metaobj->d.superdata = parentObject;
 
     if (d)
@@ -3243,11 +3243,11 @@ static const char qt_meta_stringdata_QAxBase[] = {
 };
 
 static QMetaObject qaxobject_staticMetaObject = {
-    { &QObject::staticMetaObject, qt_meta_stringdata_QAxBase,
+    { &QObject::staticMetaObject, reinterpret_cast<const QByteArrayData *>(qt_meta_stringdata_QAxBase),
         qt_meta_data_QAxBase, 0 }
 };
 static QMetaObject qaxwidget_staticMetaObject = {
-    { &QWidget::staticMetaObject, qt_meta_stringdata_QAxBase,
+    { &QWidget::staticMetaObject, reinterpret_cast<const QByteArrayData *>(qt_meta_stringdata_QAxBase),
         qt_meta_data_QAxBase, 0 }
 };
 
@@ -3612,7 +3612,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     const QMetaMethod slot = mo->method(index + mo->methodOffset());
     Q_ASSERT(slot.methodType() == QMetaMethod::Slot);
 
-    QByteArray signature(slot.signature());
+    QByteArray signature(slot.methodSignature());
     QByteArray slotname(signature);
     slotname.truncate(slotname.indexOf('('));
 
@@ -3764,7 +3764,7 @@ static void qax_noSuchFunction(int disptype, const QByteArray &name, const QByte
             const QMetaMethod slot(metaObject->method(i));
             if (slot.methodType() != QMetaMethod::Slot)
                 continue;
-            QByteArray signature = slot.signature();
+            QByteArray signature = slot.methodSignature();
             if (signature.toLower().startsWith(function.toLower()))
                 qWarning("\t\t%s", signature.data());
         }
@@ -3825,7 +3825,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
         if (id >= 0) {
             const QMetaMethod slot = mo->method(id);
             Q_ASSERT(slot.methodType() == QMetaMethod::Slot);
-            function = slot.signature();
+            function = slot.methodSignature();
             type = slot.typeName();
         }
         function.truncate(function.indexOf('('));

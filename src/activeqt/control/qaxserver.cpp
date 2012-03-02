@@ -920,7 +920,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
             outBuffer = QByteArray();
         }
         
-        QByteArray signature(slot.signature());
+        QByteArray signature(slot.methodSignature());
         QByteArray name(signature.left(signature.indexOf('(')));
         if (i <= qtSlots && ignoreSlots(name))
             continue;
@@ -989,7 +989,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
             if (signal.methodType() != QMetaMethod::Signal)
                 continue;
             
-            QByteArray signature(signal.signature());
+            QByteArray signature(signal.methodSignature());
             QByteArray name(signature.left(signature.indexOf('(')));
             signature = signature.mid(name.length() + 1);
             signature.truncate(signature.length() - 1);
