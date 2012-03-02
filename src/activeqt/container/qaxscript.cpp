@@ -747,7 +747,7 @@ QStringList QAxScript::functions(FunctionFlags flags) const
        const QMetaMethod slot(mo->method(i));
        if (slot.methodType() != QMetaMethod::Slot || slot.access() != QMetaMethod::Public)
             continue;
-        QString slotname = QString::fromLatin1(slot.signature());
+        QString slotname = QString::fromLatin1(slot.methodSignature());
         if (slotname.contains(QLatin1Char('_')))
             continue;
         
