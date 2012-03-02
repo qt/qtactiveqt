@@ -418,7 +418,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         }
 #endif
 
-        QByteArray slotSignature(slot.signature());
+        QByteArray slotSignature(slot.methodSignature());
         QByteArray slotName = slotSignature.left(slotSignature.indexOf('('));
         if (functions.contains(slotName))
             continue;
@@ -619,7 +619,7 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
             if (signal.methodType() != QMetaMethod::Signal)
                 continue;
             out << "       ";
-            addString(signal.signature(), stringData);
+            addString(signal.methodSignature().constData(), stringData);
             addString(joinParameterNames(signal.parameterNames()), stringData);
             addString(signal.typeName(), stringData);
             addString(signal.tag(), stringData);
@@ -635,7 +635,7 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
             if (slot.methodType() != QMetaMethod::Slot)
                 continue;
             out << "       ";
-            addString(slot.signature(), stringData);
+            addString(slot.methodSignature().constData(), stringData);
             addString(joinParameterNames(slot.parameterNames()), stringData);
             addString(slot.typeName(), stringData);
             addString(slot.tag(), stringData);
