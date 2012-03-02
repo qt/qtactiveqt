@@ -1944,7 +1944,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
             signal = mo->method(index);
             Q_ASSERT(signal.methodType() == QMetaMethod::Signal);
             type = signal.typeName();
-            QByteArray signature(signal.signature());
+            QByteArray signature(signal.methodSignature());
             QByteArray name(signature);
             name.truncate(name.indexOf('('));
 
@@ -2345,7 +2345,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 		if (index == -1) {
 		    for (int i = 0; i < mo->methodCount(); ++i) {
                         const QMetaMethod slot(mo->method(i));
-                        if (slot.methodType() == QMetaMethod::Slot && QByteArray(slot.signature()).startsWith(name)) {
+                        if (slot.methodType() == QMetaMethod::Slot && slot.methodSignature().startsWith(name)) {
 			    index = i;
 			    break;
 			}
@@ -2359,7 +2359,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 
                             for (int s = 0; s < qt.object->metaObject()->methodCount(); ++s) {
                                 QMetaMethod slot = qt.object->metaObject()->method(s);
-                                if (slot.methodType() == QMetaMethod::Slot && QByteArray(slot.signature()).startsWith(name)) {
+                                if (slot.methodType() == QMetaMethod::Slot && slot.methodSignature().startsWith(name)) {
                                     if (!--overload) {
                                         index = s;
                                         break;
@@ -2379,7 +2379,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 	    QMetaMethod slot(mo->method(index));
             Q_ASSERT(slot.methodType() == QMetaMethod::Slot);
 	    QByteArray type = slot.typeName();
-	    name = slot.signature();
+            name = slot.methodSignature();
             nameLength = name.indexOf('(');
 	    QByteArray prototype = name.mid(nameLength + 1);
 	    prototype.truncate(prototype.length() - 1);

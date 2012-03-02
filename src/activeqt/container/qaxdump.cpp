@@ -191,7 +191,7 @@ QString qax_generateDocumentation(QAxBase *that)
             if (returntype.isEmpty())
                 returntype = "void";
             QByteArray prototype = namedPrototype(slot.parameterTypes(), slot.parameterNames(), defArgCount);
-            QByteArray signature = slot.signature();
+            QByteArray signature = slot.methodSignature();
 	    QByteArray name = signature.left(signature.indexOf('('));
 	    stream << "<li>" << returntype << " <a href=\"#" << name << "\"><b>" << name << "</b></a>" << prototype << ";</li>" << endl;
             
@@ -259,7 +259,7 @@ QString qax_generateDocumentation(QAxBase *that)
                 continue;
 
             QByteArray prototype = namedPrototype(signal.parameterTypes(), signal.parameterNames());
-	    QByteArray signature = signal.signature();
+            QByteArray signature = signal.methodSignature();
 	    QByteArray name = signature.left(signature.indexOf('('));
 	    stream << "<li>void <a href=\"#" << name << "\"><b>" << name << "</b></a>" << prototype << ";</li>" << endl;
 
