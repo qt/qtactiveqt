@@ -82,7 +82,7 @@ void ControlInfo::setControl(QWidget *activex)
         if (method.methodType() == QMetaMethod::Signal) {
             ++count;
 	    item = new QTreeWidgetItem(group);
-            item->setText(0, QString::fromLatin1(method.signature()));
+            item->setText(0, QString::fromLatin1(method.methodSignature()));
         }
     }
     group->setText(1, QString::number(count));
@@ -96,7 +96,7 @@ void ControlInfo::setControl(QWidget *activex)
         if (method.methodType() == QMetaMethod::Slot) {
             ++count;
 	    item = new QTreeWidgetItem(group);
-            item->setText(0, QString::fromLatin1(method.signature()));
+            item->setText(0, QString::fromLatin1(method.methodSignature()));
         }
     }
     group->setText(1, QString::number(count));
