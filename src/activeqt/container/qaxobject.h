@@ -54,13 +54,11 @@ QT_MODULE(ActiveQt)
 class QAxObject : public QObject, public QAxBase
 {
     friend class QAxEventSink;
+    Q_OBJECT_FAKE
 public:
-    const QMetaObject *metaObject() const;
-    void* qt_metacast(const char*);
-    int qt_metacall(QMetaObject::Call, int, void **);
     QObject* qObject() const { return (QObject*)this; }
     const char *className() const;
-    
+
     QAxObject(QObject *parent = 0);
     QAxObject(const QString &c, QObject *parent = 0);
     QAxObject(IUnknown *iface, QObject *parent = 0);
@@ -70,10 +68,10 @@ public:
 
 protected:
     void connectNotify(const char *signal);
+    const QMetaObject *fallbackMetaObject() const;
 
 private:
     const QMetaObject *parentMetaObject() const;
-    static QMetaObject staticMetaObject;
 };
 
 #if defined Q_CC_MSVC && _MSC_VER < 1300

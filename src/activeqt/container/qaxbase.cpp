@@ -60,6 +60,10 @@
 #   include <qmutex.h>
 #endif
 
+#include <private/qobject_p.h>
+#include <private/qmetaobject_p.h>
+#include <private/qmetaobjectbuilder_p.h>
+
 #include <qt_windows.h>
 #include <ocidl.h>
 #include <ctype.h>
@@ -389,7 +393,7 @@ public:
 
             QString nameString = QLatin1String(signame);
             void *argv[] = {0, &nameString, &pDispParams->cArgs, &pDispParams->rgvarg};
-            combase->qt_metacall(QMetaObject::InvokeMetaMethod, index, argv);
+            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index, argv);
         }
 
         HRESULT hres = S_OK;
@@ -462,7 +466,7 @@ public:
 
             if (ok) {
                 // emit the generated signal if everything went well
-                combase->qt_metacall(QMetaObject::InvokeMetaMethod, index, argv);
+                QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index, argv);
                 // update the VARIANT for references and free memory
                 for (p = 0; p < pcount; ++p) {
                     bool out;
@@ -511,7 +515,7 @@ public:
         if (index != -1) {
             QString propnameString = QString::fromLatin1(propname);
             void *argv[] = {0, &propnameString};
-            combase->qt_metacall(QMetaObject::InvokeMetaMethod, index, argv);
+            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index, argv);
         }
 
         QByteArray signame = propsigs.value(dispID);
@@ -537,7 +541,7 @@ public:
                 argv[1] = &var;
 
             // emit the "changed" signal
-            combase->qt_metacall(QMetaObject::InvokeMetaMethod, index, argv);
+            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index, argv);
         }
         return S_OK;
     }
@@ -1536,42 +1540,14 @@ private:
     QByteArray usertypeToString(const TYPEDESC &tdesc, ITypeInfo *info, const QByteArray &function);
     QByteArray guessTypes(const TYPEDESC &tdesc, ITypeInfo *info, const QByteArray &function);
 
-    // ### from qmetaobject.cpp
+    // ActiveQt's extensions to the PropertyFlags defined in qmetaobject_p.h.
+    // This will break if new overlapping flags are added in qmetaobject_p.h!
     enum ProperyFlags  {
-        Invalid			= 0x00000000,
-        Readable		= 0x00000001,
-        Writable		= 0x00000002,
-        Resettable		= 0x00000004,
-        EnumOrFlag		= 0x00000008,
-        StdCppSet		= 0x00000100,
-//        Override		= 0x00000200,
-        Designable		= 0x00001000,
-        ResolveDesignable	= 0x00002000,
-        Scriptable		= 0x00004000,
-        ResolveScriptable	= 0x00008000,
-        Stored                  = 0x00010000,
-        ResolveStored           = 0x00020000,
-        Editable		= 0x00040000,
-        ResolveEditable         = 0x00080000,
-        User                    = 0x00100000,
-        ResolveUser             = 0x00200000,
-        // And our own - don't use the upper byte, as it's used for the property type
-        RequestingEdit          = 0x00400000,
-        Bindable                = 0x00800000
-    };
-    enum MemberFlags {
-        AccessPrivate = 0x00,
-        AccessProtected = 0x01,
-        AccessPublic = 0x02,
-        MemberMethod = 0x00,
-        MemberSignal = 0x04,
-        MemberSlot = 0x08,
-        MemberCompatibility = 0x10,
-        MemberCloned = 0x20,
-        MemberScriptable = 0x40,
+        RequestingEdit          = 0x01000000,
+        Bindable                = 0x02000000
     };
 
-    inline QList<QByteArray> paramList(const QByteArray &proto)
+    static inline QList<QByteArray> paramList(const QByteArray &proto)
     {
         QByteArray prototype(proto);
         QByteArray parameters = prototype.mid(prototype.indexOf('(') + 1);
@@ -1641,9 +1617,9 @@ private:
         QByteArray proto(replacePrototype(prototype));
 
         Method &signal = signal_list[proto];
-        signal.type = 0;
+        signal.type = "void";
         signal.parameters = parameters;
-        signal.flags = QMetaMethod::Public | MemberSignal;
+        signal.flags = QMetaMethod::Public | MethodSignal;
         if (proto != prototype)
             signal.realPrototype = prototype;
     }
@@ -1663,7 +1639,7 @@ private:
         Method &slot = slot_list[proto];
         slot.type = replaceType(type);
         slot.parameters = parameters;
-        slot.flags = flags | MemberSlot;
+        slot.flags = flags | MethodSlot;
         if (proto != prototype)
             slot.realPrototype = prototype;
     }
@@ -1675,11 +1651,13 @@ private:
         return slot_list.contains(prototype);
     }
 
+    static int aggregateParameterCount(const QMap<QByteArray, Method> &map);
+
     struct Property {
-        Property() : typeId(0)
+        Property() : flags(0)
         {}
         QByteArray type;
-        uint typeId;
+        uint flags;
         QByteArray realType;
     };
     QMap<QByteArray, Property> property_list;
@@ -1697,20 +1675,15 @@ private:
         }
         if (flags & Writable)
             flags |= Stored;
-        prop.typeId |= flags;
+        prop.flags = flags;
         QVariant::Type vartype = QVariant::nameToType(prop.type);
         switch(vartype) {
         case QVariant::Invalid:
         case QVariant::UserType:
-            if (prop.type == "QVariant") {
-                prop.typeId |= 0xff << 24;
-                break;
-            }
-            if (QMetaType::type(prop.type) == -1)
+            if (QMetaType::type(prop.type) == QMetaType::UnknownType)
                 qWarning("QAxBase: Unsupported property type: %s", prop.type.data());
             break;
         default:
-            prop.typeId |= vartype << 24;
             break;
         }
     }
@@ -1991,7 +1964,9 @@ QByteArray MetaObjectGenerator::guessTypes(const TYPEDESC &tdesc, ITypeInfo *inf
     QByteArray str;
     switch (tdesc.vt) {
     case VT_EMPTY:
+        break;
     case VT_VOID:
+        str = "void";
         break;
     case VT_LPWSTR:
         str = "wchar_t *";
@@ -2390,7 +2365,7 @@ void MetaObjectGenerator::addSetterSlot(const QByteArray &property)
     }
     prototype = set + prototype + '(' + propertyType(property) + ')';
     if (!hasSlot(prototype))
-        addSlot(0, prototype, property);
+        addSlot("void", prototype, property);
 }
 
 QByteArray MetaObjectGenerator::createPrototype(FUNCDESC *funcdesc, ITypeInfo *typeinfo, const QList<QByteArray> &names,
@@ -3010,6 +2985,33 @@ QMetaObject *MetaObjectGenerator::tryCache()
     return 0;
 }
 
+static int nameToBuiltinType(const QByteArray &typeName)
+{
+    int id = QMetaType::type(typeName);
+    return (id < QMetaType::User) ? id : QMetaType::UnknownType;
+}
+
+static uint nameToTypeInfo(const QByteArray &typeName, QMetaStringTable &strings)
+{
+    int id = nameToBuiltinType(typeName);
+    if (id != QMetaType::UnknownType)
+        return id;
+    else
+        return IsUnresolvedType | strings.enter(typeName);
+}
+
+// Returns the sum of all parameters (including return type) for the given
+// \a map of methods. This is needed for calculating the size of the methods'
+// parameter type/name meta-data.
+int MetaObjectGenerator::aggregateParameterCount(const QMap<QByteArray, Method> &map)
+{
+    int sum = 0;
+    QMap<QByteArray, Method>::const_iterator it;
+    for (it = map.constBegin(); it != map.constEnd(); ++it)
+        sum += paramList(it.key()).size() + 1; // +1 for return type
+    return sum;
+}
+
 QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, const QByteArray &className)
 {
     if (that) {
@@ -3036,122 +3038,109 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
 
     QAxMetaObject *metaobj = new QAxMetaObject;
 
-    // revision + classname + table + zero terminator
-    uint int_data_size = 1+1+2+2+2+2+1;
+    int paramsDataSize =
+            ((aggregateParameterCount(signal_list)
+              + aggregateParameterCount(slot_list)) * 2) // types and parameter names
+            - signal_list.count() // return "parameters" don't have names
+            - slot_list.count(); // ditto
 
+    uint int_data_size = MetaObjectPrivateFieldCount;
     int_data_size += classinfo_list.count() * 2;
-    int_data_size += signal_list.count() * 5;
-    int_data_size += slot_list.count() * 5;
+    int_data_size += (signal_list.count() + slot_list.count()) * 5 + paramsDataSize;
     int_data_size += property_list.count() * 3;
     int_data_size += enum_list.count() * 4;
     for (QMap<QByteArray, QList<QPair<QByteArray, int> > >::ConstIterator it = enum_list.begin();
     it != enum_list.end(); ++it) {
         int_data_size += (*it).count() * 2;
     }
+    ++int_data_size; // eod
 
     uint *int_data = new uint[int_data_size];
-    int_data[0] = 1; // revision number
-    int_data[1] = 0; // classname index
-    int_data[2] = classinfo_list.count(); // num_classinfo
-    int_data[3] = 10; // idx_classinfo
-    int_data[4] = signal_list.count() + slot_list.count(); // num_methods
-    int_data[5] = int_data[3] + int_data[2] * 2; // idx_signals
-    int_data[6] = property_list.count(); // num_properties
-    int_data[7] = int_data[5] + int_data[4] * 5; // idx_properties
-    int_data[8] = enum_list.count(); // num_enums
-    int_data[9] = int_data[7] + int_data[6] * 3; // idx_enums
-    int_data[int_data_size - 1] = 0; // eod;
+    QMetaObjectPrivate *header = reinterpret_cast<QMetaObjectPrivate *>(int_data);
+    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 7, "QtDBus meta-object generator should generate the same version as moc");
+    header->revision = QMetaObjectPrivate::OutputRevision;
+    header->className = 0;
+    header->classInfoCount = classinfo_list.count();
+    header->classInfoData = MetaObjectPrivateFieldCount;
+    header->methodCount = signal_list.count() + slot_list.count();
+    header->methodData = header->classInfoData + header->classInfoCount * 2;
+    header->propertyCount = property_list.count();
+    header->propertyData = header->methodData + header->methodCount * 5 + paramsDataSize;
+    header->enumeratorCount = enum_list.count();
+    header->enumeratorData = header->propertyData + header->propertyCount * 3;
+    header->constructorCount = 0;
+    header->constructorData = 0;
+    header->flags = 0;
+    header->signalCount = signal_list.count();
 
-    char null('\0');
-    // data + zero-terminator
-    QByteArray stringdata = that ? QByteArray(that->className()) : className;
-    stringdata += null;
-    stringdata.reserve(8192);
+    QMetaStringTable strings;
+    strings.enter(that ? QByteArray(that->className()) : className);
 
-    uint offset = int_data[3]; //idx_classinfo
+    uint offset = header->classInfoData;
 
     // each class info in form key\0value\0
     for (QMap<QByteArray, QByteArray>::ConstIterator it = classinfo_list.begin(); it != classinfo_list.end(); ++it) {
         QByteArray key(it.key());
         QByteArray value(it.value());
-        int_data[offset++] = stringdata.length();
-        stringdata += key;
-        stringdata += null;
-        int_data[offset++] = stringdata.length();
-        stringdata += value;
-        stringdata += null;
+        int_data[offset++] = strings.enter(key);
+        int_data[offset++] = strings.enter(value);
     }
-    Q_ASSERT(offset == int_data[5]);
+    Q_ASSERT(offset == header->methodData);
 
-    // each signal in form prototype\0parameters\0type\0tag\0
-    for (QMap<QByteArray, Method>::ConstIterator it = signal_list.begin(); it != signal_list.end(); ++it) {
-        QByteArray prototype(QMetaObject::normalizedSignature(it.key()));
-        QByteArray type(it.value().type);
-        QByteArray parameters(it.value().parameters);
-        if (!it.value().realPrototype.isEmpty())
-            metaobj->realPrototype.insert(prototype, it.value().realPrototype);
-        QByteArray tag;
-        int flags = it.value().flags;
+    uint paramsOffset = offset + header->methodCount * 5;
+    // add each method:
+    for (int x = 0; x < 2; ++x) {
+        // Signals must be added before other methods, to match moc.
+        const QMap<QByteArray, Method> &map = (x == 0) ? signal_list : slot_list;
+        for (QMap<QByteArray, Method>::ConstIterator it = map.constBegin(); it != map.constEnd(); ++it) {
+            QByteArray prototype(QMetaObject::normalizedSignature(it.key()));
+            QByteArray name = prototype.left(prototype.indexOf('('));
+            QList<QByteArray> paramTypeNames = paramList(prototype);
+            QList<QByteArray> paramNames = it.value().parameters.split(',');
+            Q_ASSERT(paramTypeNames.size() == paramNames.size());
+            QByteArray type(it.value().type);
+            if (!it.value().realPrototype.isEmpty())
+                metaobj->realPrototype.insert(prototype, it.value().realPrototype);
+            int argc = paramTypeNames.size();
+            QByteArray tag;
+            int flags = it.value().flags;
+            int_data[offset++] = strings.enter(name);
+            int_data[offset++] = argc;
+            int_data[offset++] = paramsOffset;
+            int_data[offset++] = strings.enter(tag);
+            int_data[offset++] = flags;
 
-        int_data[offset++] = stringdata.length();
-        stringdata += prototype;
-        stringdata += null;
-        int_data[offset++] = stringdata.length();
-        stringdata += parameters;
-        stringdata += null;
-        int_data[offset++] = stringdata.length();
-        stringdata += type;
-        stringdata += null;
-        int_data[offset++] = stringdata.length();
-        stringdata += tag;
-        stringdata += null;
-        int_data[offset++] = flags;
+            // Parameter types
+            for (int i = -1; i < argc; ++i) {
+                QByteArray typeName = (i < 0) ? it.value().type : paramTypeNames.at(i);
+                Q_ASSERT(!typeName.isEmpty());
+                int_data[paramsOffset++] = nameToTypeInfo(typeName, strings);
+            }
+            // Parameter names
+            for (int i = 0; i < argc; ++i)
+                int_data[paramsOffset++] = strings.enter(paramNames.at(i));
+        }
     }
-
-    // each slot in form prototype\0parameters\0type\0tag\0
-    for (QMap<QByteArray, Method>::ConstIterator it = slot_list.begin(); it != slot_list.end(); ++it) {
-        QByteArray prototype(QMetaObject::normalizedSignature(it.key()));
-        QByteArray type(it.value().type);
-        QByteArray parameters(it.value().parameters);
-        if (!it.value().realPrototype.isEmpty())
-            metaobj->realPrototype.insert(prototype, it.value().realPrototype);
-        QByteArray tag;
-        int flags = it.value().flags;
-
-        int_data[offset++] = stringdata.length();
-        stringdata += prototype;
-        stringdata += null;
-        int_data[offset++] = stringdata.length();
-        stringdata += parameters;
-        stringdata += null;
-        int_data[offset++] = stringdata.length();
-        stringdata += type;
-        stringdata += null;
-        int_data[offset++] = stringdata.length();
-        stringdata += tag;
-        stringdata += null;
-        int_data[offset++] = flags;
-    }
-    Q_ASSERT(offset == int_data[7]);
+    Q_ASSERT(offset == header->methodData + header->methodCount * 5);
+    Q_ASSERT(paramsOffset = header->propertyData);
+    offset += paramsDataSize;
+    Q_ASSERT(offset == header->propertyData);
 
     // each property in form name\0type\0
     for (QMap<QByteArray, Property>::ConstIterator it = property_list.begin(); it != property_list.end(); ++it) {
         QByteArray name(it.key());
         QByteArray type(it.value().type);
+        Q_ASSERT(!type.isEmpty());
         QByteArray realType(it.value().realType);
         if (!realType.isEmpty() && realType != type)
             metaobj->realPrototype.insert(name, realType);
-        uint flags = it.value().typeId;
+        uint flags = it.value().flags;
 
-        int_data[offset++] = stringdata.length();
-        stringdata += name;
-        stringdata += null;
-        int_data[offset++] = stringdata.length();
-        stringdata += type;
-        stringdata += null;
+        int_data[offset++] = strings.enter(name);
+        int_data[offset++] = nameToTypeInfo(type, strings);
         int_data[offset++] = flags;
     }
-    Q_ASSERT(offset == int_data[9]);
+    Q_ASSERT(offset == header->enumeratorData);
 
     int value_offset = offset + enum_list.count() * 4;
     // each enum in form name\0
@@ -3160,32 +3149,28 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         int flags = 0x0; // 0x1 for flag?
         int count = it.value().count();
 
-        int_data[offset++] = stringdata.length();
-        stringdata += name;
-        stringdata += null;
+        int_data[offset++] = strings.enter(name);
         int_data[offset++] = flags;
         int_data[offset++] = count;
         int_data[offset++] = value_offset;
         value_offset += count * 2;
     }
-    Q_ASSERT(offset == int_data[9] + enum_list.count() * 4);
+    Q_ASSERT(offset == header->enumeratorData + enum_list.count() * 4);
 
     // each enum value in form key\0
     for (QMap<QByteArray, QList<QPair<QByteArray, int> > >::ConstIterator it = enum_list.begin(); it != enum_list.end(); ++it) {
         for (QList<QPair<QByteArray,int> >::ConstIterator it2 = it.value().begin(); it2 != it.value().end(); ++it2) {
             QByteArray key((*it2).first);
             int value = (*it2).second;
-            int_data[offset++] = stringdata.length();
-            stringdata += key;
-            stringdata += null;
+            int_data[offset++] = strings.enter(key);
             int_data[offset++] = value;
         }
     }
     Q_ASSERT(offset == int_data_size-1);
+    int_data[offset] = 0; // eod
 
-    char *string_data = new char[stringdata.length()];
-    memset(string_data, 0, sizeof(string_data));
-    memcpy(string_data, stringdata, stringdata.length());
+    char *string_data = new char[strings.blobSize()];
+    strings.writeBlob(string_data);
 
     // put the metaobject together
     metaobj->d.data = int_data;
@@ -3215,40 +3200,60 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     return metaobj;
 }
 
-static const uint qt_meta_data_QAxBase[] = {
+#define QT_MOC_LITERAL(idx, ofs, len) { \
+    Q_REFCOUNT_INITIALIZE_STATIC, len, 0, 0, \
+    offsetof(qt_meta_stringdata_QAxBase_t, stringdata) + ofs \
+        - idx * sizeof(QByteArrayData) \
+    }
+const QAxBase::qt_meta_stringdata_QAxBase_t QAxBase::qt_meta_stringdata_QAxBase = {
+    {
+QT_MOC_LITERAL(0, 0, 7),
+QT_MOC_LITERAL(1, 8, 6),
+QT_MOC_LITERAL(2, 15, 0),
+QT_MOC_LITERAL(3, 16, 4),
+QT_MOC_LITERAL(4, 21, 4),
+QT_MOC_LITERAL(5, 26, 4),
+QT_MOC_LITERAL(6, 31, 15),
+QT_MOC_LITERAL(7, 47, 9),
+QT_MOC_LITERAL(8, 57, 4),
+QT_MOC_LITERAL(9, 62, 6),
+QT_MOC_LITERAL(10, 69, 4),
+QT_MOC_LITERAL(11, 74, 4),
+QT_MOC_LITERAL(12, 79, 7)
+    },
+    "QAxBase\0signal\0\0name\0argc\0argv\0"
+    "propertyChanged\0exception\0code\0source\0"
+    "desc\0help\0control\0"
+};
+#undef QT_MOC_LITERAL
+
+const uint QAxBase::qt_meta_data_QAxBase[] = {
 
  // content:
-       1,       // revision
+       7,       // revision
        0,       // classname
        0,    0, // classinfo
-       3,   10, // methods
-       1,   25, // properties
+       3,   14, // methods
+       1,   48, // properties
        0,    0, // enums/sets
+       0,    0, // constructors
+       0,       // flags
+       3,       // signalCount
 
- // signals: signature, parameters, type, tag, flags
-      24,    9,    8,    8, 0x05,
-      55,   50,    8,    8, 0x05,
-     102,   80,    8,    8, 0x05,
+ // signals: name, argc, parameters, tag, flags
+       1,    3,   29,    2, 0x05,
+       6,    1,   36,    2, 0x05,
+       7,    4,   39,    2, 0x05,
+
+ // signals: parameters
+    QMetaType::Void, QMetaType::QString, QMetaType::Int, QMetaType::VoidStar,    3,    4,    5,
+    QMetaType::Void, QMetaType::QString,    3,
+    QMetaType::Void, QMetaType::Int, QMetaType::QString, QMetaType::QString, QMetaType::QString,    8,    9,   10,   11,
 
  // properties: name, type, flags
-     149,  141, 0x0a095103,
+      12, QMetaType::QString, 0x00095000,
 
        0        // eod
-};
-
-static const char qt_meta_stringdata_QAxBase[] = {
-    "QAxBase\0\0name,argc,argv\0signal(QString,int,void*)\0name\0"
-    "propertyChanged(QString)\0code,source,desc,help\0"
-    "exception(int,QString,QString,QString)\0QString\0control\0"
-};
-
-static QMetaObject qaxobject_staticMetaObject = {
-    { &QObject::staticMetaObject, reinterpret_cast<const QByteArrayData *>(qt_meta_stringdata_QAxBase),
-        qt_meta_data_QAxBase, 0 }
-};
-static QMetaObject qaxwidget_staticMetaObject = {
-    { &QWidget::staticMetaObject, reinterpret_cast<const QByteArrayData *>(qt_meta_stringdata_QAxBase),
-        qt_meta_data_QAxBase, 0 }
 };
 
 /*!
@@ -3275,11 +3280,9 @@ const QMetaObject *QAxBase::metaObject() const
 #endif
 
     // return the default meta object if not yet initialized
-    if (!d->ptr || !d->useMetaObject) {
-        if (qObject()->isWidgetType())
-            return &qaxwidget_staticMetaObject;
-        return &qaxobject_staticMetaObject;
-    }
+    if (!d->ptr || !d->useMetaObject)
+        return fallbackMetaObject();
+
     MetaObjectGenerator generator((QAxBase*)this, d);
     return generator.metaObject(parentObject);
 }
@@ -3436,7 +3439,7 @@ static bool checkHRESULT(HRESULT hres, EXCEPINFO *exc, QAxBase *that, const QStr
 
                 if (QAxEventSink::signalHasReceivers(that->qObject(), "exception(int,QString,QString,QString)")) {
                     void *argv[] = {0, &code, &source, &desc, &help};
-                    that->qt_metacall(QMetaObject::InvokeMetaMethod, exceptionSignal, argv);
+                    QAxBase::qt_static_metacall(that, QMetaObject::InvokeMetaMethod, exceptionSignal, argv);
                     printWarning = false;
                 }
             }
@@ -3709,6 +3712,28 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
 /*!
     \internal
 */
+int QAxBase::qt_static_metacall(QAxBase *_t, QMetaObject::Call _c, int _id, void **_a)
+{
+    Q_ASSERT(_t != 0);
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        const QMetaObject *mo = _t->metaObject();
+        switch (mo->method(_id + mo->methodOffset()).methodType()) {
+        case QMetaMethod::Signal:
+            QMetaObject::activate(_t->qObject(), mo, _id, _a);
+            return _id - mo->methodCount();
+        case QMetaMethod::Method:
+        case QMetaMethod::Slot:
+            return _t->internalInvoke(_c, _id, _a);
+        default:
+            break;
+        }
+    }
+    return 0;
+}
+
+/*!
+    \internal
+*/
 int QAxBase::qt_metacall(QMetaObject::Call call, int id, void **v)
 {
     const QMetaObject *mo = metaObject();
@@ -3719,18 +3744,7 @@ int QAxBase::qt_metacall(QMetaObject::Call call, int id, void **v)
 
     switch(call) {
     case QMetaObject::InvokeMetaMethod:
-        switch (mo->method(id + mo->methodOffset()).methodType()) {
-        case QMetaMethod::Signal:
-            QMetaObject::activate(qObject(), mo, id, v);
-            id -= mo->methodCount();
-            break;
-        case QMetaMethod::Method:
-        case QMetaMethod::Slot:
-            id = internalInvoke(call, id, v);
-            break;
-        default:
-            break;
-        }
+        id = qt_static_metacall(this, call, id, v);
         break;
     case QMetaObject::ReadProperty:
     case QMetaObject::WriteProperty:
@@ -4437,7 +4451,7 @@ QVariant QAxBase::asVariant() const
         cn = cn.mid(cn.lastIndexOf(':') + 1) + '*';
         QObject *object = qObject();
         int typeId = QMetaType::type(cn);
-        if (!typeId)
+        if (typeId == QMetaType::UnknownType)
             typeId = qRegisterMetaType<QObject *>(cn);
         qvar = QVariant(typeId, &object);
     }

@@ -1903,6 +1903,15 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     \sa QAxBase, QAxObject, QAxScript, {ActiveQt Framework}
 */
 
+const QMetaObjectExtraData QAxWidget::staticMetaObjectExtraData = {
+    0, qt_static_metacall
+};
+
+const QMetaObject QAxWidget::staticMetaObject = {
+    { &QWidget::staticMetaObject, qt_meta_stringdata_QAxBase.data,
+      qt_meta_data_QAxBase, &staticMetaObjectExtraData }
+};
+
 /*!
     Creates an empty QAxWidget widget and propagates \a parent
     and \a f to the QWidget constructor. To initialize a control,
@@ -2092,6 +2101,22 @@ bool QAxWidget::doVerb(const QString &verb)
     \fn QObject *QAxWidget::qObject() const
     \internal
 */
+
+/*!
+    \internal
+*/
+void QAxWidget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
+{
+    QAxBase::qt_static_metacall(qobject_cast<QAxWidget*>(_o), _c, _id, _a);
+}
+
+/*!
+    \internal
+*/
+const QMetaObject *QAxWidget::fallbackMetaObject() const
+{
+    return &staticMetaObject;
+}
 
 /*!
     \internal
