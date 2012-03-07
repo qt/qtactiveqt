@@ -657,8 +657,6 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
             uint vartype = property.type();
             if (vartype != QVariant::Invalid && vartype != QVariant::UserType)
                 flags = vartype << 24;
-            else if (QByteArray(property.typeName()) == "QVariant")
-                flags |= 0xff << 24;
 
             if (property.isReadable())
                 flags |= Readable;

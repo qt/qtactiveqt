@@ -82,6 +82,15 @@ QT_BEGIN_NAMESPACE
     \sa QAxBase, QAxWidget, QAxScript, {ActiveQt Framework}
 */
 
+const QMetaObjectExtraData QAxObject::staticMetaObjectExtraData = {
+    0,  qt_static_metacall
+};
+
+const QMetaObject QAxObject::staticMetaObject = {
+    { &QObject::staticMetaObject, qt_meta_stringdata_QAxBase.data,
+      qt_meta_data_QAxBase, &staticMetaObjectExtraData }
+};
+
 /*!
     Creates an empty COM object and propagates \a parent to the
     QObject constructor. To initialize the object, call \link
@@ -120,6 +129,22 @@ QAxObject::QAxObject(IUnknown *iface, QObject *parent)
 QAxObject::~QAxObject()
 {
     clear();
+}
+
+/*!
+    \internal
+*/
+void QAxObject::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
+{
+    QAxBase::qt_static_metacall(qobject_cast<QAxObject*>(_o), _c, _id, _a);
+}
+
+/*!
+    \internal
+*/
+const QMetaObject *QAxObject::fallbackMetaObject() const
+{
+    return &staticMetaObject;
 }
 
 /*!

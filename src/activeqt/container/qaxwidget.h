@@ -59,10 +59,8 @@ class QAxClientSite;
 
 class QAxWidget : public QWidget, public QAxBase
 {
+    Q_OBJECT_FAKE
 public:
-    const QMetaObject *metaObject() const;
-    void* qt_metacast(const char*);
-    int qt_metacall(QMetaObject::Call, int, void **);
     QObject* qObject() const { return (QWidget*)this; }
     const char *className() const;
     
@@ -90,12 +88,12 @@ protected:
     virtual bool translateKeyEvent(int message, int keycode) const;
 
     void connectNotify(const char *signal);
+    const QMetaObject *fallbackMetaObject() const;
 private:
     friend class QAxClientSite;
     QAxClientSite *container;
     
     const QMetaObject *parentMetaObject() const;
-    static QMetaObject staticMetaObject;
 };
 
 #if defined Q_CC_MSVC && _MSC_VER < 1300
