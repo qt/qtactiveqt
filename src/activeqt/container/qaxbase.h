@@ -98,6 +98,7 @@ public:
 
     virtual const QMetaObject *metaObject() const;
     virtual int qt_metacall(QMetaObject::Call, int, void **);
+    static int qt_static_metacall(QAxBase *, QMetaObject::Call, int, void **);
 
     virtual QObject *qObject() const = 0;
     virtual const char *className() const = 0;
@@ -143,6 +144,15 @@ protected:
     void connectNotify();
     long indexOfVerb(const QString &verb) const;
 
+    virtual const QMetaObject *fallbackMetaObject() const = 0;
+
+    struct qt_meta_stringdata_QAxBase_t {
+        QByteArrayData data[13];
+        char stringdata[88];
+    };
+    static const qt_meta_stringdata_QAxBase_t qt_meta_stringdata_QAxBase;
+    static const uint qt_meta_data_QAxBase[];
+
 private:
     friend class QAxEventSink;
     friend void *qax_createObjectWrapper(int, IUnknown*);
@@ -154,8 +164,6 @@ private:
     int internalProperty(QMetaObject::Call, int index, void **v);
     int internalInvoke(QMetaObject::Call, int index, void **v);
     bool dynamicCallHelper(const char *name, void *out, QList<QVariant> &var, QByteArray &type);
-
-    static QMetaObject staticMetaObject;
 };
 
 #if defined Q_CC_MSVC && _MSC_VER < 1300
