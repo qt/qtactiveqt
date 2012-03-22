@@ -73,6 +73,7 @@ protected:
 
 private:
     const QMetaObject *parentMetaObject() const;
+public:
     static QMetaObject staticMetaObject;
 };
 
