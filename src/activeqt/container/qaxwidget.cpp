@@ -126,7 +126,7 @@ public:
     QWindow *hostWindow() const;
 
 protected:
-    bool winEvent(MSG *msg, long *result);
+    bool nativeEvent(const QByteArray &eventType, void *message, long *result);
     bool event(QEvent *e);
     bool eventFilter(QObject *o, QEvent *e);
     void resizeEvent(QResizeEvent *e);
@@ -1739,11 +1739,13 @@ void QAxHostWidget::showEvent(QShowEvent *)
     resizeObject();
 }
 
-bool QAxHostWidget::winEvent(MSG *msg, long *result)
+bool QAxHostWidget::nativeEvent(const QByteArray &eventType, void *message, long *result)
 {
-    // FIXME: 4.10.2011: no longer implemented
-    if (axhost && axhost->inPlaceObjectWindowless) {
+    qDebug(eventType.constData());
+    if (axhost && axhost->inPlaceObjectWindowless
+        && eventType == QByteArrayLiteral("windows_generic_MSG")) {
         Q_ASSERT(axhost->m_spInPlaceObject);
+        MSG *msg = static_cast<MSG *>(message);
         IOleInPlaceObjectWindowless *windowless = (IOleInPlaceObjectWindowless*)axhost->m_spInPlaceObject;
         Q_ASSERT(windowless);
         LRESULT lres;
@@ -1751,7 +1753,8 @@ bool QAxHostWidget::winEvent(MSG *msg, long *result)
         if (hres == S_OK)
             return true;
     }
-    // QWidget::winEvent(msg, result);
+
+    QWidget::nativeEvent(eventType, message, result);
     return false;
 }
 
