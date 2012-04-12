@@ -123,6 +123,8 @@ public:
         return axhost;
     }
 
+    QWindow *hostWindow() const;
+
 protected:
     bool winEvent(MSG *msg, long *result);
     bool event(QEvent *e);
@@ -1454,12 +1456,16 @@ HRESULT WINAPI QAxClientSite::EnableModeless(BOOL fEnable)
 {
     EnableWindow(hwndForWidget(host), fEnable);
 
+    QWindow *hostWindow = host->hostWindow();
+    if (!hostWindow)
+        return S_FALSE;
+
     if (!fEnable) {
         if (!QApplicationPrivate::isBlockedByModal(host))
-            QApplicationPrivate::enterModal(host);
+            QGuiApplicationPrivate::showModalWindow(hostWindow);
     } else {
         if (QApplicationPrivate::isBlockedByModal(host))
-            QApplicationPrivate::leaveModal(host);
+            QGuiApplicationPrivate::hideModalWindow(hostWindow);
     }
     // FIXME 4.10.2011: No longer exists  in Lighthouse.
     // qt_win_ignoreNextMouseReleaseEvent = false;
@@ -1671,6 +1677,15 @@ void* QAxHostWidget::qt_metacast(const char *clname)
     if (!qstrcmp(clname,"QAxHostWidget"))
         return static_cast<void*>(const_cast< QAxHostWidget*>(this));
     return QWidget::qt_metacast(clname);
+}
+
+QWindow *QAxHostWidget::hostWindow() const
+{
+    if (QWindow *w = windowHandle())
+        return w;
+    if (QWidget *parent = nativeParentWidget())
+        return parent->windowHandle();
+    return 0;
 }
 
 QSize QAxHostWidget::sizeHint() const
