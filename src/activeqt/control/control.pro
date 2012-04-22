@@ -1,7 +1,7 @@
 TEMPLATE = lib
 
 TARGET   = ActiveQt
-CONFIG += qt_install_headers
+CONFIG += create_prl qt_install_headers
 QT += widgets
 
 SYNCQT.HEADER_FILES = qaxaggregated.h qaxbindable.h qaxfactory.h
