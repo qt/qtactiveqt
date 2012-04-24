@@ -1,14 +1,6 @@
 TEMPLATE = lib
-
-TARGET   = ActiveQt
-CONFIG += create_prl qt_install_headers
-QT += widgets
-
-SYNCQT.HEADER_FILES = qaxaggregated.h qaxbindable.h qaxfactory.h
-SYNCQT.HEADER_CLASSES = ../../../include/ActiveQt/QAxAggregated ../../../include/ActiveQt/QAxBindable ../../../include/ActiveQt/QAxFactory ../../../include/ActiveQt/QAxClass 
-load(qt_installs)
-
 TARGET   = QAxServer
+CONFIG  += create_prl
 
 !debug_and_release|build_pass {
    CONFIG(debug, debug|release) {
@@ -18,7 +10,7 @@ TARGET   = QAxServer
 
 INCLUDEPATH *= $$QT.activeqt.includes
 
-QT += core-private gui-private
+QT += core-private gui-private widgets
 CONFIG  += qt warn_off staticlib
 DESTDIR  = $$QT.activeqt.libs
 
@@ -44,3 +36,5 @@ SOURCES =   qaxserver.cpp \
             qaxmain.cpp \
             ../shared/qaxtypes.cpp \
             ../shared/qaxutils.cpp
+
+load(qt_installs)
