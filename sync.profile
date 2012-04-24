@@ -5,12 +5,6 @@
 );
 %classnames = (
 );
-%mastercontent = (
-    "gui" => "#include <QtGui/QtGui>\n",
-);
-%modulepris = (
-    "ActiveQt" => "$basedir/modules/qt_activeqt.pri",
-);
 # Module dependencies.
 # Every module that is required to build this module should have one entry.
 # Each of the module version specifiers can take one of the following values:
