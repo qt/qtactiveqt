@@ -5,9 +5,6 @@
 );
 %classnames = (
 );
-%mastercontent = (
-    "gui" => "#include <QtGui/QtGui>\n",
-);
 %modulepris = (
     "ActiveQt" => "$basedir/modules/qt_activeqt.pri",
 );
