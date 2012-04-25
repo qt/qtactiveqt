@@ -1,0 +1,7 @@
+Sanity-Review+1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Code-Review+1: Jędrzej Nowacki <jedrzej.nowacki@nokia.com>
+Code-Review+2: Kent Hansen <kent.hansen@nokia.com>
+Code-Review+2: Thiago Macieira <thiago.macieira@intel.com>
+Reviewed-on: https://codereview.qt-project.org/13443
+Project: qt/qtactiveqt
+Branch: refs/heads/master
