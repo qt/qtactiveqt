@@ -87,7 +87,7 @@ protected:
 
     virtual bool translateKeyEvent(int message, int keycode) const;
 
-    void connectNotify(const char *signal);
+    void connectNotify(const QMetaMethod &signal);
     const QMetaObject *fallbackMetaObject() const;
 private:
     friend class QAxClientSite;

@@ -196,7 +196,7 @@ int QAxObject::qt_metacall(QMetaObject::Call call, int id, void **v)
 /*!
     \reimp
 */
-void QAxObject::connectNotify(const char *)
+void QAxObject::connectNotify(const QMetaMethod &)
 {
     QAxBase::connectNotify();
 }

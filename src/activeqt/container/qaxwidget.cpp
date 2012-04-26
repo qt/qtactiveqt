@@ -2244,7 +2244,7 @@ void QAxWidget::resizeEvent(QResizeEvent *)
 /*!
     \reimp
 */
-void QAxWidget::connectNotify(const char *)
+void QAxWidget::connectNotify(const QMetaMethod &)
 {
     QAxBase::connectNotify();
 }
