@@ -67,7 +67,7 @@ public:
     bool doVerb(const QString &verb);
 
 protected:
-    void connectNotify(const char *signal);
+    void connectNotify(const QMetaMethod &signal);
     const QMetaObject *fallbackMetaObject() const;
 
 private:
