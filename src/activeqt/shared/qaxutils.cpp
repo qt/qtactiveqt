@@ -46,8 +46,8 @@
 #include <QtGui/QRegion>
 #include <QtGui/QWindow>
 #include <QtGui/QGuiApplication>
-#include <QtGui/QPlatformNativeInterface>
-#include <QtGui/QPlatformPixmap>
+#include <qpa/qplatformnativeinterface.h>
+#include <qpa/qplatformpixmap.h>
 #include <QtGui/private/qpixmap_raster_p.h>
 #include <QtCore/QScopedArrayPointer>
 #include <QtCore/QRect>
