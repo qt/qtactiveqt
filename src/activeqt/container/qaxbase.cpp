@@ -394,7 +394,8 @@ public:
 
             QString nameString = QLatin1String(signame);
             void *argv[] = {0, &nameString, &pDispParams->cArgs, &pDispParams->rgvarg};
-            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index, argv);
+            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
+                                        index - meta->methodOffset(), argv);
         }
 
         HRESULT hres = S_OK;
@@ -467,7 +468,7 @@ public:
 
             if (ok) {
                 // emit the generated signal if everything went well
-                QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index, argv);
+                QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index - meta->methodOffset(), argv);
                 // update the VARIANT for references and free memory
                 for (p = 0; p < pcount; ++p) {
                     bool out;
@@ -516,7 +517,8 @@ public:
         if (index != -1) {
             QString propnameString = QString::fromLatin1(propname);
             void *argv[] = {0, &propnameString};
-            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index, argv);
+            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
+                                        index - meta->methodOffset(), argv);
         }
 
         QByteArray signame = propsigs.value(dispID);
@@ -542,7 +544,8 @@ public:
                 argv[1] = &var;
 
             // emit the "changed" signal
-            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index, argv);
+            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
+                                        index - meta->methodOffset(), argv);
         }
         return S_OK;
     }
@@ -3123,7 +3126,6 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
             // Parameter types
             for (int i = -1; i < argc; ++i) {
                 QByteArray typeName = (i < 0) ? it.value().type : paramTypeNames.at(i);
-                Q_ASSERT(!typeName.isEmpty());
                 int_data[paramsOffset++] = nameToTypeInfo(typeName, strings);
             }
             // Parameter names
@@ -3451,7 +3453,8 @@ static bool checkHRESULT(HRESULT hres, EXCEPINFO *exc, QAxBase *that, const QStr
 
                 if (QAxEventSink::signalHasReceivers(that->qObject(), "exception(int,QString,QString,QString)")) {
                     void *argv[] = {0, &code, &source, &desc, &help};
-                    QAxBase::qt_static_metacall(that, QMetaObject::InvokeMetaMethod, exceptionSignal, argv);
+                    QAxBase::qt_static_metacall(that, QMetaObject::InvokeMetaMethod,
+                                                exceptionSignal - mo->methodOffset(), argv);
                     printWarning = false;
                 }
             }
