@@ -452,6 +452,7 @@ static const char* const type_map[][2] =
     { "QCString",	"BSTR" },
     { "bool",		"VARIANT_BOOL" },
     { "int",		"int" },
+    { "void",       "void" },
     { "uint",		"unsigned int" },
     { "double",		"double" }, 
     { "QColor",		"OLE_COLOR" },
