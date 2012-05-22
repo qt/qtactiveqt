@@ -46,7 +46,6 @@
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
-#include <qcolormap.h>
 #include <qcursor.h>
 #include <qpixmap.h>
 #include <qpainter.h>
@@ -142,8 +141,6 @@ static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
     desc.picType = PICTYPE_BITMAP;
     
     desc.bmp.hbitmap = 0;
-    /* FIXME 4.10.2011: was "desc.bmp.hpal = QColormap::hPal();", but
-     * with Lighthouse, QColormap no longer has a handle. */
     desc.bmp.hpal = 0;
     
     if (!pixmap.isNull()) {
@@ -218,14 +215,7 @@ static DATE QDateTimeToDATE(const QDateTime &dt)
 
 QColor OLEColorToQColor(uint col)
 {
-    Q_UNIMPLEMENTED();
-    return QColor();
-/*  FIXME: 4.10.2011:
-    COLORREF cref;
-    OleTranslateColor(col, QColormap::hPal(), &cref);
-    return QColor(GetRValue(cref),GetGValue(cref),GetBValue(cref));
-
-*/
+    return QColor(GetRValue(col),GetGValue(col),GetBValue(col));
 }
 
 /*
