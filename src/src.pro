@@ -1,4 +1,4 @@
 TEMPLATE = subdirs
 
-SUBDIRS += tools activeqt
+SUBDIRS += activeqt tools
 CONFIG += ordered
