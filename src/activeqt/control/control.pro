@@ -11,7 +11,7 @@ CONFIG  += create_prl
 INCLUDEPATH *= $$QT.activeqt.includes
 
 QT += core-private gui-private widgets
-CONFIG  += qt warn_off staticlib
+CONFIG  += qt warn_off static
 DESTDIR  = $$QT.activeqt.libs
 
 DEFINES	+= QAX_SERVER

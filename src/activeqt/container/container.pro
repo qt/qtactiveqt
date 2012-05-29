@@ -12,7 +12,7 @@ INCLUDEPATH *= $$QT.activeqt.includes
 
 QT += core-private gui gui-private widgets widgets-private
 
-CONFIG  += qt warn_on staticlib
+CONFIG  += qt warn_on static
 DESTDIR  = $$QT.activeqt.libs
 
 LIBS    += -lole32 -loleaut32
