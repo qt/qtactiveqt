@@ -741,6 +741,8 @@ static QByteArray addDefaultArguments(const QByteArray &prototype, int numDefArg
         QByteArray type = ptype.mid(in, ptype.indexOf(' ', in) - in);
         if (type == "enum")
             type += ' ' + ptype.mid(in + 5, ptype.indexOf(' ', in + 5) - in - 5);
+        if (type == "struct")
+            type += ' ' + ptype.mid(in + 7, ptype.indexOf(' ', in + 7) - in - 7);
         ptype.replace(in, type.length(), QByteArray("VARIANT /*was: ") + type + "*/");
         --numDefArgs;
     }
