@@ -62,6 +62,7 @@
 #include <ocidl.h>
 #include <olectl.h>
 #include <private/qcoreapplication_p.h>
+#include <qwindow.h>
 
 #include "qaxfactory.h"
 #include "qaxbindable.h"
@@ -1257,11 +1258,9 @@ bool QAxServerBase::internalCreate()
 
     internalBind();
     if (isWidget) {
-        // FIXME: 4.10.2011 Does this work with the parent's HWND?
         if (!stayTopLevel) {
             QEvent e(QEvent::EmbeddingControl);
             QApplication::sendEvent(qt.widget, &e);
-            ::SetWindowLong(hwndForWidget(qt.widget), GWL_STYLE, WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
         }
         qt.widget->setAttribute(Qt::WA_QuitOnClose, false);
         qt.widget->move(0, 0);
@@ -1353,22 +1352,23 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
 
         case WM_QUERYENDSESSION:
         case WM_DESTROY:
-            // save the window handle
-            // FIXME: 4.10.2011 Does this work with the parent's HWND?
             if (that->qt.widget) {
                 that->qt.widget->hide();
-                ::SetParent(hwndForWidget(that->qt.widget), 0);
             }
 	    break;
 
         case WM_SHOWWINDOW:
 	    if(wParam) {
 	        that->internalCreate();
-            // FIXME: 4.10.2011 Does this work with the parent's HWND?
 	        if (!that->stayTopLevel) {
-            ::SetParent(hwndForWidget(that->qt.widget), that->m_hWnd);
-		    that->qt.widget->raise();
-		    that->qt.widget->move(0, 0);
+                QWindow *widgetWindow = that->qt.widget->windowHandle();
+                // Set this property on window to pass the native handle to platform plugin,
+                // so that it can create the window with proper flags instead of thinking
+                // it is toplevel.
+                if (widgetWindow)
+                    widgetWindow->setProperty("_q_embedded_native_parent_handle", WId(that->m_hWnd));
+                that->qt.widget->raise();
+                that->qt.widget->move(0, 0);
 	        }
 	        that->qt.widget->show();
 	    } else if (that->qt.widget) {
