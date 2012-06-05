@@ -1741,7 +1741,6 @@ void QAxHostWidget::showEvent(QShowEvent *)
 
 bool QAxHostWidget::nativeEvent(const QByteArray &eventType, void *message, long *result)
 {
-    qDebug(eventType.constData());
     if (axhost && axhost->inPlaceObjectWindowless
         && eventType == QByteArrayLiteral("windows_generic_MSG")) {
         Q_ASSERT(axhost->m_spInPlaceObject);
