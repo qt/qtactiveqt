@@ -39,6 +39,7 @@
 ****************************************************************************/
 
 #define QT_NO_CAST_TO_ASCII
+#define NOMINMAX
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
