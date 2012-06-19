@@ -1123,7 +1123,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     // dummy application to create widgets
     bool delete_qApp = false;
     if (!qApp) {
-        int argc;
+        int argc=0;
         (void)new QApplication(argc, 0);
         delete_qApp = true;
     }
