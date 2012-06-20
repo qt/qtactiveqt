@@ -1,0 +1,6 @@
+Sanity-Review+1: Oswald Buddenhagen <oswald.buddenhagen@nokia.com>
+Code-Review+2: Friedemann Kleint <Friedemann.Kleint@nokia.com>
+Sanity-Review-1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Reviewed-on: https://codereview.qt-project.org/24618
+Project: qt/qtactiveqt
+Branch: refs/heads/master
