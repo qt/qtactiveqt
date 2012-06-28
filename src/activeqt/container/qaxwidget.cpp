@@ -575,7 +575,6 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
         host = new QAxHostWidget(widget, this);
 
     bool showHost = false;
-    HRESULT hr = S_OK;
     if (!m_spOleObject)
         widget->queryInterface(IID_IOleObject, (void**)&m_spOleObject);
     if (m_spOleObject) {
@@ -592,8 +591,8 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
             // try to activate as document server
                 IStorage *storage = 0;
                 ILockBytes * bytes = 0;
-                HRESULT hres = ::CreateILockBytesOnHGlobal(0, TRUE, &bytes);
-                hres = ::StgCreateDocfileOnILockBytes(bytes, STGM_SHARE_EXCLUSIVE|STGM_CREATE|STGM_READWRITE, 0, &storage);
+                ::CreateILockBytesOnHGlobal(0, TRUE, &bytes);
+                ::StgCreateDocfileOnILockBytes(bytes, STGM_SHARE_EXCLUSIVE|STGM_CREATE|STGM_READWRITE, 0, &storage);
 
                 persistStorage->InitNew(storage);
                 persistStorage->Release();
@@ -709,9 +708,9 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
 
         RECT rcPos = { host->x(), host->y(), host->x()+sizehint.width(), host->y()+sizehint.height() };
 
-        hr = m_spOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, 0, (IOleClientSite*)this, 0,
-                                   (HWND)host->winId(),
-                                   &rcPos);
+        m_spOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, 0, (IOleClientSite*)this, 0,
+                              (HWND)host->winId(),
+                              &rcPos);
 
         if (!m_spOleControl)
             m_spOleObject->QueryInterface(IID_IOleControl, (void**)&m_spOleControl);
