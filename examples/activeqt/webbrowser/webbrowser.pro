@@ -3,8 +3,6 @@ TEMPLATE = app
 CONFIG += qaxcontainer
 QT += widgets
 
-QTDIR_build:REQUIRES = shared
-
 HEADERS  = webaxwidget.h
 SOURCES	 = main.cpp
 FORMS	 = mainwindow.ui
