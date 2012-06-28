@@ -1844,7 +1844,10 @@ void QAxHostWidget::focusOutEvent(QFocusEvent *e)
 
 void QAxHostWidget::paintEvent(QPaintEvent*)
 {
-    if (!QPainter::redirected(this))
+    // QWidget having redirected paint device indicates non-regular paint, which implies
+    // somebody is grabbing the widget instead of painting it to screen.
+    QPoint dummyOffset(0, 0);
+    if (!redirected(&dummyOffset))
         return;
 
     IViewObject *view = 0;
@@ -1853,7 +1856,6 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     if (!view)
         return;
 
-    // somebody tries to grab us!
     QPixmap pm(size());
     pm.fill();
 
