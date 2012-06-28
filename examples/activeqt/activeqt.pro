@@ -4,9 +4,9 @@ SUBDIRS      += comapp \
                 menus \
                 multiple \
                 simple \
-                webbrowser \
                 wrapper
-
+		
+contains(QT_CONFIG, shared):SUBDIRS += webbrowser
 contains(QT_CONFIG, opengl):SUBDIRS += opengl
 
 # For now only the contain examples with mingw, for the others you need
