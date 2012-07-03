@@ -1,10 +1,7 @@
-TEMPLATE        = app
-CONFIG         += console
+DESTDIR = $$QT.activeqt.bins
 
-QT -= gui
+QT = core
 
-SOURCES         = main.cpp
-DESTDIR         = $$QT.activeqt.bins
+SOURCES = main.cpp
 
-target.path = $$[QT_INSTALL_BINS]
-INSTALLS += target
+load(qt_tool)
