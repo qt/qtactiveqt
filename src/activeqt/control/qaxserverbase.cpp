@@ -80,6 +80,10 @@
 #define ULONG_PTR DWORD
 #endif
 
+// Statusbar messageChanged() signal is connected to a fake slot
+// that is custom handled in qt_metacall. Index needs to fit to ushort.
+#define STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX 60000
+
 QT_BEGIN_NAMESPACE
 
 extern HHOOK qax_hhook;
@@ -1892,7 +1896,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
 {
     Q_ASSERT(call == QMetaObject::InvokeMetaMethod);
 
-    if (index == -1) {
+    if (index == STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX) {
         if (sender() && m_spInPlaceFrame) {
             if (qobject_cast<QStatusBar*>(sender()) != statusBar)
                 return true;
@@ -3425,7 +3429,7 @@ HRESULT WINAPI QAxServerBase::UIDeactivate()
             if (statusBar) {
                 statusBar->removeEventFilter(this);
 		const int index = statusBar->metaObject()->indexOfSignal("messageChanged(QString)");
-		QMetaObject::disconnect(statusBar, index, this, -1);
+        QMetaObject::disconnect(statusBar, index, this, STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX);
 	        statusBar = 0;
             }
 	    m_spInPlaceFrame->SetActiveObject(0, 0);
@@ -3825,7 +3829,7 @@ HRESULT QAxServerBase::internalActivate()
 		    statusBar = qt.widget ? qt.widget->findChild<QStatusBar*>() : 0;
 		    if (statusBar && !statusBar->isVisible()) {
 			const int index = statusBar->metaObject()->indexOfSignal("messageChanged(QString)");
-			QMetaObject::connect(statusBar, index, this, -1);
+            QMetaObject::connect(statusBar, index, this, STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX);
 			statusBar->hide();
 			statusBar->installEventFilter(this);
 		    }
