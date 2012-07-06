@@ -64,6 +64,7 @@
 #include <olectl.h>
 #include <private/qcoreapplication_p.h>
 #include <qwindow.h>
+#include <qpa/qplatformnativeinterface.h>
 
 #include "qaxfactory.h"
 #include "qaxbindable.h"
@@ -1370,8 +1371,23 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
                 // Set this property on window to pass the native handle to platform plugin,
                 // so that it can create the window with proper flags instead of thinking
                 // it is toplevel.
-                if (widgetWindow)
+                if (widgetWindow) {
                     widgetWindow->setProperty("_q_embedded_native_parent_handle", WId(that->m_hWnd));
+
+                    // If embedded widget is native, such as QGLWidget, it may have already created
+                    // a window before now, probably as an undesired toplevel. In that case set the
+                    // proper parent window and set the window frameless to position it correctly.
+                    if (widgetWindow
+                        && that->qt.widget->testAttribute(Qt::WA_WState_Created)
+                        && !that->qt.widget->isVisible()) {
+                        HWND h = static_cast<HWND>(QGuiApplication::platformNativeInterface()->
+                            nativeResourceForWindow("handle", widgetWindow));
+                        if (h)
+                            ::SetParent(h, that->m_hWnd);
+                        Qt::WindowFlags flags = widgetWindow->windowFlags();
+                        widgetWindow->setWindowFlags(Qt::FramelessWindowHint);
+                    }
+                }
                 that->qt.widget->raise();
                 that->qt.widget->move(0, 0);
 	        }
