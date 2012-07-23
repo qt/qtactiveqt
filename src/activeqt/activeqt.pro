@@ -5,6 +5,7 @@ SUBDIRS	= container
 !wince*: SUBDIRS += control
 
 TARGET = ActiveQt
+VERSION = $$QT_VERSION
 MODULE = activeqt
 MODULE_DEPENDS = widgets
 MODULE_PRI = $$section(PWD, /, 0, -3)/modules/qt_activeqt.pri
