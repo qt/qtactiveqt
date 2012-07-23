@@ -60,6 +60,7 @@
 #include <qregexp.h>
 #include <quuid.h>
 #include <qwhatsthis.h>
+#include <qabstractnativeeventfilter.h>
 
 #include <windowsx.h>
 #include <ocidl.h>
@@ -462,19 +463,6 @@ static Qt::KeyboardModifiers translateModifierState(int s)
     return bst;
 }
 
-static QAbstractEventDispatcher::EventFilter previous_filter = 0;
-#if QT_VERSION >= 0x050000
-/* FIXME Implement QAbstractEventDispatcher's event filtering mechanism properly as done in QObject::install/removeEventFilter
- * to enable a reliable chain of event filters living in different DLLs, from which filters can be removed at arbitrary times.
- * Not possible with the current API which requires a newly installed event filter to call the
- * previous event filter - if the previous event filter is unloaded, then the later event filter trying to call it will crash the
- * process. */
-#  ifdef Q_CC_MSVC
-#    pragma message ("Fix QAbstractEventDispatcher::setEventFilter")
-#  else
-#    warning "Fix QAbstractEventDispatcher::setEventFilter"
-#  endif
-#endif
 #if defined(Q_WS_WINCE)
 static int filter_ref = 0;
 #else
@@ -482,7 +470,14 @@ static const wchar_t *qaxatom = L"QAxContainer4_Atom";
 #endif
 
 // The filter procedure listening to user interaction on the control
-bool axc_FilterProc(void *m)
+class QAxNativeEventFilter : public QAbstractNativeEventFilter
+{
+public:
+    virtual bool nativeEventFilter(const QByteArray &eventType, void *message, long *) Q_DECL_OVERRIDE;
+};
+Q_GLOBAL_STATIC(QAxNativeEventFilter, s_nativeEventFilter)
+
+bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *)
 {
     MSG *msg = (MSG*)m;
     const uint message = msg->message;
@@ -535,9 +530,6 @@ bool axc_FilterProc(void *m)
             }
         }
     }
-
-    if (previous_filter)
-        return previous_filter(m);
 
     return false;
 }
@@ -2030,7 +2022,7 @@ bool QAxWidget::createHostWindow(bool initialized, const QByteArray &data)
     ATOM filter_ref = FindAtom(qaxatom);
 #endif
     if (!filter_ref)
-        previous_filter = QAbstractEventDispatcher::instance()->setEventFilter(axc_FilterProc);
+        QAbstractEventDispatcher::instance()->installNativeEventFilter(s_nativeEventFilter());
 #if !defined(Q_OS_WINCE)
     AddAtom(qaxatom);
 #else
@@ -2075,8 +2067,7 @@ void QAxWidget::clear()
 #else
         if (!filter_ref && !--filter_ref) {
 #endif
-            QAbstractEventDispatcher::instance()->setEventFilter(previous_filter);
-            previous_filter = 0;
+            QAbstractEventDispatcher::instance()->removeNativeEventFilter(s_nativeEventFilter());
         }
     }
 

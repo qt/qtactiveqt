@@ -56,6 +56,7 @@ class QAxHostWindow;
 class QAxAggregated;
 
 class QAxClientSite;
+class QAxWidgetPrivate;
 
 class QAxWidget : public QWidget, public QAxBase
 {
@@ -92,7 +93,8 @@ protected:
 private:
     friend class QAxClientSite;
     QAxClientSite *container;
-    
+
+    QAxWidgetPrivate *d;
     const QMetaObject *parentMetaObject() const;
 };
 

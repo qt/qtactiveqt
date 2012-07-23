@@ -65,6 +65,7 @@
 #include <private/qcoreapplication_p.h>
 #include <qwindow.h>
 #include <qpa/qplatformnativeinterface.h>
+#include <qabstractnativeeventfilter.h>
 
 #include "qaxfactory.h"
 #include "qaxbindable.h"
@@ -752,7 +753,13 @@ LRESULT QT_WIN_CALLBACK axs_FilterProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 // filter for executable case to hook into Qt eventloop
 // for DLLs the client calls TranslateAccelerator
-bool qax_winEventFilter(void *message)
+class QAxWinEventFilter : public QAbstractNativeEventFilter
+{
+public:
+    virtual bool nativeEventFilter(const QByteArray &, void *message, long *) Q_DECL_OVERRIDE;
+};
+
+bool QAxWinEventFilter::nativeEventFilter(const QByteArray &, void *message, long *)
 {
     MSG *pMsg = (MSG*)message;
     if (pMsg->message < WM_KEYFIRST || pMsg->message > WM_KEYLAST)
@@ -782,6 +789,7 @@ bool qax_winEventFilter(void *message)
     return hres == S_OK;
 }
 
+Q_GLOBAL_STATIC(QAxWinEventFilter, qax_winEventFilter);
 
 // COM Factory class, mapping COM requests to ActiveQt requests.
 // One instance of this class for each ActiveX the server can provide.
@@ -862,7 +870,7 @@ public:
         qApp->setQuitOnLastWindowClosed(false);
 
         if (qAxOutProcServer)
-            QAbstractEventDispatcher::instance()->setEventFilter(qax_winEventFilter);
+            QAbstractEventDispatcher::instance()->installNativeEventFilter(qax_winEventFilter());
         else
             QApplication::instance()->d_func()->in_exec = true;
 
