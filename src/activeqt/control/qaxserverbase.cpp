@@ -782,7 +782,6 @@ bool qax_winEventFilter(void *message)
     return hres == S_OK;
 }
 
-extern void qWinMsgHandler(QtMsgType t, const char* str);
 
 // COM Factory class, mapping COM requests to ActiveQt requests.
 // One instance of this class for each ActiveX the server can provide.
@@ -856,7 +855,6 @@ public:
 
     	// Make sure a QApplication instance is present (inprocess case)
         if (!qApp) {
-            qInstallMsgHandler(qWinMsgHandler);
             qax_ownQApp = true;
             int argc = 0;
             QApplication *app = new QApplication(argc, 0);
