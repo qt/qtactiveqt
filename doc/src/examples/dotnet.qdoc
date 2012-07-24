@@ -33,10 +33,6 @@
     .NET environment, and how .NET objects can be used in a Qt
     environment.
 
-    If you need to combine Qt and Win Forms widgets in the same
-    application, you might want to use the higher-level
-    \l{QtWinForms Solution} instead.
-
     Contents:
 
     \tableofcontents
@@ -336,6 +332,4 @@
     implement and compile performance critical algorithms into native code
     kicks in, ActiveQt becomes a valid choice for making even non-visual
     parts of your application accessible to .NET.
-
-    \sa {QtWinForms Solution}
 */
