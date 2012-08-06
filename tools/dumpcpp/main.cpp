@@ -481,8 +481,6 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
 
         if (!slotTag.isEmpty())
             out << slotTag << " ";
-        if (slotType.isEmpty())
-            out << "void ";
         else
             out << slotType << " ";
         if (category & OnlyInlines)
@@ -506,7 +504,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
             out << endl;
             out << indent << "{" << endl;
             
-            if (!slotType.isEmpty()) {
+            if (slotType != QStringLiteral("void")) {
                 out << indent << "    " << slotType << " qax_result";
                 if (slotType.endsWith('*'))
                     out << " = 0";
@@ -522,7 +520,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
                 }
             }
             out << indent << "    void *_a[] = {";
-            if (!slotType.isEmpty())
+            if (slotType != QStringLiteral("void"))
                 out << "(void*)&qax_result";
             else
                 out << "0";
@@ -533,7 +531,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
             out << "};" << endl;
 
             out << indent << "    qt_metacall(QMetaObject::InvokeMetaMethod, " << islot << ", _a);" << endl;
-            if (!slotType.isEmpty())
+            if (slotType != QStringLiteral("void"))
                 out << indent << "    return qax_result;" << endl;
             out << indent << "}" << endl;
         }
