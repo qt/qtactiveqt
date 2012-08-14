@@ -117,9 +117,9 @@ void MainWindow::on_actionFileNew_triggered()
     QAxSelect select(this);
     if (select.exec()) {
         QAxWidget *container = new QAxWidget;
-        mdiArea->addSubWindow(container);
         container->setControl(select.clsid());
         container->setObjectName(container->windowTitle());
+        mdiArea->addSubWindow(container);
         container->show();
     }
     updateGUI();
