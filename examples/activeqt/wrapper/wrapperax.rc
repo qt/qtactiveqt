@@ -1,7 +1,7 @@
 #include "winver.h"
 
 1 TYPELIB "wrapperax.rc"
-1 ICON DISCARDABLE "..\\..\\..\\src\\activeqt\\control\\qaxserver.ico"
+1 ICON DISCARDABLE "qaxserver.ico"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION 1,0,0,0
