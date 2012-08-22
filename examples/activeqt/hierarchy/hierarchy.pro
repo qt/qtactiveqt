@@ -7,11 +7,11 @@ QT += widgets
 
 SOURCES	 = objects.cpp main.cpp
 HEADERS	 = objects.h
-RC_FILE	 = $$QT.activeqt.sources/control/qaxserver.rc
-DEF_FILE = $$QT.activeqt.sources/control/qaxserver.def
+RC_FILE  = hierarchy.rc
+DEF_FILE = hierarchy.def
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/activeqt/hierarchy
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS hierarchy.pro
+sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS $$RC_FILE $$DEF_FILE hierarchy.ico hierarchy.pro
 sources.path = $$[QT_INSTALL_EXAMPLES]/activeqt/hierarchy
 INSTALLS += target sources
