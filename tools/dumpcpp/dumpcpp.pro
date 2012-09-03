@@ -1,7 +1,7 @@
 TEMPLATE = app
 
 CONFIG  += console qaxcontainer
-QT += widgets
+QT += widgets core-private
 
 SOURCES += main.cpp
 
