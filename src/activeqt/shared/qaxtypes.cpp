@@ -244,13 +244,16 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
     QVariant qvar = var;
     // "type" is the expected type, so coerce if necessary
     QVariant::Type proptype = typeName.isEmpty() ? QVariant::Invalid : QVariant::nameToType(typeName);
-    if (proptype == QVariant::UserType && !typeName.isEmpty()) {
+    if ((proptype == QVariant::UserType || proptype == QMetaType::QVariant) && !typeName.isEmpty()) {
         if (typeName == "short" || typeName == "char")
             proptype = QVariant::Int;
         else if (typeName == "float")
             proptype = QVariant::Double;
     }
-    if (proptype != QVariant::Invalid && proptype != QVariant::UserType && proptype != qvar.type()) {
+    if (proptype != QVariant::Invalid
+        && proptype != QVariant::UserType
+        && proptype != QMetaType::QVariant
+        && proptype != qvar.type()) {
         if (qvar.canConvert(proptype))
             qvar.convert(proptype);
         else
