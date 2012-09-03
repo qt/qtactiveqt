@@ -1,3 +1,4 @@
 TEMPLATE = subdirs
 SUBDIRS += \
-    qaxobject
+    qaxobject \
+    dumpcpp
