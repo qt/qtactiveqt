@@ -1,9 +1,8 @@
-TEMPLATE = app
+DESTDIR = $$QT.activeqt.bins
 
 CONFIG  += console qaxcontainer
-QT += widgets
+QT += widgets core-private
 
-SOURCES += main.cpp
+SOURCES = main.cpp
 
-target.path = $$[QT_INSTALL_BINS]
-INSTALLS += target
+load(qt_tool)
