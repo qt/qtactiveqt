@@ -1564,15 +1564,19 @@ private:
     inline QByteArray replaceType(const QByteArray &type)
     {
         int i = 0;
-        while (type_conversion[i][0]) {
-            int len = int(strlen(type_conversion[i][0]));
-            int ti;
-            if ((ti = type.indexOf(type_conversion[i][0])) != -1) {
-                QByteArray rtype(type);
-                rtype.replace(ti, len, type_conversion[i][1]);
-                return rtype;
+        if (type.isEmpty()) {
+            return QByteArray("void");
+        } else {
+            while (type_conversion[i][0]) {
+                int len = int(strlen(type_conversion[i][0]));
+                int ti;
+                if ((ti = type.indexOf(type_conversion[i][0])) != -1) {
+                    QByteArray rtype(type);
+                    rtype.replace(ti, len, type_conversion[i][1]);
+                    return rtype;
+                }
+                ++i;
             }
-            ++i;
         }
         return type;
     }
@@ -1681,17 +1685,6 @@ private:
         if (flags & Writable)
             flags |= Stored;
         prop.flags = flags;
-        QVariant::Type vartype = QVariant::nameToType(prop.type);
-        switch(vartype) {
-        case QVariant::Invalid:
-        case QVariant::UserType:
-            if (QMetaType::type(prop.type) == QMetaType::UnknownType)
-                qWarning("QAxBase: Unsupported property '%s' type: %s (%d)",
-                         name.constData(), prop.type.data(), vartype);
-            break;
-        default:
-            break;
-        }
     }
 
     inline bool hasProperty(const QByteArray &name)
@@ -3673,7 +3666,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
         QByteArray type = d->metaobj->paramType(signature, p, &out);
         QVariant::Type vt = QVariant::nameToType(type);
         QVariant qvar;
-        if (vt != QVariant::UserType)
+        if (vt != QVariant::UserType && vt != QMetaType::QVariant)
             qvar = QVariant(vt, v[p + 1]);
 
         if (!qvar.isValid()) {
