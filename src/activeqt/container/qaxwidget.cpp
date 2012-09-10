@@ -1268,7 +1268,7 @@ QMenu *QAxClientSite::generatePopup(HMENU subMenu, QWidget *parent)
             if (lastSep != -1) {
                 QString keyString = text.right(text.length() - lastSep);
                 accel = keyString;
-                if ((int)accel)
+                if (!accel.isEmpty())
                     text = text.left(lastSep);
             }
 
@@ -1291,7 +1291,7 @@ QMenu *QAxClientSite::generatePopup(HMENU subMenu, QWidget *parent)
             }
 
             if (action) {
-                if (int(accel))
+                if (!accel.isEmpty())
                     action->setShortcut(accel);
                 if (!icon.isNull())
                     action->setIcon(icon);
