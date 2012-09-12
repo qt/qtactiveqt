@@ -177,9 +177,9 @@ void AddressBookModel::addItem(const QString &firstName, const QString &lastName
 //! [7] //! [8]
 void AddressBookModel::update()
 {
+    beginResetModel();
     cache.clear();
-
-    emit reset();
+    endResetModel();
 }
 
 
