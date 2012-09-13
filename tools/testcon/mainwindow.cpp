@@ -56,10 +56,10 @@ QAxObject *ax_mainWindow = 0;
 
 static QTextEdit *debuglog = 0;
 
-static void redirectDebugOutput(QtMsgType type, const char*msg)
+static void redirectDebugOutput(QtMsgType type, const QMessageLogContext &, const QString &msg)
 {
     Q_UNUSED(type);
-    debuglog->append(QLatin1String(msg));
+    debuglog->append(msg);
 }
 
 QT_END_NAMESPACE
@@ -80,7 +80,7 @@ MainWindow::MainWindow(QWidget *parent)
     dlgAmbient = 0;
     scripts = 0;
     debuglog = logDebug;
-    oldDebugHandler = qInstallMsgHandler(redirectDebugOutput);
+    oldDebugHandler = qInstallMessageHandler(redirectDebugOutput);
     QHBoxLayout *layout = new QHBoxLayout(Workbase);
     mdiArea = new QMdiArea(Workbase);
     layout->addWidget(mdiArea);
@@ -92,7 +92,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    qInstallMsgHandler(oldDebugHandler);
+    qInstallMessageHandler(oldDebugHandler);
     debuglog = 0;
 }
 
