@@ -94,7 +94,7 @@ private:
     QAxScriptManager *scripts;
     QMdiArea *mdiArea;
 
-    QtMsgHandler oldDebugHandler;
+    QtMessageHandler oldDebugHandler;
 
 private slots:
     void updateGUI();
