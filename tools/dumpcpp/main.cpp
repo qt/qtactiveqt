@@ -1412,20 +1412,45 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
 
         // partial template specialization for qMetaTypeCreateHelper and qMetaTypeConstructHelper
         declOut << "QT_BEGIN_NAMESPACE" << endl << endl;
+        declOut << "namespace QtMetaTypePrivate {" << end;
         for (int t = 0; t < subtypes.count(); ++t) {
             QByteArray subType(subtypes.at(t));
-            declOut << "template<>" << endl;
-            declOut << "inline void *qMetaTypeCreateHelper<" << libName << "::" << subType << " >(const void *t)" << endl;
-            declOut << "{ Q_ASSERT(!t); Q_UNUSED(t); return new " << libName << "::" << subType << "; }" << endl;
-            declOut << endl;
 
-            // qMetaTypeConstructHelper is required to make generated files compile,
-            // though it doesn't seem to be used in practice.
             declOut << "template<>" << endl;
-            declOut << "inline void *qMetaTypeConstructHelper<" << libName << "::" << subType << " >(void *where, const void *t)" << endl;
-            declOut << "{ Q_ASSERT(!t); Q_UNUSED(t); return new (where) " << libName << "::" << subType << "; }" << endl;
-            declOut << endl;
+            declOut << "class QMetaTypeFunctionHelper<" << libName << "::" << subType << ", /* Accepted */ true> {" << endl;
+
+            declOut << "    static void Delete(void *t) { delete static_cast<" << libName << "::" << subType << "*>(t); }" << endl;
+
+            declOut << "    static void *Create(const void *t)" << endl;
+            declOut << "    {" << endl;
+            declOut << "        if (t)" << endl;
+            declOut << "            return new " << libName << "::" << subType << "(*static_cast<const " << libName << "::" << subType << "*>(t));" << endl;
+            declOut << "        return new " << libName << "::" << subType << "();" << endl;
+            declOut << "    }" << endl;
+
+            declOut << "    static void Destruct(void *t)" << endl;
+            declOut << "    {" << endl;
+            declOut << "        Q_UNUSED(t) // Silence MSVC that warns for POD types." << endl;
+            declOut << "        static_cast<" << libName << "::" << subType << "*>(t)->~" << libName << "::" << subType << "();" << endl;
+            declOut << "    }" << endl;
+
+            declOut << "    static void *Construct(void *where, const void *t)" << endl;
+            declOut << "    {" << endl;
+            declOut << "        if (t)" << endl;
+            declOut << "            return new (where) " << libName << "::" << subType << "(*static_cast<const " << libName << "::" << subType << "*>(t));" << endl;
+            declOut << "        return new (where) " << libName << "::" << subType << ";" << endl;
+            declOut << "    }" << endl;
+
+            declOut << "#ifndef QT_NO_DATASTREAM" << endl;
+
+            declOut << "    // static void Save(QDataStream &stream, const void *t) { stream << *static_cast<const " << libName << "::" << subType << "*>(t); }" << endl;
+            declOut << "    // static void Load(QDataStream &stream, void *t) { stream >> *static_cast<" << libName << "::" << subType << "*>(t); }" << endl;
+
+            declOut << "#endif // QT_NO_DATASTREAM" << endl;
+
+            declOut << "};" << endl << endl;
         }
+        declOut << "} // namespace QtMetaTypePrivate" << end;
         declOut << "QT_END_NAMESPACE" << endl << endl;
         declOut << "#endif" << endl;
         declOut << endl;
