@@ -2,6 +2,9 @@ TEMPLATE = lib
 TARGET   = QAxContainer
 CONFIG  += create_prl
 
+contains(QT_CONFIG, debug_and_release):CONFIG += debug_and_release
+contains(QT_CONFIG, build_all):CONFIG += build_all
+
 !debug_and_release|build_pass {
     CONFIG(debug, debug|release) {
         TARGET = $$member(TARGET, 0)d
