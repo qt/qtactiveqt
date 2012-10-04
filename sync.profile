@@ -1,5 +1,6 @@
 %modules = ( # path to module name map
-    "ActiveQt" => "$basedir/src/activeqt",
+    "QAxServer" => "$basedir/src/activeqt/control",
+    "QAxContainer" => "$basedir/src/activeqt/container",
 );
 %moduleheaders = ( # restrict the module headers to those found in relative path
 );

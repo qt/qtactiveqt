@@ -2,11 +2,9 @@ TEMPLATE = lib
 TARGET   = QAxContainer
 CONFIG  += create_prl
 
-!debug_and_release|build_pass {
-    CONFIG(debug, debug|release) {
-        TARGET = $$member(TARGET, 0)d
-    }
-}
+MODULE = QAxContainer
+load(qt_module)
+DEFINES -= QT_NO_CAST_TO_ASCII QT_ASCII_CAST_WARNINGS QT_USE_QSTRINGBUILDER
 
 INCLUDEPATH *= $$QT.activeqt.includes
 
@@ -40,4 +38,3 @@ SOURCES =   qaxbase.cpp \
 
 FORMS =     qaxselect.ui
 
-load(qt_installs)
