@@ -8,6 +8,9 @@ CONFIG  += create_prl
    }
 }
 
+MODULE = QAxServer
+load(qt_module)
+
 INCLUDEPATH *= $$QT.activeqt.includes
 
 QT += core-private gui-private widgets
@@ -36,4 +39,3 @@ SOURCES =   qaxserver.cpp \
             ../shared/qaxtypes.cpp \
             ../shared/qaxutils.cpp
 
-load(qt_installs)

@@ -8,6 +8,9 @@ CONFIG  += create_prl
     }
 }
 
+MODULE = QAxContainer
+load(qt_module)
+
 INCLUDEPATH *= $$QT.activeqt.includes
 
 QT += core-private gui gui-private widgets widgets-private
@@ -40,4 +43,3 @@ SOURCES =   qaxbase.cpp \
 
 FORMS =     qaxselect.ui
 
-load(qt_installs)
