@@ -2799,7 +2799,6 @@ void MetaObjectGenerator::readEventInterface(ITypeInfo *eventinfo, IConnectionPo
             break;
         if (funcdesc->invkind != INVOKE_FUNC ||
             funcdesc->funckind != FUNC_DISPATCH) {
-            eventinfo->ReleaseTypeAttr(eventattr);
             eventinfo->ReleaseFuncDesc(funcdesc);
             continue;
         }
