@@ -56,6 +56,9 @@
 #include <qmetaobject.h>
 #include <qsettings.h>
 #include <qdebug.h>
+#include <QGuiApplication>
+#include <qpa/qplatformwindow.h>
+#include <qpa/qplatformnativeinterface.h>
 
 #ifndef QT_NO_THREAD
 #   include <qmutex.h>
@@ -70,6 +73,8 @@
 #include <ctype.h>
 
 #include "../shared/qaxtypes.h"
+
+#define ASYNC_EXPOSE_LITERAL QStringLiteral("async_expose")
 
 QT_BEGIN_NAMESPACE
 
@@ -100,7 +105,32 @@ static inline HRESULT Invoke(IDispatch *disp,
         }
     }
 
-    return disp->Invoke(dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+    // If there is a WM_PAINT in queue for one of Qt's windows, set said window to require
+    // asynchronous exposes. Otherwise painter can get corrupted if Invoke was called during an
+    // existing paint operation (e.g. from a slot that was invoked during paint).
+    MSG msg;
+    QPlatformWindow *pw = 0;
+    bool asyncSet = false;
+    if (PeekMessage(&msg, 0, WM_PAINT, WM_PAINT, PM_NOREMOVE)) {
+        const QWindowList windowList = QGuiApplication::allWindows();
+        for (int i = windowList.size() - 1; i >= 0; --i) {
+            pw = windowList[i]->handle();
+            if (pw && reinterpret_cast<HWND>(pw->winId()) == msg.hwnd) {
+                asyncSet = true;
+                QGuiApplication::platformNativeInterface()->setWindowProperty(
+                    pw, ASYNC_EXPOSE_LITERAL, QVariant(true));
+            }
+        }
+    }
+
+    HRESULT retval = disp->Invoke(dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
+
+    if (asyncSet) {
+        QGuiApplication::platformNativeInterface()->setWindowProperty(
+            pw, ASYNC_EXPOSE_LITERAL, QVariant(false));
+    }
+
+    return retval;
 }
 
 /*
