@@ -56,6 +56,8 @@
 #include <qmetaobject.h>
 #include <qsettings.h>
 #include <qdebug.h>
+#include <QGuiApplication>
+#include <qpa/qplatformnativeinterface.h>
 
 #ifndef QT_NO_THREAD
 #   include <qmutex.h>
@@ -1220,6 +1222,16 @@ bool QAxBase::initialize(IUnknown **ptr)
 {
     if (*ptr || control().isEmpty())
         return false;
+
+    // Request asynchronous expose events to be used when application uses ActiveQt objects.
+    // Otherwise painter can get corrupted if Invoke or some other COM method that cause Windows
+    // messages to be processed is called during an existing paint operation when WM_PAINT is
+    // also in the queue.
+    static bool asyncExposeSet = false;
+    if (!asyncExposeSet) {
+        QGuiApplication::platformNativeInterface()->setProperty("asyncExpose", QVariant(true));
+        asyncExposeSet = true;
+    }
 
     *ptr = 0;
 
