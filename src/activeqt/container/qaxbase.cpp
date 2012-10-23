@@ -56,6 +56,8 @@
 #include <qmetaobject.h>
 #include <qsettings.h>
 #include <qdebug.h>
+#include <QGuiApplication>
+#include <qpa/qplatformwindow.h>
 
 #ifndef QT_NO_THREAD
 #   include <qmutex.h>
@@ -100,6 +102,21 @@ static inline HRESULT Invoke(IDispatch *disp,
         }
     }
 
+    // If there is a WM_PAINT in queue for one of Qt's windows, post a custom message to the same
+    // window to indicate that any expose event should be asynchronous. Otherwise painter can
+    // get corrupted if Invoke was called during paint.
+    MSG msg;
+    if (PeekMessage(&msg, 0, WM_PAINT, WM_PAINT, PM_NOREMOVE)) {
+        const QWindowList windowList = QGuiApplication::allWindows();
+        for (int i = windowList.size() - 1; i >= 0; --i) {
+            if (const QPlatformWindow *pw = windowList[i]->handle()) {
+                if (reinterpret_cast<HWND>(pw->winId()) == msg.hwnd) {
+                    PostMessage(msg.hwnd, WM_USER + 0xAE, 0, 0);
+                    break;
+                }
+            }
+        }
+    }
     return disp->Invoke(dispIdMember, riid, lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
