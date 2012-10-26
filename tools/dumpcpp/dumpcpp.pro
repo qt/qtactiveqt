@@ -1,5 +1,3 @@
-DESTDIR = $$QT.activeqt.bins
-
 CONFIG  += console qaxcontainer
 QT += widgets core-private
 
