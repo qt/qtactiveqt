@@ -1,4 +1,4 @@
-CONFIG  += console qaxcontainer
+CONFIG  += qaxcontainer
 QT += widgets core-private
 
 SOURCES = main.cpp
