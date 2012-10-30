@@ -40,12 +40,7 @@
 
 #ifndef QAXSELECT_H
 #define QAXSELECT_H
-
 #include <QtWidgets/QDialog>
-
-#ifndef QT_NO_WIN_ACTIVEQT
-#include "ui_qaxselect.h"
-#endif
 
 QT_BEGIN_HEADER
 
@@ -55,17 +50,23 @@ QT_MODULE(ActiveQt)
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
-class QAxSelect : public QDialog, private Ui::QAxSelect
+namespace Ui {
+    class QAxSelect;
+}
+
+class QAxSelect : public QDialog
 {
     Q_OBJECT
 public:
     QAxSelect(QWidget *parent = 0, Qt::WindowFlags f = 0);
-
-    QString clsid() const { return ActiveX->text(); }
+    ~QAxSelect();
+    QString clsid() const;
 
 private Q_SLOTS:
     void on_ActiveXList_clicked(const QModelIndex &index);
     void on_ActiveXList_doubleClicked(const QModelIndex &index);
+private:
+    QScopedPointer<Ui::QAxSelect> selectUi;
 };
 
 QT_END_NAMESPACE
