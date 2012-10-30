@@ -41,6 +41,7 @@
 #include "qaxselect.h"
 
 #ifndef QT_NO_WIN_ACTIVEQT
+#include "ui_qaxselect.h"
 
 #include <qt_windows.h>
 
@@ -122,33 +123,44 @@ QVariant ControlList::data(const QModelIndex &index, int role) const
 QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags f)
 : QDialog(parent, f)
 {
+    selectUi = new Ui_QAxSelect;
 #ifndef QT_NO_CURSOR
     QApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
 
-    setupUi(this);
-    ActiveXList->setModel(new ControlList(this));
-    connect(ActiveXList->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+    selectUi->setupUi(this);
+    selectUi->ActiveXList->setModel(new ControlList(this));
+    connect(selectUi->ActiveXList->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
         this, SLOT(on_ActiveXList_clicked(QModelIndex)));
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
-    ActiveXList->setFocus();
+    selectUi->ActiveXList->setFocus();
 
-    connect(buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(buttonCancel, SIGNAL(clicked()), this, SLOT(reject()));
+    connect(selectUi->buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
+    connect(selectUi->buttonCancel, SIGNAL(clicked()), this, SLOT(reject()));
+}
+
+QAxSelect::~QAxSelect()
+{
+    delete selectUi;
+}
+
+QString QAxSelect::clsid() const
+{
+    return selectUi->ActiveX->text();
 }
 
 void QAxSelect::on_ActiveXList_clicked(const QModelIndex &index)
 {
-    QVariant clsid = ActiveXList->model()->data(index, Qt::UserRole);
-    ActiveX->setText(clsid.toString());
+    QVariant clsid = selectUi->ActiveXList->model()->data(index, Qt::UserRole);
+    selectUi->ActiveX->setText(clsid.toString());
 }
 
 void QAxSelect::on_ActiveXList_doubleClicked(const QModelIndex &index)
 {
-    QVariant clsid = ActiveXList->model()->data(index, Qt::UserRole);
-    ActiveX->setText(clsid.toString());
+    QVariant clsid = selectUi->ActiveXList->model()->data(index, Qt::UserRole);
+    selectUi->ActiveX->setText(clsid.toString());
 
     accept();
 }
