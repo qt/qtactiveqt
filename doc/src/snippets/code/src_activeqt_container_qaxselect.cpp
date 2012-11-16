@@ -3,7 +3,7 @@
 ** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the ActiveQt framework of the Qt Toolkit.
+** This file is part of the documentation of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,40 +38,11 @@
 **
 ****************************************************************************/
 
-#ifndef QAXSELECT_H
-#define QAXSELECT_H
-#include <QtWidgets/QDialog>
-
-QT_BEGIN_HEADER
-
-QT_BEGIN_NAMESPACE
-
-QT_MODULE(ActiveQt)
-
-#ifndef QT_NO_WIN_ACTIVEQT
-
-namespace Ui {
-    class QAxSelect;
+//! [0]
+QAxSelect select;
+if (select.exec()) {
+    QAxWidget *container = new QAxWidget;
+    container->setControl(select.clsid());
+    container->show();
 }
-
-class QAxSelect : public QDialog
-{
-    Q_OBJECT
-public:
-    QAxSelect(QWidget *parent = 0, Qt::WindowFlags flags = 0);
-    ~QAxSelect();
-    QString clsid() const;
-
-private Q_SLOTS:
-    void on_ActiveXList_clicked(const QModelIndex &index);
-    void on_ActiveXList_doubleClicked(const QModelIndex &index);
-private:
-    QScopedPointer<Ui::QAxSelect> selectUi;
-};
-
-QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT
-
-QT_END_HEADER
-
-#endif // QAXSELECT_H
+//! [0]
