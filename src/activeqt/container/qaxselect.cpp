@@ -120,8 +120,27 @@ QVariant ControlList::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags f)
-: QDialog(parent, f), selectUi(new Ui::QAxSelect)
+/*!
+    \class QAxSelect
+    \brief The QAxSelect class provides a selection dialog for registered COM components.
+
+    \inmodule QAxContainer
+
+    QAxSelect dialog can be used to provide users with a way to browse the registered COM
+    components of the system and select one. The CLSID of the selected component can
+    then be used in the application to e.g. initialize a QAxWidget:
+
+    \snippet doc/src/snippets/code/src_activeqt_container_qaxselect.cpp 0
+
+    \sa QAxWidget, {ActiveQt Framework}
+*/
+
+/*!
+    Constructs a QAxSelect object. Dialog parent widget and window flags can be
+    optionally specified with \a parent and \a flags parameters, respectively.
+*/
+QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags flags)
+: QDialog(parent, flags), selectUi(new Ui::QAxSelect)
 {
 #ifndef QT_NO_CURSOR
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -139,10 +158,18 @@ QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags f)
     connect(selectUi->buttonCancel, SIGNAL(clicked()), this, SLOT(reject()));
 }
 
+/*!
+    Destroys the QAxSelect object.
+*/
 QAxSelect::~QAxSelect()
 {
 }
 
+/*!
+    \fn QString QAxSelect::clsid() const
+
+    Returns the CLSID of the selected COM component.
+*/
 QString QAxSelect::clsid() const
 {
     return selectUi->ActiveX->text();
