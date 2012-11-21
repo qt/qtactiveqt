@@ -10,6 +10,6 @@ RC_FILE  = menus.rc
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/activeqt/menus
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS $$RC_FILE menus.ico menus.pro
+sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS $$RC_FILE menus.ico menus.pro *.xpm
 sources.path = $$[QT_INSTALL_EXAMPLES]/activeqt/menus
 INSTALLS += target sources
