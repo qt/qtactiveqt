@@ -47,8 +47,6 @@ QT_BEGIN_HEADER
 
 QT_BEGIN_NAMESPACE
 
-QT_MODULE(ActiveQt)
-
 #ifndef QT_NO_WIN_ACTIVEQT
 
 class QAxObject : public QObject, public QAxBase
