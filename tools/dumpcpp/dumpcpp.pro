@@ -1,5 +1,4 @@
-CONFIG  += qaxcontainer
-QT += widgets core-private
+QT += axcontainer widgets core-private
 
 SOURCES = main.cpp
 

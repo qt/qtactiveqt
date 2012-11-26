@@ -1,5 +1,5 @@
 TEMPLATE = app
-CONFIG  += qaxserver
+QT  += axserver
 
 QT += widgets
 

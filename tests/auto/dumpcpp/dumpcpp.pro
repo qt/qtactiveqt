@@ -1,5 +1,5 @@
-CONFIG += testcase qaxcontainer
-QT += widgets testlib
+CONFIG += testcase
+QT += widgets axcontainer testlib
 SOURCES += tst_dumpcpp.cpp
 TARGET = tst_dumpcpp
 

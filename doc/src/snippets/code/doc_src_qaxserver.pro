@@ -40,7 +40,7 @@
 
 #! [0]
 TEMPLATE = app
-CONFIG  += qaxserver
+QT  += axserver
 
 RC_FILE  = qaxserver.rc
 ...
@@ -49,7 +49,8 @@ RC_FILE  = qaxserver.rc
 
 #! [1]
 TEMPLATE = lib
-CONFIG  += qaxserver dll
+QT += axserver
+CONFIG  += dll
 
 DEF_FILE = qaxserver.def
 RC_FILE  = qaxserver.rc
