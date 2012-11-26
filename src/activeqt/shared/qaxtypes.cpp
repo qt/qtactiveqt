@@ -63,6 +63,8 @@
 QT_BEGIN_NAMESPACE
 
 #ifdef QAX_SERVER
+#   define QVariantToVARIANT QVariantToVARIANT_server
+#   define VARIANTToQVariant VARIANTToQVariant_server
 extern ITypeLib *qAxTypeLibrary;
 
 CLSID CLSID_QRect = { 0x34030f30, 0xe359, 0x4fe6, {0xab, 0x82, 0x39, 0x76, 0x6f, 0x5d, 0x91, 0xee } };
@@ -71,6 +73,8 @@ CLSID CLSID_QPoint = { 0x3be838a3, 0x3fac, 0xbfc4, {0x4c, 0x6c, 0x37, 0xc4, 0x4d
 
 GUID IID_IAxServerBase = { 0xbd2ec165, 0xdfc9, 0x4319, { 0x8b, 0x9b, 0x60, 0xa5, 0x74, 0x78, 0xe9, 0xe3} };
 #else
+#   define QVariantToVARIANT QVariantToVARIANT_container
+#   define VARIANTToQVariant VARIANTToQVariant_container
 extern void *qax_createObjectWrapper(int metaType, IUnknown *iface);
 #endif
 
@@ -213,11 +217,6 @@ static DATE QDateTimeToDATE(const QDateTime &dt)
     SystemTimeToVariantTime(&stime, &vtime);
     
     return vtime;
-}
-
-QColor OLEColorToQColor(uint col)
-{
-    return QColor(GetRValue(col),GetGValue(col),GetBValue(col));
 }
 
 /*
@@ -796,106 +795,6 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
     Q_ASSERT(!out || (arg.vt & VT_BYREF));
     return true;
 }
-
-/*!
-    Copies the data in \a var into \a data.
-
-    Used by
-
-    QAxServerBase:
-        - QAxServerBase::qt_metacall (update out parameters/return value)
-
-    QAxBase:
-        - internalProperty(ReadProperty)
-        - internalInvoke(update out parameters/return value)
-
-*/
-bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeName, uint type)
-{
-    if (!data)
-        return true;
-
-    if (type == QMetaType::QVariant || type == QVariant::LastType || (type == 0 && typeName == "QVariant")) {
-        *(QVariant*)data = var;
-        return true;
-    }
-
-    switch (var.type()) {
-    case QVariant::Invalid:
-        break;
-    case QVariant::String:
-        *(QString*)data = var.toString();
-        break;
-    case QVariant::Int:
-        *(int*)data = var.toInt();
-        break;
-    case QVariant::UInt:
-        *(uint*)data = var.toUInt();
-        break;
-    case QVariant::Bool:
-        *(bool*)data = var.toBool();
-        break;
-    case QVariant::Double:
-        *(double*)data = var.toDouble();
-        break;
-    case QVariant::Color:
-        *(QColor*)data = qvariant_cast<QColor>(var);
-        break;
-    case QVariant::Date:
-        *(QDate*)data = var.toDate();
-        break;
-    case QVariant::Time:
-        *(QTime*)data = var.toTime();
-        break;
-    case QVariant::DateTime:
-        *(QDateTime*)data = var.toDateTime();
-        break;
-    case QVariant::Font:
-        *(QFont*)data = qvariant_cast<QFont>(var);
-        break;
-    case QVariant::Pixmap:
-        *(QPixmap*)data = qvariant_cast<QPixmap>(var);
-        break;
-#ifndef QT_NO_CURSOR
-    case QVariant::Cursor:
-        *(QCursor*)data = qvariant_cast<QCursor>(var);
-        break;
-#endif
-    case QVariant::List:
-        *(QList<QVariant>*)data = var.toList();
-        break;
-    case QVariant::StringList:
-        *(QStringList*)data = var.toStringList();
-        break;
-    case QVariant::ByteArray:
-        *(QByteArray*)data = var.toByteArray();
-        break;
-    case QVariant::LongLong:
-        *(qint64*)data = var.toLongLong();
-        break;
-    case QVariant::ULongLong:
-        *(quint64*)data = var.toULongLong();
-        break;
-    case QVariant::Rect:
-        *(QRect*)data = var.toRect();
-        break;
-    case QVariant::Size:
-        *(QSize*)data = var.toSize();
-        break;
-    case QVariant::Point:
-        *(QPoint*)data = var.toPoint();
-        break;
-    case QVariant::UserType:
-        *(void**)data = *(void**)var.constData();
-//        qVariantGet(var, *(void**)data, typeName);
-        break;
-    default:
-        qWarning("QVariantToVoidStar: Unhandled QVariant type");
-        return false;
-    }
-    
-    return true;
-}
   
 /*!
     Returns \a arg as a QVariant of type \a type.
@@ -1408,80 +1307,6 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     return var;
 }
 
-void clearVARIANT(VARIANT *var)
-{
-    if (var->vt & VT_BYREF) {
-        switch(var->vt) {
-        case VT_BSTR|VT_BYREF:
-            SysFreeString(*var->pbstrVal);
-            delete var->pbstrVal;
-            break;
-        case VT_BOOL|VT_BYREF:
-            delete var->pboolVal;
-            break;
-        case VT_I1|VT_BYREF:
-            delete var->pcVal;
-            break;
-        case VT_I2|VT_BYREF:
-            delete var->piVal;
-            break;
-        case VT_I4|VT_BYREF:
-            delete var->plVal;
-            break;
-        case VT_INT|VT_BYREF:
-            delete var->pintVal;
-            break;
-        case VT_UI1|VT_BYREF:
-            delete var->pbVal;
-            break;
-        case VT_UI2|VT_BYREF:
-            delete var->puiVal;
-            break;
-        case VT_UI4|VT_BYREF:
-            delete var->pulVal;
-            break;
-        case VT_UINT|VT_BYREF:
-            delete var->puintVal;
-            break;
-#if !defined(Q_OS_WINCE) && defined(_MSC_VER) && _MSC_VER >= 1400
-        case VT_I8|VT_BYREF:
-            delete var->pllVal;
-            break;
-        case VT_UI8|VT_BYREF:
-            delete var->pullVal;
-            break;
-#endif
-        case VT_CY|VT_BYREF:
-            delete var->pcyVal;
-            break;
-        case VT_R4|VT_BYREF:
-            delete var->pfltVal;
-            break;
-        case VT_R8|VT_BYREF:
-            delete var->pdblVal;
-            break;
-        case VT_DATE|VT_BYREF:
-            delete var->pdate;
-            break;
-        case VT_DISPATCH|VT_BYREF:
-            (*var->ppdispVal)->Release();
-            delete var->ppdispVal;
-            break;
-        case VT_ARRAY|VT_VARIANT|VT_BYREF:
-        case VT_ARRAY|VT_UI1|VT_BYREF:
-        case VT_ARRAY|VT_BSTR|VT_BYREF:
-            SafeArrayDestroy(*var->pparray);
-            delete var->pparray;
-            break;
-        case VT_VARIANT|VT_BYREF:
-            delete var->pvarVal;
-            break;
-        }
-        VariantInit(var);
-    } else {
-        VariantClear(var);
-    }
-}
-
 QT_END_NAMESPACE
+
 #endif // QT_NO_WIN_ACTIVEQT

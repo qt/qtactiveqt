@@ -1,7 +1,6 @@
 TEMPLATE = app
 
-CONFIG += qaxcontainer
-QT += widgets
+QT += widgets axcontainer
 
 HEADERS  = webaxwidget.h
 SOURCES	 = main.cpp
