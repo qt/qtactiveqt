@@ -2,7 +2,6 @@ TEMPLATE = lib
 TARGET	 = hierarchyax
 
 CONFIG	+= qt warn_off qaxserver dll
-contains(CONFIG, static):DEFINES += QT_NODLL
 QT += widgets
 
 SOURCES	 = objects.cpp main.cpp

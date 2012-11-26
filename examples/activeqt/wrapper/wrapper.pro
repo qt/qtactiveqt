@@ -4,8 +4,6 @@ TARGET	 = wrapperax
 CONFIG	+= qt warn_off qaxserver dll
 QT += widgets
 
-contains(CONFIG, static):DEFINES += QT_NODLL
-
 SOURCES	 = main.cpp
 RC_FILE	 = wrapperax.rc
 DEF_FILE = wrapperax.def
