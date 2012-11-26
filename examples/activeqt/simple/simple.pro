@@ -1,8 +1,8 @@
 TEMPLATE = app
 TARGET	 = simpleax
 
-CONFIG	+= qt warn_off qaxserver
-QT += widgets
+CONFIG	+= qt warn_off
+QT += widgets axserver
 
 SOURCES	 = main.cpp
 RC_FILE  = simple.rc

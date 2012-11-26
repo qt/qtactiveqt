@@ -54,7 +54,7 @@
     \section1 Using the Library
 
     To turn a standard Qt application into a COM server using the
-    QAxServer library you must add \c qaxserver as a CONFIG setting
+    QAxServer library you must add \c axserver to the QT variable
     in your \c .pro file.
 
     An out-of-process executable server is generated from a \c .pro
@@ -72,7 +72,7 @@
     type library entry, ie. you can add version information or specify
     a different toolbox icon.
 
-    The \c qaxserver configuration will cause the \c qmake tool to add the 
+    Using the \c axserver module will cause the \c qmake tool to add the
     required build steps to the build system:
 
     \list

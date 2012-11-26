@@ -1,8 +1,8 @@
 TEMPLATE = lib
 TARGET	 = multipleax
 
-CONFIG	+= qt warn_off qaxserver dll
-QT += widgets
+CONFIG	+= qt warn_off dll
+QT += widgets axserver
 
 contains(CONFIG, static):DEFINES += QT_NODLL
 

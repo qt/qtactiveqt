@@ -1,21 +1,7 @@
-TEMPLATE = lib
 TARGET   = QAxServer
-CONFIG  += create_prl
 
-contains(QT_CONFIG, debug_and_release):CONFIG += debug_and_release
-contains(QT_CONFIG, build_all):CONFIG += build_all
-
-!debug_and_release|build_pass {
-   CONFIG(debug, debug|release) {
-      TARGET = $$member(TARGET, 0)d
-   }
-}
-
-INCLUDEPATH *= $$QT.activeqt.includes
-
-QT += core-private gui-private widgets
-CONFIG  += qt warn_off static
-DESTDIR  = $$QT.activeqt.libs
+QT += core-private gui-private widgets axbase
+CONFIG  += static
 
 DEFINES	+= QAX_SERVER
 win32-g++*:DEFINES += QT_NEEDS_QMAIN
@@ -26,8 +12,7 @@ win32-g++*:LIBS += -luuid
 HEADERS =   qaxaggregated.h \
             qaxbindable.h \
             qaxfactory.h \
-            ../shared/qaxtypes.h \
-            ../shared/qaxutils_p.h
+            ../shared/qaxtypes.h
 
 SOURCES =   qaxserver.cpp \
             qaxserverbase.cpp \
@@ -36,7 +21,11 @@ SOURCES =   qaxserver.cpp \
             qaxservermain.cpp \
             qaxserverdll.cpp \
             qaxmain.cpp \
-            ../shared/qaxtypes.cpp \
-            ../shared/qaxutils.cpp
+            ../shared/qaxtypes.cpp
 
-load(qt_installs)
+MODULE = axserver
+MODULE_DEFINES = QAXSERVER
+MODULE_CONFIG = idcidl
+CONFIG  += no_module_headers
+load(qt_module)
+DEFINES -= QT_NO_CAST_TO_ASCII QT_USE_QSTRINGBUILDER

@@ -1,7 +1,7 @@
 TEMPLATE = app
 
-CONFIG  += console qaxcontainer
-QT += widgets
+CONFIG  += console
+QT += axcontainer widgets
 
 SOURCES += main.cpp
 
