@@ -1,8 +1,8 @@
 TEMPLATE = lib
 TARGET	 = multipleax
 
-CONFIG	+= qt warn_off qaxserver dll
-QT += widgets
+CONFIG += qt warn_off dll
+QT += widgets axserver
 
 SOURCES	 = main.cpp
 HEADERS	 = ax1.h ax2.h

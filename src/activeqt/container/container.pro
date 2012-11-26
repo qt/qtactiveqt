@@ -1,22 +1,7 @@
-TEMPLATE = lib
 TARGET   = QAxContainer
-CONFIG  += create_prl
 
-contains(QT_CONFIG, debug_and_release):CONFIG += debug_and_release
-contains(QT_CONFIG, build_all):CONFIG += build_all
-
-!debug_and_release|build_pass {
-    CONFIG(debug, debug|release) {
-        TARGET = $$member(TARGET, 0)d
-    }
-}
-
-INCLUDEPATH *= $$QT.activeqt.includes
-
-QT += core-private gui gui-private widgets widgets-private
-
-CONFIG  += qt warn_on static
-DESTDIR  = $$QT.activeqt.libs
+QT += core-private gui gui-private widgets widgets-private axbase
+CONFIG  += static
 
 LIBS    += -lole32 -loleaut32
 !wince*:LIBS    += -luser32 -lgdi32 -ladvapi32
@@ -28,8 +13,7 @@ HEADERS =   ../control/qaxaggregated.h \
             qaxobject.h \
             qaxscript.h \
             qaxselect.h \
-            ../shared/qaxtypes.h \
-            ../shared/qaxutils_p.h
+            ../shared/qaxtypes.h
 
 SOURCES =   qaxbase.cpp \
             qaxdump.cpp \
@@ -38,9 +22,12 @@ SOURCES =   qaxbase.cpp \
             qaxscript.cpp \
             qaxscriptwrapper.cpp \
             qaxselect.cpp \
-            ../shared/qaxtypes.cpp \
-            ../shared/qaxutils.cpp
+            ../shared/qaxtypes.cpp
 
 FORMS =     qaxselect.ui
 
-load(qt_installs)
+MODULE = axcontainer
+MODULE_CONFIG = dumpcpp
+CONFIG += no_module_headers
+load(qt_module)
+DEFINES -= QT_NO_CAST_TO_ASCII QT_USE_QSTRINGBUILDER
