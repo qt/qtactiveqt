@@ -542,14 +542,6 @@ int stridx(const QByteArray &s)
     return i;
 }
 
-bool isBuiltinType(const QByteArray &type)
-{
-    int id = QMetaType::type(type.constData());
-    if (id == QMetaType::UnknownType)
-        return false;
-    return (id < QMetaType::User);
-}
-
 const char *metaTypeEnumValueString(int type)
 {
 #define RETURN_METATYPENAME_STRING(MetaTypeName, MetaTypeId, RealType) \
@@ -573,7 +565,7 @@ uint nameToBuiltinType(const QByteArray &name)
 
 void generateTypeInfo(QTextStream &out, const QByteArray &typeName)
 {
-    if (isBuiltinType(typeName)) {
+    if (QtPrivate::isBuiltinType(typeName)) {
         int type;
         QByteArray valueString;
         if (typeName == "qreal") {
@@ -710,14 +702,14 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
 
         strreg(method.name());
         QByteArray typeName = method.typeName();
-        if (!isBuiltinType(typeName))
+        if (!QtPrivate::isBuiltinType(typeName))
             strreg(typeName);
         strreg(method.tag());
 
         const QList<QByteArray> parameterNames = method.parameterNames();
         const QList<QByteArray> parameterTypes = method.parameterTypes();
         for (int j = 0; j < argsCount; ++j) {
-            if (!isBuiltinType(parameterTypes.at(j)))
+            if (!QtPrivate::isBuiltinType(parameterTypes.at(j)))
                 strreg(parameterTypes.at(j));
             strreg(parameterNames.at(j));
         }
@@ -725,7 +717,7 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
     for (int i = mo->propertyOffset(); i < allPropertyCount; ++i) {
         const QMetaProperty property = mo->property(i);
         strreg(property.name());
-        if (!isBuiltinType(property.typeName()))
+        if (!QtPrivate::isBuiltinType(property.typeName()))
             strreg(property.typeName());
     }
     for (int i = mo->enumeratorOffset(); i < allEnumCount; ++i) {
