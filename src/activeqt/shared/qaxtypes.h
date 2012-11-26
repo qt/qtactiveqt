@@ -41,14 +41,7 @@
 #ifndef QAXTYPES_H
 #define QAXTYPES_H
 
-#if !defined(_WINDOWS_) && !defined(_WINDOWS_H) && !defined(__WINDOWS__)
-#error Must include windows.h first!
-#endif
-
-#include <QtGui/qcolor.h>
-#include <QtGui/qfont.h>
-#include <QtCore/qdatetime.h>
-#include <QtCore/qvariant.h>
+#include "qaxtypefunctions.h"
 
 QT_BEGIN_HEADER
 
@@ -58,40 +51,29 @@ QT_MODULE(ActiveQt)
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
-extern GUID IID_IAxServerBase;
-struct IAxServerBase : public IUnknown
-{
-    virtual IUnknown *clientSite() const = 0;
-    virtual void emitPropertyChanged(const char*) = 0;
-    virtual bool emitRequestPropertyChange(const char*) = 0;
-    virtual QObject *qObject() const = 0;
-    virtual void reportError(int code, const QString &src, const QString &desc, const QString &context) = 0;
-};
+#ifdef QAX_SERVER
+#   define QVariantToVARIANTFunc QVariantToVARIANT_server
+#   define VARIANTToQVariantFunc VARIANTToQVariant_server
+#else
+#   define QVariantToVARIANTFunc QVariantToVARIANT_container
+#   define VARIANTToQVariantFunc VARIANTToQVariant_container
+#endif
 
-#define HIMETRIC_PER_INCH   2540
-#define MAP_PIX_TO_LOGHIM(x,ppli)   ((HIMETRIC_PER_INCH*(x) + ((ppli)>>1)) / (ppli))
-#define MAP_LOGHIM_TO_PIX(x,ppli)   (((ppli)*(x) + HIMETRIC_PER_INCH/2) / HIMETRIC_PER_INCH)
-#define QAX_NUM_PARAMS 8
+extern bool QVariantToVARIANTFunc(const QVariant &var, VARIANT &arg, const QByteArray &typeName = 0, bool out = false);
+extern QVariant VARIANTToQVariantFunc(const VARIANT &arg, const QByteArray &typeName, uint type = 0);
 
-static inline BSTR QStringToBSTR(const QString &str)
+inline bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &typeName = 0, bool out = false)
 {
-    return SysAllocStringLen((OLECHAR*)str.unicode(), str.length());
+    return QVariantToVARIANTFunc(var, arg, typeName, out);
 }
 
-static inline uint QColorToOLEColor(const QColor &col)
+inline QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint type = 0)
 {
-    return qRgba(col.blue(), col.green(), col.red(), 0x00);
+    return VARIANTToQVariantFunc(arg, typeName, type);
 }
 
-extern QColor OLEColorToQColor(uint col);
-
-extern bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &typeName = 0, bool out = false);
-extern QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint type = 0);
-extern bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeName, uint type = 0);
-extern void clearVARIANT(VARIANT *var);
-
-#define QAX_INPROC_SERVER  (0x51540001)
-#define QAX_OUTPROC_SERVER (0x51540002)
+#undef QVariantToVARIANTFunc
+#undef VARIANTToQVariantFunc
 
 QT_END_NAMESPACE
 #endif // QT_NO_WIN_ACTIVEQT
