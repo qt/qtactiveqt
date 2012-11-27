@@ -8,7 +8,7 @@ HEADERS	 = docuwindow.h mainwindow.h invokemethod.h changeproperties.h ambientpr
 FORMS    = mainwindow.ui invokemethod.ui changeproperties.ui ambientproperties.ui controlinfo.ui
 RC_FILE	 = testcon.rc
 
-!win32-g++*:QMAKE_POST_LINK = midl $$QT.activeqt.sources/../../tools/testcon/testcon.idl && move testcon.tlb $(TARGETDIR)
+!win32-g++*:QMAKE_POST_LINK = midl $$shell_quote($$shell_path($$PWD/testcon.idl)) && move testcon.tlb $(TARGETDIR)
 
 target.path = $$[QT_INSTALL_BINS]
 INSTALLS += target
