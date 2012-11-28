@@ -82,7 +82,7 @@ STDAPI DumpIDL(const QString &outfile, const QString &ver);
 #endif
 
 // Monitors the shutdown event
-static DWORD WINAPI MonitorProc(void* pv)
+static DWORD WINAPI MonitorProc(void* /* pv */)
 {
     while (1) {
         WaitForSingleObject(hEventShutdown, INFINITE);
@@ -252,7 +252,7 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR,
     }
     
     if (run) {
-        HRESULT hRes = CoInitialize(0);
+        CoInitialize(0);
 
         int argc;
         QVector<char*> argv(8);
