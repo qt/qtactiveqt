@@ -315,8 +315,9 @@ QString QAxFactory::exposeToSuperClass(const QString &key) const
     should be a top level window, e.g. a dialog. The default implementation
     returns false.
 */
-bool QAxFactory::stayTopLevel(const QString &key) const
+bool QAxFactory::stayTopLevel(const QString & key) const
 {
+    Q_UNUSED(key)
     return false;
 }
 
