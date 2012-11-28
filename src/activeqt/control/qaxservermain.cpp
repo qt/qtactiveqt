@@ -82,7 +82,7 @@ STDAPI DumpIDL(const QString &outfile, const QString &ver);
 #endif
 
 // Monitors the shutdown event
-static DWORD WINAPI MonitorProc(void* pv)
+static DWORD WINAPI MonitorProc(void* /* pv */)
 {
     while (1) {
         WaitForSingleObject(hEventShutdown, INFINITE);

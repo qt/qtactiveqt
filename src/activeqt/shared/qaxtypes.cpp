@@ -703,6 +703,8 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                     recordInfo->RecordCreateCopy(&qpoint, &record);
                 }
                 break;
+            default:
+                break;
             }
             
             arg.vt = VT_RECORD;

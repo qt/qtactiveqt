@@ -582,7 +582,6 @@ static QByteArray renameOverloads(const QByteArray &name)
 {
     QByteArray newName = name;
     
-    int n = mapping.value(name);
     if (mapping.contains(name)) {
         int n = mapping.value(name);
         newName = name + '_' + QByteArray::number(n);
@@ -1005,7 +1004,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
             bool ok = true;
             
             QByteArray type = signal.typeName();
-            if (!type.isEmpty() && type != QStringLiteral("void")) // signals with return value not supported
+            if (!type.isEmpty() && type != "void") // signals with return value not supported
                 continue;
             
             QByteArray ptype(prototype(parameterTypes, parameterNames, &ok));
