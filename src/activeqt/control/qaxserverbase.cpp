@@ -1391,7 +1391,7 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
                         if (h)
                             ::SetParent(h, that->m_hWnd);
                         Qt::WindowFlags flags = widgetWindow->windowFlags();
-                        widgetWindow->setWindowFlags(Qt::FramelessWindowHint);
+                        widgetWindow->setWindowFlags(flags | Qt::FramelessWindowHint);
                     }
                 }
                 that->qt.widget->raise();
