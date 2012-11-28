@@ -2416,9 +2416,8 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 	    int pcount = ptypes.count();
 
 	    // verify parameter count
-            if (pcount > pDispParams->cArgs) {
+            if (pcount > static_cast<int>(pDispParams->cArgs)) {
                 // count cloned slots immediately following the real thing
-                int defArgs = 0;
                 while (index < mo->methodCount()) {
                     ++index;
                     slot = mo->method(index);
@@ -2426,13 +2425,13 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                         break;
                     --pcount;
                     // found a matching overload. ptypes still valid
-                    if (pcount <= pDispParams->cArgs)
+                    if (pcount <= static_cast<int>(pDispParams->cArgs))
                         break;
                 }
                 // still wrong :(
-                if (pcount > pDispParams->cArgs)
+                if (pcount > static_cast<int>(pDispParams->cArgs))
 		    return DISP_E_PARAMNOTOPTIONAL;
-            } else if (pcount < pDispParams->cArgs) {
+            } else if (pcount < static_cast<int>(pDispParams->cArgs)) {
 		return DISP_E_BADPARAMCOUNT;
             }
 
