@@ -3102,7 +3102,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         int_data[offset++] = strings.enter(key);
         int_data[offset++] = strings.enter(value);
     }
-    Q_ASSERT(offset == header->methodData);
+    Q_ASSERT(offset == uint(header->methodData));
 
     uint paramsOffset = offset + header->methodCount * 5;
     // add each method:
@@ -3137,10 +3137,10 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
                 int_data[paramsOffset++] = strings.enter(paramNames.at(i));
         }
     }
-    Q_ASSERT(offset == header->methodData + header->methodCount * 5);
+    Q_ASSERT(offset == uint(header->methodData + header->methodCount * 5));
     Q_ASSERT(paramsOffset = header->propertyData);
     offset += paramsDataSize;
-    Q_ASSERT(offset == header->propertyData);
+    Q_ASSERT(offset == uint(header->propertyData));
 
     // each property in form name\0type\0
     for (QMap<QByteArray, Property>::ConstIterator it = property_list.begin(); it != property_list.end(); ++it) {
@@ -3156,7 +3156,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         int_data[offset++] = nameToTypeInfo(type, strings);
         int_data[offset++] = flags;
     }
-    Q_ASSERT(offset == header->enumeratorData);
+    Q_ASSERT(offset == uint(header->enumeratorData));
 
     int value_offset = offset + enum_list.count() * 4;
     // each enum in form name\0
@@ -3171,7 +3171,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         int_data[offset++] = value_offset;
         value_offset += count * 2;
     }
-    Q_ASSERT(offset == header->enumeratorData + enum_list.count() * 4);
+    Q_ASSERT(offset == uint(header->enumeratorData + enum_list.count() * 4));
 
     // each enum value in form key\0
     for (QMap<QByteArray, QList<QPair<QByteArray, int> > >::ConstIterator it = enum_list.begin(); it != enum_list.end(); ++it) {
