@@ -317,6 +317,7 @@ QString QAxFactory::exposeToSuperClass(const QString &key) const
 */
 bool QAxFactory::stayTopLevel(const QString &key) const
 {
+    Q_UNUSED(key)
     return false;
 }
 
