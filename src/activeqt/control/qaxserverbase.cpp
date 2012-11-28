@@ -2059,7 +2059,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                 VARIANT retval;
                 VariantInit(&retval);
                 VARIANT *pretval = 0;
-                if (!type.isEmpty() && type != QStringLiteral("void"))
+                if (!type.isEmpty() && type != QByteArrayLiteral("void"))
                     pretval = &retval;
 
                 // call listeners (through IDispatch)
@@ -2492,7 +2492,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 	    }
 
             // return value
-        if (!type.isEmpty() && type != QStringLiteral("void")) {
+        if (!type.isEmpty() && type != QByteArrayLiteral("void")) {
                 QVariant::Type vt = QVariant::nameToType(type);
                 if (vt == QVariant::UserType)
                     vt = QVariant::Invalid;
@@ -2530,7 +2530,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 			    ok = false;
 		    }
 		}
-                if (!type.isEmpty() && type != QStringLiteral("void") && pvarResult) {
+                if (!type.isEmpty() && type != QByteArrayLiteral("void") && pvarResult) {
                     if (!varp[0].isValid() && type != "QVariant")
                         varp[0] = QVariant(QMetaType::type(type), argv_pointer);
 //                        varp[0].setValue(argv_pointer[0], type);
