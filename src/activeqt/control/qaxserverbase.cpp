@@ -450,7 +450,6 @@ public:
     {
 	*iface = 0;
 
-	HRESULT res = E_NOINTERFACE;
 	if (iid == IID_IUnknown) {
 	    *iface = (IUnknown*)this;
 	    AddRef();
@@ -3613,7 +3612,6 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
     m_spClientSite->QueryInterface(IID_IOleControlSite, (void**)&controlSite);
     if (!controlSite)
         return S_FALSE;
-    bool resetUserData = false;
     // set server type in the user-data of the window.
 #ifdef GWLP_USERDATA
     LONG_PTR serverType = QAX_INPROC_SERVER;
@@ -3780,7 +3778,6 @@ HRESULT QAxServerBase::internalActivate()
 
     HRESULT hr = E_FAIL;
     if (!isInPlaceActive) {
-	BOOL bNoRedraw = false;
 	hr = m_spInPlaceSite->CanInPlaceActivate();
 	if (FAILED(hr))
 	    return hr;
