@@ -11,6 +11,4 @@ DEF_FILE = multipleax.def
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/activeqt/multiple
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS $$RC_FILE $$DEF_FILE multipleax.ico multiple.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/activeqt/multiple
-INSTALLS += target sources
+INSTALLS += target
