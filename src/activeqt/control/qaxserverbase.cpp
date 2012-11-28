@@ -1828,7 +1828,9 @@ void QAxServerBase::updateMask()
 
 static bool checkHRESULT(HRESULT hres)
 {
+#if defined(QT_CHECK_STATE)
     const char *name = 0;
+#endif
     switch(hres) {
     case S_OK:
 	return true;
