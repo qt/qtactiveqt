@@ -582,9 +582,8 @@ static QByteArray renameOverloads(const QByteArray &name)
 {
     QByteArray newName = name;
     
-    int n = mapping.value(name);
-    if (mapping.contains(name)) {
-        int n = mapping.value(name);
+    int n = mapping.value(name, 0);
+    if (n > 0) {
         newName = name + '_' + QByteArray::number(n);
         mapping.insert(name, n+1);
     } else {
