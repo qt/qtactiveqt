@@ -69,7 +69,8 @@ public:
             if (result == ERROR_SUCCESS) {
                 HKEY sub_key;
                 QString clsid = QString::fromWCharArray(buffer);
-                result = RegOpenKeyEx(classes_key, reinterpret_cast<const wchar_t *>(QString(clsid + "\\Control").utf16()), 0, KEY_READ, &sub_key);
+                const QString clsidRegKey = clsid + QStringLiteral("\\Control");
+                result = RegOpenKeyEx(classes_key, reinterpret_cast<const wchar_t *>(clsidRegKey.utf16()), 0, KEY_READ, &sub_key);
                 if (result == ERROR_SUCCESS) {
                     RegCloseKey(sub_key);
                     RegistryQueryValue(classes_key, buffer, (LPBYTE)buffer, &szBuffer);
