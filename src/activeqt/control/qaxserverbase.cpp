@@ -865,6 +865,7 @@ public:
             qax_ownQApp = true;
             int argc = 0;
             QApplication *app = new QApplication(argc, 0);
+            Q_UNUSED(app);
         }
         qApp->setQuitOnLastWindowClosed(false);
 
@@ -949,6 +950,7 @@ public:
 
     HRESULT WINAPI CreateInstanceLic(IUnknown *pUnkOuter, IUnknown *pUnkReserved, REFIID iid, BSTR bKey, PVOID *ppObject)
     {
+        Q_UNUSED(pUnkReserved);
         QString licenseKey = QString::fromWCharArray(bKey);
 	if (!qAxFactory()->validateLicenseKey(className, licenseKey))
 	    return CLASS_E_NOTLICENSED;
@@ -1917,6 +1919,7 @@ static inline QByteArray paramType(const QByteArray &ptype, bool *out)
 */
 int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
 {
+    Q_UNUSED(call);
     Q_ASSERT(call == QMetaObject::InvokeMetaMethod);
 
     if (index == STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX) {
@@ -2243,7 +2246,7 @@ HRESULT WINAPI QAxServerBase::GetTypeInfoCount(UINT* pctinfo)
 /*
     Provides the ITypeInfo for this IDispatch implementation.
 */
-HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT itinfo, LCID /*lcid*/, ITypeInfo** pptinfo)
+HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT /*itinfo*/, LCID /*lcid*/, ITypeInfo** pptinfo)
 {
     if (!pptinfo)
 	return E_POINTER;
@@ -2262,7 +2265,7 @@ HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT itinfo, LCID /*lcid*/, ITypeInfo*
 /*
     Provides the names of the methods implemented in this IDispatch implementation.
 */
-HRESULT WINAPI QAxServerBase::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames,
+HRESULT WINAPI QAxServerBase::GetIDsOfNames(REFIID /*riid*/, LPOLESTR* rgszNames, UINT cNames,
 				     LCID /*lcid*/, DISPID* rgdispid)
 {
     if (!rgszNames || !rgdispid)
@@ -2885,6 +2888,8 @@ HRESULT WINAPI QAxServerBase::Load(IStorage *pStg)
 
 HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL fSameAsLoad)
 {
+    Q_UNUSED(fSameAsLoad);
+
     IStream *spStream = 0;
     QString streamName = QLatin1String(qt.object->metaObject()->className());
     streamName.replace(QLatin1Char(':'), QLatin1Char('.'));
@@ -3037,6 +3042,8 @@ HRESULT WINAPI QAxServerBase::GetCurFile(LPOLESTR *currentFile)
 
 HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD mode)
 {
+    Q_UNUSED(mode);
+
     const QMetaObject *mo = qt.object->metaObject();
     int mimeIndex = mo->indexOfClassInfo("MIME");
     if (mimeIndex == -1)
@@ -3127,7 +3134,7 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
 /*
     Draws the widget into the provided device context.
 */
-HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
+HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /*lindex*/, void * /*pvAspect*/, DVTARGETDEVICE *ptd,
 		HDC hicTargetDev, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL /*lprcWBounds*/,
 		BOOL(__stdcall* /*pfnContinue*/)(ULONG_PTR), ULONG_PTR /*dwContinue*/)
 {
@@ -3180,6 +3187,12 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG lindex, void *pvAspect, 
 HRESULT WINAPI QAxServerBase::GetColorSet(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
 		HDC hicTargetDev, LOGPALETTE **ppColorSet)
 {
+    Q_UNUSED(dwDrawAspect);
+    Q_UNUSED(lindex);
+    Q_UNUSED(pvAspect);
+    Q_UNUSED(ptd);
+    Q_UNUSED(hicTargetDev);
+    Q_UNUSED(ppColorSet);
     return E_NOTIMPL;
 }
 
@@ -3188,6 +3201,10 @@ HRESULT WINAPI QAxServerBase::GetColorSet(DWORD dwDrawAspect, LONG lindex, void 
 */
 HRESULT WINAPI QAxServerBase::Freeze(DWORD dwAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze)
 {
+    Q_UNUSED(dwAspect);
+    Q_UNUSED(lindex);
+    Q_UNUSED(pvAspect);
+    Q_UNUSED(pdwFreeze);
     return E_NOTIMPL;
 }
 
@@ -3196,6 +3213,7 @@ HRESULT WINAPI QAxServerBase::Freeze(DWORD dwAspect, LONG lindex, void *pvAspect
 */
 HRESULT WINAPI QAxServerBase::Unfreeze(DWORD dwFreeze)
 {
+    Q_UNUSED(dwFreeze);
     return E_NOTIMPL;
 }
 
@@ -3656,11 +3674,15 @@ HRESULT WINAPI QAxServerBase::OnFrameWindowActivate(BOOL fActivate)
 
 HRESULT WINAPI QAxServerBase::OnDocWindowActivate(BOOL fActivate)
 {
+    Q_UNUSED(fActivate);
     return S_OK;
 }
 
 HRESULT WINAPI QAxServerBase::ResizeBorder(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fFrameWindow)
 {
+    Q_UNUSED(prcBorder);
+    Q_UNUSED(pUIWindow);
+    Q_UNUSED(fFrameWindow);
     return S_OK;
 }
 
@@ -4072,6 +4094,8 @@ HRESULT WINAPI QAxServerBase::SetExtent(DWORD dwDrawAspect, SIZEL* psizel)
 */
 HRESULT WINAPI QAxServerBase::SetHostNames(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj)
 {
+    Q_UNUSED(szContainerApp);
+    Q_UNUSED(szContainerObj);
     return S_OK;
 }
 
