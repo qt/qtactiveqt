@@ -450,7 +450,6 @@ public:
     {
 	*iface = 0;
 
-	HRESULT res = E_NOINTERFACE;
 	if (iid == IID_IUnknown) {
 	    *iface = (IUnknown*)this;
 	    AddRef();
@@ -865,7 +864,7 @@ public:
         if (!qApp) {
             qax_ownQApp = true;
             int argc = 0;
-            QApplication *app = new QApplication(argc, 0);
+            new QApplication(argc, 0);
         }
         qApp->setQuitOnLastWindowClosed(false);
 
@@ -948,7 +947,7 @@ public:
 	return S_OK;
     }
 
-    HRESULT WINAPI CreateInstanceLic(IUnknown *pUnkOuter, IUnknown *pUnkReserved, REFIID iid, BSTR bKey, PVOID *ppObject)
+    HRESULT WINAPI CreateInstanceLic(IUnknown *pUnkOuter, IUnknown * /* pUnkReserved */, REFIID iid, BSTR bKey, PVOID *ppObject)
     {
         QString licenseKey = QString::fromWCharArray(bKey);
 	if (!qAxFactory()->validateLicenseKey(className, licenseKey))
@@ -990,8 +989,9 @@ HRESULT GetClassObject(REFIID clsid, REFIID iid, void **ppUnk)
     the COM server for the respective CLSID.
 */
 QAxServerBase::QAxServerBase(const QString &classname, IUnknown *outerUnknown)
-: aggregatedObject(0), ref(0), ole_ref(0), class_name(classname),
+: aggregatedObject(0),
   m_hWnd(0), hmenuShared(0), hwndMenuOwner(0),
+  ref(0), ole_ref(0), class_name(classname),
   m_outerUnknown(outerUnknown)
 {
     init();
@@ -1650,7 +1650,7 @@ void QAxServerBase::createMenu(QMenuBar *menuBar)
         AppendMenu(hmenuShared, flags, itemId, (const wchar_t *)action->text().utf16());
     }
 
-    OLEMENUGROUPWIDTHS menuWidths = {0,edit,0,object,0,help};
+    OLEMENUGROUPWIDTHS menuWidths = { { 0,edit,0,object,0,help } };
     HRESULT hres = m_spInPlaceFrame->InsertMenus(hmenuShared, &menuWidths);
     if (FAILED(hres)) {
 	::DestroyMenu(hmenuShared);
@@ -1830,6 +1830,7 @@ void QAxServerBase::updateMask()
 static bool checkHRESULT(HRESULT hres)
 {
     const char *name = 0;
+    Q_UNUSED(name);
     switch(hres) {
     case S_OK:
 	return true;
@@ -2059,7 +2060,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                 VARIANT retval;
                 VariantInit(&retval);
                 VARIANT *pretval = 0;
-                if (!type.isEmpty() && type != QStringLiteral("void"))
+                if (!type.isEmpty() && type != "void")
                     pretval = &retval;
 
                 // call listeners (through IDispatch)
@@ -2242,7 +2243,7 @@ HRESULT WINAPI QAxServerBase::GetTypeInfoCount(UINT* pctinfo)
 /*
     Provides the ITypeInfo for this IDispatch implementation.
 */
-HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT itinfo, LCID /*lcid*/, ITypeInfo** pptinfo)
+HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT /* itinfo */, LCID /*lcid*/, ITypeInfo** pptinfo)
 {
     if (!pptinfo)
 	return E_POINTER;
@@ -2261,7 +2262,7 @@ HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT itinfo, LCID /*lcid*/, ITypeInfo*
 /*
     Provides the names of the methods implemented in this IDispatch implementation.
 */
-HRESULT WINAPI QAxServerBase::GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames,
+HRESULT WINAPI QAxServerBase::GetIDsOfNames(REFIID /* riid */, LPOLESTR* rgszNames, UINT cNames,
 				     LCID /*lcid*/, DISPID* rgdispid)
 {
     if (!rgszNames || !rgdispid)
@@ -2413,12 +2414,11 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 	    QList<QByteArray> ptypes;
 	    if (!prototype.isEmpty())
 		ptypes = prototype.split(',');
-	    int pcount = ptypes.count();
+        UINT pcount = ptypes.count();
 
 	    // verify parameter count
             if (pcount > pDispParams->cArgs) {
                 // count cloned slots immediately following the real thing
-                int defArgs = 0;
                 while (index < mo->methodCount()) {
                     ++index;
                     slot = mo->method(index);
@@ -2464,7 +2464,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 argv_pointer[0] = 0;
             }
 
-	    for (int p = 0; p < pcount; ++p) {
+        for (UINT p = 0; p < pcount; ++p) {
 		// map the VARIANT to the void*
 		bool out;
 		QByteArray ptype = paramType(ptypes.at(p), &out);
@@ -2492,7 +2492,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 	    }
 
             // return value
-        if (!type.isEmpty() && type != QStringLiteral("void")) {
+        if (!type.isEmpty() && type != "void") {
                 QVariant::Type vt = QVariant::nameToType(type);
                 if (vt == QVariant::UserType)
                     vt = QVariant::Invalid;
@@ -2522,7 +2522,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 invokeCount = 0;
 
 		// update reference parameters and return value
-		for (int p = 0; p < pcount; ++p) {
+        for (UINT p = 0; p < pcount; ++p) {
 		    bool out;
 		    QByteArray ptype = paramType(ptypes.at(p), &out);
 		    if (out) {
@@ -2530,7 +2530,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 			    ok = false;
 		    }
 		}
-                if (!type.isEmpty() && type != QStringLiteral("void") && pvarResult) {
+                if (!type.isEmpty() && type != "void" && pvarResult) {
                     if (!varp[0].isValid() && type != "QVariant")
                         varp[0] = QVariant(QMetaType::type(type), argv_pointer);
 //                        varp[0].setValue(argv_pointer[0], type);
@@ -2883,7 +2883,7 @@ HRESULT WINAPI QAxServerBase::Load(IStorage *pStg)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL fSameAsLoad)
+HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL /* fSameAsLoad */)
 {
     IStream *spStream = 0;
     QString streamName = QLatin1String(qt.object->metaObject()->className());
@@ -2961,13 +2961,14 @@ HRESULT WINAPI QAxServerBase::Load(IPropertyBag *bag, IErrorLog * /*log*/)
 	HRESULT res = bag->Read(bstr, &var, 0);
 	if (property.isWritable() && var.vt != VT_EMPTY) {
 	    if (res != S_OK || !qt.object->setProperty(pname, VARIANTToQVariant(var, property.typeName(), property.type())))
-		error = true;
-	}
+        error = true;
+    }
 	SysFreeString(bstr);
     }
 
     updateGeometry();
 
+    Q_UNUSED(error)
     return /*error ? E_FAIL :*/ S_OK;
 }
 
@@ -2999,6 +3000,7 @@ HRESULT WINAPI QAxServerBase::Save(IPropertyBag *bag, BOOL clearDirty, BOOL /*sa
 	bag->Write(bstr, &var);
 	SysFreeString(bstr);
     }
+    Q_UNUSED(error)
     return /*error ? E_FAIL :*/ S_OK;
 }
 
@@ -3035,7 +3037,7 @@ HRESULT WINAPI QAxServerBase::GetCurFile(LPOLESTR *currentFile)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD mode)
+HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD /* mode */)
 {
     const QMetaObject *mo = qt.object->metaObject();
     int mimeIndex = mo->indexOfClassInfo("MIME");
@@ -3127,7 +3129,7 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
 /*
     Draws the widget into the provided device context.
 */
-HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
+HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* pvAspect */, DVTARGETDEVICE *ptd,
 		HDC hicTargetDev, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL /*lprcWBounds*/,
 		BOOL(__stdcall* /*pfnContinue*/)(ULONG_PTR), ULONG_PTR /*dwContinue*/)
 {
@@ -3177,8 +3179,8 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG lindex, void *pvAspect, 
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::GetColorSet(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
-		HDC hicTargetDev, LOGPALETTE **ppColorSet)
+HRESULT WINAPI QAxServerBase::GetColorSet(DWORD /* dwDrawAspect */, LONG /* lindex */, void * /* pvAspect */, DVTARGETDEVICE * /* ptd */,
+        HDC /* hicTargetDev */, LOGPALETTE ** /* ppColorSet */)
 {
     return E_NOTIMPL;
 }
@@ -3186,7 +3188,7 @@ HRESULT WINAPI QAxServerBase::GetColorSet(DWORD dwDrawAspect, LONG lindex, void 
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::Freeze(DWORD dwAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze)
+HRESULT WINAPI QAxServerBase::Freeze(DWORD /* dwAspect */, LONG  /* lindex */, void * /* pvAspect */, DWORD * /* pdwFreeze */)
 {
     return E_NOTIMPL;
 }
@@ -3194,7 +3196,7 @@ HRESULT WINAPI QAxServerBase::Freeze(DWORD dwAspect, LONG lindex, void *pvAspect
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::Unfreeze(DWORD dwFreeze)
+HRESULT WINAPI QAxServerBase::Unfreeze(DWORD /* dwFreeze */)
 {
     return E_NOTIMPL;
 }
@@ -3532,11 +3534,9 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
                 if (shift) {
                     if (!curFocus->isWindow()) {
                         QWidget *nextFocus = curFocus->nextInFocusChain();
-                        QWidget *prevFocus = 0;
                         QWidget *topLevel = 0;
                         while (nextFocus != curFocus) {
                             if (nextFocus->focusPolicy() & Qt::TabFocus) {
-                                prevFocus = nextFocus;
                                 topLevel = 0;
                             } else if (nextFocus->isWindow()) {
                                 topLevel = nextFocus;
@@ -3614,7 +3614,6 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
     m_spClientSite->QueryInterface(IID_IOleControlSite, (void**)&controlSite);
     if (!controlSite)
         return S_FALSE;
-    bool resetUserData = false;
     // set server type in the user-data of the window.
 #ifdef GWLP_USERDATA
     LONG_PTR serverType = QAX_INPROC_SERVER;
@@ -3655,12 +3654,12 @@ HRESULT WINAPI QAxServerBase::OnFrameWindowActivate(BOOL fActivate)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::OnDocWindowActivate(BOOL fActivate)
+HRESULT WINAPI QAxServerBase::OnDocWindowActivate(BOOL /* fActivate */)
 {
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::ResizeBorder(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fFrameWindow)
+HRESULT WINAPI QAxServerBase::ResizeBorder(LPCRECT /* prcBorder */, IOleInPlaceUIWindow * /* pUIWindow */, BOOL /* fFrameWindow */)
 {
     return S_OK;
 }
@@ -3781,7 +3780,6 @@ HRESULT QAxServerBase::internalActivate()
 
     HRESULT hr = E_FAIL;
     if (!isInPlaceActive) {
-	BOOL bNoRedraw = false;
 	hr = m_spInPlaceSite->CanInPlaceActivate();
 	if (FAILED(hr))
 	    return hr;
@@ -4072,7 +4070,7 @@ HRESULT WINAPI QAxServerBase::SetExtent(DWORD dwDrawAspect, SIZEL* psizel)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::SetHostNames(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj)
+HRESULT WINAPI QAxServerBase::SetHostNames(LPCOLESTR /* szContainerApp */, LPCOLESTR /* szContainerObj */)
 {
     return S_OK;
 }
