@@ -1,4 +1,4 @@
-TARGET   = QAxServer
+TARGET   = QtAxServer
 
 QT += core-private gui-private widgets axbase
 CONFIG  += static
@@ -24,7 +24,4 @@ MODULE_DEFINES = QAXSERVER
 MODULE_CONFIG = idcidl
 CONFIG  += no_module_headers
 load(qt_module)
-# QtActiveQt is too inconsistent with other Qt modules
-# to use the generic cmake config files generator
-CONFIG -= create_cmake
 DEFINES -= QT_NO_CAST_TO_ASCII QT_USE_QSTRINGBUILDER

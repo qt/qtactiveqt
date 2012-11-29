@@ -1,7 +1,8 @@
 # This modules provides the header files, installed under "ActiveQt/".
 # It also contains shared code that is used by axcontainer and axserver.
 
-TARGET = ActiveQt
+TARGET = QtAxBase
+MODULE_INCNAME = ActiveQt
 CONFIG += static
 QT += gui-private
 
@@ -19,6 +20,3 @@ SOURCES = \
 
 MODULE = axbase
 load(qt_module)
-# QtActiveQt is too inconsistent with other Qt modules
-# to use the generic cmake config files generator
-CONFIG -= create_cmake
