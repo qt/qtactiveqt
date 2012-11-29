@@ -1228,7 +1228,7 @@ bool QAxBase::initialize(IUnknown **ptr)
     // messages to be processed is called during an existing paint operation when WM_PAINT is
     // also in the queue.
     static bool asyncExposeSet = false;
-    if (!asyncExposeSet) {
+    if (!asyncExposeSet && QGuiApplication::platformNativeInterface()) {
         QGuiApplication::platformNativeInterface()->setProperty("asyncExpose", QVariant(true));
         asyncExposeSet = true;
     }
