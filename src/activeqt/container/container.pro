@@ -3,10 +3,6 @@ TARGET   = QAxContainer
 QT += core-private gui gui-private widgets widgets-private axbase
 CONFIG  += static
 
-LIBS    += -lole32 -loleaut32
-!wince*:LIBS    += -luser32 -lgdi32 -ladvapi32
-win32-g++*:LIBS += -luuid
-
 HEADERS =   ../control/qaxaggregated.h \
             qaxbase.h \
             qaxwidget.h \
