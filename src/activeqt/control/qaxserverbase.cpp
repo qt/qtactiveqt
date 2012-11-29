@@ -1917,6 +1917,7 @@ static inline QByteArray paramType(const QByteArray &ptype, bool *out)
 */
 int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
 {
+    Q_UNUSED(call);
     Q_ASSERT(call == QMetaObject::InvokeMetaMethod);
 
     if (index == STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX) {
