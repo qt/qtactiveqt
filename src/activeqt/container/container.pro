@@ -1,4 +1,4 @@
-TARGET   = QAxContainer
+TARGET   = QtAxContainer
 
 QT += core-private gui gui-private widgets widgets-private axbase
 CONFIG  += static
