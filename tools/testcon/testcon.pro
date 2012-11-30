@@ -8,6 +8,9 @@ HEADERS	 = docuwindow.h mainwindow.h invokemethod.h changeproperties.h ambientpr
 FORMS    = mainwindow.ui invokemethod.ui changeproperties.ui ambientproperties.ui controlinfo.ui
 RC_FILE	 = testcon.rc
 
+# Use WinMain() from qaxservermain
+win32:QMAKE_LIBS_QT_ENTRY -= -lqtmain
+
 !win32-g++*:QMAKE_POST_LINK = midl $$shell_quote($$shell_path($$PWD/testcon.idl)) && move testcon.tlb $(TARGETDIR)
 
 target.path = $$[QT_INSTALL_BINS]
