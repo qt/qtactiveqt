@@ -1,4 +1,4 @@
-TARGET   = QAxServer
+TARGET   = QtAxServer
 
 QT += core-private gui-private widgets axbase
 CONFIG  += static
