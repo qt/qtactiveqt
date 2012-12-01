@@ -13,4 +13,5 @@
 #
 %dependencies = (
     "qtbase" => "refs/heads/master",
+    "qtdoc" => "refs/heads/master",
 );
