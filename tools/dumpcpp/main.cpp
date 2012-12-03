@@ -46,6 +46,7 @@
 #include <QTextStream>
 #include <QSettings>
 #include <QStringList>
+#include <QTemporaryFile>
 #include <QUuid>
 #include <QWidget>
 #include <QFileInfo>
@@ -1009,8 +1010,12 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
 
     QMetaObject *namespaceObject = qax_readEnumInfo(typelib, 0);
 
-    QByteArray classImplBuffer;
-    QTextStream classImplOut(&classImplBuffer, QIODevice::WriteOnly);
+    QTemporaryFile classImplFile;
+    if (!classImplFile.open()) {
+        qWarning("dumpcpp: Cannot open temporary file.");
+        return false;
+    }
+    QTextStream classImplOut(&classImplFile);
     QFile implFile(cppFile + QLatin1String(".cpp"));
     QTextStream implOut(&implFile);
     if (!(category & (NoMetaObject|NoImplementation))) {
@@ -1386,7 +1391,12 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
 
         implOut << "#undef QT_MOC_LITERAL" << endl << endl;
 
-        implOut << classImplBuffer << endl;
+        classImplOut.flush();
+        classImplFile.seek(0);
+        const int copyBufferSize = 4 * (1024 << 1);
+        while (!classImplFile.atEnd())
+            implOut << classImplFile.read(copyBufferSize);
+        implOut << endl;
     }
 
     qax_deleteMetaObject(namespaceObject);
