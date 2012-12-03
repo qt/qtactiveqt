@@ -77,6 +77,7 @@ extern QMetaObject *qax_readInterfaceInfo(ITypeLib *typeLib, ITypeInfo *typeInfo
 extern QList<QByteArray> qax_qualified_usertypes;
 extern QString qax_docuFromName(ITypeInfo *typeInfo, const QString &name);
 extern bool qax_dispatchEqualsIDispatch;
+extern void qax_deleteMetaObject(QMetaObject *mo);
 
 QByteArray nameSpace;
 QMap<QByteArray, QByteArray> namespaceForType;
@@ -535,6 +536,12 @@ void strreg(const QByteArray &s)
     }
 }
 
+void strDetachAndRegister(QByteArray s)
+{
+    s.detach();
+    strreg(s);
+}
+
 int stridx(const QByteArray &s)
 {
     int i = stringIndex.value(s);
@@ -700,7 +707,7 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
         int argsCount = method.parameterCount();
         combinedParameterCount += argsCount;
 
-        strreg(method.name());
+        strDetachAndRegister(method.name());
         QByteArray typeName = method.typeName();
         if (!QtPrivate::isBuiltinType(typeName))
             strreg(typeName);
@@ -710,8 +717,8 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
         const QList<QByteArray> parameterTypes = method.parameterTypes();
         for (int j = 0; j < argsCount; ++j) {
             if (!QtPrivate::isBuiltinType(parameterTypes.at(j)))
-                strreg(parameterTypes.at(j));
-            strreg(parameterNames.at(j));
+                strDetachAndRegister(parameterTypes.at(j));
+            strDetachAndRegister(parameterNames.at(j));
         }
     }
     for (int i = mo->propertyOffset(); i < allPropertyCount; ++i) {
@@ -1119,7 +1126,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
                     break;
                 }
 
-                delete metaObject;
+                qax_deleteMetaObject(metaObject);
                 typeinfo->ReleaseTypeAttr(typeattr);
                 typeinfo->Release();
             }
@@ -1278,7 +1285,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
             currentTypeInfo = 0;
         }
 
-        delete metaObject;
+        qax_deleteMetaObject(metaObject);
 
         typeinfo->ReleaseTypeAttr(typeattr);
         typeinfo->Release();
@@ -1382,7 +1389,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
         implOut << classImplBuffer << endl;
     }
 
-    delete namespaceObject;
+    qax_deleteMetaObject(namespaceObject);
 
     classesOut.flush();
     inlinesOut.flush();
