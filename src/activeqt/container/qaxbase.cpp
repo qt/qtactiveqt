@@ -1832,6 +1832,11 @@ QMetaObject *qax_readClassInfo(ITypeLib *typeLib, ITypeInfo *classInfo, const QM
     return generator.metaObject(parentObject, className.toLatin1());
 }
 
+void qax_deleteMetaObject(QMetaObject *metaObject)
+{
+    delete static_cast<QAxMetaObject *>(metaObject);
+}
+
 MetaObjectGenerator::MetaObjectGenerator(QAxBase *ax, QAxBasePrivate *dptr)
 : that(ax), d(dptr), disp(0), dispInfo(0), classInfo(0), typelib(0), 
   iidnames(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"), QSettings::NativeFormat)
