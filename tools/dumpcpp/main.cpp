@@ -475,7 +475,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
             out << endl;
             out << indent << "{" << endl;
             
-            if (slotType != QStringLiteral("void")) {
+            if (slotType != QByteArrayLiteral("void")) {
                 out << indent << "    " << slotType << " qax_result";
                 if (slotType.endsWith('*'))
                     out << " = 0";
@@ -493,7 +493,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
                 }
             }
             out << indent << "    void *_a[] = {";
-            if (slotType != QStringLiteral("void"))
+            if (slotType != QByteArrayLiteral("void"))
                 out << "(void*)&qax_result";
             else
                 out << "0";
@@ -504,7 +504,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
             out << "};" << endl;
 
             out << indent << "    qt_metacall(QMetaObject::InvokeMetaMethod, " << islot << ", _a);" << endl;
-            if (slotType != QStringLiteral("void"))
+            if (slotType != QByteArrayLiteral("void"))
                 out << indent << "    return qax_result;" << endl;
             out << indent << "}" << endl;
         }
@@ -1007,7 +1007,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
     libName = QString::fromWCharArray(nameString);
     SysFreeString(nameString);
     if (!nameSpace.isEmpty())
-        libName = QString(nameSpace);
+        libName = QString::fromLocal8Bit(nameSpace);
 
     QString libVersion(QLatin1String("1.0"));
 
