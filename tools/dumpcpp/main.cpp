@@ -46,6 +46,7 @@
 #include <QTextStream>
 #include <QSettings>
 #include <QStringList>
+#include <QTemporaryFile>
 #include <QUuid>
 #include <QWidget>
 #include <QFileInfo>
@@ -570,6 +571,24 @@ uint nameToBuiltinType(const QByteArray &name)
     return tp < uint(QMetaType::User) ? tp : uint(QMetaType::UnknownType);
 }
 
+void copyFileToStream(QFile *file, QTextStream *stream)
+{
+    file->seek(0);
+    QByteArray buffer;
+    const int bufferSize = 4096 * 1024;
+    buffer.resize(bufferSize);
+    while (!file->atEnd()) {
+        const int bytesRead = static_cast<int>(file->read(buffer.data(), bufferSize));
+        if (bytesRead < bufferSize) {
+            buffer.resize(bytesRead);
+            *stream << buffer;
+            buffer.resize(bufferSize);
+        } else {
+            *stream << buffer;
+        }
+    }
+}
+
 void generateTypeInfo(QTextStream &out, const QByteArray &typeName)
 {
     if (QtPrivate::isBuiltinType(typeName)) {
@@ -1009,8 +1028,12 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
 
     QMetaObject *namespaceObject = qax_readEnumInfo(typelib, 0);
 
-    QByteArray classImplBuffer;
-    QTextStream classImplOut(&classImplBuffer, QIODevice::WriteOnly);
+    QTemporaryFile classImplFile;
+    if (!classImplFile.open()) {
+        qWarning("dumpcpp: Cannot open temporary file.");
+        return false;
+    }
+    QTextStream classImplOut(&classImplFile);
     QFile implFile(cppFile + QLatin1String(".cpp"));
     QTextStream implOut(&implFile);
     if (!(category & (NoMetaObject|NoImplementation))) {
@@ -1386,7 +1409,9 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
 
         implOut << "#undef QT_MOC_LITERAL" << endl << endl;
 
-        implOut << classImplBuffer << endl;
+        classImplOut.flush();
+        copyFileToStream(&classImplFile, &implOut);
+        implOut << endl;
     }
 
     qax_deleteMetaObject(namespaceObject);
