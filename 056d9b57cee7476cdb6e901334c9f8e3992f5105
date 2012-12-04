@@ -1,0 +1,6 @@
+Code-Review+1: Friedemann Kleint <Friedemann.Kleint@digia.com>
+Code-Review+2: Miikka Heikkinen <miikka.heikkinen@digia.com>
+Sanity-Review+1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Reviewed-on: https://codereview.qt-project.org/41684
+Project: qt/qtactiveqt
+Branch: refs/heads/stable
