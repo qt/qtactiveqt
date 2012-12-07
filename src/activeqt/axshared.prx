@@ -2,6 +2,7 @@
 # It also contains shared code that is used by axcontainer and axserver.
 
 TARGET = QtAxBase
+QMAKE_DOCS = $$PWD/doc/activeqt.qdocconf
 MODULE_INCNAME = ActiveQt
 CONFIG += static
 QT += gui-private
