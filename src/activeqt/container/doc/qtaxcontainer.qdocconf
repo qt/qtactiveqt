@@ -1,0 +1,40 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project                 = QtAxContainer
+description             = Qt ActiveX Container
+url                     = http://qt-project.org/doc/qtaxcontainer
+version                 = 5.0.0
+
+examplesinstallpath     = axcontainer
+
+qhp.projects            = QtAxContainer
+
+qhp.QtAxContainer.file         = qtaxcontainer.qhp
+qhp.QtAxContainer.namespace           = org.qt-project.qtaxcontainer.500
+qhp.QtAxContainer.virtualFolder       = qtaxcontainer
+qhp.QtAxContainer.indexTitle          = Qt AxContainer
+qhp.QtAxContainer.indexRoot           =
+
+qhp.QtAxContainer.filterAttributes    = qtaxcontainer 5.0.0 qtrefdoc
+qhp.QtAxContainer.customFilters.Qt.name = QtAxContainer 5.0.0
+qhp.QtAxContainer.customFilters.Qt.filterAttributes = qtaxcontainer 5.0.0
+
+qhp.QtAxContainer.subprojects         = classes
+qhp.QtAxContainer.subprojects.classes.title = C++ Classes
+qhp.QtAxContainer.subprojects.classes.indexTitle = Qt AxContainer C++ Classes
+qhp.QtAxContainer.subprojects.classes.selectors = class fake:headerfile
+qhp.QtAxContainer.subprojects.classes.sortPages = true
+
+tagfile                 = ../../../doc/qtaxcontainer/qtaxcontainer.tags
+
+depends                 += qtcore qtgui qtdoc
+
+headerdirs  += ..
+
+sourcedirs  += ..
+
+exampledirs += ../ \
+               snippets
+
+imagedirs   += images
+

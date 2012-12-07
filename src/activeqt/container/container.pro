@@ -1,4 +1,5 @@
 TARGET   = QtAxContainer
+QMAKE_DOCS = $$PWD/doc/src/qaxcontainer.qdoc
 
 QT += core-private gui gui-private widgets widgets-private axbase
 CONFIG  += static

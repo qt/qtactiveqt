@@ -1,4 +1,5 @@
 TARGET   = QtAxServer
+#QMAKE_DOCS = $$PWD/doc/src/activeqt-server.qdoc
 
 QT += core-private gui-private widgets axbase
 CONFIG  += static
