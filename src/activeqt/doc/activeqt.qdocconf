@@ -1,0 +1,40 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project                 = ActiveQt
+description             = ActiveQt
+url                     = http://qt-project.org/doc/activeqt
+version                 = 5.0.0
+
+examplesinstallpath     = activeqt
+
+qhp.projects            = ActiveQt
+
+qhp.ActiveQt.file         = activeqt.qhp
+qhp.ActiveQt.namespace           = org.qt-project.activeqt.500
+qhp.ActiveQt.virtualFolder       = activeqt
+qhp.ActiveQt.indexTitle          = ActiveQt
+qhp.ActiveQt.indexRoot           =
+
+qhp.ActiveQt.filterAttributes    = activeqt 5.0.0 qtrefdoc
+qhp.ActiveQt.customFilters.Qt.name = activeqt 5.0.0
+qhp.ActiveQt.customFilters.Qt.filterAttributes = activeqt 5.0.0
+
+qhp.ActiveQt.subprojects         = classes
+qhp.ActiveQt.subprojects.classes.title = C++ Classes
+qhp.ActiveQt.subprojects.classes.indexTitle = Qt ActiveQt C++ Classes
+qhp.ActiveQt.subprojects.classes.selectors = class fake:headerfile
+qhp.ActiveQt.subprojects.classes.sortPages = true
+
+tagfile                 = ../../../doc/activeqt/activeqt.tags
+
+depends                 += qtcore qtgui qtdoc
+
+headerdirs  += ..
+
+sourcedirs  += ..
+
+exampledirs += ../ \
+               snippets
+
+imagedirs   += images
+
