@@ -61,7 +61,7 @@
     \example activeqt/opengl
     \title OpenGL Example (ActiveQt)
 
-    The OpenGL example demonstrates the use of the default factory
+    \brief The OpenGL example demonstrates the use of the default factory
     and  QAxFactory::isServer(), and the implementation of an
     additional COM interface using QAxBindable and QAxAggregated.
     The server executable  can run both as an ActiveX server and as a
