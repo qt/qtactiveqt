@@ -45,7 +45,7 @@
     \example activeqt/menus
     \title Menus Example (ActiveQt)
 
-    The Menus example demonstrates the use of QMenuBar and QStatusBar
+    \brief The Menus example demonstrates the use of QMenuBar and QStatusBar
     in a QMainWindow to implement an in-place active control.
 
     To build the example you must first build the QAxServer library.
