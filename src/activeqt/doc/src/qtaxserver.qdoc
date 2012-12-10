@@ -26,6 +26,59 @@
 ****************************************************************************/
 
 /*!
+    \module QAxServer
+    \title QAxServer C++ Classes
+    \ingroup modules
+
+    \brief The QAxServer module is a Windows-only static library that
+    you can use to turn a standard Qt binary into a COM server.
+
+    QAxServer is part of the \l{Active Qt} module. The
+    \l{Building ActiveX servers in Qt} page contains information about
+    turning a Qt binary into a COM server
+
+    \section1 License Information
+
+    The QAxContainer module is not covered by the \l{GNU General Public License (GPL)},
+    the \l{GNU Lesser General Public License (LGPL)}, or the
+    \l{Qt Commercial License}. Instead, it is distributed under
+    the following license.
+
+    \legalese
+    Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).\br
+    Contact: http://www.qt-project.org/legal\br
+
+    You may use this file under the terms of the BSD license as follows:
+
+    "Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions are
+    met:
+      * Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+      * Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in
+        the documentation and/or other materials provided with the
+        distribution.
+      * Neither the name of Digia Plc and its Subsidiary(-ies) nor the names
+        of its contributors may be used to endorse or promote products derived
+        from this software without specific prior written permission.
+
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+    A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+    SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+    LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+    DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+    THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+    (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+    \endlegalese
+*/
+
+/*!
     \page activeqt-server.html
     \title Building ActiveX servers in Qt
     \ingroup qt-activex
@@ -60,10 +113,10 @@
     An out-of-process executable server is generated from a \c .pro
     file like this:
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.pro 0
+    \snippet doc_src_qaxserver.pro 0
 
     To build an in-process server, use a \c .pro file like this:
-    \snippet doc/src/snippets/code/doc_src_qaxserver.pro 1
+    \snippet doc_src_qaxserver.pro 1
 
     The files \c qaxserver.rc and \c qaxserver.def are part of the
     framework and can be used from their usual location (specify a
@@ -91,7 +144,7 @@
     Additionally you can specify a version number using the \c VERSION
     variable, e.g.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.pro 2
+    \snippet doc_src_qaxserver.pro 2
 
     The version number specified will be used as the version of the type
     library and of the server when registering.
@@ -100,7 +153,7 @@
 
     Whether your COM server should run as a stand-alone executable
     or as a shared library in the client process depends mainly on the
-    type of COM objects you want to provide in the server. 
+    type of COM objects you want to provide in the server.
 
     An executable server has the advantage of being able to run as a
     stand-alone application, but adds considerable overhead to the
@@ -113,7 +166,7 @@
     time. The communication between client and server is done directly
     through virtual function calls and does not introduce the overhead
     required for remote procedure calls. However, if the server crashes the
-    client application is likely to crash as well, and not every 
+    client application is likely to crash as well, and not every
     functionality is available for in-process servers (i.e. register in
     the COM's running-object-table).
 
@@ -122,7 +175,7 @@
 
     \section2 Typical Errors During the Post-Build Steps
 
-    For the ActiveQt specific post-processing steps to work the 
+    For the ActiveQt specific post-processing steps to work the
     server has to meet some requirements:
 
     \list
@@ -131,19 +184,19 @@
     \li The initial linking of the server includes a temporary type
     library resource
     \li All dependencies required to run the server are in the system path
-    (or in the path used by the calling environment; note that Visual 
+    (or in the path used by the calling environment; note that Visual
     Studio has its own set of environment variables listed in the
     Tools|Options|Directories dialog).
     \endlist
 
-    If those requirements are not met one ore more of the following 
+    If those requirements are not met one ore more of the following
     errors are likely to occur:
 
     \section3 The Server Executable Crashes
 
     To generate the IDL the widgets exposed as ActiveX controls need to
-    be instantiated (the constructor is called). At this point, nothing 
-    else but a QApplication object exists. Your widget constructor must 
+    be instantiated (the constructor is called). At this point, nothing
+    else but a QApplication object exists. Your widget constructor must
     not rely on any other objects to be created, e.g. it should check for
     null-pointers.
 
@@ -186,26 +239,26 @@
     or any existing QObject subclass. If the class is a subclass of QWidget,
     the COM object will be an ActiveX control.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 3
+    \snippet doc_src_qaxserver.cpp 3
 
     The Q_OBJECT macro is required to provide the meta object information
     about the widget to the ActiveQt framework.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 4
+    \snippet doc_src_qaxserver.cpp 4
 
     Use the Q_CLASSINFO() macro to specify the COM identifiers for the COM
     object. \c ClassID and \c InterfaceID are required, while \c EventsID is
     only necessary when your object has signals. To generate these identifiers,
     use system tools like \c uuidgen or \c guidgen.
 
-    You can specify additional attributes for each of your classes; see 
+    You can specify additional attributes for each of your classes; see
     \l{Class Information and Tuning} for details.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 5
+    \snippet doc_src_qaxserver.cpp 5
 
     Use the Q_PROPERTY() macro to declare properties for the ActiveX control.
 
-    Declare a standard constructor taking a parent object, and functions, 
+    Declare a standard constructor taking a parent object, and functions,
     signals and slots like for any QObject subclass.
     \footnote
     If a standard constructor is not present the compiler will issue
@@ -216,9 +269,9 @@
     your implementation of QAxFactory::create.
     \endfootnote
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 6
+    \snippet doc_src_qaxserver.cpp 6
 
-    The ActiveQt framework will expose properties and public slots as ActiveX 
+    The ActiveQt framework will expose properties and public slots as ActiveX
     properties and methods, and signals as ActiveX events, and convert between
     the Qt data types and the equivalent COM data types.
 
@@ -273,8 +326,8 @@
     COM cannot marshal IPictureDisp accross process boundaries,
     so QPixmap properties cannot be called for out-of-process servers. You
     can however marshal the image data via e.g. temporary files. See the
-    Microsoft 
-    \link http://support.microsoft.com/default.aspx?scid=kb;[LN];Q150034 KB article 
+    Microsoft
+    \link http://support.microsoft.com/default.aspx?scid=kb;[LN];Q150034 KB article
     Q150034 \endlink for more information.
     \endfootnote
     \row
@@ -393,7 +446,7 @@
     \row
     \li QRect&
     \footnote
-    OLE needs to marshal user defined types by reference (ByRef), and cannot 
+    OLE needs to marshal user defined types by reference (ByRef), and cannot
     marshal them by value (ByVal). This is why const-references and object
     parameters are not supported for QRect, QSize and QPoint.
     \endfootnote
@@ -416,7 +469,7 @@
     \section2 Sub-Objects
 
     COM objects can have multiple sub-objects that can represent a sub element
-    of the COM object. A COM object representing a multi-document spread sheet 
+    of the COM object. A COM object representing a multi-document spread sheet
     application can for example provide one sub-object for each spread sheet.
 
     Any QObject subclass can be used as the type for a sub object in ActiveX, as
@@ -428,38 +481,38 @@
     To make the properties bindable for the ActiveX client, use multiple
     inheritance from the QAxBindable class:
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 7
+    \snippet doc_src_qaxserver.cpp 7
 
     When implementing the property write functions, use the
     QAxBindable class's requestPropertyChange() and propertyChanged()
     functions to allow ActiveX clients to bind to the control
-    properties. 
-    \footnote 
-    This is not required, but gives the client more control over 
+    properties.
+    \footnote
+    This is not required, but gives the client more control over
     the ActiveX control.
     \endfootnote
 
     \section1 Serving Controls
 
-    To make a COM server available to the COM system it must be registered 
-    in the system registry using five unique identifiers. 
-    These identifiers are provided by tools like \c guidgen or \c uuidgen. 
-    The registration information allows COM to localize the binary providing 
-    a requested ActiveX control, marshall remote procedure calls to the 
-    control and read type information about the methods and properties exposed 
+    To make a COM server available to the COM system it must be registered
+    in the system registry using five unique identifiers.
+    These identifiers are provided by tools like \c guidgen or \c uuidgen.
+    The registration information allows COM to localize the binary providing
+    a requested ActiveX control, marshall remote procedure calls to the
+    control and read type information about the methods and properties exposed
     by the control.
 
-    To create the COM object when the client asks for it the server must export 
+    To create the COM object when the client asks for it the server must export
     an implementation of a QAxFactory. The easist way to do this is to use a set
     of macros:
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 8
+    \snippet doc_src_qaxserver.cpp 8
 
     This will export \c MyWidget and \c MyWidget2 as COM objects that can be
     created by COM clients, and will register \c MySubType as a type that can
     be used in properties and parameters of \c MyWidget and \c MyWidget2.
 
-    The \link QAxFactory QAxFactory class documentation \endlink explains 
+    The \link QAxFactory QAxFactory class documentation \endlink explains
     how to use this macro, and how to implement and use custom factories.
 
     For out-of-process executable servers you can implement a main()
@@ -470,7 +523,7 @@
     server. Use QAxFactory::isServer() to create and run a standard
     application interface, or to prevent a stand-alone execution:
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 9
+    \snippet doc_src_qaxserver.cpp 9
 
     This is however not necessary as ActiveQt provides a default implementation
     of a main function. The default implemenation calls QAxFactory::startServer(),
@@ -498,7 +551,7 @@
 
     \section2 Typical Compile-Time Problems
 
-    The compiler/linker errors listed are based on those issued by the 
+    The compiler/linker errors listed are based on those issued by the
     Microsoft Visual C++ 6.0 compiler.
 
     \section3 "No overloaded function takes 2 parameters"
@@ -512,13 +565,13 @@
     macro, the QAxFactory subclass had no appropriate constructor.
     Provide a public class constructor like
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 10
+    \snippet doc_src_qaxserver.cpp 10
 
     for your factory class.
 
     \section3 "Syntax error: bad suffix on number"
 
-    The unique identifiers have not been passed as strings into the 
+    The unique identifiers have not been passed as strings into the
     QAXFACTORY_EXPORT() or QAXFACTORY_DEFAULT() macro.
 
     \section3 "Unresolved external symbol _ucm_instantiate"
@@ -560,7 +613,7 @@
     your installer process, resolve the \c DllRegisterServer symbol and
     call the function:
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 11
+    \snippet doc_src_qaxserver.cpp 11
 
     \section3 Distributing Servers over the Internet
 
@@ -578,11 +631,11 @@
     other Online resources. The examples include INF files that can be used
     to build CAB archives:
 
-    \snippet examples/activeqt/simple/simple.inf 0
+    \snippet activeqt/simple/simple.inf 0
 
     The CABARC tool from Microsoft can easily generate CAB archives:
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.qdoc 12
+    \snippet doc_src_qaxserver.qdoc 12
 
     The INF files assume a static build of Qt, so no dependencies to other DLLs
     are listed in the INF files. To distribute an ActiveX server depending on
@@ -592,13 +645,13 @@
     \section1 Using the Controls
 
     To use the ActiveX controls, e.g. to embed them in a web page, use
-    the \c <object> HTML tag. 
+    the \c <object> HTML tag.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.qdoc 13
+    \snippet doc_src_qaxserver.qdoc 13
 
     To initialize the control's properties, use
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.qdoc 14
+    \snippet doc_src_qaxserver.qdoc 14
 
     If the web browser supports scripting use JavaScript, VBScript
     and forms to script the control. The
@@ -612,7 +665,7 @@
 
     \section3 Supported Clients
 
-    These standard applications work with ActiveX controls developed with 
+    These standard applications work with ActiveX controls developed with
     ActiveQt. Note that some clients support only in-process controls.
 
     \list
@@ -647,8 +700,8 @@
 
     If the system is unable to start the server (check with the task
     manager whether the server runs a process), make sure that no DLL
-    the server depends on is missing from the system path (e.g. the Qt 
-    DLL!). Use a dependency walker to view all dependencies of the server 
+    the server depends on is missing from the system path (e.g. the Qt
+    DLL!). Use a dependency walker to view all dependencies of the server
     binary.
 
     If the server runs (e.g. the task manager lists a process), see
@@ -657,7 +710,7 @@
     \section3 The Object Cannot Be Created
 
     If the server could be built and registered correctly during the build
-    process, but the object cannot be initiliazed e.g. by the OLE/COM Object 
+    process, but the object cannot be initiliazed e.g. by the OLE/COM Object
     Viewer application, make sure that no DLL the server depends on is
     missing from the system path (e.g. the Qt DLL). Use a dependency walker
     to view all dependencies of the server binary.
@@ -667,16 +720,16 @@
 
     \section2 Debugging Runtime Errors
 
-    To debug an in-process server in Visual Studio, set the server project 
+    To debug an in-process server in Visual Studio, set the server project
     as the active project, and specify a client "executable for debug
-    session" in the project settings (e.g. use the ActiveX Test Container). 
-    You can set breakpoints in your code, and also step into ActiveQt and 
+    session" in the project settings (e.g. use the ActiveX Test Container).
+    You can set breakpoints in your code, and also step into ActiveQt and
     Qt code if you installed the debug version.
 
     To debug an executable server, run the application in a debugger
     and start with the command line parameter \c -activex. Then start
-    your client and create an instance of your ActiveX control. COM 
-    will use the existing process for the next client trying to create 
+    your client and create an instance of your ActiveX control. COM
+    will use the existing process for the next client trying to create
     an ActiveX control.
 
     \section1 Class Information and Tuning
@@ -731,7 +784,7 @@
     \row
     \li Insertable
     \li If the value is "yes" the class is registered to be "Insertable"
-       and will be listed in OLE 2 containers (ie. Microsoft Office). This 
+       and will be listed in OLE 2 containers (ie. Microsoft Office). This
        attribute is not be set by default.
     \row
     \li Aggregatable
@@ -751,12 +804,12 @@
     \row
     \li MIME
     \li The object can handle data and files of the format specified in the
-       value. The value has the format mime:extension:description. Multiple 
+       value. The value has the format mime:extension:description. Multiple
        formats are separated by a semicolon.
     \row
     \li CoClassAlias
     \li The classname used in the generated IDL and in the registry. This is
-       esp. useful for C++ classes that live in a namespace - by default, 
+       esp. useful for C++ classes that live in a namespace - by default,
        ActiveQt just removes the "::" to make the IDL compile.
     \endtable
 
@@ -766,13 +819,13 @@
     own API, and is available in the "Insert Objects" dialog of Microsoft
     Office applications.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 15
+    \snippet doc_src_qaxserver.cpp 15
 
     \section2 Developing Licensed Components
 
     If you develop components you might want to control who is able to instantiate
-    those components. Since the server binary can be shipped to and registered on 
-    any client machine it is possible for anybody to use those components in his 
+    those components. Since the server binary can be shipped to and registered on
+    any client machine it is possible for anybody to use those components in his
     own software.
 
     Licensing components can be done using a variety of techniques, e.g. the code
@@ -782,35 +835,35 @@
     To mark a Qt class as licensed specify a "LicenseKey" using the
     Q_CLASSINFO() macro.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 16
+    \snippet doc_src_qaxserver.cpp 16
 
     The key is required to be able to create an instance of \c MyLicensedControl
-    on a machine that is not licensed itself. The licensed developer can now 
-    redistributes the server binary with his application, which creates the control 
+    on a machine that is not licensed itself. The licensed developer can now
+    redistributes the server binary with his application, which creates the control
     using the value of "LicenseKey", while users of the application cannot create
     the control without the license key.
 
-    If a single license key for the control is not sufficient (ie. you want 
-    differnet developers to receive different license keys) you can specify an 
-    empty key to indicate that the control requires a license, and reimplement 
-    \l QAxFactory::validateLicenseKey() to verify that a license exists on the 
+    If a single license key for the control is not sufficient (ie. you want
+    differnet developers to receive different license keys) you can specify an
+    empty key to indicate that the control requires a license, and reimplement
+    \l QAxFactory::validateLicenseKey() to verify that a license exists on the
     system (ie. through a license file).
 
     \section2 More Interfaces
 
-    ActiveX controls provided by ActiveQt servers support a minimal set of COM 
-    interfaces to implement the OLE specifications. When the ActiveX class inherits 
+    ActiveX controls provided by ActiveQt servers support a minimal set of COM
+    interfaces to implement the OLE specifications. When the ActiveX class inherits
     from the QAxBindable class it can also implement additional COM interfaces.
 
     Create a new subclass of QAxAggregated and use multiple inheritance
-    to subclass additional COM interface classes. 
+    to subclass additional COM interface classes.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 17
+    \snippet doc_src_qaxserver.cpp 17
 
     Reimplement the QAxAggregated::queryInterface() function to
     support the additional COM interfaces.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 18
+    \snippet doc_src_qaxserver.cpp 18
 
     Since \c ISomeCOMInterface is a subclass of \c IUnknown you will
     have to implement the \c QueryInterface(), \c AddRef(), and \c
@@ -820,7 +873,7 @@
     returned by the QAxAggregated::controllingUnknown() function,
     e.g.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 19
+    \snippet doc_src_qaxserver.cpp 19
 
     Do not support the \c IUnknown interface itself in your
     \l{QAxAggregated::queryInterface()}{queryInterface()}
@@ -833,5 +886,5 @@
     QAxBindable::createAggregate() to return a new object of the
     QAxAggregated subclass.
 
-    \snippet doc/src/snippets/code/doc_src_qaxserver.cpp 20
+    \snippet doc_src_qaxserver.cpp 20
 */

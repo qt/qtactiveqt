@@ -26,45 +26,35 @@
 ****************************************************************************/
 
 /*!
-    \page qaxserver-demo-multiple.html
-    \title Two Simple Qt Widgets
+    \page qaxserver-demo-menus.html
+    \preliminary
 
-    \input examples/multiple-demo.qdocinc
+    \title Menubar Merging
+
+    This example is not full functional at the moment.
+
+    \raw HTML
+    <object ID="QMenus" CLASSID="CLSID:4dc3f340-a6f7-44e4-a79b-3e9217695fbd"
+    CODEBASE="http://qt.nokia.com/demos/menusax.cab">
+    [Object not available! Did you forget to build and register the server?]
+    </object>
+    \endraw
 */
 
 /*!
-    \example activeqt/multiple
-    \title Multiple Example (ActiveQt)
+    \example activeqt/menus
+    \title Menus Example (ActiveQt)
 
-    \brief The Multiple example demonstrates the implementation of a
-    QAxFactory to provide multiple ActiveX controls in a single in
-    process ActiveX server using the \c QAXFACTORY_EXPORT() macro.
-    The ActiveX controls in this example are simple QWidget
-    subclasses that reimplement QWidget::paintEvent().
-
-    \snippet examples/activeqt/multiple/ax1.h 0
-
-    The first control draws a filled rectangle. The fill color is exposed
-    as a property. \c Q_CLASSINFO() is used to specify the COM identifiers.
-
-    \snippet examples/activeqt/multiple/ax2.h 0
-
-    The second control draws a circle. The linewith is exposed as a property.
-    \c Q_CLASSINFO() is used to specify the COM identifiers, and to set the
-    attributes \e ToSuperClass and \e StockEvents to expose only the API of
-    the class itself, and to add COM stock events to the ActiveX control.
-
-    \snippet examples/activeqt/multiple/main.cpp 0
-
-    The classes are exported from the server using the QAxFactory macros.
+    \brief The Menus example demonstrates the use of QMenuBar and QStatusBar
+    in a QMainWindow to implement an in-place active control.
 
     To build the example you must first build the QAxServer library.
-    Then run \c qmake and your make tool in  \c
-    examples/activeqt/multiple.
+    Then run \c qmake and your make tool in \c
+    examples/activeqt/menus.
 
-    The \l{qaxserver-demo-multiple.html}{demonstration} requires your
+    The \l{qaxserver-demo-menus.html}{demonstration} requires your
     WebBrowser to support ActiveX controls, and scripting to be
     enabled.
 
-    \snippet examples/multiple-demo.qdocinc 0
+    \snippet activeqt/menus/doc/snippets/doc_src_examples_activeqt_menus.qdoc 0
 */

@@ -43,12 +43,12 @@
     example are the standard button classes QPushButton, QCheckBox
     and QRadioButton as provided by Qt.
 
-    \snippet examples/activeqt/wrapper/main.cpp 0
+    \snippet activeqt/wrapper/main.cpp 0
     The factory implementation returns the list of supported controls,
     creates controls on request and provides information about the unique
     IDs of the COM classes and interfaces for each control.
 
-    \snippet examples/activeqt/wrapper/main.cpp 1
+    \snippet activeqt/wrapper/main.cpp 1
     The factory is exported using the QAXFACTORY_EXPORT macro.
 
     To build the example you must first build the QAxServer library.
