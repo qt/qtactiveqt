@@ -32,27 +32,24 @@
 
     These tools provide support for integrating Qt with ActiveX components.
 
-    \generatelist{related}
-
     \sa {ActiveQt Framework}
 */
 
 /*!
-    \page activeqt.html
-    \title Qt's ActiveX Framework (ActiveQt)
-    \brief An overview of Qt's ActiveX and COM integration on Windows.
-
+    \page activeqt-index.html
     \ingroup qt-activex
     \keyword ActiveQt
     \target ActiveQt Framework
+    \title Active Qt
+    \brief Provides ActiveX and COM integration on Windows
 
     Qt's ActiveX and COM support allows Qt for Windows developers to:
 
-    \list 1
+    \list
     \li Access and use ActiveX controls and COM objects provided by any
     ActiveX server in their Qt applications.
     \li Make their Qt applications available as COM servers, with
-    any number of Qt objects and widgets as COM objects and ActiveX 
+    any number of Qt objects and widgets as COM objects and ActiveX
     controls.
     \endlist
 
@@ -76,7 +73,7 @@
     A set of \l{Tools for ActiveQt}{tools} is provided to simplify the
     developing and building of Qt projects that use ActiveX.
 
-    To build the static libraries, change into the \c activeqt directory 
+    To build the static libraries, change into the \c activeqt directory
     (usually \c QTDIR/src/activeqt), and run \c qmake and your make
     tool in both the \c container and the \c control subdirectory.
     The libraries \c qaxcontainer.lib and \c qaxserver.lib will be linked
@@ -87,8 +84,31 @@
     plugin that integrates the QAxContainer module into \l{Qt
     Designer}.
 
-    The ActiveQt modules are part of the \l{Qt Commercial Edition} and
-    the \l{Open Source Versions of Qt}.
+    \section1 Articles and Guides
+    \list
+    \li \l{Tools for ActiveQt}
+    \li \l{Using ActiveX controls and COM in Qt}
+    \li \l{Building ActiveX servers in Qt}
+    \endlist
 
-    \sa {QAxContainer Module}, {QAxServer Module}
+    \section1 Reference
+
+    \list
+    \li \l{QAxContainer C++ Classes}
+    \li \l{QAxServer C++ Classes}
+    \endlist
+
+    \section1 Examples
+    \list
+    \li \l{Multiple Example (ActiveQt)}
+    \li \l{Qutlook Example (ActiveQt)}
+    \li \l{COM App Example (ActiveQt)}
+    \li \l{Dot Net Example (ActiveQt)}
+    \li \l{OpenGL Example (ActiveQt)}
+    \li \l{Hierarchy Example (ActiveQt)}
+    \li \l{Menus Example (ActiveQt)}
+    \li \l{Wrapper Example (ActiveQt)}
+    \li \l{Simple Example (ActiveQt)}
+    \li \l{Web Browser Example (ActiveQt)}
+    \endlist
 */

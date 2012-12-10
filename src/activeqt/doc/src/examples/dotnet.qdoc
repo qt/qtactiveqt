@@ -97,7 +97,7 @@
     \b{Remark:} You will notice that in the generated code the following line is
     commented out:
 
-    \snippet doc/src/snippets/code/doc_src_examples_activeqt_dotnet.qdoc 0
+    \snippet doc_src_examples_activeqt_dotnet.qdoc 0
 
     This line is regenerated without comment whenever you change the
     dialog, in which case you have to comment it out again to be able
@@ -114,14 +114,14 @@
     managed .NET application, whether written in C#, VB.NET, MC++ or other
     managed programming language.
 
-    \snippet examples/activeqt/dotnet/wrapper/lib/worker.h 0
+    \snippet activeqt/dotnet/wrapper/lib/worker.h 0
 
     The Qt class has nothing unusual for Qt users, and as even the Qt
     specialities like \c Q_PROPERTY, \c slots and \c signals are
     implemented with straight C++ they don't cause any trouble when
     compiling this class with any C++ compiler.
 
-    \snippet examples/activeqt/dotnet/wrapper/lib/networker.h 0
+    \snippet activeqt/dotnet/wrapper/lib/networker.h 0
 
     The .NET wrapper class uses keywords that are part of MC++ to indicate
     that the class is managed/garbage collected (\c {__gc}), and that \c
@@ -155,21 +155,21 @@
     to the String object, even if it has been moved by the garbage
     collector, and it can be used just like a normal pointer.
 
-    \snippet examples/activeqt/dotnet/wrapper/lib/tools.cpp 0
+    \snippet activeqt/dotnet/wrapper/lib/tools.cpp 0
     \codeline
-    \snippet examples/activeqt/dotnet/wrapper/lib/tools.cpp 1
+    \snippet activeqt/dotnet/wrapper/lib/tools.cpp 1
 
     The convertor functions can then be used in the wrapper class
     implementation to call the functions in the native C++ class.
 
-    \snippet examples/activeqt/dotnet/wrapper/lib/networker.cpp 0
+    \snippet activeqt/dotnet/wrapper/lib/networker.cpp 0
     \codeline
-    \snippet examples/activeqt/dotnet/wrapper/lib/networker.cpp 1
+    \snippet activeqt/dotnet/wrapper/lib/networker.cpp 1
 
     The constructor and destructor simply create and destroy the Qt
     object wrapped using the C++ operators \c new and \c delete.
 
-    \snippet examples/activeqt/dotnet/wrapper/lib/networker.cpp 2
+    \snippet activeqt/dotnet/wrapper/lib/networker.cpp 2
 
     The netWorker class delegates calls from the .NET code to the native
     code. Although the transition between those two worlds implies a small
@@ -177,7 +177,7 @@
     this should be negligible since we are anyway going to run within the
     CLR.
 
-    \snippet examples/activeqt/dotnet/wrapper/lib/networker.cpp 3
+    \snippet activeqt/dotnet/wrapper/lib/networker.cpp 3
 
     The property setter calls the native Qt class before firing the
     event using the \c __raise keyword.
@@ -185,10 +185,10 @@
     This wrapper class can now be used in .NET code, e.g. using C++, C#,
     Visual Basic or any other programming language available for .NET.
 
-    \snippet examples/activeqt/dotnet/wrapper/main.cs 0
-    \snippet examples/activeqt/dotnet/wrapper/main.cs 1
-    \snippet examples/activeqt/dotnet/wrapper/main.cs 2
-    \snippet examples/activeqt/dotnet/wrapper/main.cs 3
+    \snippet activeqt/dotnet/wrapper/main.cs 0
+    \snippet activeqt/dotnet/wrapper/main.cs 1
+    \snippet activeqt/dotnet/wrapper/main.cs 2
+    \snippet activeqt/dotnet/wrapper/main.cs 3
 
     \section1 Walkthrough: .NET/COM Interop with ActiveQt
 
@@ -266,7 +266,7 @@
     the event handler \c circleClicked for the \c ClickEvent to increase
     the line width by one for every click:
 
-    \snippet examples/activeqt/dotnet/walkthrough/Form1.cs 0
+    \snippet activeqt/dotnet/walkthrough/Form1.cs 0
 
     In general we can implement a default event handler by double
     clicking on the widget in the form, but the default events for
@@ -276,7 +276,7 @@
     emitted by QPushButton. Add the event handler \c resetLineWidth to
     the \c clicked event, and implement the generated function:
 
-    \snippet examples/activeqt/dotnet/walkthrough/Form1.cs 1
+    \snippet activeqt/dotnet/walkthrough/Form1.cs 1
 
     We reset the property to 1, and also call the \c setFocus() slot
     to simulate the user style on Windows, where a button grabs focus

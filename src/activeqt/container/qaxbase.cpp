@@ -705,7 +705,7 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     the IDispatch interface, the properties and methods of that object
     become available as Qt properties and slots.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 0
+    \snippet src_activeqt_container_qaxbase.cpp 0
 
     Properties exposed by the object's IDispatch implementation can
     be read and written through the property system provided by the
@@ -713,18 +713,18 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     QObject::setProperty() and QObject::property()). Properties with
     multiple parameters are not supported.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 1
+    \snippet src_activeqt_container_qaxbase.cpp 1
 
     Write-functions for properties and other methods exposed by the
     object's IDispatch implementation can be called directly using
     dynamicCall(), or indirectly as slots connected to a signal.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 2
+    \snippet src_activeqt_container_qaxbase.cpp 2
 
     Outgoing events supported by the COM object are emitted as
     standard Qt signals.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 3
+    \snippet src_activeqt_container_qaxbase.cpp 3
 
     QAxBase transparently converts between COM data types and the
     equivalent Qt data types. Some COM types have no equivalent Qt data structure.
@@ -841,11 +841,11 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
 
     To call the methods of a COM interface described by the following IDL
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 4
+    \snippet src_activeqt_container_qaxbase.cpp 4
 
     use the QAxBase API like this:
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 5
+    \snippet src_activeqt_container_qaxbase.cpp 5
 
     Note that the QList the object should fill has to be provided as an
     element in the parameter list of \l{QVariant}s.
@@ -855,7 +855,7 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     through its \c IDispatch implementation or other interfaces.
     Those interfaces can be retrieved through queryInterface().
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 6
+    \snippet src_activeqt_container_qaxbase.cpp 6
 
     To get the definition of the COM interfaces you will have to use the header
     files provided with the component you want to use. Some compilers can also
@@ -955,21 +955,21 @@ QAxMetaObject *QAxBase::internalMetaObject() const
     The most efficient way to set this property is by using the
     registered component's UUID, e.g.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 7
+    \snippet src_activeqt_container_qaxbase.cpp 7
 
     The second fastest way is to use the registered control's class
     name (with or without version number), e.g.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 8
+    \snippet src_activeqt_container_qaxbase.cpp 8
 
     The slowest, but easiest way to use is to use the control's full
     name, e.g.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 9
+    \snippet src_activeqt_container_qaxbase.cpp 9
 
     It is also possible to initialize the object from a file, e.g.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 10
+    \snippet src_activeqt_container_qaxbase.cpp 10
 
     If the component's UUID is used the following patterns can be used
     to initialize the control on a remote machine, to initialize a
@@ -978,21 +978,21 @@ QAxMetaObject *QAxBase::internalMetaObject() const
     \li To initialize the control on a different machine use the following
     pattern:
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 11
+    \snippet src_activeqt_container_qaxbase.cpp 11
 
     \li To initialize a licensed control use the following pattern:
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 12
+    \snippet src_activeqt_container_qaxbase.cpp 12
 
     \li To connect to an already running object use the following pattern:
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 13
+    \snippet src_activeqt_container_qaxbase.cpp 13
 
     \endlist
     The first two patterns can be combined, e.g. to initialize a licensed
     control on a remote machine:
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 14
+    \snippet src_activeqt_container_qaxbase.cpp 14
 
     The control's read function always returns the control's UUID, if provided including the license
     key, and the name of the server, but not including the username, the domain or the password.
@@ -1624,7 +1624,7 @@ private:
     }
 
     struct Method {
-        Method() : flags(0) 
+        Method() : flags(0)
         {}
         QByteArray type;
         QByteArray parameters;
@@ -1838,14 +1838,14 @@ void qax_deleteMetaObject(QMetaObject *metaObject)
 }
 
 MetaObjectGenerator::MetaObjectGenerator(QAxBase *ax, QAxBasePrivate *dptr)
-: that(ax), d(dptr), disp(0), dispInfo(0), classInfo(0), typelib(0), 
+: that(ax), d(dptr), disp(0), dispInfo(0), classInfo(0), typelib(0),
   iidnames(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"), QSettings::NativeFormat)
 {
     init();
 }
 
 MetaObjectGenerator::MetaObjectGenerator(ITypeLib *tlib, ITypeInfo *tinfo)
-: that(0), d(0), disp(0), dispInfo(tinfo), classInfo(0), typelib(tlib), 
+: that(0), d(0), disp(0), dispInfo(tinfo), classInfo(0), typelib(tlib),
   iidnames(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"), QSettings::NativeFormat)
 {
     init();
@@ -2222,7 +2222,7 @@ void MetaObjectGenerator::readClassInfo()
                 classInfo->GetImplTypeFlags(i, &typeFlags);
                 if (typeFlags & IMPLTYPEFLAG_FSOURCE)
                     continue;
-                
+
                 HREFTYPE hrefType;
                 if (S_OK == classInfo->GetRefTypeOfImplType(i, &hrefType))
                     classInfo->GetRefTypeInfo(hrefType, &dispInfo);
@@ -2231,7 +2231,7 @@ void MetaObjectGenerator::readClassInfo()
                     dispInfo->GetTypeAttr(&ifaceAttr);
                     WORD typekind = ifaceAttr->typekind;
                     dispInfo->ReleaseTypeAttr(ifaceAttr);
-                    
+
                     if (typekind & TKIND_DISPATCH) {
                         break;
                     } else {
@@ -3475,7 +3475,7 @@ static bool checkHRESULT(HRESULT hres, EXCEPINFO *exc, QAxBase *that, const QStr
                 qWarning("             Help       : %s", help.toLatin1().data());
                 qWarning("         Connect to the exception(int,QString,QString,QString) signal to catch this exception");
             }
-        }       
+        }
         return false;
     case DISP_E_MEMBERNOTFOUND:
         qWarning("QAxBase: Error calling IDispatch member %s: Member not found", name.toLatin1().data());
@@ -4050,12 +4050,12 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     as the full prototype, for example as it would be written in a
     QObject::connect() call.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 15
+    \snippet src_activeqt_container_qaxbase.cpp 15
 
     Alternatively a function can be called passing the parameters embedded
     in the string, e.g. above function can also be invoked using
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 16
+    \snippet src_activeqt_container_qaxbase.cpp 16
 
     All parameters are passed as strings; it depends on the control whether
     they are interpreted correctly, and is slower than using the prototype
@@ -4065,7 +4065,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     property. The property setter is called when \a var1 is a valid QVariant,
     otherwise the getter is called.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 17
+    \snippet src_activeqt_container_qaxbase.cpp 17
 
     Note that it is faster to get and set properties using
     QObject::property() and QObject::setProperty().
@@ -4084,7 +4084,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     queryInterface() to retrieve the appropriate COM interface, and
     use the function directly.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 18
+    \snippet src_activeqt_container_qaxbase.cpp 18
 
     This is also more efficient.
 */
@@ -4167,7 +4167,7 @@ QVariant QAxBase::dynamicCall(const char *function, QList<QVariant> &vars)
     certain elements of the application as dispatch interfaces. Use
     this method to navigate the hierarchy of the object model, e.g.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 19
+    \snippet src_activeqt_container_qaxbase.cpp 19
 */
 QAxObject *QAxBase::querySubObject(const char *name,
                                    const QVariant &var1,
@@ -4511,7 +4511,7 @@ void *qax_createObjectWrapper(int metaType, IUnknown *iface)
     values is turned around, ie. the last element of the array is the first
     parameter in the function.
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxbase.cpp 20
+    \snippet src_activeqt_container_qaxbase.cpp 20
 
     Use this signal if the event has parameters of unsupported data
     types. Otherwise, connect directly to the signal \a name.
