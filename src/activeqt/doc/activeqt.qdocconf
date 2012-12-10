@@ -12,18 +12,23 @@ qhp.projects            = ActiveQt
 qhp.ActiveQt.file         = activeqt.qhp
 qhp.ActiveQt.namespace           = org.qt-project.activeqt.500
 qhp.ActiveQt.virtualFolder       = activeqt
-qhp.ActiveQt.indexTitle          = ActiveQt
+qhp.ActiveQt.indexTitle          = Active Qt
 qhp.ActiveQt.indexRoot           =
 
 qhp.ActiveQt.filterAttributes    = activeqt 5.0.0 qtrefdoc
 qhp.ActiveQt.customFilters.Qt.name = activeqt 5.0.0
 qhp.ActiveQt.customFilters.Qt.filterAttributes = activeqt 5.0.0
 
-qhp.ActiveQt.subprojects         = classes
-qhp.ActiveQt.subprojects.classes.title = C++ Classes
-qhp.ActiveQt.subprojects.classes.indexTitle = Qt ActiveQt C++ Classes
-qhp.ActiveQt.subprojects.classes.selectors = class fake:headerfile
-qhp.ActiveQt.subprojects.classes.sortPages = true
+qhp.ActiveQt.subprojects         = qaxcontainerclasses qaxserverclasses
+qhp.ActiveQt.subprojects.qaxcontainerclasses.title = QAxContainer C++ Classes
+qhp.ActiveQt.subprojects.qaxcontainerclasses.indexTitle = QAxContainer C++ Classes
+qhp.ActiveQt.subprojects.qaxcontainerclasses.selectors = class fake:headerfile
+qhp.ActiveQt.subprojects.qaxcontainerclasses.sortPages = true
+
+qhp.ActiveQt.subprojects.qaxserverclasses.title = QAxServer C++ Classes
+qhp.ActiveQt.subprojects.qaxserverclasses.indexTitle = QAxServer C++ Classes
+qhp.ActiveQt.subprojects.qaxserverclasses.selectors = class fake:headerfile
+qhp.ActiveQt.subprojects.qaxserverclasses.sortPages = true
 
 tagfile                 = ../../../doc/activeqt/activeqt.tags
 
@@ -33,8 +38,7 @@ headerdirs  += ..
 
 sourcedirs  += ..
 
-exampledirs += ../ \
+exampledirs += ../../../examples \
                snippets
 
 imagedirs   += images
-
