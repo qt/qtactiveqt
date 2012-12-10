@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 
-/*! 
+/*!
     \page qaxserver-demo-simple.html
 
     \title A standard ActiveX and the "simple" ActiveQt widget
@@ -78,7 +78,7 @@
     QAxBindable::requestPropertyChange() and
     QAxBindable::propertyChanged(), and the use of the default
     QAxFactory through the \c QAXFACTORY_DEFAULT() macro.
-    
+
     The ActiveX control in this example is a laid out QWidget with a
     QSlider, a QLCDNumber and a QLineEdit. It provides a
     signal/slot/property interface to change the values of the slider
@@ -86,10 +86,10 @@
 
 
     The Qt implementation of the ActiveX for this example is
-    \snippet examples/activeqt/simple/main.cpp 0
+    \snippet activeqt/simple/main.cpp 0
 
     The control is exported using the default QAxFactory
-    \snippet examples/activeqt/simple/main.cpp 1
+    \snippet activeqt/simple/main.cpp 1
 
     To build the example you must first build the QAxServer library.
     Then run qmake and your make tool in \c examples/activeqt/simple.
