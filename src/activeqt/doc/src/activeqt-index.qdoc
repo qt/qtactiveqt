@@ -30,7 +30,11 @@
     \title Tools for ActiveQt
     \brief Tools to help integrate Qt applications with ActiveX components.
 
-    These tools provide support for integrating Qt with ActiveX components.
+    The following tools enable Qt integration with the ActiveX components.
+    \list
+     \li \l {The dumpcpp Tool (ActiveQt)}{dumpcpp}
+     \li \l {The dumpdoc Tool (ActiveQt)}{dumpdoc}
+    \endlist
 
     \sa {ActiveQt Framework}
 */
