@@ -5,7 +5,7 @@ description             = ActiveQt
 url                     = http://qt-project.org/doc/activeqt
 version                 = 5.0.0
 
-examplesinstallpath     = activeqt
+examplesinstallpath     = 
 
 qhp.projects            = ActiveQt
 
@@ -38,7 +38,7 @@ headerdirs  += ..
 
 sourcedirs  += ..
 
-exampledirs += ../../../examples \
+exampledirs += ../../../examples/ \
                snippets
 
 imagedirs   += images
