@@ -1186,6 +1186,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
                             declOut << "    class " << className << ";" << endl;
                             namespaceForType.insert(className, nspace);
                             namespaceForType.insert(className + "*", nspace);
+                            namespaceForType.insert(className + "**", nspace);
                         }
                     }
                     declOut << "}" << endl << endl;
@@ -1208,6 +1209,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
                 declOut << "    class " << className << ";" << endl;
                 namespaceForType.insert(className, libName.toLatin1());
                 namespaceForType.insert(className + "*", libName.toLatin1());
+                namespaceForType.insert(className + "**", libName.toLatin1());
             }
         }
 
