@@ -1,7 +1,7 @@
 TEMPLATE = lib
 TARGET	 = hierarchyax
 
-CONFIG += qt warn_off dll
+CONFIG += warn_off dll
 QT += widgets axserver
 
 SOURCES	 = objects.cpp main.cpp
