@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET	 = menusax
 
-CONFIG += qt warn_off
+CONFIG += warn_off
 QT += widgets axserver
 
 SOURCES	 = main.cpp menus.cpp
