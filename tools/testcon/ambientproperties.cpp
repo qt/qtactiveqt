@@ -41,7 +41,10 @@
 
 #include "ambientproperties.h"
 
-#include <QtWidgets>
+#include <QtWidgets/QColorDialog>
+#include <QtWidgets/QFontDialog>
+#include <QtWidgets/QMdiArea>
+#include <QtWidgets/QMdiSubWindow>
 
 QT_BEGIN_NAMESPACE
 
