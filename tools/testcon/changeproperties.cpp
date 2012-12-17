@@ -41,9 +41,12 @@
 
 #include "changeproperties.h"
 
-#include <QtWidgets>
-#include <qt_windows.h>
-#include <ActiveQt/ActiveQt>
+#include <QtWidgets/QMessageBox>
+#include <QtWidgets/QFileDialog>
+#include <QtCore/qt_windows.h>
+#include <QtCore/QMetaObject>
+#include <QtCore/QMetaProperty>
+#include <ActiveQt/QAxWidget>
 
 QT_BEGIN_NAMESPACE
 

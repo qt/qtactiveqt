@@ -41,7 +41,7 @@
 
 #include "controlinfo.h"
 
-#include <QtGui>
+#include <QtCore/QMetaClassInfo>
 
 QT_BEGIN_NAMESPACE
 
