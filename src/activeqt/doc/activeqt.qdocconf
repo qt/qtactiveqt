@@ -3,7 +3,7 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 project                 = ActiveQt
 description             = ActiveQt
 url                     = http://qt-project.org/doc/activeqt
-version                 = 5.0.0
+version                 = 5.0.1
 
 examplesinstallpath     =
 
@@ -15,9 +15,9 @@ qhp.ActiveQt.virtualFolder       = activeqt
 qhp.ActiveQt.indexTitle          = Active Qt
 qhp.ActiveQt.indexRoot           =
 
-qhp.ActiveQt.filterAttributes    = activeqt 5.0.0 qtrefdoc
-qhp.ActiveQt.customFilters.Qt.name = activeqt 5.0.0
-qhp.ActiveQt.customFilters.Qt.filterAttributes = activeqt 5.0.0
+qhp.ActiveQt.filterAttributes    = activeqt 5.0.1 qtrefdoc
+qhp.ActiveQt.customFilters.Qt.name = activeqt 5.0.1
+qhp.ActiveQt.customFilters.Qt.filterAttributes = activeqt 5.0.1
 
 qhp.ActiveQt.subprojects         = qaxcontainerclasses qaxserverclasses
 qhp.ActiveQt.subprojects.qaxcontainerclasses.title = QAxContainer C++ Classes
