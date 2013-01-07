@@ -64,20 +64,20 @@ extern wchar_t qAxModuleFilename[MAX_PATH];
     the pure virtual functions in any implementation file (e.g. main.cpp), and export
     the factory using the \c QAXFACTORY_EXPORT() macro.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 0
+    \snippet src_activeqt_control_qaxfactory.cpp 0
 
     If you use the \c Q_CLASSINFO() macro to provide the unique
     identifiers or other attributes for your class you can use the \c
     QAXFACTORY_BEGIN(), \c QAXCLASS() and \c QAXFACTORY_END() macros to
     expose one or more classes as COM objects.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 1
+    \snippet src_activeqt_control_qaxfactory.cpp 1
 
 
     If your server supports just a single COM object, you can use
     a default factory implementation through the \c QAXFACTORY_DEFAULT() macro.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 2
+    \snippet src_activeqt_control_qaxfactory.cpp 2
 
     Only one QAxFactory implementation may be instantiated and
     exported by an ActiveX server application. This instance is accessible
@@ -230,7 +230,7 @@ QUuid QAxFactory::eventsID(const QString &key) const
     e.g. implemented categories, can be added in an implementation of
     this function.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 3
+    \snippet src_activeqt_control_qaxfactory.cpp 3
 
     If you reimplement this function you must also reimplement
     unregisterClass() to remove the additional registry values.
@@ -247,7 +247,7 @@ void QAxFactory::registerClass(const QString &key, QSettings *settings) const
     Unregisters any additional values for the class \a key from the
     system registry using the \a settings object.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 4
+    \snippet src_activeqt_control_qaxfactory.cpp 4
 
     \sa registerClass(), QSettings
 */
@@ -354,7 +354,7 @@ extern bool qAxIsServer;
     Returns true if the application has been started (by COM) as an ActiveX
     server, otherwise returns false.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 5
+    \snippet src_activeqt_control_qaxfactory.cpp 5
 */
 
 bool QAxFactory::isServer()
@@ -426,9 +426,9 @@ bool QAxFactory::isService() const
 
     The server is started automatically with \a type set to \c MultipleInstances
     if the server executable has been started with the \c -activex
-    command line parameter. To switch to SingleInstance, call 
-    
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 6
+    command line parameter. To switch to SingleInstance, call
+
+    \snippet src_activeqt_control_qaxfactory.cpp 6
 
     in your own main() entry point function.
 */
@@ -519,7 +519,7 @@ bool QAxFactory::registerActiveObject(QObject *object)
     and if the server is an executable server then it will have the application id
     \a AppID.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 7
+    \snippet src_activeqt_control_qaxfactory.cpp 7
 
     \sa QAXFACTORY_EXPORT(), QAXFACTORY_BEGIN()
 */
@@ -533,7 +533,7 @@ bool QAxFactory::registerActiveObject(QObject *object)
     and if the server is an executable server then it will have the application id
     \a AppID.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 8
+    \snippet src_activeqt_control_qaxfactory.cpp 8
 
     \sa QAXFACTORY_BEGIN()
 */
@@ -552,7 +552,7 @@ bool QAxFactory::registerActiveObject(QObject *object)
     This macro needs to be used together with the QAXCLASS(), QAXTYPE()
     and QAXFACTORY_END() macros.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxfactory.cpp 9
+    \snippet src_activeqt_control_qaxfactory.cpp 9
 */
 
 /*!

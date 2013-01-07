@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
     \l{moc}{meta-object compiler} requires you to inherit from
     QWidget first.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxbindable.cpp 0
+    \snippet src_activeqt_control_qaxbindable.cpp 0
 
     When implementing the property write function, use
     requestPropertyChange() to get permission from the ActiveX client
@@ -107,7 +107,7 @@ QAxBindable::~QAxBindable()
     This function is usually called first in the write function for \a
     property, and writing is abandoned if the function returns false.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxbindable.cpp 1
+    \snippet src_activeqt_control_qaxbindable.cpp 1
 
     \sa propertyChanged()
 */
@@ -197,7 +197,7 @@ void QAxBindable::reportError(int code, const QString &src, const QString &desc,
     writeData().  The default implementation does nothing and returns
     false.
 
-    \warning ActiveX controls embedded in HTML can use either the 
+    \warning ActiveX controls embedded in HTML can use either the
     \c type and \c data attribute of the \c object tag to read data,
     or use a list of \c param tags to initialize properties. If
     \c param tags are used, then Internet Explorer will ignore the
@@ -271,7 +271,7 @@ bool QAxBindable::writeData(QIODevice *sink)
     support the interface \a iid. Note that you must cast the \c
     this pointer to the appropriate superclass.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxbindable.cpp 2
+    \snippet src_activeqt_control_qaxbindable.cpp 2
 
     Return the standard COM results \c S_OK (interface is supported)
     or \c E_NOINTERFACE (requested interface is not supported).
@@ -290,7 +290,7 @@ bool QAxBindable::writeData(QIODevice *sink)
     delegate calls to \c QueryInterface(), \c AddRef(), and \c
     Release() to the interface provided by this function.
 
-    \snippet doc/src/snippets/code/src_activeqt_control_qaxbindable.cpp 3
+    \snippet src_activeqt_control_qaxbindable.cpp 3
 
     Instead of declaring and implementing these three functions
     manually, you can use the \c QAXAGG_IUNKNOWN macro in the class

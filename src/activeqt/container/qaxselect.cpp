@@ -51,7 +51,7 @@ class ControlList : public QAbstractListModel
 {
 public:
     ControlList(QObject *parent=0)
-    : QAbstractListModel(parent) 
+    : QAbstractListModel(parent)
     {
         HKEY classes_key;
         RegOpenKeyEx(HKEY_CLASSES_ROOT, L"CLSID", 0, KEY_READ, &classes_key);
@@ -102,7 +102,7 @@ public:
 
     int rowCount(const QModelIndex & = QModelIndex()) const { return controls.count(); }
     QVariant data(const QModelIndex &index, int role) const;
-    
+
 private:
     QStringList controls;
     QMap<QString, QString> clsids;
@@ -131,7 +131,7 @@ QVariant ControlList::data(const QModelIndex &index, int role) const
     components of the system and select one. The CLSID of the selected component can
     then be used in the application to e.g. initialize a QAxWidget:
 
-    \snippet doc/src/snippets/code/src_activeqt_container_qaxselect.cpp 0
+    \snippet src_activeqt_container_qaxselect.cpp 0
 
     \sa QAxWidget, {ActiveQt Framework}
 */

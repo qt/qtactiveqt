@@ -46,6 +46,7 @@
 #include <QTextStream>
 #include <QSettings>
 #include <QStringList>
+#include <QTemporaryFile>
 #include <QUuid>
 #include <QWidget>
 #include <QFileInfo>
@@ -77,6 +78,7 @@ extern QMetaObject *qax_readInterfaceInfo(ITypeLib *typeLib, ITypeInfo *typeInfo
 extern QList<QByteArray> qax_qualified_usertypes;
 extern QString qax_docuFromName(ITypeInfo *typeInfo, const QString &name);
 extern bool qax_dispatchEqualsIDispatch;
+extern void qax_deleteMetaObject(QMetaObject *mo);
 
 QByteArray nameSpace;
 QMap<QByteArray, QByteArray> namespaceForType;
@@ -535,6 +537,12 @@ void strreg(const QByteArray &s)
     }
 }
 
+void strDetachAndRegister(QByteArray s)
+{
+    s.detach();
+    strreg(s);
+}
+
 int stridx(const QByteArray &s)
 {
     int i = stringIndex.value(s);
@@ -561,6 +569,24 @@ uint nameToBuiltinType(const QByteArray &name)
 
     uint tp = QMetaType::type(name.constData());
     return tp < uint(QMetaType::User) ? tp : uint(QMetaType::UnknownType);
+}
+
+void copyFileToStream(QFile *file, QTextStream *stream)
+{
+    file->seek(0);
+    QByteArray buffer;
+    const int bufferSize = 4096 * 1024;
+    buffer.resize(bufferSize);
+    while (!file->atEnd()) {
+        const int bytesRead = static_cast<int>(file->read(buffer.data(), bufferSize));
+        if (bytesRead < bufferSize) {
+            buffer.resize(bytesRead);
+            *stream << buffer;
+            buffer.resize(bufferSize);
+        } else {
+            *stream << buffer;
+        }
+    }
 }
 
 void generateTypeInfo(QTextStream &out, const QByteArray &typeName)
@@ -700,7 +726,7 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
         int argsCount = method.parameterCount();
         combinedParameterCount += argsCount;
 
-        strreg(method.name());
+        strDetachAndRegister(method.name());
         QByteArray typeName = method.typeName();
         if (!QtPrivate::isBuiltinType(typeName))
             strreg(typeName);
@@ -710,8 +736,8 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
         const QList<QByteArray> parameterTypes = method.parameterTypes();
         for (int j = 0; j < argsCount; ++j) {
             if (!QtPrivate::isBuiltinType(parameterTypes.at(j)))
-                strreg(parameterTypes.at(j));
-            strreg(parameterNames.at(j));
+                strDetachAndRegister(parameterTypes.at(j));
+            strDetachAndRegister(parameterNames.at(j));
         }
     }
     for (int i = mo->propertyOffset(); i < allPropertyCount; ++i) {
@@ -1002,8 +1028,12 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
 
     QMetaObject *namespaceObject = qax_readEnumInfo(typelib, 0);
 
-    QByteArray classImplBuffer;
-    QTextStream classImplOut(&classImplBuffer, QIODevice::WriteOnly);
+    QTemporaryFile classImplFile;
+    if (!classImplFile.open()) {
+        qWarning("dumpcpp: Cannot open temporary file.");
+        return false;
+    }
+    QTextStream classImplOut(&classImplFile);
     QFile implFile(cppFile + QLatin1String(".cpp"));
     QTextStream implOut(&implFile);
     if (!(category & (NoMetaObject|NoImplementation))) {
@@ -1119,7 +1149,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
                     break;
                 }
 
-                delete metaObject;
+                qax_deleteMetaObject(metaObject);
                 typeinfo->ReleaseTypeAttr(typeattr);
                 typeinfo->Release();
             }
@@ -1156,6 +1186,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
                             declOut << "    class " << className << ";" << endl;
                             namespaceForType.insert(className, nspace);
                             namespaceForType.insert(className + "*", nspace);
+                            namespaceForType.insert(className + "**", nspace);
                         }
                     }
                     declOut << "}" << endl << endl;
@@ -1178,6 +1209,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
                 declOut << "    class " << className << ";" << endl;
                 namespaceForType.insert(className, libName.toLatin1());
                 namespaceForType.insert(className + "*", libName.toLatin1());
+                namespaceForType.insert(className + "**", libName.toLatin1());
             }
         }
 
@@ -1278,7 +1310,7 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
             currentTypeInfo = 0;
         }
 
-        delete metaObject;
+        qax_deleteMetaObject(metaObject);
 
         typeinfo->ReleaseTypeAttr(typeattr);
         typeinfo->Release();
@@ -1379,10 +1411,12 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
 
         implOut << "#undef QT_MOC_LITERAL" << endl << endl;
 
-        implOut << classImplBuffer << endl;
+        classImplOut.flush();
+        copyFileToStream(&classImplFile, &implOut);
+        implOut << endl;
     }
 
-    delete namespaceObject;
+    qax_deleteMetaObject(namespaceObject);
 
     classesOut.flush();
     inlinesOut.flush();

@@ -878,6 +878,11 @@ public:
             qax_hhook = SetWindowsHookEx(WH_GETMESSAGE, axs_FilterProc, 0, GetCurrentThreadId());
         }
 
+        // If we created QApplication instance, ensure native event loop starts properly
+        // by calling processEvents.
+        if (qax_ownQApp)
+            qApp->processEvents();
+
 	HRESULT res;
 	// Create the ActiveX wrapper - aggregate if requested
 	if (pUnkOuter) {
@@ -1390,8 +1395,8 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
                             nativeResourceForWindow("handle", widgetWindow));
                         if (h)
                             ::SetParent(h, that->m_hWnd);
-                        Qt::WindowFlags flags = widgetWindow->windowFlags();
-                        widgetWindow->setWindowFlags(flags | Qt::FramelessWindowHint);
+                        Qt::WindowFlags flags = widgetWindow->flags();
+                        widgetWindow->setFlags(flags | Qt::FramelessWindowHint);
                     }
                 }
                 that->qt.widget->raise();

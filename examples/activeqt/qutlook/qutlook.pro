@@ -18,6 +18,4 @@ isEmpty(TYPELIBS) {
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/activeqt/qutlook
-sources.files = $$SOURCES $$HEADERS $$RESOURCES $$FORMS qutlook.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/activeqt/qutlook
-INSTALLS += target sources
+INSTALLS += target
