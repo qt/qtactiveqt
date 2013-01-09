@@ -878,6 +878,11 @@ public:
             qax_hhook = SetWindowsHookEx(WH_GETMESSAGE, axs_FilterProc, 0, GetCurrentThreadId());
         }
 
+        // If we created QApplication instance, ensure native event loop starts properly
+        // by calling processEvents.
+        if (qax_ownQApp)
+            qApp->processEvents();
+
 	HRESULT res;
 	// Create the ActiveX wrapper - aggregate if requested
 	if (pUnkOuter) {
