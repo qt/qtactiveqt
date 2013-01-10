@@ -1,0 +1,7 @@
+Sanity-Review-1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Sanity-Review+1: Sergio Ahumada <sergio.ahumada@digia.com>
+Code-Review+2: Sergio Ahumada <sergio.ahumada@digia.com>
+Code-Review+1: Akseli Salovaara <akseli.salovaara@digia.com>
+Reviewed-on: https://codereview.qt-project.org/43772
+Project: qt/qtactiveqt
+Branch: refs/heads/stable
