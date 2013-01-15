@@ -127,5 +127,5 @@
     control should be allowed (the exact browser behaviour depends on the security
     settings in the Internet Options dialog).
 
-    \snippet doc/src/examples/opengl-demo.qdocinc 0
-*/
+    \input doc/src/examples/opengl-demo.qdocinc
+*:
