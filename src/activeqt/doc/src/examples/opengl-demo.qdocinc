@@ -1,5 +1,4 @@
-\raw HTML
-//! [0]
+\code
 <SCRIPT LANGUAGE="JavaScript">
 function setRot( form )
 {
@@ -23,5 +22,4 @@ Y:<input type="edit" name="YEdit" value="0" /><br />
 Z:<input type="edit" name="ZEdit" value="0" /><br />
 <input type="button" value="Set" onClick="setRot(this.form)" />
 </form>
-//! [0]
-\endraw
+\endcode
