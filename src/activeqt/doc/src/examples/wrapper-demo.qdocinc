@@ -1,5 +1,4 @@
-\raw HTML
-//! [0]
+\code
 <SCRIPT LANGUAGE="VBScript">
 Sub ToolButton_Clicked()
     RadioButton.text = InputBox( "Enter something", "Wrapper Demo" )
@@ -47,5 +46,4 @@ CODEBASE="http://qt.nokia.com/demos/wrapperax.cab">
     <PARAM NAME="text" VALUE="Tune me!" />
 [Object not available! Did you forget to build and register the server?]
 </object><br />
-//! [0]
-\endraw
+\endcode
