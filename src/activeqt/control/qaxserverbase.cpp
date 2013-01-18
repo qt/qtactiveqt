@@ -1008,9 +1008,13 @@ QAxServerBase::QAxServerBase(const QString &classname, IUnknown *outerUnknown)
     Constructs a QAxServerBase object wrapping \a o.
 */
 QAxServerBase::QAxServerBase(QObject *o)
-: aggregatedObject(0), ref(0), ole_ref(0),
-  m_hWnd(0), hmenuShared(0), hwndMenuOwner(0),
-  m_outerUnknown(0)
+    : aggregatedObject(0)
+    , m_hWnd(0)
+    , hmenuShared(0)
+    , hwndMenuOwner(0)
+    , ref(0)
+    , ole_ref(0)
+    , m_outerUnknown(0)
 {
     init();
 
@@ -1830,76 +1834,6 @@ void QAxServerBase::updateMask()
     CombineRgn(wr, hrgn, 0, RGN_COPY);
     SetWindowRgn(m_hWnd, wr, true);
     DeleteObject(hrgn);
-}
-
-static bool checkHRESULT(HRESULT hres)
-{
-    const char *name = 0;
-    Q_UNUSED(name);
-    switch(hres) {
-    case S_OK:
-	return true;
-    case DISP_E_BADPARAMCOUNT:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Bad parameter count", name);
-#endif
-	return false;
-    case DISP_E_BADVARTYPE:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Bad variant type", name);
-#endif
-	return false;
-    case DISP_E_EXCEPTION:
-#if defined(QT_CHECK_STATE)
-	    qWarning("QAxBase: Error calling IDispatch member %s: Exception thrown by server", name);
-#endif
-	return false;
-    case DISP_E_MEMBERNOTFOUND:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Member not found", name);
-#endif
-	return false;
-    case DISP_E_NONAMEDARGS:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: No named arguments", name);
-#endif
-	return false;
-    case DISP_E_OVERFLOW:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Overflow", name);
-#endif
-	return false;
-    case DISP_E_PARAMNOTFOUND:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Parameter not found", name);
-#endif
-	return false;
-    case DISP_E_TYPEMISMATCH:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Type mismatch", name);
-#endif
-	return false;
-    case DISP_E_UNKNOWNINTERFACE:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Unknown interface", name);
-#endif
-	return false;
-    case DISP_E_UNKNOWNLCID:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Unknown locale ID", name);
-#endif
-	return false;
-    case DISP_E_PARAMNOTOPTIONAL:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Non-optional parameter missing", name);
-#endif
-	return false;
-    default:
-#if defined(QT_CHECK_STATE)
-	qWarning("QAxBase: Error calling IDispatch member %s: Unknown error", name);
-#endif
-	return false;
-    }
 }
 
 static inline QByteArray paramType(const QByteArray &ptype, bool *out)
@@ -2974,6 +2908,7 @@ HRESULT WINAPI QAxServerBase::Load(IPropertyBag *bag, IErrorLog * /*log*/)
 
     updateGeometry();
 
+    Q_UNUSED(error)
     return /*error ? E_FAIL :*/ S_OK;
 }
 
