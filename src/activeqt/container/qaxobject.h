@@ -43,8 +43,6 @@
 
 #include <ActiveQt/qaxbase.h>
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_WIN_ACTIVEQT
@@ -96,7 +94,5 @@ QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QAxObject*)
 
 #endif // QT_NO_WIN_ACTIVEQT
-
-QT_END_HEADER
 
 #endif // QAXOBJECT_H
