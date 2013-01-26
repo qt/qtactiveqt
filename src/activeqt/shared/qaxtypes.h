@@ -43,8 +43,6 @@
 
 #include "qaxtypefunctions.h"
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_WIN_ACTIVEQT
@@ -75,7 +73,5 @@ inline QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName
 
 QT_END_NAMESPACE
 #endif // QT_NO_WIN_ACTIVEQT
-
-QT_END_HEADER
 
 #endif // QAXTYPES_H

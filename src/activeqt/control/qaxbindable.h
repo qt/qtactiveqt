@@ -45,8 +45,6 @@
 
 struct IUnknown;
 
-QT_BEGIN_HEADER
-
 QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_WIN_ACTIVEQT
@@ -80,7 +78,5 @@ private:
 
 QT_END_NAMESPACE
 #endif // QT_NO_WIN_ACTIVEQT
-
-QT_END_HEADER
 
 #endif // QAXBINDABLE_H
