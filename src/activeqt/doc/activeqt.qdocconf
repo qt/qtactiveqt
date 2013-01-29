@@ -10,7 +10,7 @@ examplesinstallpath     =
 qhp.projects            = ActiveQt
 
 qhp.ActiveQt.file         = activeqt.qhp
-qhp.ActiveQt.namespace           = org.qt-project.activeqt.500
+qhp.ActiveQt.namespace           = org.qt-project.activeqt.501
 qhp.ActiveQt.virtualFolder       = activeqt
 qhp.ActiveQt.indexTitle          = Active Qt
 qhp.ActiveQt.indexRoot           =
