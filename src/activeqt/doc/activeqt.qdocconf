@@ -39,6 +39,7 @@ headerdirs  += ..
 sourcedirs  += ..
 
 exampledirs += ../../../examples/ \
+               src/examples/ \
                snippets
 
 imagedirs   += images
