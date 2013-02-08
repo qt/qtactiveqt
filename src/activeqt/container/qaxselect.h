@@ -46,9 +46,8 @@ QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
-namespace Ui {
-    class QAxSelect;
-}
+class QAxSelectPrivate;
+class QModelIndex;
 
 class QAxSelect : public QDialog
 {
@@ -59,10 +58,12 @@ public:
     QString clsid() const;
 
 private Q_SLOTS:
-    void on_ActiveXList_clicked(const QModelIndex &index);
-    void on_ActiveXList_doubleClicked(const QModelIndex &index);
+    void onActiveXListCurrentChanged(const QModelIndex &);
+    void onActiveXListActivated();
+    void onFilterLineEditChanged(const QString &);
+
 private:
-    QScopedPointer<Ui::QAxSelect> selectUi;
+    QScopedPointer<QAxSelectPrivate> d;
 };
 
 QT_END_NAMESPACE
