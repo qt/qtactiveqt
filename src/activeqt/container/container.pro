@@ -9,7 +9,8 @@ HEADERS =   ../control/qaxaggregated.h \
             qaxobject.h \
             qaxscript.h \
             qaxselect.h \
-            ../shared/qaxtypes.h
+            ../shared/qaxtypes.h \
+            ../shared/qaxutils_p.h
 
 SOURCES =   qaxbase.cpp \
             qaxdump.cpp \
@@ -18,7 +19,8 @@ SOURCES =   qaxbase.cpp \
             qaxscript.cpp \
             qaxscriptwrapper.cpp \
             qaxselect.cpp \
-            ../shared/qaxtypes.cpp
+            ../shared/qaxtypes.cpp \
+            ../shared/qaxutils.cpp
 
 FORMS =     qaxselect.ui
 
