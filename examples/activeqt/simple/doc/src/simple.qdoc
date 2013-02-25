@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -99,18 +99,18 @@
 
     The simple ActiveX control is embedded using the \c <object> tag.
 
-    \snippet doc/src/examples/simple-demo.qdocinc 0
+    \input doc/src/examples/simple-demo.qdocinc 0
 
     A simple HTML button is connected to the ActiveQt's about() slot.
 
-    \snippet doc/src/examples/simple-demo.qdocinc 1
+    \input doc/src/examples/simple-demo.qdocinc 1
 
     A second ActiveX control - the standard Calendar Control - is instantiated
 
-    \snippet doc/src/examples/simple-demo.qdocinc 2
+    \input doc/src/examples/simple-demo.qdocinc 2
 
     Events from the ActiveX controls are handled using both Visual Basic Script
     and JavaScript.
 
-    \snippet doc/src/examples/simple-demo.qdocinc 3
+    \input doc/src/examples/simple-demo.qdocinc 3
 */
