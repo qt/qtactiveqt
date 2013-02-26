@@ -48,6 +48,7 @@
 
 #ifndef QT_NO_WIN_ACTIVEQT
 
+#include <qdebug.h>
 #include <qcursor.h>
 #include <qpixmap.h>
 #include <qpainter.h>
@@ -1033,7 +1034,11 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                                 QAxObject *object = (QAxObject*)qax_createObjectWrapper(metaType, disp);
                                 var = QVariant(QMetaType::type(typeName), &object);
                             } else
-#endif
+#else // !QAX_SERVER
+                            if (QMetaType::type(typeName)) {
+                                qWarning().nospace() << Q_FUNC_INFO << ": Unhandled type: " << typeName;
+                            } else
+#endif // QAX_SERVER
                                 var = QVariant(qRegisterMetaType<IDispatch*>(typeName), &disp);
                         }
                     }
