@@ -66,5 +66,5 @@
     WebBrowser to support ActiveX controls, and scripting to be
     enabled.
 
-    \input  doc/src/examples/multiple-demo.qdocinc
+    \input  multiple-demo.qdocinc 0
 */
