@@ -36,9 +36,11 @@ depends                 += qtcore qtgui qtdoc
 
 headerdirs  += ..
 
-sourcedirs  += ..
+sourcedirs  += .. \
+               src/examples
 
 exampledirs += ../../../examples/ \
+               src/examples \
                snippets
 
 imagedirs   += images
