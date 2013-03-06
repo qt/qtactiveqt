@@ -30,7 +30,7 @@
 
     \title Standard Qt widgets in an HTML page
 
-    \input doc/src/examples/examples/wrapper-demo.qdocinc
+    \input doc/src/examples/wrapper-demo.qdocinc
 */
 
 /*!
@@ -59,5 +59,5 @@
     web browser that supports ActiveX controls, and scripting to be
     enabled.
 
-    \input examples/wrapper-demo.qdocinc 0
+    \input doc/src/examples/wrapper-demo.qdocinc
 */
