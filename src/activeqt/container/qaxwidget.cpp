@@ -1641,6 +1641,10 @@ void QAxClientSite::windowActivationChange()
 QAxHostWidget::QAxHostWidget(QWidget *parent, QAxClientSite *ax)
 : QWidget(parent), setFocusTimer(0), hasFocus(false), axhost(ax)
 {
+    // Force creation of native siblings (which was disabled in Qt 5.1)
+    // to avoid stacking problems.
+    if (QCoreApplication::testAttribute(Qt::AA_DontCreateNativeWidgetSiblings))
+        QCoreApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings, false);
     setAttribute(Qt::WA_NoBackground);
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_OpaquePaintEvent);
