@@ -1,5 +1,4 @@
 \code
-//! [0]
 <script language="javascript">
 function setColor( form )
 {
@@ -35,5 +34,4 @@ CODEBASE="http://qt.nokia.com/demos/multipleax.cab">
 Line width: <input type="edit" ID="widthEdit" value = "1" />
 <input type="button" value = "Set" onClick="setWidth(this.form)" />
 </form>
-//! [0]
 \endcode
