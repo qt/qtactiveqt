@@ -1,0 +1,5 @@
+Sanity-Review+1: Qt Sanity Bot <qt_sanity_bot@ovi.com>
+Code-Review+2: Friedemann Kleint <Friedemann.Kleint@digia.com>
+Reviewed-on: https://codereview.qt-project.org/51325
+Project: qt/qtactiveqt
+Branch: refs/heads/stable
