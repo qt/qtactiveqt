@@ -3682,7 +3682,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
         QByteArray type = d->metaobj->paramType(signature, p, &out);
         QVariant::Type vt = QVariant::nameToType(type);
         QVariant qvar;
-        if (vt != QVariant::UserType && vt != QMetaType::QVariant)
+        if (vt != QVariant::UserType && vt != int(QMetaType::QVariant))
             qvar = QVariant(vt, v[p + 1]);
 
         if (!qvar.isValid()) {

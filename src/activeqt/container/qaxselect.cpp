@@ -43,6 +43,10 @@
 #ifndef QT_NO_WIN_ACTIVEQT
 #include "ui_qaxselect.h"
 
+#include <QtCore/QSortFilterProxyModel>
+#include <QtCore/QItemSelectionModel>
+#include <QtWidgets/QPushButton>
+
 #include <qt_windows.h>
 
 QT_BEGIN_NAMESPACE
@@ -121,6 +125,26 @@ QVariant ControlList::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+class QAxSelectPrivate {
+public:
+    inline QString clsidAt(const QModelIndex &index) const
+    {
+        if (index.isValid()) {
+            const QModelIndex sourceIndex = filterModel->mapToSource(index);
+            if (sourceIndex.isValid())
+                return sourceIndex.data(Qt::UserRole).toString();
+        }
+        return QString();
+    }
+
+    inline QPushButton *okButton() const { return selectUi.buttonBox->button(QDialogButtonBox::Ok); }
+
+    inline void setOkButtonEnabled(bool enabled) { okButton()->setEnabled(enabled); }
+
+    Ui::QAxSelect selectUi;
+    QSortFilterProxyModel *filterModel;
+};
+
 /*!
     \class QAxSelect
     \brief The QAxSelect class provides a selection dialog for registered COM components.
@@ -141,22 +165,36 @@ QVariant ControlList::data(const QModelIndex &index, int role) const
     optionally specified with \a parent and \a flags parameters, respectively.
 */
 QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags flags)
-: QDialog(parent, flags), selectUi(new Ui::QAxSelect)
+    : QDialog(parent, flags)
+    , d(new QAxSelectPrivate)
 {
+    setWindowFlags(windowFlags() &~ Qt::WindowContextHelpButtonHint);
+    d->selectUi.setupUi(this);
+    d->setOkButtonEnabled(false);
+
 #ifndef QT_NO_CURSOR
     QApplication::setOverrideCursor(Qt::WaitCursor);
 #endif
-    selectUi->setupUi(this);
-    selectUi->ActiveXList->setModel(new ControlList(this));
-    connect(selectUi->ActiveXList->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-        this, SLOT(on_ActiveXList_clicked(QModelIndex)));
+
+    d->filterModel = new QSortFilterProxyModel(this);
+    d->filterModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    d->filterModel->setSourceModel(new ControlList(this));
+    d->selectUi.ActiveXList->setModel(d->filterModel);
+
+    connect(d->selectUi.ActiveXList->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
+            this, SLOT(onActiveXListCurrentChanged(QModelIndex)));
+    connect(d->selectUi.ActiveXList, SIGNAL(activated(QModelIndex)),
+            this, SLOT(onActiveXListActivated()));
+
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
-    selectUi->ActiveXList->setFocus();
+    d->selectUi.ActiveXList->setFocus();
 
-    connect(selectUi->buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
-    connect(selectUi->buttonCancel, SIGNAL(clicked()), this, SLOT(reject()));
+    connect(d->selectUi.buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(d->selectUi.buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+    connect(d->selectUi.filterLineEdit, SIGNAL(filterChanged(QString)),
+            this, SLOT(onFilterLineEditChanged(QString)));
 }
 
 /*!
@@ -173,21 +211,25 @@ QAxSelect::~QAxSelect()
 */
 QString QAxSelect::clsid() const
 {
-    return selectUi->ActiveX->text();
+    return d->selectUi.ActiveX->text().trimmed();
 }
 
-void QAxSelect::on_ActiveXList_clicked(const QModelIndex &index)
+void QAxSelect::onActiveXListCurrentChanged(const QModelIndex &index)
 {
-    QVariant clsid = selectUi->ActiveXList->model()->data(index, Qt::UserRole);
-    selectUi->ActiveX->setText(clsid.toString());
+    const QString newClsid = d->clsidAt(index);
+    d->selectUi.ActiveX->setText(newClsid);
+    d->setOkButtonEnabled(!newClsid.isEmpty());
 }
 
-void QAxSelect::on_ActiveXList_doubleClicked(const QModelIndex &index)
+void QAxSelect::onActiveXListActivated()
 {
-    QVariant clsid = selectUi->ActiveXList->model()->data(index, Qt::UserRole);
-    selectUi->ActiveX->setText(clsid.toString());
+    if (!clsid().isEmpty())
+        d->okButton()->animateClick();
+}
 
-    accept();
+void QAxSelect::onFilterLineEditChanged(const QString &text)
+{
+    d->filterModel->setFilterFixedString(text);
 }
 
 QT_END_NAMESPACE

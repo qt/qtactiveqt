@@ -48,7 +48,10 @@ QT_USE_NAMESPACE
 
 int main(int argc, char **argv)
 {
-    CoInitialize(0);
+    if (FAILED(CoInitialize(0))) {
+        qErrnoWarning("CoInitialize() failed.");
+        return -1;
+    }
 
     enum State {
         Default = 0,

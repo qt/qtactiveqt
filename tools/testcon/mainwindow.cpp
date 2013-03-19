@@ -46,9 +46,16 @@
 #include "controlinfo.h"
 #include "docuwindow.h"
 
-#include <QtWidgets>
-#include <qt_windows.h>
-#include <ActiveQt/ActiveQt>
+#include <QtWidgets/QMdiArea>
+#include <QtWidgets/QMdiSubWindow>
+#include <QtWidgets/QFileDialog>
+#include <QtWidgets/QInputDialog>
+#include <QtWidgets/QMessageBox>
+#include <QtCore/qt_windows.h>
+#include <ActiveQt/QAxScriptManager>
+#include <ActiveQt/QAxSelect>
+#include <ActiveQt/QAxWidget>
+#include <ActiveQt/qaxtypes.h>
 
 QT_BEGIN_NAMESPACE
 

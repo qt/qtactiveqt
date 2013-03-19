@@ -1494,7 +1494,10 @@ int main(int argc, char **argv)
 {
     qax_dispatchEqualsIDispatch = false;
 
-    CoInitialize(0);
+    if (FAILED(CoInitialize(0))) {
+        qErrnoWarning("CoInitialize() failed.");
+        return -1;
+    }
 
     uint category = DefaultObject;
 
