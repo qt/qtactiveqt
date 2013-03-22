@@ -463,7 +463,7 @@ static Qt::KeyboardModifiers translateModifierState(int s)
     return bst;
 }
 
-#if defined(Q_WS_WINCE)
+#if defined(Q_OS_WINCE)
 static int filter_ref = 0;
 #else
 static const wchar_t *qaxatom = L"QAxContainer4_Atom";
