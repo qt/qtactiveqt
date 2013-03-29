@@ -12,7 +12,7 @@ qhp.projects            = ActiveQt
 qhp.ActiveQt.file         = activeqt.qhp
 qhp.ActiveQt.namespace           = org.qt-project.activeqt.$QT_VERSION_TAG
 qhp.ActiveQt.virtualFolder       = activeqt
-qhp.ActiveQt.indexTitle          = Active Qt
+qhp.ActiveQt.indexTitle          = ActiveQt
 qhp.ActiveQt.indexRoot           =
 
 qhp.ActiveQt.filterAttributes    = activeqt $QT_VERSION qtrefdoc
