@@ -3778,7 +3778,7 @@ HRESULT QAxServerBase::internalActivate()
 	    }
 
 	    if (m_spInPlaceFrame) {
-		hr = m_spInPlaceFrame->SetActiveObject(this, QStringToBSTR(class_name));
+                hr = m_spInPlaceFrame->SetActiveObject(this, (wchar_t*)class_name.utf16());
 		if (!FAILED(hr)) {
 		    menuBar = (qt.widget && !qax_disable_inplaceframe) ? qt.widget->findChild<QMenuBar*>() : 0;
 		    if (menuBar && !menuBar->isVisible()) {
@@ -3796,7 +3796,7 @@ HRESULT QAxServerBase::internalActivate()
 		}
 	    }
 	    if (spInPlaceUIWindow) {
-		spInPlaceUIWindow->SetActiveObject(this, QStringToBSTR(class_name));
+                spInPlaceUIWindow->SetActiveObject(this, (wchar_t*)class_name.utf16());
 		spInPlaceUIWindow->SetBorderSpace(0);
 	    }
 	}
