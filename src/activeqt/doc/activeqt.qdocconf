@@ -44,3 +44,5 @@ exampledirs += ../../../examples/ \
                snippets
 
 imagedirs   += images
+
+navigation.landingpage = "Active Qt"
