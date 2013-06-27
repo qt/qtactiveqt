@@ -32,7 +32,7 @@
     \brief The QAxContainer module is a Windows-only extension for
     accessing ActiveX controls and COM objects.
 
-    QAxServer is part of the \l{Active Qt} module.
+    QAxContainer is part of the \l{Active Qt} module.
     The \l{Using ActiveX controls and COM in Qt} page contains information about
     containers for ActiveX controls.
 
