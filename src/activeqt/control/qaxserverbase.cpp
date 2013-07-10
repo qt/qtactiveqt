@@ -1382,18 +1382,16 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
 	    if(wParam) {
 	        that->internalCreate();
 	        if (!that->stayTopLevel) {
-                QWindow *widgetWindow = that->qt.widget->windowHandle();
                 // Set this property on window to pass the native handle to platform plugin,
                 // so that it can create the window with proper flags instead of thinking
                 // it is toplevel.
-                if (widgetWindow) {
-                    widgetWindow->setProperty("_q_embedded_native_parent_handle", WId(that->m_hWnd));
+                that->qt.widget->setProperty("_q_embedded_native_parent_handle", WId(that->m_hWnd));
 
+                if (QWindow *widgetWindow = that->qt.widget->windowHandle()) {
                     // If embedded widget is native, such as QGLWidget, it may have already created
                     // a window before now, probably as an undesired toplevel. In that case set the
                     // proper parent window and set the window frameless to position it correctly.
-                    if (widgetWindow
-                        && that->qt.widget->testAttribute(Qt::WA_WState_Created)
+                    if (that->qt.widget->testAttribute(Qt::WA_WState_Created)
                         && !that->qt.widget->isVisible()) {
                         HWND h = static_cast<HWND>(QGuiApplication::platformNativeInterface()->
                             nativeResourceForWindow("handle", widgetWindow));
