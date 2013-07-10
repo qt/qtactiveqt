@@ -3100,7 +3100,7 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* 
     if (!bMetaFile)
         ::LPtoDP(hicTargetDev, (LPPOINT)&rc, 2);
 
-    QPixmap pm = QPixmap::grabWidget(qt.widget);
+    const QPixmap pm = qt.widget->grab();
     HBITMAP hbm = qaxPixmapToWinHBITMAP(pm);
     HDC hdc = CreateCompatibleDC(0);
     SelectObject(hdc, hbm);
