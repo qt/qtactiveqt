@@ -2343,7 +2343,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 
 	    // get slot info
 	    QMetaMethod slot(mo->method(index));
-            Q_ASSERT(slot.methodType() == QMetaMethod::Slot);
+	     Q_ASSERT(slot.methodType() == QMetaMethod::Slot || slot.methodType() == QMetaMethod::Method);
 	    QByteArray type = slot.typeName();
             name = slot.methodSignature();
             nameLength = name.indexOf('(');
