@@ -388,6 +388,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             }
         }
         break;
+    case QMetaType::Float:
     case QVariant::Double:
         if (out && arg.vt == (VT_R8|VT_BYREF)) {
             *arg.pdblVal = qvar.toDouble();
