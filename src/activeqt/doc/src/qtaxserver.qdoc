@@ -29,6 +29,7 @@
     \module QAxServer
     \title QAxServer C++ Classes
     \ingroup modules
+    \qtvariable axserver
 
     \brief The QAxServer module is a Windows-only static library that
     you can use to turn a standard Qt binary into a COM server.
