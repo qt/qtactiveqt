@@ -59,7 +59,14 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
-      <widget class="FilterWidget" name="filterLineEdit"/>
+      <widget class="QLineEdit" name="filterLineEdit">
+       <property name="placeholderText">
+        <string>Filter</string>
+       </property>
+       <property name="clearButtonEnabled">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QListView" name="ActiveXList"/>
@@ -102,13 +109,6 @@
   </layout>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <customwidgets>
-  <customwidget>
-   <class>FilterWidget</class>
-   <extends>QWidget</extends>
-   <header>filterwidget_p.h</header>
-  </customwidget>
- </customwidgets>
  <includes>
   <include location="local">qaxwidget.h</include>
  </includes>

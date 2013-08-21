@@ -193,7 +193,7 @@ QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags flags)
 
     connect(d->selectUi.buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
     connect(d->selectUi.buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-    connect(d->selectUi.filterLineEdit, SIGNAL(filterChanged(QString)),
+    connect(d->selectUi.filterLineEdit, SIGNAL(textChanged(QString)),
             this, SLOT(onFilterLineEditChanged(QString)));
 }
 

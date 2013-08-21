@@ -9,7 +9,6 @@ HEADERS =   ../control/qaxaggregated.h \
             qaxobject.h \
             qaxscript.h \
             qaxselect.h \
-            filterwidget_p.h \
             ../shared/qaxtypes.h \
             ../shared/qaxutils_p.h
 
@@ -20,7 +19,6 @@ SOURCES =   qaxbase.cpp \
             qaxscript.cpp \
             qaxscriptwrapper.cpp \
             qaxselect.cpp \
-            filterwidget.cpp \
             ../shared/qaxtypes.cpp \
             ../shared/qaxutils.cpp
 
