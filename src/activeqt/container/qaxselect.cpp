@@ -45,11 +45,153 @@
 
 #include <QtCore/QSortFilterProxyModel>
 #include <QtCore/QItemSelectionModel>
+#include <QtCore/QSysInfo>
+#include <QtCore/QTextStream>
+#include <QtCore/QRegExp>
 #include <QtWidgets/QPushButton>
 
 #include <qt_windows.h>
 
+#include <algorithm>
+#include <functional>
+
 QT_BEGIN_NAMESPACE
+
+struct Control
+{
+    inline Control() : wordSize(0) {}
+    int compare(const Control &rhs) const;
+    QString toolTip() const;
+
+    QString clsid;
+    QString name;
+    QString dll;
+    QString version;
+    unsigned wordSize;
+};
+
+inline int Control::compare(const Control &rhs) const
+{
+    // Sort reverse by word size to ensure that disabled 32bit controls
+    // are listed last in 64bit executables.
+    if (wordSize > rhs.wordSize)
+        return -1;
+    if (wordSize < rhs.wordSize)
+        return 1;
+    if (const int n = name.compare(rhs.name))
+        return n;
+    if (const int c = clsid.compare(rhs.clsid))
+        return c;
+    if (const int d = dll.compare(rhs.dll))
+        return d;
+    if (const int v = version.compare(rhs.version))
+        return v;
+    return 0;
+}
+
+QString Control::toolTip() const
+{
+    QString result;
+    QTextStream str(&result);
+    str << "<html><head/><body><table>"
+        << "<tr><th>" << QAxSelect::tr("Name:") << "</th><td>" << name << "</td></tr>"
+        << "<tr><th>" << QAxSelect::tr("CLSID:") << "</th><td>" << clsid << "</td></tr>"
+        << "<tr><th>" << QAxSelect::tr("Word&nbsp;size:") << "</th><td>" << wordSize << "</td></tr>";
+    if (!dll.isEmpty())
+        str << "<tr><th>" << QAxSelect::tr("DLL:") << "</th><td>" << dll << "</td></tr>";
+    if (!version.isEmpty())
+        str << "<tr><th>" << QAxSelect::tr("Version:") << "</th><td>" << version << "</td></tr>";
+    str << "</table></body></html>";
+    result.replace(QStringLiteral(" "), QStringLiteral("&nbsp;"));
+    return result;
+}
+
+inline bool operator<(const Control &c1, const Control &c2) { return c1.compare(c2) < 0; }
+inline bool operator==(const Control &c1, const Control &c2) { return !c1.compare(c2); }
+
+class FindByClsidPredicate : public std::unary_function<bool, Control> {
+public:
+    explicit FindByClsidPredicate(const QString &clsid) :  m_clsid(clsid) {}
+    inline bool operator()(const Control &c) const { return m_clsid == c.clsid; }
+
+private:
+    const QString m_clsid;
+};
+
+static LONG RegistryQueryValue(HKEY hKey, LPCWSTR lpSubKey, LPBYTE lpData, LPDWORD lpcbData)
+{
+    LONG ret = ERROR_FILE_NOT_FOUND;
+    HKEY hSubKey = NULL;
+    RegOpenKeyEx(hKey, lpSubKey, 0, KEY_READ, &hSubKey);
+    if (hSubKey) {
+        ret = RegQueryValueEx(hSubKey, 0, 0, 0, lpData, lpcbData);
+        RegCloseKey(hSubKey);
+    }
+    return ret;
+}
+
+static bool querySubKeyValue(HKEY hKey, const QString &subKeyName,  LPBYTE lpData, LPDWORD lpcbData)
+{
+    HKEY hSubKey = NULL;
+    const LONG openResult = RegOpenKeyEx(hKey,  reinterpret_cast<const wchar_t *>(subKeyName.utf16()),
+                                         0, KEY_READ, &hSubKey);
+    if (openResult != ERROR_SUCCESS)
+        return false;
+    const bool result = RegQueryValueEx(hSubKey, 0, 0, 0, lpData, lpcbData) == ERROR_SUCCESS;
+    RegCloseKey(hSubKey);
+    return result;
+}
+
+static QList<Control> readControls(const wchar_t *rootKey, unsigned wordSize)
+{
+    QList<Control> controls;
+    HKEY classesKey;
+    RegOpenKeyEx(HKEY_CLASSES_ROOT, rootKey, 0, KEY_READ, &classesKey);
+    if (!classesKey) {
+        qErrnoWarning("RegOpenKeyEx failed.");
+        return controls;
+    }
+    const QString systemRoot = QString::fromLocal8Bit(qgetenv("SystemRoot"));
+    const QRegExp systemRootPattern(QStringLiteral("%SystemRoot%"), Qt::CaseInsensitive, QRegExp::FixedString);
+    DWORD index = 0;
+    LONG result = 0;
+    wchar_t buffer[256];
+    DWORD szBuffer = 0;
+    FILETIME ft;
+    do {
+        szBuffer = sizeof(buffer) / sizeof(wchar_t);
+        result = RegEnumKeyEx(classesKey, index, buffer, &szBuffer, 0, 0, 0, &ft);
+        szBuffer = sizeof(buffer) / sizeof(wchar_t);
+        if (result == ERROR_SUCCESS) {
+            HKEY subKey;
+            const QString clsid = QString::fromWCharArray(buffer);
+            const QString key = clsid + QStringLiteral("\\Control");
+            result = RegOpenKeyEx(classesKey, reinterpret_cast<const wchar_t *>(key.utf16()), 0, KEY_READ, &subKey);
+            if (result == ERROR_SUCCESS) {
+                RegCloseKey(subKey);
+                szBuffer = sizeof(buffer) / sizeof(wchar_t);
+                RegistryQueryValue(classesKey, buffer, (LPBYTE)buffer, &szBuffer);
+                Control control;
+                control.clsid = clsid;
+                control.wordSize = wordSize;
+                control.name = QString::fromWCharArray(buffer);
+                szBuffer = sizeof(buffer) / sizeof(wchar_t);
+                if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\InprocServer32"), (LPBYTE)buffer, &szBuffer)) {
+                    control.dll = QString::fromWCharArray(buffer);
+                    control.dll.replace(systemRootPattern, systemRoot);
+                }
+                szBuffer = sizeof(buffer) / sizeof(wchar_t);
+                if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\VERSION"), (LPBYTE)buffer, &szBuffer))
+                    control.version = QString::fromWCharArray(buffer);
+                controls.push_back(control);
+            }
+            result = ERROR_SUCCESS;
+        }
+        ++index;
+    } while (result == ERROR_SUCCESS);
+    RegCloseKey(classesKey);
+    return controls;
+}
 
 class ControlList : public QAbstractListModel
 {
@@ -57,59 +199,22 @@ public:
     ControlList(QObject *parent=0)
     : QAbstractListModel(parent)
     {
-        HKEY classes_key;
-        RegOpenKeyEx(HKEY_CLASSES_ROOT, L"CLSID", 0, KEY_READ, &classes_key);
-        if (!classes_key)
-            return;
-
-        DWORD index = 0;
-        LONG result = 0;
-        wchar_t buffer[256];
-        DWORD szBuffer = sizeof(buffer) / sizeof(wchar_t);
-        FILETIME ft;
-        do {
-            result = RegEnumKeyEx(classes_key, index, buffer, &szBuffer, 0, 0, 0, &ft);
-            szBuffer = sizeof(buffer) / sizeof(wchar_t);
-            if (result == ERROR_SUCCESS) {
-                HKEY sub_key;
-                QString clsid = QString::fromWCharArray(buffer);
-                const QString key = clsid + QStringLiteral("\\Control");
-                result = RegOpenKeyEx(classes_key, reinterpret_cast<const wchar_t *>(key.utf16()), 0, KEY_READ, &sub_key);
-                if (result == ERROR_SUCCESS) {
-                    RegCloseKey(sub_key);
-                    RegistryQueryValue(classes_key, buffer, (LPBYTE)buffer, &szBuffer);
-                    QString name = QString::fromWCharArray(buffer);
-
-                    controls << name;
-                    clsids.insert(name, clsid);
-                }
-                result = ERROR_SUCCESS;
+        m_controls = readControls(L"CLSID", unsigned(QSysInfo::WordSize));
+        if (QSysInfo::WordSize == 64) { // Append the 32bit controls as disabled items.
+            foreach (const Control &c, readControls(L"Wow6432Node\\CLSID", 32u)) {
+                if (std::find_if(m_controls.constBegin(), m_controls.constEnd(), FindByClsidPredicate(c.clsid)) == m_controls.constEnd())
+                    m_controls.append(c);
             }
-            szBuffer = sizeof(buffer) / sizeof(wchar_t);
-            ++index;
-        } while (result == ERROR_SUCCESS);
-        RegCloseKey(classes_key);
-        controls.sort();
-    }
-
-    LONG RegistryQueryValue(HKEY hKey, LPCWSTR lpSubKey, LPBYTE lpData, LPDWORD lpcbData)
-    {
-        LONG ret = ERROR_FILE_NOT_FOUND;
-        HKEY hSubKey = NULL;
-        RegOpenKeyEx(hKey, lpSubKey, 0, KEY_READ, &hSubKey);
-        if (hSubKey) {
-            ret = RegQueryValueEx(hSubKey, 0, 0, 0, lpData, lpcbData);
-            RegCloseKey(hSubKey);
         }
-        return ret;
+        std::sort(m_controls.begin(), m_controls.end());
     }
 
-    int rowCount(const QModelIndex & = QModelIndex()) const { return controls.count(); }
+    int rowCount(const QModelIndex & = QModelIndex()) const { return m_controls.count(); }
     QVariant data(const QModelIndex &index, int role) const;
+    Qt::ItemFlags flags(const QModelIndex &index) const;
 
 private:
-    QStringList controls;
-    QMap<QString, QString> clsids;
+    QList<Control> m_controls;
 };
 
 QVariant ControlList::data(const QModelIndex &index, int role) const
@@ -117,12 +222,25 @@ QVariant ControlList::data(const QModelIndex &index, int role) const
     if (!index.isValid())
         return QVariant();
 
-    if (role == Qt::DisplayRole)
-        return controls.at(index.row());
-    if (role == Qt::UserRole)
-        return clsids.value(controls.at(index.row()));
-
+    switch (role) {
+    case Qt::DisplayRole:
+        return m_controls.at(index.row()).name;
+    case Qt::ToolTipRole:
+        return m_controls.at(index.row()).toolTip();
+    case Qt::UserRole:
+        return m_controls.at(index.row()).clsid;
+    default:
+        break;
+    }
     return QVariant();
+}
+
+Qt::ItemFlags ControlList::flags(const QModelIndex &index) const
+{
+    Qt::ItemFlags result = QAbstractListModel::flags(index);
+    if (!index.isValid() || m_controls.at(index.row()).wordSize != QSysInfo::WordSize)
+        result &= ~Qt::ItemIsEnabled;
+    return result;
 }
 
 class QAxSelectPrivate {
