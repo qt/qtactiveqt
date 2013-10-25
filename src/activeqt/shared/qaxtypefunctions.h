@@ -51,8 +51,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 extern GUID IID_IAxServerBase;
 struct IAxServerBase : public IUnknown
 {
@@ -86,7 +84,5 @@ extern void clearVARIANT(VARIANT *var);
 #define QAX_OUTPROC_SERVER (0x51540002)
 
 QT_END_NAMESPACE
-
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXTYPEFUNCTIONS_P_H

@@ -40,8 +40,6 @@
 
 #include "qaxfactory.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qfile.h>
 #include <qfileinfo.h>
 #include <qmetaobject.h>
@@ -590,4 +588,3 @@ bool QAxFactory::registerActiveObject(QObject *object)
 */
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

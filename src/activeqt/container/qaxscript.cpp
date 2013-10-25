@@ -41,8 +41,6 @@
 #include "qaxscript.h"
 #include "../shared/qaxutils_p.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #if defined(Q_CC_GNU)
 # define QT_NO_QAXSCRIPT
 #elif defined(Q_CC_BOR) && __BORLANDC__ < 0x560
@@ -1296,4 +1294,3 @@ void QAxScriptManager::scriptError(int code, const QString &desc, int spos, cons
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

@@ -41,8 +41,6 @@
 #include <qapplication.h>
 #include <qaxfactory.h>
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 int main(int argc, char **argv)
 {
     QT_USE_NAMESPACE
@@ -52,4 +50,3 @@ int main(int argc, char **argv)
 
     return app.exec();
 }
-#endif // QT_NO_WIN_ACTIVEQT

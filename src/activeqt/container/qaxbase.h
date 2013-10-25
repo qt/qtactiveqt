@@ -51,8 +51,6 @@ struct IDispatch;
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 class QUuid;
 class QAxEventSink;
 class QAxObject;
@@ -226,7 +224,5 @@ Q_DECLARE_METATYPE(IUnknown*)
 Q_DECLARE_METATYPE(IDispatch*)
 
 #endif
-
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXBASE_H

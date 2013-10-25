@@ -45,8 +45,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 class QAxObject : public QObject, public QAxBase
 {
     friend class QAxEventSink;
@@ -92,7 +90,5 @@ template <> inline QAxObject *qobject_cast<QAxObject*>(QObject *o)
 
 QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QAxObject*)
-
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXOBJECT_H

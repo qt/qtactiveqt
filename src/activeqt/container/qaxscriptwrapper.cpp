@@ -40,8 +40,6 @@
 
 #include "qaxobject.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <ActiveQt/qaxfactory.h>
 
 #include <qt_windows.h>
@@ -62,4 +60,3 @@ QAxBase *qax_create_object_wrapper(QObject *object)
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

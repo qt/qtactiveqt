@@ -41,8 +41,6 @@
 #define QT_NO_CAST_TO_ASCII
 #define NOMINMAX
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qabstracteventdispatcher.h>
 #include <qapplication.h>
 #include <qbuffer.h>
@@ -4376,4 +4374,3 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

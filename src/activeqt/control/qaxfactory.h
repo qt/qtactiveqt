@@ -52,8 +52,6 @@ struct IDispatch;
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 class QWidget;
 class QSettings;
 
@@ -302,7 +300,5 @@ Q_DECLARE_METATYPE(IUnknown*)
 Q_DECLARE_METATYPE(IDispatch*)
 
 #endif
-
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXFACTORY_H

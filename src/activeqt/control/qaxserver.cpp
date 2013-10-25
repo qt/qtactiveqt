@@ -41,8 +41,6 @@
 #include "qaxbindable.h"
 #include "qaxfactory.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qapplication.h>
 #include <qdatetime.h>
 #include <qdir.h>
@@ -1259,4 +1257,3 @@ ErrorInClass:
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

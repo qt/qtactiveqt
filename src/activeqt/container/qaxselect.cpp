@@ -40,7 +40,6 @@
 
 #include "qaxselect.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
 #include "ui_qaxselect.h"
 
 #include <QtCore/QSortFilterProxyModel>
@@ -351,4 +350,3 @@ void QAxSelect::onFilterLineEditChanged(const QString &text)
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

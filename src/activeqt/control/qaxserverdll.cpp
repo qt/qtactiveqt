@@ -38,8 +38,6 @@
 **
 ****************************************************************************/
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qapplication.h>
 #include <qwidget.h>
 
@@ -136,4 +134,3 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /* lpvR
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

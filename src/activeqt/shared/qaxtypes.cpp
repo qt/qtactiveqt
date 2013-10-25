@@ -46,8 +46,6 @@
 #include "qaxtypes.h"
 #include "qaxutils_p.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qcursor.h>
 #include <qpixmap.h>
 #include <qpainter.h>
@@ -1311,5 +1309,3 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
 }
 
 QT_END_NAMESPACE
-
-#endif // QT_NO_WIN_ACTIVEQT

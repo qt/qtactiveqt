@@ -47,8 +47,6 @@ struct IUnknown;
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 class QUuid;
 
 class QAxAggregated
@@ -80,8 +78,6 @@ private:
     return controllingUnknown()->QueryInterface(iid, iface); } \
     ULONG WINAPI AddRef() {return controllingUnknown()->AddRef(); } \
     ULONG WINAPI Release() {return controllingUnknown()->Release(); } \
-
-#endif // QT_NO_WIN_ACTIVEQT
 
 QT_END_NAMESPACE
 

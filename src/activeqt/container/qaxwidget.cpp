@@ -41,8 +41,6 @@
 #include "qaxwidget.h"
 #include "../shared/qaxutils_p.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <ActiveQt/qaxaggregated.h>
 
 #include <qabstracteventdispatcher.h>
@@ -2307,4 +2305,3 @@ bool QAxWidget::translateKeyEvent(int message, int keycode) const
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

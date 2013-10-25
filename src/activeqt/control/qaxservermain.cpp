@@ -43,8 +43,6 @@
 
 #include "qaxfactory.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qt_windows.h>
 
 QT_BEGIN_NAMESPACE
@@ -271,5 +269,3 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR,
     
     return nRet;
 }
-
-#endif // QT_NO_WIN_ACTIVEQT
