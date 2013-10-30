@@ -21,3 +21,4 @@ SOURCES = \
 
 MODULE = axbase
 load(qt_module)
+QMAKE_DOCS_TARGETDIR =   # Make qt_docs.prf default to activeqt instead of qtaxbase
