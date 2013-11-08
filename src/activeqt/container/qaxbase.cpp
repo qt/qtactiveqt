@@ -44,11 +44,8 @@
 
 #include "qaxobject.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qfile.h>
 #include <qwidget.h>
-
 #include <quuid.h>
 #include <qhash.h>
 #include <qset.h>
@@ -4544,4 +4541,3 @@ void *qax_createObjectWrapper(int metaType, IUnknown *iface)
 */
 
 QT_END_NAMESPACE
-#endif //QT_NO_WIN_ACTIVEQT

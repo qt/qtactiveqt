@@ -40,8 +40,6 @@
 
 #include "qaxbindable.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qmetaobject.h>
 
 #include <qt_windows.h> // for IUnknown
@@ -322,4 +320,3 @@ bool QAxBindable::writeData(QIODevice *sink)
 */
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

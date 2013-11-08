@@ -47,8 +47,6 @@ struct IUnknown;
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 class QAxAggregated;
 class QIODevice;
 struct IAxServerBase;
@@ -77,6 +75,5 @@ private:
 };
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXBINDABLE_H

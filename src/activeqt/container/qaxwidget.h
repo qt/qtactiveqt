@@ -46,8 +46,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 class QAxHostWindow;
 class QAxAggregated;
 
@@ -115,6 +113,5 @@ template <> inline QAxWidget *qobject_cast<QAxWidget*>(QObject *o)
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXWIDGET_H

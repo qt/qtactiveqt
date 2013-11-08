@@ -47,8 +47,6 @@ struct IActiveScript;
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 class QAxBase;
 class QAxScript;
 class QAxScriptSite;
@@ -238,6 +236,5 @@ inline void QAxScriptManager::addObject(QObject *object)
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXSCRIPT_H

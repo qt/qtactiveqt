@@ -44,8 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 class QAxSelectPrivate;
 class QModelIndex;
 
@@ -67,6 +65,5 @@ private:
 };
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXSELECT_H

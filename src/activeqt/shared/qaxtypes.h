@@ -45,8 +45,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #ifdef QAX_SERVER
 #   define QVariantToVARIANTFunc QVariantToVARIANT_server
 #   define VARIANTToQVariantFunc VARIANTToQVariant_server
@@ -72,6 +70,5 @@ inline QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName
 #undef VARIANTToQVariantFunc
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT
 
 #endif // QAXTYPES_H

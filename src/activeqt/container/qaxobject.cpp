@@ -40,8 +40,6 @@
 
 #include "qaxobject.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <quuid.h>
 #include <qmetaobject.h>
 #include <qstringlist.h>
@@ -228,4 +226,3 @@ bool QAxObject::doVerb(const QString &verb)
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT

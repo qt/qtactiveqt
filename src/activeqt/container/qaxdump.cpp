@@ -40,8 +40,6 @@
 
 #include "qaxbase.h"
 
-#ifndef QT_NO_WIN_ACTIVEQT
-
 #include <qmetaobject.h>
 #include <quuid.h>
 #include <qt_windows.h>
@@ -402,4 +400,3 @@ QString qax_generateDocumentation(QAxBase *that)
 }
 
 QT_END_NAMESPACE
-#endif // QT_NO_WIN_ACTIVEQT
