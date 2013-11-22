@@ -54,6 +54,20 @@ static QString quotePath(const QString &s)
     return s;
 }
 
+static bool hasFileExtension(const QString &filePath, const QString &extension)
+{
+    return filePath.endsWith(extension, Qt::CaseInsensitive);
+}
+
+static bool hasExeExtension(const QString &filePath)
+{
+    return hasFileExtension(filePath, QStringLiteral(".exe"));
+}
+
+static bool hasDllExtension(const QString &filePath)
+{
+    return hasFileExtension(filePath, QStringLiteral(".dll"));
+}
 
 static bool runWithQtInEnvironment(const QString &cmd)
 {
@@ -113,7 +127,7 @@ static bool attachTypeLibrary(const QString &applicationName, int resource, cons
 static bool registerServer(const QString &input)
 {
     bool ok = false;
-    if (input.endsWith(QLatin1String(".exe"))) {
+    if (hasExeExtension(input)) {
         ok = runWithQtInEnvironment(quotePath(input) + QLatin1String(" -regserver"));
     } else {
         HMODULE hdll = LoadLibrary((const wchar_t *)input.utf16());
@@ -135,7 +149,7 @@ static bool registerServer(const QString &input)
 static bool unregisterServer(const QString &input)
 {
     bool ok = false;
-    if (input.endsWith(QLatin1String(".exe"))) {
+    if (hasExeExtension(input)) {
         ok = runWithQtInEnvironment(quotePath(input) + QLatin1String(" -unregserver"));
     } else {
         HMODULE hdll = LoadLibrary((const wchar_t *)input.utf16());
@@ -158,7 +172,7 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
 {
     HRESULT res = E_FAIL;
 
-    if (input.endsWith(QLatin1String(".exe"))) {
+    if (hasExeExtension(input)) {
         if (runWithQtInEnvironment(quotePath(input) + QLatin1String(" -dumpidl ") + idlfile + QLatin1String(" -version ") + version))
             res = S_OK;
     } else {
@@ -212,7 +226,7 @@ int runIdc(int argc, char **argv)
                 break;
             }
             idlfile = QLatin1String(argv[i]);
-            idlfile = idlfile.trimmed().toLower();
+            idlfile = idlfile.trimmed();
         } else if (p == QLatin1String("/version") || p == QLatin1String("-version")) {
             ++i;
             if (i > argc)
@@ -226,7 +240,7 @@ int runIdc(int argc, char **argv)
                 break;
             }
             tlbfile = QLatin1String(argv[i]);
-            tlbfile = tlbfile.trimmed().toLower();
+            tlbfile = tlbfile.trimmed();
         } else if (p == QLatin1String("/v") || p == QLatin1String("-v")) {
             fprintf(stdout, "Qt Interface Definition Compiler version 1.0\n");
             return 0;
@@ -249,7 +263,7 @@ int runIdc(int argc, char **argv)
             break;
         } else {
             input = QLatin1String(argv[i]);
-            input = input.trimmed().toLower();
+            input = input.trimmed();
         }
         i++;
     }
@@ -262,11 +276,11 @@ int runIdc(int argc, char **argv)
         fprintf(stderr, "No input file specified!\n");
         return 1;
     }
-    if (input.endsWith(QLatin1String(".exe")) && tlbfile.isEmpty() && idlfile.isEmpty()) {
+    if (hasExeExtension(input) && tlbfile.isEmpty() && idlfile.isEmpty()) {
         fprintf(stderr, "No type output file specified!\n");
         return 2;
     }
-    if (input.endsWith(QLatin1String(".dll")) && idlfile.isEmpty() && tlbfile.isEmpty()) {
+    if (hasDllExtension(input) && idlfile.isEmpty() && tlbfile.isEmpty()) {
         fprintf(stderr, "No interface definition file and no type library file specified!\n");
         return 3;
     }
