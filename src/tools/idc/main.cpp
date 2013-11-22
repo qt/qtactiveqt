@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include <QDir>
 #include <QFile>
 #include <QProcess>
 #include <QLibraryInfo>
@@ -194,19 +195,6 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
     return res;
 }
 
-static void slashify(QString &s)
-{
-    if (!s.contains(QLatin1Char('/')))
-        return;
-
-    int i = 0;
-    while (i < (int)s.length()) {
-        if (s[i] == QLatin1Char('/'))
-            s[i] = QLatin1Char('\\');
-        ++i;
-    }
-}
-
 int runIdc(int argc, char **argv)
 {
     QString error;
@@ -284,9 +272,9 @@ int runIdc(int argc, char **argv)
         fprintf(stderr, "No interface definition file and no type library file specified!\n");
         return 3;
     }
-    slashify(input);
+    input = QDir::toNativeSeparators(input);
     if (!tlbfile.isEmpty()) {
-        slashify(tlbfile);
+        tlbfile = QDir::toNativeSeparators(tlbfile);
         QFile file(tlbfile);
         if (!file.open(QIODevice::ReadOnly)) {
             fprintf(stderr, "Couldn't open %s for read\n", (const char*)tlbfile.toLocal8Bit().data());
@@ -299,7 +287,7 @@ int runIdc(int argc, char **argv)
         fprintf(stderr, "\n");
         return ok ? 0 : 4;
     } else if (!idlfile.isEmpty()) {
-        slashify(idlfile);
+        idlfile = QDir::toNativeSeparators(idlfile);
         idlfile = quotePath(idlfile);
         fprintf(stderr, "\n\n%s\n\n", (const char*)idlfile.toLocal8Bit().data());
         quotePath(input);
