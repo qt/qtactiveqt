@@ -39,7 +39,9 @@
 ****************************************************************************/
 
 #include <qapplication.h>
+#include <private/qcoreapplication_p.h>
 #include <qwidget.h>
+#include <qdir.h>
 
 #include <qt_windows.h>
 
@@ -120,6 +122,10 @@ STDAPI DllCanUnloadNow()
 EXTERN_C BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /* lpvReserved */)
 {
     GetModuleFileName(hInstance, qAxModuleFilename, MAX_PATH);
+    // Point QApplication here such that the directory is added to the patch, and qt.conf and
+    // deployed plugins are found.
+    QCoreApplicationPrivate::setApplicationFilePath(QDir::cleanPath(QString::fromWCharArray(qAxModuleFilename)));
+
     qAxInstance = hInstance;
     qAxIsServer = true;
     
