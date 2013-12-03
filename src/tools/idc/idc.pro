@@ -1,7 +1,5 @@
 option(host_build)
-
-QT = core
-
+CONFIG += force_bootstrap
 SOURCES = main.cpp
 
 load(qt_tool)
