@@ -3092,8 +3092,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     header->flags = 0;
     header->signalCount = signal_list.count();
 
-    QMetaStringTable strings;
-    strings.enter(that ? QByteArray(that->className()) : className);
+    QMetaStringTable strings(that ? QByteArray(that->className()) : className);
 
     uint offset = header->classInfoData;
 
