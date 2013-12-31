@@ -252,7 +252,7 @@ bool QAxBindable::writeData(QIODevice *sink)
     in your subclass (unless you use QPointer), as the QWidget can
     be destroyed by the ActiveQt framework at any time.
 
-    \sa QAxBindable, QAxFactory, {Qt's ActiveX Framework (ActiveQt)}
+    \sa QAxBindable, QAxFactory, {Active Qt}
 */
 
 /*!
