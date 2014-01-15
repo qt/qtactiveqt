@@ -79,7 +79,7 @@ class QSubWidget : public QWidget
     Q_CLASSINFO("ClassID", "{850652f4-8f71-4f69-b745-bce241ccdc30}");
     Q_CLASSINFO("InterfaceID", "{2d76cc2f-3488-417a-83d6-debff88b3c3f}");
     Q_CLASSINFO("ToSuperClass", "QSubWidget");
-    
+
 public:
     QSubWidget(QWidget *parent = 0, const QString &name = QString());
 

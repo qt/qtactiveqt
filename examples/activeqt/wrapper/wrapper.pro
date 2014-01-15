@@ -1,11 +1,11 @@
 TEMPLATE = lib
-TARGET	 = wrapperax
+TARGET   = wrapperax
 
 CONFIG += warn_off dll
 QT += widgets axserver
 
-SOURCES	 = main.cpp
-RC_FILE	 = wrapperax.rc
+SOURCES  = main.cpp
+RC_FILE  = wrapperax.rc
 DEF_FILE = wrapperax.def
 
 # install

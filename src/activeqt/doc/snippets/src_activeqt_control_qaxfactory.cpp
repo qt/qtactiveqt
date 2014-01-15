@@ -89,7 +89,7 @@ QUuid ActiveQtFactory::eventsID(const QString &key) const
 }
 
 QAXFACTORY_EXPORT(
-    ActiveQtFactory,			      // factory class
+    ActiveQtFactory,                          // factory class
     "{01234567-89AB-CDEF-0123-456789ABCDEF}", // type library ID
     "{01234567-89AB-CDEF-0123-456789ABCDEF}"  // application ID
 )
@@ -114,7 +114,7 @@ QAXFACTORY_END()
 #include "theactivex.h"
 
 QAXFACTORY_DEFAULT(
-    TheActiveX,				  // widget class
+    TheActiveX,                               // widget class
     "{01234567-89AB-CDEF-0123-456789ABCDEF}", // class ID
     "{01234567-89AB-CDEF-0123-456789ABCDEF}", // interface ID
     "{01234567-89AB-CDEF-0123-456789ABCDEF}", // event interface ID
@@ -165,7 +165,7 @@ if (QAxFactory::isServer()) {
 #include "theactivex.h"
 
 QAXFACTORY_DEFAULT(
-    TheActiveX,				  // widget class
+    TheActiveX,                               // widget class
     "{01234567-89AB-CDEF-0123-456789ABCDEF}", // class ID
     "{01234567-89AB-CDEF-0123-456789ABCDEF}", // interface ID
     "{01234567-89AB-CDEF-0123-456789ABCDEF}", // event interface ID
@@ -177,7 +177,7 @@ QAXFACTORY_DEFAULT(
 
 //! [8]
 QAXFACTORY_EXPORT(
-    MyFactory,			              // factory class
+    MyFactory,                                // factory class
     "{01234567-89AB-CDEF-0123-456789ABCDEF}", // type library ID
     "{01234567-89AB-CDEF-0123-456789ABCDEF}"  // application ID
 )

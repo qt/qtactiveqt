@@ -63,15 +63,15 @@ class QAxBase
 
 public:
     typedef QMap<QString, QVariant> PropertyBag;
-    
+
     QAxBase(IUnknown *iface = 0);
     virtual ~QAxBase();
-    
+
     QString control() const;
-    
+
     long queryInterface(const QUuid &, void**) const;
-    
-    QVariant dynamicCall(const char *name, const QVariant &v1 = QVariant(), 
+
+    QVariant dynamicCall(const char *name, const QVariant &v1 = QVariant(),
                                            const QVariant &v2 = QVariant(),
                                            const QVariant &v3 = QVariant(),
                                            const QVariant &v4 = QVariant(),
@@ -96,21 +96,21 @@ public:
 
     virtual QObject *qObject() const = 0;
     virtual const char *className() const = 0;
-    
+
     PropertyBag propertyBag() const;
     void setPropertyBag(const PropertyBag&);
-    
+
     QString generateDocumentation();
-    
+
     virtual bool propertyWritable(const char*) const;
     virtual void setPropertyWritable(const char*, bool);
-    
+
     bool isNull() const;
 
     QStringList verbs() const;
-    
+
     QVariant asVariant() const;
-    
+
 #ifdef qdoc
 Q_SIGNALS:
     void signal(const QString&,int,void*);
@@ -153,7 +153,7 @@ private:
     bool initializeLicensedHelper(void *factory, const QString &key, IUnknown **ptr);
     QAxBasePrivate *d;
     QAxMetaObject *internalMetaObject() const;
-    
+
     virtual const QMetaObject *parentMetaObject() const = 0;
     int internalProperty(QMetaObject::Call, int index, void **v);
     int internalInvoke(QMetaObject::Call, int index, void **v);
@@ -198,7 +198,7 @@ inline QDataStream &operator >>(QDataStream &s, QAxBase &c)
     s >> bag;
     c.setPropertyBag(bag);
     c.qObject()->blockSignals(false);
-    
+
     return s;
 }
 
@@ -207,7 +207,7 @@ inline QDataStream &operator <<(QDataStream &s, const QAxBase &c)
     QAxBase::PropertyBag bag = c.propertyBag();
     s << c.control();
     s << bag;
-    
+
     return s;
 }
 #endif // QT_NO_DATASTREAM

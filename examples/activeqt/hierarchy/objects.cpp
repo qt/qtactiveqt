@@ -47,7 +47,7 @@
 QParentWidget::QParentWidget(QWidget *parent)
 : QWidget(parent)
 {
-    vbox = new QVBoxLayout(this);    
+    vbox = new QVBoxLayout(this);
 }
 
 //! [0] //! [1]

@@ -86,7 +86,7 @@ void AmbientProperties::on_buttonBackground_clicked()
         p = widget->palette();
         p.setColor(widget->backgroundRole(), c);
         widget->setPalette(p);
-	}
+    }
 }
 
 void AmbientProperties::on_buttonForeground_clicked()
@@ -113,7 +113,7 @@ void AmbientProperties::on_buttonFont_clicked()
     bool ok;
     QFont f = QFontDialog::getFont( &ok, fontSample->font(), this );
     if ( !ok )
-	return;
+        return;
     fontSample->setFont( f );
     container->setFont( f );
 

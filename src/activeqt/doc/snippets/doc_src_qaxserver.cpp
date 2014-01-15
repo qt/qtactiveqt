@@ -121,7 +121,7 @@ MyFactory(const QUuid &, const QUuid &);
 //! [11]
 HMODULE dll = LoadLibrary("myserver.dll");
 typedef HRESULT(__stdcall *DllRegisterServerProc)();
-DllRegisterServerProc DllRegisterServer = 
+DllRegisterServerProc DllRegisterServer =
     (DllRegisterServerProc)GetProcAddress(dll, "DllRegisterServer");
 
 HRESULT res = E_FAIL;

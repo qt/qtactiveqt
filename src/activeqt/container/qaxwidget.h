@@ -58,12 +58,12 @@ class QAxWidget : public QWidget, public QAxBase
 public:
     QObject* qObject() const { return (QWidget*)this; }
     const char *className() const;
-    
+
     QAxWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
     QAxWidget(const QString &c, QWidget *parent = 0, Qt::WindowFlags f = 0);
     QAxWidget(IUnknown *iface, QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~QAxWidget();
-    
+
     void clear();
     bool doVerb(const QString &verb);
 
@@ -76,7 +76,7 @@ protected:
     bool initialize(IUnknown**);
     virtual bool createHostWindow(bool);
     bool createHostWindow(bool, const QByteArray&);
-    
+
     void changeEvent(QEvent *e);
     void resizeEvent(QResizeEvent *);
 

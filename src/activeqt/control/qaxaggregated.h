@@ -62,7 +62,7 @@ protected:
 
     inline IUnknown *controllingUnknown() const
     { return controlling_unknown; }
-    inline QWidget *widget() const 
+    inline QWidget *widget() const
     {
         return qobject_cast<QWidget*>(the_object);
     }

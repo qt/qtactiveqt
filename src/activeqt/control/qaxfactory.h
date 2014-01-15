@@ -60,35 +60,35 @@ class QAxFactory : public QObject
 public:
     QAxFactory(const QUuid &libId, const QUuid &appId);
     virtual ~QAxFactory();
-    
+
     virtual QStringList featureList() const = 0;
 
     virtual QObject *createObject(const QString &key) = 0;
     virtual const QMetaObject *metaObject(const QString &key) const = 0;
     virtual bool createObjectWrapper(QObject *object, IDispatch **wrapper);
-    
+
     virtual QUuid classID(const QString &key) const;
     virtual QUuid interfaceID(const QString &key) const;
     virtual QUuid eventsID(const QString &key) const;
-    
+
     virtual QUuid typeLibID() const;
     virtual QUuid appID() const;
-    
+
     virtual void registerClass(const QString &key, QSettings *) const;
     virtual void unregisterClass(const QString &key, QSettings *) const;
-    
+
     virtual bool validateLicenseKey(const QString &key, const QString &licenseKey) const;
-    
+
     virtual QString exposeToSuperClass(const QString &key) const;
     virtual bool stayTopLevel(const QString &key) const;
     virtual bool hasStockEvents(const QString &key) const;
     virtual bool isService() const;
-    
+
     enum ServerType {
         SingleInstance,
         MultipleInstances
     };
-    
+
     static bool isServer();
     static QString serverDirPath();
     static QString serverFilePath();
@@ -96,7 +96,7 @@ public:
     static bool stopServer();
 
     static bool registerActiveObject(QObject *object);
-    
+
 private:
     QUuid typelib;
     QUuid app;
@@ -120,12 +120,12 @@ inline bool QAxFactory::stopServer()
     return qax_stopServer();
 }
 
-#define QAXFACTORY_EXPORT(IMPL, TYPELIB, APPID)	\
+#define QAXFACTORY_EXPORT(IMPL, TYPELIB, APPID) \
     QT_BEGIN_NAMESPACE \
-    QAxFactory *qax_instantiate()		\
-    {							\
-        IMPL *impl = new IMPL(QUuid(TYPELIB), QUuid(APPID));	\
-        return impl;					\
+    QAxFactory *qax_instantiate()               \
+    {                                                   \
+        IMPL *impl = new IMPL(QUuid(TYPELIB), QUuid(APPID));    \
+        return impl;                                    \
     } \
     QT_END_NAMESPACE
 
@@ -185,7 +185,7 @@ public:
     QAxClass(const QString &libId, const QString &appId)
     : QAxFactory(libId, appId)
     {}
-    
+
     const QMetaObject *metaObject(const QString &) const { return &T::staticMetaObject; }
     QStringList featureList() const { return QStringList(QString(T::staticMetaObject.className())); }
     QObject *createObject(const QString &key)
@@ -281,10 +281,10 @@ public:
             return f ? f->hasStockEvents(key) : false; \
         } \
     }; \
-    QAxFactory *qax_instantiate()		\
-    {							\
-        QAxFactoryList *impl = new QAxFactoryList();	\
-        return impl;					\
+    QAxFactory *qax_instantiate()               \
+    {                                                   \
+        QAxFactoryList *impl = new QAxFactoryList();    \
+        return impl;                                    \
     } \
     QT_END_NAMESPACE
 

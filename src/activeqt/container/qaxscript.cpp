@@ -232,10 +232,10 @@ HRESULT WINAPI QAxScriptSite::OnScriptTerminate(const VARIANT *result, const EXC
         emit script->finished(VARIANTToQVariant(*result, 0));
     if (exception)
         emit script->finished(exception->wCode,
-        QString::fromWCharArray(exception->bstrSource),
-        QString::fromWCharArray(exception->bstrDescription),
-        QString::fromWCharArray(exception->bstrHelpFile)
-			    );
+                              QString::fromWCharArray(exception->bstrSource),
+                              QString::fromWCharArray(exception->bstrDescription),
+                              QString::fromWCharArray(exception->bstrHelpFile)
+                             );
     return S_OK;
 }
 

@@ -1,11 +1,11 @@
 TEMPLATE = lib
-TARGET	 = multipleax
+TARGET   = multipleax
 
 CONFIG += warn_off dll
 QT += widgets axserver
 
-SOURCES	 = main.cpp
-HEADERS	 = ax1.h ax2.h
+SOURCES  = main.cpp
+HEADERS  = ax1.h ax2.h
 RC_FILE  = multipleax.rc
 DEF_FILE = multipleax.def
 

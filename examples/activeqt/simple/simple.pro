@@ -1,10 +1,10 @@
 TEMPLATE = app
-TARGET	 = simpleax
+TARGET   = simpleax
 
 CONFIG += warn_off
 QT += widgets axserver
 
-SOURCES	 = main.cpp
+SOURCES  = main.cpp
 RC_FILE  = simple.rc
 
 # install

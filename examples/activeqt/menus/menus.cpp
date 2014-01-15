@@ -49,7 +49,7 @@
 #include "fileopen.xpm"
 #include "filesave.xpm"
 
-QMenus::QMenus(QWidget *parent) 
+QMenus::QMenus(QWidget *parent)
     : QMainWindow(parent, 0) // QMainWindow's default flag is WType_TopLevel
 {
     QAction *action;
@@ -167,8 +167,8 @@ void QMenus::editAdvancedStyle()
 
 void QMenus::helpAbout()
 {
-    QMessageBox::about(this, "About QMenus", 
-			"This example implements an in-place ActiveX control with menus and status messages.");
+    QMessageBox::about(this, "About QMenus",
+                       "This example implements an in-place ActiveX control with menus and status messages.");
 }
 
 void QMenus::helpAboutQt()

@@ -1,11 +1,11 @@
 TEMPLATE = lib
-TARGET	 = hierarchyax
+TARGET   = hierarchyax
 
 CONFIG += warn_off dll
 QT += widgets axserver
 
-SOURCES	 = objects.cpp main.cpp
-HEADERS	 = objects.h
+SOURCES  = objects.cpp main.cpp
+HEADERS  = objects.h
 RC_FILE  = hierarchy.rc
 DEF_FILE = hierarchy.def
 

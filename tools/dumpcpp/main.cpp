@@ -146,7 +146,7 @@ static QByteArray joinParameterNames(const QList<QByteArray> &parameterNames)
 QByteArray constRefify(const QByteArray &type)
 {
     QByteArray ctype(type);
-    if (type == "QString" || type == "QPixmap" 
+    if (type == "QString" || type == "QPixmap"
         || type == "QVariant" || type == "QDateTime"
         || type == "QColor" || type == "QFont"
         || type == "QByteArray" || type == "QValueList<QVariant>"
@@ -260,7 +260,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         QMetaProperty property = mo->property(iprop);
         if (!property.isReadable())
             continue;
-        
+
         QByteArray propertyName(property.name());
         if (propertyName == "control" || propertyName == className)
             continue;
@@ -276,7 +276,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         }
 
         // Check whether the new function conflicts with any of QAxBase public virtual functions.
-        // If so, prepend the function name with '<classname>_'. Since all internal metaobject magic 
+        // If so, prepend the function name with '<classname>_'. Since all internal metaobject magic
         // remains the same, we have to use the original name when used with QObject::connect or QMetaObject
         QByteArray propertyFunctionName(propertyName);
         if (axBase_vfuncs.contains(propertyFunctionName)) {
@@ -292,7 +292,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
 
         out << indent << "inline ";
         bool foreignNamespace = true;
-        if (!propertyType.contains("::") && 
+        if (!propertyType.contains("::") &&
             (qax_qualified_usertypes.contains(simplePropType) || qax_qualified_usertypes.contains("enum "+ simplePropType))
            ) {
             propertyType = nameSpace + "::" + propertyType;
@@ -339,7 +339,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         }
 
         functions << propertyName;
-        
+
         if (property.isWritable()) {
             QByteArray setter(propertyName);
             if (isupper(setter.at(0))) {
@@ -348,12 +348,12 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
                 setter[0] = toupper(setter[0]);
                 setter = "set" + setter;
             }
-            
+
             out << indent << "inline " << "void ";
             if (category & OnlyInlines)
                 out << className << "::";
             out << setter << "(" << constRefify(propertyType) << " value)";
-            
+
             if (!(category & NoInlines)) {
                 if (propertyType.endsWith('*')) {
                     out << "{" << endl;
@@ -429,7 +429,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
             } else {
                 parameterSplit = slotParameters.split(',');
             }
-            
+
             for (int i = 0; i < signatureSplit.count(); ++i) {
                 QByteArray parameterType = signatureSplit.at(i);
                 if (!parameterType.contains("::") && namespaceForType.contains(parameterType))
@@ -474,7 +474,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         } else {
             out << endl;
             out << indent << "{" << endl;
-            
+
             if (slotType != QByteArrayLiteral("void")) {
                 out << indent << "    " << slotType << " qax_result";
                 if (slotType.endsWith('*'))
@@ -902,7 +902,7 @@ bool generateClass(QAxObject *object, const QByteArray &className, const QByteAr
 
     if (!nameSpace.isEmpty() && !(category & NoDeclaration)) {
         QFile outfile(QString::fromLatin1(nameSpace.toLower().constData()) + QLatin1String(".h"));
-		if (!outfile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        if (!outfile.open(QIODevice::WriteOnly | QIODevice::Text)) {
             qWarning("dumpcpp: Could not open output file '%s'", qPrintable(outfile.fileName()));
             return false;
         }
@@ -1285,8 +1285,8 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
         if (metaObject) {
             currentTypeInfo = typeinfo;
             QByteArray className(metaObject->className());
-            if (!(typeattr->wTypeFlags & TYPEFLAG_FDUAL) 
-                && (metaObject->propertyCount() - metaObject->propertyOffset()) == 1 
+            if (!(typeattr->wTypeFlags & TYPEFLAG_FDUAL)
+                && (metaObject->propertyCount() - metaObject->propertyOffset()) == 1
                 && className.contains("Events")) {
                 declOut << "// skipping event interface " << className << endl << endl;
             } else {
@@ -1508,10 +1508,10 @@ int main(int argc, char **argv)
         GetTypeLib
     } state;
     state = Default;
-    
+
     QByteArray outname;
     QByteArray typeLib;
-    
+
     for (int a = 1; a < argc; ++a) {
         QByteArray arg(argv[a]);
         const char first = arg[0];
@@ -1609,7 +1609,7 @@ int main(int argc, char **argv)
 
     if (category == DoNothing)
         return 0;
-    
+
     if (typeLib.isEmpty()) {
         qWarning("dumpcpp: No object class or type library name provided.\n"
             "         Use -h for help.");

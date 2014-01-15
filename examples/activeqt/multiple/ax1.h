@@ -61,21 +61,21 @@ public:
 
     QColor fillColor() const
     {
-	return fill_color;
+        return fill_color;
     }
     void setFillColor(const QColor &fc)
     {
-	fill_color = fc;
-	repaint();
+        fill_color = fc;
+        repaint();
     }
 
 protected:
     void paintEvent(QPaintEvent *e)
     {
-	QPainter paint(this);
-	QRect r = rect();
-	r.adjust(10, 10, -10, -10);
-	paint.fillRect(r, fill_color);
+        QPainter paint(this);
+        QRect r = rect();
+        r.adjust(10, 10, -10, -10);
+        paint.fillRect(r, fill_color);
     }
 
 private:

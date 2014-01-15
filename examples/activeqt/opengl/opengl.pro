@@ -1,14 +1,14 @@
 TEMPLATE = app
-TARGET	 = openglax
+TARGET   = openglax
 
 CONFIG += warn_off
 QT += widgets axserver opengl
 
-HEADERS	 = glbox.h \
-	   globjwin.h
-SOURCES	 = glbox.cpp \
-	   globjwin.cpp \
-	   main.cpp
+HEADERS  = glbox.h \
+           globjwin.h
+SOURCES  = glbox.cpp \
+           globjwin.cpp \
+           main.cpp
 
 RC_FILE = opengl.rc
 

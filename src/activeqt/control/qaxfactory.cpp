@@ -493,7 +493,7 @@ bool QAxFactory::registerActiveObject(QObject *object)
         return false;
 
     if (!QString::fromWCharArray(qAxModuleFilename).toLower().endsWith(QLatin1String(".exe")))
-	return false;
+        return false;
 
     ActiveObject *active = new ActiveObject(object, qAxFactory());
     if (!active->wrapper || !active->cookie) {

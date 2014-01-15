@@ -3,7 +3,7 @@ TARGET   = QtAxServer
 QT += core-private gui-private widgets axbase
 CONFIG  += static
 
-DEFINES	+= QAX_SERVER
+DEFINES += QAX_SERVER
 
 HEADERS =   qaxaggregated.h \
             qaxbindable.h \

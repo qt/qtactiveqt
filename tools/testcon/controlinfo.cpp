@@ -68,8 +68,8 @@ void ControlInfo::setControl(QWidget *activex)
     int i;
     int count;
     for (i = mo->classInfoOffset(); i < mo->classInfoCount(); ++i) {
-	const QMetaClassInfo info = mo->classInfo(i);
-	item = new QTreeWidgetItem(group);
+        const QMetaClassInfo info = mo->classInfo(i);
+        item = new QTreeWidgetItem(group);
         item->setText(0, QString::fromLatin1(info.name()));
         item->setText(1, QString::fromLatin1(info.value()));
     }
@@ -78,10 +78,10 @@ void ControlInfo::setControl(QWidget *activex)
 
     count = 0;
     for (i = mo->methodOffset(); i < mo->methodCount(); ++i) {
-	const QMetaMethod method = mo->method(i);
+        const QMetaMethod method = mo->method(i);
         if (method.methodType() == QMetaMethod::Signal) {
             ++count;
-	    item = new QTreeWidgetItem(group);
+            item = new QTreeWidgetItem(group);
             item->setText(0, QString::fromLatin1(method.methodSignature()));
         }
     }
@@ -92,10 +92,10 @@ void ControlInfo::setControl(QWidget *activex)
 
     count = 0;
     for (i = mo->methodOffset(); i < mo->methodCount(); ++i) {
-	const QMetaMethod method = mo->method(i);
+        const QMetaMethod method = mo->method(i);
         if (method.methodType() == QMetaMethod::Slot) {
             ++count;
-	    item = new QTreeWidgetItem(group);
+            item = new QTreeWidgetItem(group);
             item->setText(0, QString::fromLatin1(method.methodSignature()));
         }
     }
@@ -107,8 +107,8 @@ void ControlInfo::setControl(QWidget *activex)
     count = 0;
     for (i = mo->propertyOffset(); i < mo->propertyCount(); ++i) {
         ++count;
-	const QMetaProperty property = mo->property(i);
-	item = new QTreeWidgetItem(group);
+        const QMetaProperty property = mo->property(i);
+        item = new QTreeWidgetItem(group);
         item->setText(0, QString::fromLatin1(property.name()));
         item->setText(1, QString::fromLatin1(property.typeName()));
         if (!property.isDesignable()) {

@@ -65,8 +65,8 @@
 GLBox::GLBox( QWidget* parent, const char* name )
     : QGLWidget( parent )
 {
-    xRot = yRot = zRot = 0.0;		// default object rotation
-    scale = 1.25;			// default object scale
+    xRot = yRot = zRot = 0.0;           // default object rotation
+    scale = 1.25;                       // default object scale
     object = 0;
 }
 
@@ -95,8 +95,8 @@ void GLBox::paintGL()
     glTranslatef( 0.0, 0.0, -10.0 );
     glScalef( scale, scale, scale );
 
-    glRotatef( xRot, 1.0, 0.0, 0.0 ); 
-    glRotatef( yRot, 0.0, 1.0, 0.0 ); 
+    glRotatef( xRot, 1.0, 0.0, 0.0 );
+    glRotatef( yRot, 0.0, 1.0, 0.0 );
     glRotatef( zRot, 0.0, 0.0, 1.0 );
 
     glCallList( object );
@@ -109,8 +109,8 @@ void GLBox::paintGL()
 
 void GLBox::initializeGL()
 {
-    qglClearColor(Qt::black); 		// Let OpenGL clear to black
-    object = makeObject();		// Generate an OpenGL display list
+    qglClearColor(Qt::black);           // Let OpenGL clear to black
+    object = makeObject();              // Generate an OpenGL display list
     glShadeModel( GL_FLAT );
 }
 
@@ -135,14 +135,14 @@ void GLBox::resizeGL( int w, int h )
 */
 
 GLuint GLBox::makeObject()
-{	
+{
     GLuint list;
 
     list = glGenLists( 1 );
 
     glNewList( list, GL_COMPILE );
 
-    qglColor(Qt::white);		      // Shorthand for glColor3f or glIndex
+    qglColor(Qt::white);                      // Shorthand for glColor3f or glIndex
 
     glLineWidth( 2.0 );
 
@@ -206,8 +206,8 @@ void GLBox::setZRotation( int degrees )
 }
 
 //! [1]
-class ObjectSafetyImpl : public QAxAggregated, 
-			 public IObjectSafety
+class ObjectSafetyImpl : public QAxAggregated,
+                         public IObjectSafety
 {
 public:
 //! [1] //! [2]
@@ -215,14 +215,14 @@ public:
 
     long queryInterface( const QUuid &iid, void **iface )
     {
-	*iface = 0;
-	if ( iid == IID_IObjectSafety )
-	    *iface = (IObjectSafety*)this;
-	else
-	    return E_NOINTERFACE;
+        *iface = 0;
+        if ( iid == IID_IObjectSafety )
+            *iface = (IObjectSafety*)this;
+        else
+            return E_NOINTERFACE;
 
-	AddRef();
-	return S_OK;
+        AddRef();
+        return S_OK;
     }
 
 //! [2] //! [3]
@@ -231,13 +231,13 @@ public:
 //! [3] //! [4]
     HRESULT WINAPI GetInterfaceSafetyOptions( REFIID riid, DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions )
     {
-	*pdwSupportedOptions = INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACESAFE_FOR_UNTRUSTED_CALLER;
-	*pdwEnabledOptions = INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACESAFE_FOR_UNTRUSTED_CALLER;
-	return S_OK;
+        *pdwSupportedOptions = INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACESAFE_FOR_UNTRUSTED_CALLER;
+        *pdwEnabledOptions = INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACESAFE_FOR_UNTRUSTED_CALLER;
+        return S_OK;
     }
     HRESULT WINAPI SetInterfaceSafetyOptions( REFIID riid, DWORD pdwSupportedOptions, DWORD pdwEnabledOptions )
     {
-	return S_OK;
+        return S_OK;
     }
 };
 //! [4] //! [5]

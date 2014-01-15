@@ -56,7 +56,7 @@ webBrowser->dynamicCall("GoHome()");
 
 //! [3]
 connect(webBrowser, SIGNAL(TitleChanged(QString)),
-	this, SLOT(setCaption(QString)));
+        this, SLOT(setCaption(QString)));
 //! [3]
 
 
@@ -175,8 +175,8 @@ QAxWidget outlook("Outlook.Application");
 QAxObject *session = outlook.querySubObject("Session");
 if (session) {
     QAxObject *defFolder = session->querySubObject(
-			    "GetDefaultFolder(OlDefaultFolders)",
-			    "olFolderContacts");
+                            "GetDefaultFolder(OlDefaultFolders)",
+                            "olFolderContacts");
     //...
 }
 //! [19]
@@ -187,13 +187,13 @@ void Receiver::slot(const QString &name, int argc, void *argv)
 {
     VARIANTARG *params = (VARIANTARG*)argv;
     if (name.startsWith("BeforeNavigate2(")) {
-	IDispatch *pDisp = params[argc-1].pdispVal;
-	VARIANTARG URL = *params[argc-2].pvarVal;
-	VARIANTARG Flags = *params[argc-3].pvarVal;
-	VARIANTARG TargetFrameName = *params[argc-4].pvarVal;
-	VARIANTARG PostData = *params[argc-5].pvarVal;
-	VARIANTARG Headers = *params[argc-6].pvarVal;
-	bool *Cancel = params[argc-7].pboolVal;
+        IDispatch *pDisp = params[argc-1].pdispVal;
+        VARIANTARG URL = *params[argc-2].pvarVal;
+        VARIANTARG Flags = *params[argc-3].pvarVal;
+        VARIANTARG TargetFrameName = *params[argc-4].pvarVal;
+        VARIANTARG PostData = *params[argc-5].pvarVal;
+        VARIANTARG Headers = *params[argc-6].pvarVal;
+        bool *Cancel = params[argc-7].pboolVal;
     }
 }
 //! [20]

@@ -58,10 +58,10 @@ int main(int argc, char **argv)
             OutOption
     } state;
     state = Default;
-    
+
     QByteArray outname;
     QByteArray object;
-    
+
     for (int a = 1; a < argc; ++a) {
         QByteArray arg(argv[a]);
         const char first = arg[0];
@@ -90,12 +90,12 @@ int main(int argc, char **argv)
             outname = arg;
             state = Default;
             break;
-            
+
         default:
             break;
         }
     }
-    
+
     if (object.isEmpty()) {
         qWarning("dumpdoc: No object name provided.\n"
             "         Use -h for help.");
@@ -111,19 +111,19 @@ int main(int argc, char **argv)
         outfile.open(stdout, QIODevice::WriteOnly);
     }
     QTextStream out(&outfile);
-    
+
     QByteArray subobject = object;
     int index = subobject.indexOf('/');
     if (index != -1)
         subobject = subobject.left(index);
-    
+
     QAxObject topobject(QString::fromLatin1(subobject.constData()));
-    
+
     if (topobject.isNull()) {
         qWarning("dumpdoc: Could not instantiate COM object '%s'", subobject.data());
         return -2;
     }
-    
+
     QAxObject *axobject = &topobject;
     while (index != -1 && axobject) {
         index++;
@@ -131,18 +131,18 @@ int main(int argc, char **argv)
         if (object.indexOf('/', index) != -1) {
             int oldindex = index;
             index = object.indexOf('/', index);
-            subobject = object.mid(oldindex, index-oldindex);	    
+            subobject = object.mid(oldindex, index-oldindex);
         } else {
             index = -1;
         }
-        
+
         axobject = axobject->querySubObject(subobject);
     }
     if (!axobject || axobject->isNull()) {
         qWarning("dumpdoc: Subobject '%s' does not exist in '%s'", subobject.data(), object.data());
         return -3;
     }
-    
+
     QString docu = axobject->generateDocumentation();
     out << docu;
     return 0;

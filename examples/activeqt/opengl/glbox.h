@@ -52,7 +52,7 @@
 #include <QAxBindable>
 
 class GLBox : public QGLWidget,
-	      public QAxBindable
+              public QAxBindable
 {
     Q_OBJECT
 //! [0] //! [1]
@@ -66,18 +66,18 @@ public:
 
 public slots:
 
-    void		setXRotation( int degrees );
+    void                setXRotation( int degrees );
 //! [1]
-    void		setYRotation( int degrees );
-    void		setZRotation( int degrees );
+    void                setYRotation( int degrees );
+    void                setZRotation( int degrees );
 
 protected:
 
-    void		initializeGL();
-    void		paintGL();
-    void		resizeGL( int w, int h );
+    void                initializeGL();
+    void                paintGL();
+    void                resizeGL( int w, int h );
 
-    virtual GLuint 	makeObject();
+    virtual GLuint      makeObject();
 
 private:
 

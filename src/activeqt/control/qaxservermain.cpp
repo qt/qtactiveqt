@@ -96,7 +96,7 @@ static DWORD WINAPI MonitorProc(void* /* pv */)
     CloseHandle(hEventShutdown);
     PostThreadMessage(dwThreadID, WM_QUIT, 0, 0);
     PostQuitMessage(0);
-    
+
     return 0;
 }
 
@@ -126,20 +126,20 @@ bool qax_startServer(QAxFactory::ServerType type)
 {
     if (qAxIsServer)
         return true;
-    
+
     const QStringList keys = qAxFactory()->featureList();
     if (!keys.count())
         return false;
-    
+
     if (!qAxFactory()->isService())
         StartMonitor();
-    
+
     classRegistration = new DWORD[keys.count()];
     int object = 0;
     for (QStringList::ConstIterator key = keys.begin(); key != keys.end(); ++key, ++object) {
         IUnknown* p = 0;
         CLSID clsid = qAxFactory()->classID(*key);
-        
+
         // Create a QClassFactory (implemented in qaxserverbase.cpp)
         HRESULT hRes = GetClassObject(clsid, IID_IClassFactory, (void**)&p);
         if (SUCCEEDED(hRes))
@@ -161,19 +161,19 @@ bool qax_stopServer()
 {
     if (!qAxIsServer || !classRegistration)
         return true;
-    
+
     qAxIsServer = false;
-    
+
     const QStringList keys = qAxFactory()->featureList();
     int object = 0;
     for (QStringList::ConstIterator key = keys.begin(); key != keys.end(); ++key, ++object)
         CoRevokeClassObject(classRegistration[object]);
-    
+
     delete []classRegistration;
     classRegistration = 0;
-    
+
     Sleep(dwPause); //wait for any threads to finish
-    
+
     return true;
 }
 
@@ -199,7 +199,7 @@ extern "C" int main(int, char **);
 
 EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR, int nShowCmd)
 {
-    QT_USE_NAMESPACE 
+    QT_USE_NAMESPACE
 
     qAxOutProcServer = true;
     GetModuleFileName(0, qAxModuleFilename, MAX_PATH);
@@ -237,7 +237,7 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR,
                     else
                         version = "1.0";
                 }
-                
+
                 nRet = DumpIDL(QString::fromLatin1(outfile.constData()), QString::fromLatin1(version.constData()));
             } else {
                 qWarning("Wrong commandline syntax: <app> -dumpidl <idl file> [-version <x.y.z>]");
@@ -248,7 +248,7 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR,
             unprocessed += cmds.at(i) + ' ';
         }
     }
-    
+
     if (run) {
         if (SUCCEEDED(CoInitialize(0))) {
             int argc;
@@ -266,6 +266,6 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR,
             nRet = -1;
         }
     }
-    
+
     return nRet;
 }

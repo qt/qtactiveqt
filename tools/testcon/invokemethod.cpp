@@ -65,32 +65,32 @@ void InvokeMethod::setControl(QAxBase *ax)
     comboMethods->setEnabled(hasControl);
     buttonInvoke->setEnabled(hasControl);
     boxParameters->setEnabled(hasControl);
-    
+
     comboMethods->clear();
     listParameters->clear();
-    
+
     if (!hasControl) {
-	editValue->clear();
-	return;
+        editValue->clear();
+        return;
     }
 
     const QMetaObject *mo = activex->metaObject();
     if (mo->methodCount()) {
-	for (int i = mo->methodOffset(); i < mo->methodCount(); ++i) {
-	    const QMetaMethod method = mo->method(i);
+        for (int i = mo->methodOffset(); i < mo->methodCount(); ++i) {
+            const QMetaMethod method = mo->method(i);
             if (method.methodType() == QMetaMethod::Slot)
                 comboMethods->addItem(QString::fromLatin1(method.methodSignature()));
-	}
+        }
         comboMethods->model()->sort(0);
 
-	on_comboMethods_activated(comboMethods->currentText());
+        on_comboMethods_activated(comboMethods->currentText());
     }
 }
 
 void InvokeMethod::on_buttonInvoke_clicked()
 {
     if (!activex)
-	return;
+        return;
 
     on_buttonSet_clicked();
     QString method = comboMethods->currentText();
@@ -98,15 +98,15 @@ void InvokeMethod::on_buttonInvoke_clicked()
 
     int itemCount = listParameters->topLevelItemCount();
     for (int i = 0; i < itemCount; ++i) {
-	QTreeWidgetItem *parameter = listParameters->topLevelItem(i);
-	vars << parameter->text(2);
+        QTreeWidgetItem *parameter = listParameters->topLevelItem(i);
+        vars << parameter->text(2);
     }
     QVariant result = activex->dynamicCall(method.toLatin1(), vars);
 
     int v = 0;
     for (int i = 0; i < itemCount; ++i) {
-	QTreeWidgetItem *parameter = listParameters->topLevelItem(i);
-	parameter->setText(2, vars[v++].toString());
+        QTreeWidgetItem *parameter = listParameters->topLevelItem(i);
+        parameter->setText(2, vars[v++].toString());
     }
 
     QString resString = result.toString();
@@ -117,7 +117,7 @@ void InvokeMethod::on_buttonInvoke_clicked()
 void InvokeMethod::on_comboMethods_activated(const QString &method)
 {
     if (!activex)
-	return;
+        return;
     listParameters->clear();
 
     const QMetaObject *mo = activex->metaObject();
@@ -130,40 +130,40 @@ void InvokeMethod::on_comboMethods_activated(const QString &method)
     QList<QByteArray> ptypes = slot.parameterTypes();
 
     for (int p = 0; p < ptypes.count(); ++p) {
-	QString ptype(QString::fromLatin1(ptypes.at(p)));
-	if (ptype.isEmpty())
-	    continue;
-	QString pname(QString::fromLatin1(pnames.at(p).constData()));
-	if (pname.isEmpty())
-	    pname = QString::fromLatin1("<unnamed %1>").arg(p);
-	QTreeWidgetItem *item = new QTreeWidgetItem(listParameters);
+        QString ptype(QString::fromLatin1(ptypes.at(p)));
+        if (ptype.isEmpty())
+            continue;
+        QString pname(QString::fromLatin1(pnames.at(p).constData()));
+        if (pname.isEmpty())
+            pname = QString::fromLatin1("<unnamed %1>").arg(p);
+        QTreeWidgetItem *item = new QTreeWidgetItem(listParameters);
         item->setText(0, pname);
         item->setText(1, ptype);
     }
 
     if (listParameters->topLevelItemCount())
-	listParameters->setCurrentItem(listParameters->topLevelItem(0));
+        listParameters->setCurrentItem(listParameters->topLevelItem(0));
     editReturn->setText(QString::fromLatin1(slot.typeName()));
 }
 
 void InvokeMethod::on_listParameters_currentItemChanged(QTreeWidgetItem *item)
 {
     if (!activex)
-	return;
+        return;
     editValue->setEnabled(item != 0);
     buttonSet->setEnabled(item != 0);
     if (!item)
-	return;
+        return;
     editValue->setText(item->text(2));
 }
 
 void InvokeMethod::on_buttonSet_clicked()
 {
     if (!activex)
-	return;
+        return;
     QTreeWidgetItem *item = listParameters->currentItem();
     if (!item)
-	return;
+        return;
     item->setText(2, editValue->text());
 }
 

@@ -106,8 +106,8 @@ void MainWindow::on_WebBrowser_TitleChange(const QString &title)
 void MainWindow::on_WebBrowser_ProgressChange(int a, int b)
 {
     if (a <= 0 || b <= 0) {
-	pb->hide();
-	return;
+        pb->hide();
+        return;
     }
     pb->show();
     pb->setRange(0, b);
@@ -118,11 +118,11 @@ void MainWindow::on_WebBrowser_CommandStateChange(int cmd, bool on)
 {
     switch (cmd) {
     case 1:
-	actionForward->setEnabled(on);
-	break;
+        actionForward->setEnabled(on);
+        break;
     case 2:
-	actionBack->setEnabled(on);
-	break;
+        actionBack->setEnabled(on);
+        break;
     }
 }
 
@@ -147,7 +147,7 @@ void MainWindow::on_actionNewWindow_triggered()
     MainWindow *window = new MainWindow;
     window->show();
     if (addressEdit->text().isEmpty())
-	return;
+        return;
     window->addressEdit->setText(addressEdit->text());
     window->actionStop->setEnabled(true);
     window->on_actionGo_triggered();
@@ -156,9 +156,9 @@ void MainWindow::on_actionNewWindow_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this, tr("About WebBrowser"),
-		tr("This Example has been created using the ActiveQt integration into Qt Designer.\n"
-		   "It demonstrates the use of QAxWidget to embed the Internet Explorer ActiveX\n"
-		   "control into a Qt application."));
+                tr("This Example has been created using the ActiveQt integration into Qt Designer.\n"
+                   "It demonstrates the use of QAxWidget to embed the Internet Explorer ActiveX\n"
+                   "control into a Qt application."));
 }
 
 void MainWindow::on_actionAboutQt_triggered()

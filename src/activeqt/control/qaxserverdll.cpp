@@ -78,7 +78,7 @@ STDAPI DllGetClassObject(const GUID &clsid, const GUID &iid, void** ppv)
     if (!qAxThreadId)
         qAxThreadId = GetCurrentThreadId();
     else if (GetCurrentThreadId() != qAxThreadId)
-        return E_FAIL; 
+        return E_FAIL;
 
     GetClassObject(clsid, iid, ppv);
     if (!*ppv)
@@ -94,7 +94,7 @@ STDAPI DllCanUnloadNow()
         return S_FALSE;
     if (!qax_ownQApp)
         return S_OK;
-    
+
     // check if qApp still runs widgets (in other DLLs)
     QWidgetList widgets = qApp->allWidgets();
     int count = widgets.count();
@@ -106,14 +106,14 @@ STDAPI DllCanUnloadNow()
     }
     if (count)
         return S_FALSE;
-    
+
     // no widgets left - destroy qApp
     if (qax_hhook)
         UnhookWindowsHookEx(qax_hhook);
-    
+
     delete qApp;
     qax_ownQApp = false;
-    
+
     // never allow unloading - safety net for Internet Explorer
     return S_FALSE;
 }
@@ -128,14 +128,14 @@ EXTERN_C BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /* lpvR
 
     qAxInstance = hInstance;
     qAxIsServer = true;
-    
+
     if (dwReason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(hInstance);
         qAxInit();
     } else if (dwReason == DLL_PROCESS_DETACH) {
         qAxCleanup();
     }
-    
+
     return true;
 }
 

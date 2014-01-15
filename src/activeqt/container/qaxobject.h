@@ -57,7 +57,7 @@ public:
     QAxObject(const QString &c, QObject *parent = 0);
     QAxObject(IUnknown *iface, QObject *parent = 0);
     ~QAxObject();
-    
+
     bool doVerb(const QString &verb);
 
 protected:

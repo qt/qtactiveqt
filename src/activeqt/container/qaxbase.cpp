@@ -239,7 +239,7 @@ static const char *const type_conversion[][2] =
     \class QAxEventSink
 
     \brief The QAxEventSink class implements the event sink for all
-	   IConnectionPoints implemented in the COM object.
+           IConnectionPoints implemented in the COM object.
 */
 
 class QAxEventSink : public IDispatch, public IPropertyNotifySink
@@ -292,14 +292,14 @@ public:
 
     void addSignal(DISPID memid, const char *name)
     {
-	QByteArray signalname = name;
-	int pi = signalname.indexOf('(');
+        QByteArray signalname = name;
+        int pi = signalname.indexOf('(');
         int i = 0;
         while (type_conversion[i][0]) {
             int ti = pi;
             int len = int(strlen(type_conversion[i][0]));
             while ((ti = signalname.indexOf(type_conversion[i][0], ti)) != -1)
-	        signalname.replace(ti, len, type_conversion[i][1]);
+                signalname.replace(ti, len, type_conversion[i][1]);
             ++i;
         }
 
@@ -627,12 +627,12 @@ public:
     QString ctrl;
 
     QHash<QUuid, QAxEventSink*> eventSink;
-    uint useEventSink	    :1;
-    uint useMetaObject	    :1;
-    uint useClassInfo	    :1;
+    uint useEventSink       :1;
+    uint useMetaObject      :1;
+    uint useClassInfo       :1;
     uint cachedMetaObject   :1;
-    uint initialized	    :1;
-    uint tryCache	    :1;
+    uint initialized        :1;
+    uint tryCache           :1;
 
     IUnknown *ptr;
     mutable IDispatch *disp;
@@ -1089,9 +1089,9 @@ void QAxBase::disableEventSink()
 */
 void QAxBase::disableMetaObject()
 {
-    d->useMetaObject	= false;
-    d->useEventSink	= false;
-    d->useClassInfo	= false;
+    d->useMetaObject    = false;
+    d->useEventSink     = false;
+    d->useClassInfo     = false;
 }
 
 /*!
@@ -2925,8 +2925,8 @@ void MetaObjectGenerator::readEventInfo()
             if (cpoint) cpoint->Release();
             epoints->Release();
         } else if (classInfo) { // no enumeration - search source interfaces and ask for those
-	    TYPEATTR *typeattr = 0;
-	    classInfo->GetTypeAttr(&typeattr);
+            TYPEATTR *typeattr = 0;
+            classInfo->GetTypeAttr(&typeattr);
             if (typeattr) {
                 for (int i = 0; i < typeattr->cImplTypes; ++i) {
                     int flags = 0;

@@ -47,8 +47,8 @@
 class WebAxWidget : public QAxWidget
 {
 public:
-    
-    WebAxWidget(QWidget* parent = 0, Qt::WindowFlags f = 0) 
+
+    WebAxWidget(QWidget* parent = 0, Qt::WindowFlags f = 0)
         : QAxWidget(parent, f)
     {
     }

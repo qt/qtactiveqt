@@ -1,11 +1,11 @@
 TEMPLATE = app
-TARGET	 = menusax
+TARGET   = menusax
 
 CONFIG += warn_off
 QT += widgets axserver
 
-SOURCES	 = main.cpp menus.cpp
-HEADERS	 = menus.h
+SOURCES  = main.cpp menus.cpp
+HEADERS  = menus.h
 RC_FILE  = menus.rc
 
 # install

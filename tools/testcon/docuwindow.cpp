@@ -122,13 +122,13 @@ void DocuWindow::save()
     QString filename = QFileDialog::getSaveFileName(this);
 
     if (filename.isEmpty())
-	return;
+        return;
 
     QString text = browser->document()->toHtml();
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly)) {
-	statusBar()->showMessage(tr("Could not write to %1").arg(filename), 2000);
-	return;
+        statusBar()->showMessage(tr("Could not write to %1").arg(filename), 2000);
+        return;
     }
 
     QTextStream t(&f);
@@ -145,14 +145,14 @@ void DocuWindow::print()
 #else
     QPrinter printer;
     if (printer.printerName().isEmpty()) {
-	statusBar()->showMessage(tr("No printer installed"), 2000);
-	return;
+        statusBar()->showMessage(tr("No printer installed"), 2000);
+        return;
     }
 
     QPrintDialog printDialog(&printer, this);
     if (!printDialog.exec()) {
-	statusBar()->showMessage(tr("Printing aborted"), 2000);
-	return;
+        statusBar()->showMessage(tr("Printing aborted"), 2000);
+        return;
     }
 
     browser->document()->print(&printer);
