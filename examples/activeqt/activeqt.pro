@@ -11,4 +11,4 @@ contains(QT_CONFIG, opengl):!contains(QT_CONFIG, opengles2):SUBDIRS += opengl
 
 # For now only the contain examples with mingw, for the others you need
 # an IDL compiler
-win32-g++*|wince*:SUBDIRS = webbrowser
+mingw|wince*:SUBDIRS = webbrowser
