@@ -31,7 +31,7 @@
 
     \title Menubar Merging
 
-    This example is not full functional at the moment.
+    This example is not fully functional at the moment.
 
     \raw HTML
     <object ID="QMenus" CLASSID="CLSID:4dc3f340-a6f7-44e4-a79b-3e9217695fbd"
