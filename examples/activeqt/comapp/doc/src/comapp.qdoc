@@ -79,7 +79,7 @@
     \snippet  activeqt/comapp/main.cpp 6
     The classes are exported from the server using the QAxFactory macros. Only
     \c Application objects can be instantiated from outside - the other APIs can
-    only be used after accessing the respective objects throught the \c Application
+    only be used after accessing the respective objects throughout the \c Application
     API.
 
     \snippet  activeqt/comapp/main.cpp 7

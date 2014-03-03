@@ -324,7 +324,7 @@
     \li QPixmap
     \li IPictureDisp*
     \footnote
-    COM cannot marshal IPictureDisp accross process boundaries,
+    COM cannot marshal IPictureDisp across process boundaries,
     so QPixmap properties cannot be called for out-of-process servers. You
     can however marshal the image data via e.g. temporary files. See the
     Microsoft
@@ -475,7 +475,7 @@
 
     Any QObject subclass can be used as the type for a sub object in ActiveX, as
     long as it is known to the QAxFactory. Then the type can be used in properties,
-    or as the return type or paramter of a slot.
+    or as the return type or parameter of a slot.
 
     \section2 Property Notification
 
@@ -527,7 +527,7 @@
     \snippet doc_src_qaxserver.cpp 9
 
     This is however not necessary as ActiveQt provides a default implementation
-    of a main function. The default implemenation calls QAxFactory::startServer(),
+    of a main function. The default implementation calls QAxFactory::startServer(),
     creates a QApplication instance and calls exec().
 
     To build the ActiveX server executable run \c qmake

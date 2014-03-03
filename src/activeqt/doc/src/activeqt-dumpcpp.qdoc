@@ -48,7 +48,7 @@
     library ID, or a CLSID or ProgID for an object
     \row
     \li -o file
-    \li Writes the class declaration to \e {file}.h and meta object infomation to \e {file}.cpp
+    \li Writes the class declaration to \e {file}.h and meta object information to \e {file}.cpp
     \row
     \li -n namespace
     \li Generate a C++ namespace \e namespace
