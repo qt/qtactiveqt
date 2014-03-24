@@ -3249,6 +3249,16 @@ QT_MOC_LITERAL(12, 79, 7)
 };
 #undef QT_MOC_LITERAL
 
+/*!
+    \fn const QMetaObject *QAxBase::fallbackMetaObject() const
+    \internal
+*/
+
+/*!
+    \internal
+    \class QAxBase::qt_meta_stringdata_QAxBase_t
+*/
+
 const uint QAxBase::qt_meta_data_QAxBase[] = {
 
  // content:

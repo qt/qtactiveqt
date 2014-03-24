@@ -51,9 +51,7 @@
     \snippet activeqt/webbrowser/main.cpp 1
 
     The constructor initializes the user interface, installs a
-    progress bar on the status bar, and uses QAxBase::dynamicCall()
-    to invoke the \c GoHome() method of Internet Explorer to
-    navigate  to the user's home page.
+    progress bar on the status bar, and loads the bookmarks.
 
     \snippet activeqt/webbrowser/main.cpp 2
     Different slots handle the signals emitted by the WebBrowser object.

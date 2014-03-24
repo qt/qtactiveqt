@@ -246,7 +246,7 @@
     \section3 Error calling IDispatch member: Type mismatch in parameter n
 
     A QAxBase::dynamicCall() failed - the function prototype was correct,
-    but the paramter at index \c n was of the wrong type and could
+    but the parameter at index \c n was of the wrong type and could
     not be coerced to the correct type.
 
     \section3 QAxScriptManager::call(): No script provides this function

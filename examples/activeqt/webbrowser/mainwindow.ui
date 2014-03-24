@@ -114,7 +114,25 @@
         <addaction name="separator" />
         <addaction name="actionFileClose" />
       </widget>
-      <widget class="QMenu" name="unnamed" >
+      <widget class="QMenu" name="BookmarksMenu" >
+        <property name="objectName" >
+          <string notr="true" >BookmarksMenu</string>
+        </property>
+        <property name="title" >
+          <string>&amp;Bookmarks</string>
+        </property>
+        <addaction name="actionAddBookmark" />
+        <addaction name="separator" />
+      </widget>
+      <widget class="QMenu" name="HistoryMenu" >
+        <property name="objectName" >
+          <string notr="true" >HistoryMenu</string>
+        </property>
+        <property name="title" >
+          <string>Hi&amp;story</string>
+        </property>
+      </widget>
+       <widget class="QMenu" name="unnamed" >
         <property name="objectName" >
           <string notr="true" >unnamed</string>
         </property>
@@ -125,6 +143,8 @@
         <addaction name="actionAboutQt" />
       </widget>
       <addaction name="PopupMenu" />
+      <addaction name="BookmarksMenu" />
+      <addaction name="HistoryMenu" />
       <addaction name="unnamed" />
     </widget>
     <action name="actionGo" >
@@ -224,6 +244,14 @@
       </property>
       <property name="iconText" >
         <string>About</string>
+      </property>
+    </action>
+    <action name="actionAddBookmark" >
+      <property name="objectName" >
+        <string>actionAddBookmark</string>
+      </property>
+      <property name="text" >
+        <string>Add Bookmark</string>
       </property>
     </action>
     <action name="actionAboutQt" >
