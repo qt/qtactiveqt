@@ -16,7 +16,7 @@ qhp.ActiveQt.indexTitle          = Active Qt
 qhp.ActiveQt.indexRoot           =
 
 qhp.ActiveQt.filterAttributes    = activeqt $QT_VERSION qtrefdoc
-qhp.ActiveQt.customFilters.Qt.name = activeqt $QT_VERSION
+qhp.ActiveQt.customFilters.Qt.name = ActiveQt $QT_VERSION
 qhp.ActiveQt.customFilters.Qt.filterAttributes = activeqt $QT_VERSION
 
 qhp.ActiveQt.subprojects         = qaxcontainerclasses qaxserverclasses
