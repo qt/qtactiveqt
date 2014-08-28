@@ -5,7 +5,7 @@ TARGET = QtAxBase
 QMAKE_DOCS = $$PWD/doc/activeqt.qdocconf
 MODULE_INCNAME = ActiveQt
 CONFIG += static
-QT += gui-private
+QT += gui-private widgets
 
 LIBS_PRIVATE += -lole32 -loleaut32
 !wince*: LIBS_PRIVATE += -luser32 -lgdi32 -ladvapi32
