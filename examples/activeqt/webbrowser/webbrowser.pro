@@ -5,7 +5,6 @@ QT += widgets axcontainer
 HEADERS  = webaxwidget.h
 SOURCES  = main.cpp
 FORMS    = mainwindow.ui
-wincewm*: FORMS = mainwindow_windowsmobile.ui
 
 
 # install

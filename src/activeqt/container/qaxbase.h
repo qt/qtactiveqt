@@ -160,21 +160,13 @@ private:
     bool dynamicCallHelper(const char *name, void *out, QList<QVariant> &var, QByteArray &type);
 };
 
-#if defined Q_CC_MSVC && _MSC_VER < 1300
-template <> inline QAxBase *qobject_cast_helper<QAxBase*>(const QObject *o, QAxBase *)
-#else
 template <> inline QAxBase *qobject_cast<QAxBase*>(const QObject *o)
-#endif
 {
     void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxBase") : 0;
     return (QAxBase*)(result);
 }
 
-#if defined Q_CC_MSVC && _MSC_VER < 1300
-template <> inline QAxBase *qobject_cast_helper<QAxBase*>(QObject *o, QAxBase *)
-#else
 template <> inline QAxBase *qobject_cast<QAxBase*>(QObject *o)
-#endif
 {
     void *result = o ? o->qt_metacast("QAxBase") : 0;
     return (QAxBase*)(result);

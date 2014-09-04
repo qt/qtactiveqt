@@ -886,9 +886,6 @@ QAxBase::QAxBase(IUnknown *iface)
         d->ptr->AddRef();
         d->initialized = true;
     }
-#if defined(Q_OS_WINCE)
-    CoInitializeEx(0, COINIT_MULTITHREADED);
-#endif
 }
 
 /*!
@@ -898,9 +895,6 @@ QAxBase::QAxBase(IUnknown *iface)
 */
 QAxBase::~QAxBase()
 {
-#if defined(Q_OS_WINCE)
-    CoUninitialize();
-#endif
 
     clear();
 
@@ -1349,17 +1343,12 @@ bool QAxBase::initializeLicensedHelper(void *f, const QString &key, IUnknown **p
 */
 bool QAxBase::initializeActive(IUnknown** ptr)
 {
-#if defined(Q_OS_WINCE)
-    Q_UNUSED(ptr);
-    return false;
-#else
     int at = control().lastIndexOf(QLatin1String("}&"));
     QString clsid(control().left(at));
 
     GetActiveObject(QUuid(clsid), 0, ptr);
 
     return *ptr != 0;
-#endif
 }
 
 #ifdef Q_CC_GNU
@@ -1380,10 +1369,6 @@ bool QAxBase::initializeActive(IUnknown** ptr)
 */
 bool QAxBase::initializeFromFile(IUnknown** ptr)
 {
-#if defined(Q_OS_WINCE)
-    Q_UNUSED(ptr);
-    return false;
-#else
     IStorage *storage = 0;
     ILockBytes * bytes = 0;
     HRESULT hres = ::CreateILockBytesOnHGlobal(0, TRUE, &bytes);
@@ -1395,7 +1380,6 @@ bool QAxBase::initializeFromFile(IUnknown** ptr)
     bytes->Release();
 
     return hres == S_OK;
-#endif
 }
 
 

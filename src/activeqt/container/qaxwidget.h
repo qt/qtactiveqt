@@ -92,21 +92,13 @@ private:
     const QMetaObject *parentMetaObject() const;
 };
 
-#if defined Q_CC_MSVC && _MSC_VER < 1300
-template <> inline QAxWidget *qobject_cast_helper<QAxWidget*>(const QObject *o, QAxWidget *)
-#else
 template <> inline QAxWidget *qobject_cast<QAxWidget*>(const QObject *o)
-#endif
 {
     void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxWidget") : 0;
     return (QAxWidget*)(result);
 }
 
-#if defined Q_CC_MSVC && _MSC_VER < 1300
-template <> inline QAxWidget *qobject_cast_helper<QAxWidget*>(QObject *o, QAxWidget *)
-#else
 template <> inline QAxWidget *qobject_cast<QAxWidget*>(QObject *o)
-#endif
 {
     void *result = o ? o->qt_metacast("QAxWidget") : 0;
     return (QAxWidget*)(result);

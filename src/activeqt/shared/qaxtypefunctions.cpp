@@ -188,14 +188,12 @@ void clearVARIANT(VARIANT *var)
         case VT_UINT|VT_BYREF:
             delete var->puintVal;
             break;
-#if !defined(Q_OS_WINCE) && defined(_MSC_VER) && _MSC_VER >= 1400
         case VT_I8|VT_BYREF:
             delete var->pllVal;
             break;
         case VT_UI8|VT_BYREF:
             delete var->pullVal;
             break;
-#endif
         case VT_CY|VT_BYREF:
             delete var->pcyVal;
             break;

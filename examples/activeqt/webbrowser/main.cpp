@@ -50,12 +50,7 @@
 #include <QVariant>
 #include <QSettings>
 
-#if defined(Q_WS_WINCE_WM)
-#include "ui_mainwindow_windowsmobile.h"
-#include <windows.h>
-#else
 #include "ui_mainwindow.h"
-#endif
 
 static const char qtProjectUrl[] = "qt-project.org";
 static const char iWebBrowser2DocumentationUrl[] = "http://msdn.microsoft.com/en-us/library/aa752127%28v=vs.85%29.aspx";
@@ -336,11 +331,7 @@ int main(int argc, char ** argv)
     const QString url = arguments.size() > 1 ?
         arguments.at(1) : QString::fromLatin1(qtProjectUrl);
     w.navigate(url);
-#if defined(Q_OS_WINCE)
-    w.showMaximized();
-#else
     w.show();
-#endif
     return a.exec();
 }
 //! [4]

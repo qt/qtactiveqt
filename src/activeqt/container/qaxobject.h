@@ -68,21 +68,13 @@ private:
     const QMetaObject *parentMetaObject() const;
 };
 
-#if defined Q_CC_MSVC && _MSC_VER < 1300
-template <> inline QAxObject *qobject_cast_helper<QAxObject*>(const QObject *o, QAxObject *)
-#else
 template <> inline QAxObject *qobject_cast<QAxObject*>(const QObject *o)
-#endif
 {
     void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxObject") : 0;
     return (QAxObject*)(result);
 }
 
-#if defined Q_CC_MSVC && _MSC_VER < 1300
-template <> inline QAxObject *qobject_cast_helper<QAxObject*>(QObject *o, QAxObject *)
-#else
 template <> inline QAxObject *qobject_cast<QAxObject*>(QObject *o)
-#endif
 {
     void *result = o ? o->qt_metacast("QAxObject") : 0;
     return (QAxObject*)(result);

@@ -177,11 +177,7 @@ bool qax_stopServer()
     return true;
 }
 
-#if defined(Q_OS_WINCE)
-extern void __cdecl qWinMain(HINSTANCE, HINSTANCE, LPSTR, int, int &, QVector<char *> &);
-#else
 extern void qWinMain(HINSTANCE, HINSTANCE, LPSTR, int, int &, QVector<char *> &);
-#endif
 
 QT_END_NAMESPACE
 
@@ -189,11 +185,7 @@ QT_END_NAMESPACE
 int qMain(int, char **);
 #define main qMain
 #else
-#if defined(Q_OS_WINCE)
-extern "C" int __cdecl main(int, char **);
-#else
 extern "C" int main(int, char **);
-#endif
 #endif
 
 

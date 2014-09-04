@@ -381,7 +381,6 @@ public:
     bool eventTranslated : 1;
 
 private:
-#if !defined(Q_WS_WINCE)
     struct OleMenuItem {
         OleMenuItem(HMENU hm = 0, int ID = 0, QMenu *menu = 0)
             : hMenu(hm), id(ID), subMenu(menu)
@@ -391,7 +390,6 @@ private:
         QMenu *subMenu;
     };
     QMenu *generatePopup(HMENU subMenu, QWidget *parent);
-#endif
 
     IOleObject *m_spOleObject;
     IOleControl *m_spOleControl;
@@ -406,19 +404,15 @@ private:
     bool canHostDocument : 1;
 
     DWORD m_dwOleObject;
-#if !defined(Q_WS_WINCE)
     HWND m_menuOwner;
-#endif
     CONTROLINFO control_info;
 
     QSize sizehint;
     LONG ref;
     QAxWidget *widget;
     QAxHostWidget *host;
-#if !defined(Q_WS_WINCE)
     QPointer<QMenuBar> menuBar;
     QMap<QAction*,OleMenuItem> menuItemMap;
-#endif
 };
 
 static const ushort mouseTbl[] = {
@@ -461,11 +455,7 @@ static Qt::KeyboardModifiers translateModifierState(int s)
     return bst;
 }
 
-#if defined(Q_WS_WINCE)
-static int filter_ref = 0;
-#else
 static const wchar_t *qaxatom = L"QAxContainer4_Atom";
-#endif
 
 // The filter procedure listening to user interaction on the control
 class QAxNativeEventFilter : public QAbstractNativeEventFilter
@@ -552,10 +542,8 @@ QAxClientSite::QAxClientSite(QAxWidget *c)
     canHostDocument = false;
 
     m_dwOleObject = 0;
-#if !defined(Q_WS_WINCE)
     m_menuOwner = 0;
     menuBar = 0;
-#endif
     memset(&control_info, 0, sizeof(control_info));
 }
 
@@ -571,7 +559,6 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
         DWORD dwMiscStatus = 0;
         m_spOleObject->GetMiscStatus(DVASPECT_CONTENT, &dwMiscStatus);
 
-#if !defined(Q_OS_WINCE)
         IOleDocument *document = 0;
         m_spOleObject->QueryInterface(IID_IOleDocument, (void**)&document);
         if (document) {
@@ -595,7 +582,6 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
             }
             document->Release();
         }
-#endif
 
         if (!canHostDocument) {
             // activate as control
@@ -630,7 +616,6 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
                     if (spPS) {
                         HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, data.length());
                         if (hGlobal) {
-#if !defined(Q_OS_WINCE)
                             BYTE* pbData = (BYTE*)GlobalLock(hGlobal);
                             if (pbData)
                                 memcpy(pbData, data.data(), data.length());
@@ -647,7 +632,6 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
                                 pLockBytes->Release();
                             }
                             GlobalFree(hGlobal);
-#endif
                         }
                         spPS->Release();
                     }
@@ -1066,9 +1050,7 @@ HRESULT WINAPI QAxClientSite::CanInPlaceActivate()
 HRESULT WINAPI QAxClientSite::OnInPlaceActivate()
 {
     AX_DEBUG(QAxClientSite::OnInPlaceActivate);
-#if !defined(Q_OS_WINCE)
     OleLockRunning(m_spOleObject, true, false);
-#endif
     if (!m_spInPlaceObject) {
 /* ### disabled for now
         m_spOleObject->QueryInterface(IID_IOleInPlaceObjectWindowless, (void**) &m_spInPlaceObject);
@@ -1134,9 +1116,7 @@ HRESULT WINAPI QAxClientSite::OnInPlaceDeactivate()
         m_spInPlaceObject->Release();
     m_spInPlaceObject = 0;
     inPlaceObjectWindowless = false;
-#if !defined(Q_OS_WINCE)
     OleLockRunning(m_spOleObject, false, false);
-#endif
 
     return S_OK;
 }
@@ -1162,11 +1142,6 @@ HRESULT WINAPI QAxClientSite::OnPosRectChange(LPCRECT /*lprcPosRect*/)
 }
 
 //**** IOleInPlaceFrame
-#if defined(Q_WS_WINCE)
-HRESULT WINAPI QAxClientSite::InsertMenus(HMENU /*hmenuShared*/, LPOLEMENUGROUPWIDTHS /*lpMenuWidths*/)
-{
-    return E_NOTIMPL;
-#else
 HRESULT WINAPI QAxClientSite::InsertMenus(HMENU /*hmenuShared*/, LPOLEMENUGROUPWIDTHS lpMenuWidths)
 {
     AX_DEBUG(QAxClientSite::InsertMenus);
@@ -1200,7 +1175,6 @@ HRESULT WINAPI QAxClientSite::InsertMenus(HMENU /*hmenuShared*/, LPOLEMENUGROUPW
         lpMenuWidths->width[4] = windowMenu->actions().count();
 
     return S_OK;
-#endif
 }
 
 static int menuItemEntry(HMENU menu, int index, MENUITEMINFO item, QString &text, QPixmap &/*icon*/)
@@ -1237,7 +1211,6 @@ static int menuItemEntry(HMENU menu, int index, MENUITEMINFO item, QString &text
     return -1;
 }
 
-#if !defined(Q_OS_WINCE)
 QMenu *QAxClientSite::generatePopup(HMENU subMenu, QWidget *parent)
 {
     QMenu *popup = 0;
@@ -1303,13 +1276,7 @@ QMenu *QAxClientSite::generatePopup(HMENU subMenu, QWidget *parent)
     }
     return popup;
 }
-#endif
 
-#if defined(Q_OS_WINCE)
-HRESULT WINAPI QAxClientSite::SetMenu(HMENU /*hmenuShared*/, HOLEMENU /*holemenu*/, HWND /*hwndActiveObject*/)
-{
-    return E_NOTIMPL;
-#else
 HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND hwndActiveObject)
 {
     AX_DEBUG(QAxClientSite::SetMenu);
@@ -1388,14 +1355,8 @@ HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND
 
     OleSetMenuDescriptor(holemenu, widget ? hwndForWidget(widget) : 0, m_menuOwner, this, m_spInPlaceActiveObject);
     return S_OK;
-#endif
 }
 
-#if defined(Q_OS_WINCE)
-int QAxClientSite::qt_metacall(QMetaObject::Call /*call*/, int isignal, void ** /*argv*/)
-{
-    return isignal;
-#else
 int QAxClientSite::qt_metacall(QMetaObject::Call call, int isignal, void **argv)
 {
     if (!m_spOleObject || call != QMetaObject::InvokeMetaMethod || !menuBar)
@@ -1411,15 +1372,11 @@ int QAxClientSite::qt_metacall(QMetaObject::Call call, int isignal, void **argv)
     if (oleItem.hMenu)
         ::PostMessage(m_menuOwner, WM_COMMAND, oleItem.id, 0);
     return -1;
-#endif
 }
 
 
 HRESULT WINAPI QAxClientSite::RemoveMenus(HMENU /*hmenuShared*/)
 {
-#if defined(Q_OS_WINCE)
-    return E_NOTIMPL;
-#else
     AX_DEBUG(QAxClientSite::RemoveMenus);
     QMap<QAction*, OleMenuItem>::Iterator it;
     for (it = menuItemMap.begin(); it != menuItemMap.end(); ++it) {
@@ -1429,7 +1386,6 @@ HRESULT WINAPI QAxClientSite::RemoveMenus(HMENU /*hmenuShared*/)
     }
     menuItemMap.clear();
     return S_OK;
-#endif
 }
 
 HRESULT WINAPI QAxClientSite::SetStatusText(LPCOLESTR pszStatusText)
@@ -2009,23 +1965,14 @@ bool QAxWidget::createHostWindow(bool initialized)
 */
 bool QAxWidget::createHostWindow(bool initialized, const QByteArray &data)
 {
-#ifdef QT3_SUPPORT
-    QApplication::sendPostedEvents(0, QEvent::ChildInserted);
-#endif
 
     container = new QAxClientSite(this);
     container->activateObject(initialized, data);
 
-#if !defined(Q_OS_WINCE)
     ATOM filter_ref = FindAtom(qaxatom);
-#endif
     if (!filter_ref)
         QAbstractEventDispatcher::instance()->installNativeEventFilter(s_nativeEventFilter());
-#if !defined(Q_OS_WINCE)
     AddAtom(qaxatom);
-#else
-    ++filter_ref;
-#endif
 
     if (parentWidget())
         QApplication::postEvent(parentWidget(), new QEvent(QEvent::LayoutRequest));
@@ -2056,17 +2003,12 @@ void QAxWidget::clear()
     if (isNull())
         return;
     if (!control().isEmpty()) {
-#if !defined(Q_OS_WINCE)
         ATOM filter_ref = FindAtom(qaxatom);
         if (filter_ref)
             DeleteAtom(filter_ref);
         filter_ref = FindAtom(qaxatom);
-        if (!filter_ref) {
-#else
-        if (!filter_ref && !--filter_ref) {
-#endif
+        if (!filter_ref)
             QAbstractEventDispatcher::instance()->removeNativeEventFilter(s_nativeEventFilter());
-        }
     }
 
     if (container)

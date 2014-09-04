@@ -7,8 +7,7 @@ MODULE_INCNAME = ActiveQt
 CONFIG += static
 QT += gui-private widgets
 
-LIBS_PRIVATE += -lole32 -loleaut32
-!wince*: LIBS_PRIVATE += -luser32 -lgdi32 -ladvapi32
+LIBS_PRIVATE += -lole32 -loleaut32 -luser32 -lgdi32 -ladvapi32
 mingw: LIBS_PRIVATE += -luuid
 
 HEADERS = \

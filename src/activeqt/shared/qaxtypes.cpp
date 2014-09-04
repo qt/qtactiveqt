@@ -78,10 +78,6 @@ extern void *qax_createObjectWrapper(int metaType, IUnknown *iface);
 
 static IFontDisp *QFontToIFont(const QFont &font)
 {
-#if defined(Q_OS_WINCE)
-    Q_UNUSED(font);
-    return 0;
-#else
     FONTDESC fdesc;
     memset(&fdesc, 0, sizeof(fdesc));
     fdesc.cbSizeofstruct = sizeof(FONTDESC);
@@ -102,7 +98,6 @@ static IFontDisp *QFontToIFont(const QFont &font)
 #endif
     }
     return f;
-#endif
 }
 
 static QFont IFontToQFont(IFont *f)
@@ -134,10 +129,6 @@ static QFont IFontToQFont(IFont *f)
 
 static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
 {
-#if defined(Q_OS_WINCE)
-    Q_UNUSED(pixmap);
-    return 0;
-#else
     IPictureDisp *pic = 0;
 
     PICTDESC desc;
@@ -161,7 +152,6 @@ static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
 #endif
     }
     return pic;
-#endif
 }
 
 static QPixmap IPictureToQPixmap(IPicture *ipic)
@@ -323,7 +313,6 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
     case QVariant::LongLong:
         if (out && arg.vt == (VT_CY|VT_BYREF)) {
             arg.pcyVal->int64 = qvar.toLongLong();
-#if !defined(Q_OS_WINCE) && defined(_MSC_VER) && _MSC_VER >= 1400
         } else if (out && arg.vt == (VT_I8|VT_BYREF)) {
             *arg.pllVal = qvar.toLongLong();
         } else {
@@ -334,22 +323,11 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 arg.vt |= VT_BYREF;
             }
         }
-#else
-        } else {
-            arg.vt = VT_CY;
-            arg.cyVal.int64 = qvar.toLongLong();
-            if (out) {
-                arg.pcyVal = new CY(arg.cyVal);
-                arg.vt |= VT_BYREF;
-            }
-        }
-#endif
         break;
 
     case QVariant::ULongLong:
         if (out && arg.vt == (VT_CY|VT_BYREF)) {
             arg.pcyVal->int64 = qvar.toULongLong();
-#if !defined(Q_OS_WINCE) && defined(_MSC_VER) && _MSC_VER >= 1400
         } else if (out && arg.vt == (VT_UI8|VT_BYREF)) {
             *arg.pullVal = qvar.toULongLong();
         } else {
@@ -360,18 +338,6 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 arg.vt |= VT_BYREF;
             }
         }
-#else
-        } else {
-            arg.vt = VT_CY;
-            arg.cyVal.int64 = qvar.toULongLong();
-            if (out) {
-                arg.pcyVal = new CY(arg.cyVal);
-                arg.vt |= VT_BYREF;
-            }
-        }
-
-#endif
-
         break;
 
     case QVariant::Bool:
@@ -530,13 +496,8 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 pElement = &variant.boolVal;
                 break;
             case QVariant::LongLong:
-#if !defined(Q_OS_WINCE) && defined(_MSC_VER) && _MSC_VER >= 1400
                 vt = VT_I8;
                 pElement = &variant.llVal;
-#else
-                vt = VT_CY;
-                pElement = &variant.cyVal;
-#endif
                 break;
             default:
                 break;
@@ -921,7 +882,6 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     case VT_CY|VT_BYREF:
         var = arg.pcyVal->int64;
         break;
-#if !defined(Q_OS_WINCE) && defined(_MSC_VER) && _MSC_VER >= 1400
     case VT_I8:
         var = arg.llVal;
         break;
@@ -934,7 +894,6 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     case VT_UI8|VT_BYREF:
         var = *arg.pullVal;
         break;
-#endif
     case VT_R4:
         var = arg.fltVal;
         break;
@@ -1210,7 +1169,6 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
         break;
 #endif // QAX_SERVER
     default:
-#if !defined(Q_OS_WINCE)
         // support for any SAFEARRAY(Type) where Type can be converted to a QVariant
         // -> QVariantList
         if (arg.vt & VT_ARRAY) {
@@ -1238,10 +1196,8 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
             case VT_I1: pElement = &variant.cVal; break;
             case VT_I2: pElement = &variant.iVal; break;
             case VT_I4: pElement = &variant.lVal; break;
-#if defined(_MSC_VER) && _MSC_VER >= 1400
             case VT_I8: pElement = &variant.llVal; break;
             case VT_UI8: pElement = &variant.ullVal; break;
-#endif
             case VT_INT: pElement = &variant.intVal; break;
             case VT_UI1: Q_ASSERT(false); break; // already covered
             case VT_UI2: pElement = &variant.uiVal; break;
@@ -1274,7 +1230,6 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
 
             var = list;
         }
-#endif
         break;
     }
 

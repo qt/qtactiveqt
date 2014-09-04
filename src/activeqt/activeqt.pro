@@ -3,8 +3,7 @@ win32:!winrt {
 
     CONFIG += ordered
     axshared.file = axshared.prx
-    SUBDIRS = axshared container
-    !wince: SUBDIRS += control
+    SUBDIRS = axshared container control
 } else {
     # fake project for creating the documentation
     TEMPLATE = aux
