@@ -1510,8 +1510,7 @@ int main(int argc, char **argv)
         switch(state) {
         case Default:
             if (first == '-' || first == '/') {
-                arg = arg.mid(1);
-                arg.toLower();
+                arg = arg.mid(1).toLower();
 
                 if (arg == "o") {
                     state = Output;
