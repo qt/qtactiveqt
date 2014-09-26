@@ -303,7 +303,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
                     settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/Control/."), QVariant(QLatin1String("")));
                 if (insertable)
                     settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/Insertable/."), QVariant(QLatin1String("")));
-                if (file.right(3).toLower() == QLatin1String("dll"))
+                if (file.endsWith(QLatin1String("dll"), Qt::CaseInsensitive))
                     settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/InProcServer32/."), file);
                 else
                     settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/LocalServer32/."),

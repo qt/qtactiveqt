@@ -141,8 +141,8 @@ void ChangeProperties::on_buttonSet_clicked()
         break;
     case QVariant::Bool:
         {
-            QString txt = editValue->text().toLower();
-            value = QVariant(txt != QLatin1String("0") && txt != QLatin1String("false"));
+            const QString txt = editValue->text();
+            value = QVariant(txt != QLatin1String("0") && txt.compare(QLatin1String("false"), Qt::CaseInsensitive));
         }
         break;
     case QVariant::List:

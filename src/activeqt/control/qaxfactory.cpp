@@ -492,7 +492,7 @@ bool QAxFactory::registerActiveObject(QObject *object)
     if (qstricmp(object->metaObject()->classInfo(object->metaObject()->indexOfClassInfo("RegisterObject")).value(), "yes"))
         return false;
 
-    if (!QString::fromWCharArray(qAxModuleFilename).toLower().endsWith(QLatin1String(".exe")))
+    if (!QString::fromWCharArray(qAxModuleFilename).endsWith(QLatin1String(".exe"), Qt::CaseInsensitive))
         return false;
 
     ActiveObject *active = new ActiveObject(object, qAxFactory());

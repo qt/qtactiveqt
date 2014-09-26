@@ -990,7 +990,7 @@ QAxMetaObject *QAxBase::internalMetaObject() const
 */
 bool QAxBase::setControl(const QString &c)
 {
-    if (c.toLower() == d->ctrl.toLower())
+    if (!c.compare(d->ctrl, Qt::CaseInsensitive))
         return !d->ctrl.isEmpty();
 
     QString search = c;
@@ -1025,7 +1025,7 @@ bool QAxBase::setControl(const QString &c)
             search = c;
     }
 
-    if (search.toLower() == d->ctrl.toLower())
+    if (!search.compare(d->ctrl, Qt::CaseInsensitive))
         return !d->ctrl.isEmpty();
 
     clear();
