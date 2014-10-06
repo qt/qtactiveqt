@@ -41,7 +41,7 @@
 #ifndef QAXTYPES_H
 #define QAXTYPES_H
 
-#include "qaxtypefunctions.h"
+#include <ActiveQt/qaxtypefunctions.h>
 
 QT_BEGIN_NAMESPACE
 
