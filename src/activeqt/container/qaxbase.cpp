@@ -304,14 +304,7 @@ public:
         }
 
         sigs.insert(memid, signalname);
-        QMap<DISPID,QByteArray>::ConstIterator it;
-        DISPID id = -1;
-        for (it = propsigs.constBegin(); it!= propsigs.constEnd(); ++it) {
-            if (it.value() == signalname) {
-                id = it.key();
-                break;
-            }
-        }
+        const DISPID id = propsigs.key(signalname, -1);
         if (id != -1)
             propsigs.remove(id);
     }
@@ -586,6 +579,8 @@ public:
 class QAxBasePrivate
 {
 public:
+    typedef QHash<QUuid, QAxEventSink*> UuidEventSinkHash;
+
     QAxBasePrivate()
         : useEventSink(true), useMetaObject(true), useClassInfo(true),
         cachedMetaObject(false), initialized(false), tryCache(false),
@@ -625,8 +620,7 @@ public:
     }
 
     QString ctrl;
-
-    QHash<QUuid, QAxEventSink*> eventSink;
+    UuidEventSinkHash eventSink;
     uint useEventSink       :1;
     uint useMetaObject      :1;
     uint useClassInfo       :1;
@@ -1008,10 +1002,9 @@ bool QAxBase::setControl(const QString &c)
                 search = controls.value(c + QLatin1String("/CLSID/Default")).toString();
                 if (search.isEmpty()) {
                     controls.beginGroup(QLatin1String("/CLSID"));
-                    QStringList clsids = controls.childGroups();
-                    for (QStringList::Iterator it = clsids.begin(); it != clsids.end(); ++it) {
-                        QString clsid = *it;
-                        QString name = controls.value(clsid + QLatin1String("/Default")).toString();
+                    const QStringList clsids = controls.childGroups();
+                    foreach (const QString &clsid, clsids) {
+                        const QString name = controls.value(clsid + QLatin1String("/Default")).toString();
                         if (name == c) {
                             search = clsid;
                             break;
@@ -1110,10 +1103,7 @@ void QAxBase::disableClassInfo()
 */
 void QAxBase::clear()
 {
-    QHash<QUuid, QAxEventSink*>::Iterator it =  d->eventSink.begin();
-    while (it != d->eventSink.end()) {
-        QAxEventSink *eventSink = it.value();
-        ++it;
+    foreach (QAxEventSink *eventSink, d->eventSink) {
         if (eventSink) {
             eventSink->unadvise();
             eventSink->Release();
@@ -1526,6 +1516,10 @@ public:
     }
 
 private:
+    typedef QPair<QByteArray, int> ByteArrayIntPair;
+    typedef QList<ByteArrayIntPair> ByteArrayIntPairList;
+    typedef QMap<QByteArray, ByteArrayIntPairList>::ConstIterator EnumListMapConstIterator;
+
     void init();
 
 
@@ -1690,10 +1684,11 @@ private:
         return property_list.value(name).type;
     }
 
-    QMap<QByteArray, QList<QPair<QByteArray, int> > > enum_list;
+    QMap<QByteArray, ByteArrayIntPairList> enum_list;
+
     inline void addEnumValue(const QByteArray &enumname, const QByteArray &key, int value)
     {
-        enum_list[enumname].append(QPair<QByteArray, int>(key, value));
+        enum_list[enumname].append(ByteArrayIntPair(key, value));
     }
 
     inline bool hasEnum(const QByteArray &enumname)
@@ -2166,11 +2161,10 @@ void MetaObjectGenerator::readClassInfo()
         if (!tlid.isEmpty()) {
             controls.beginGroup(QLatin1String("/Classes/TypeLib/") + tlid);
             QStringList versions = controls.childGroups();
-            QStringList::Iterator vit = versions.begin();
-            while (tlfile.isEmpty() && vit != versions.end()) {
-                QString version = *vit;
-                ++vit;
+            foreach (const QString &version, versions) {
                 tlfile = controls.value(QLatin1Char('/') + version + QLatin1String("/0/win32/.")).toString();
+                if (!tlfile.isEmpty())
+                    break;
             }
             controls.endGroup();
         } else {
@@ -2962,11 +2956,7 @@ QMetaObject *MetaObjectGenerator::tryCache()
             IConnectionPointContainer *cpoints = 0;
             d->ptr->QueryInterface(IID_IConnectionPointContainer, (void**)&cpoints);
             if (cpoints) {
-                QList<QUuid>::ConstIterator it = d->metaobj->connectionInterfaces.begin();
-                while (it != d->metaobj->connectionInterfaces.end()) {
-                    QUuid iid = *it;
-                    ++it;
-
+                foreach (const QUuid &iid, d->metaobj->connectionInterfaces) {
                     IConnectionPoint *cpoint = 0;
                     cpoints->FindConnectionPoint(iid, &cpoint);
                     if (cpoint) {
@@ -3052,10 +3042,9 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     int_data_size += (signal_list.count() + slot_list.count()) * 5 + paramsDataSize;
     int_data_size += property_list.count() * 3;
     int_data_size += enum_list.count() * 4;
-    for (QMap<QByteArray, QList<QPair<QByteArray, int> > >::ConstIterator it = enum_list.begin();
-    it != enum_list.end(); ++it) {
-        int_data_size += (*it).count() * 2;
-    }
+    const EnumListMapConstIterator ecend = enum_list.end();
+    for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it)
+        int_data_size += it.value().count() * 2;
     ++int_data_size; // eod
 
     uint *int_data = new uint[int_data_size];
@@ -3084,7 +3073,9 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     uint offset = header->classInfoData;
 
     // each class info in form key\0value\0
-    for (QMap<QByteArray, QByteArray>::ConstIterator it = classinfo_list.begin(); it != classinfo_list.end(); ++it) {
+    typedef QMap<QByteArray, QByteArray>::ConstIterator ClassInfoConstIterator;
+    const ClassInfoConstIterator cend = classinfo_list.end();
+    for (ClassInfoConstIterator it = classinfo_list.begin(); it != cend; ++it) {
         QByteArray key(it.key());
         QByteArray value(it.value());
         int_data[offset++] = strings.enter(key);
@@ -3131,7 +3122,9 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     Q_ASSERT(offset == uint(header->propertyData));
 
     // each property in form name\0type\0
-    for (QMap<QByteArray, Property>::ConstIterator it = property_list.begin(); it != property_list.end(); ++it) {
+    typedef QMap<QByteArray, Property>::ConstIterator PropertyMapConstIterator;
+    const PropertyMapConstIterator pcend = property_list.end();
+    for (PropertyMapConstIterator it = property_list.begin(); it != pcend; ++it) {
         QByteArray name(it.key());
         QByteArray type(it.value().type);
         Q_ASSERT(!type.isEmpty());
@@ -3148,7 +3141,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
 
     int value_offset = offset + enum_list.count() * 4;
     // each enum in form name\0
-    for (QMap<QByteArray, QList<QPair<QByteArray, int> > >::ConstIterator it = enum_list.begin(); it != enum_list.end(); ++it) {
+    for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it) {
         QByteArray name(it.key());
         int flags = 0x0; // 0x1 for flag?
         int count = it.value().count();
@@ -3162,8 +3155,9 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     Q_ASSERT(offset == uint(header->enumeratorData + enum_list.count() * 4));
 
     // each enum value in form key\0
-    for (QMap<QByteArray, QList<QPair<QByteArray, int> > >::ConstIterator it = enum_list.begin(); it != enum_list.end(); ++it) {
-        for (QList<QPair<QByteArray,int> >::ConstIterator it2 = it.value().begin(); it2 != it.value().end(); ++it2) {
+    for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it) {
+        const ByteArrayIntPairList::ConstIterator vcend = it.value().end();
+        for (ByteArrayIntPairList::ConstIterator it2 = it.value().begin(); it2 != vcend; ++it2) {
             QByteArray key((*it2).first);
             int value = (*it2).second;
             int_data[offset++] = strings.enter(key);
@@ -3190,8 +3184,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     if (!cacheKey.isEmpty()) {
         mo_cache.insert(cacheKey, d->metaobj);
         d->cachedMetaObject = true;
-        for (QHash<QUuid, QAxEventSink*>::Iterator it = d->eventSink.begin(); it != d->eventSink.end(); ++it) {
-            QAxEventSink *sink = it.value();
+         foreach (QAxEventSink *sink, d->eventSink) {
             if (sink) {
                 QUuid ciid = sink->connectionInterface();
 

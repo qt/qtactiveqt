@@ -218,20 +218,20 @@ public:
             factory = new QAxClass<Class>(typeLibID().toString(), appID().toString()); \
             qRegisterMetaType<Class*>(#Class"*"); \
             keys = factory->featureList(); \
-            for (it = keys.begin(); it != keys.end(); ++it) { \
-                factoryKeys += *it; \
-                factories.insert(*it, factory); \
-                creatable.insert(*it, true); \
+            foreach (const QString &key, keys) { \
+                factoryKeys += key; \
+                factories.insert(key, factory); \
+                creatable.insert(key, true); \
             }\
 
 #define QAXTYPE(Class) \
             factory = new QAxClass<Class>(typeLibID().toString(), appID().toString()); \
             qRegisterMetaType<Class*>(#Class"*"); \
             keys = factory->featureList(); \
-            for (it = keys.begin(); it != keys.end(); ++it) { \
-                factoryKeys += *it; \
-                factories.insert(*it, factory); \
-                creatable.insert(*it, false); \
+            foreach (const QString &key, keys) { \
+                factoryKeys += key; \
+                factories.insert(key, factory); \
+                creatable.insert(key, false); \
             }\
 
 #define QAXFACTORY_END() \

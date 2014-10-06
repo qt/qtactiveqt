@@ -128,17 +128,18 @@ bool qax_startServer(QAxFactory::ServerType type)
         return true;
 
     const QStringList keys = qAxFactory()->featureList();
-    if (!keys.count())
+    const int keyCount = keys.count();
+    if (!keyCount)
         return false;
 
     if (!qAxFactory()->isService())
         StartMonitor();
 
-    classRegistration = new DWORD[keys.count()];
+    classRegistration = new DWORD[keyCount];
     int object = 0;
-    for (QStringList::ConstIterator key = keys.begin(); key != keys.end(); ++key, ++object) {
+    for (object = 0; object < keyCount; ++object) {
         IUnknown* p = 0;
-        CLSID clsid = qAxFactory()->classID(*key);
+        CLSID clsid = qAxFactory()->classID(keys.at(object));
 
         // Create a QClassFactory (implemented in qaxserverbase.cpp)
         HRESULT hRes = GetClassObject(clsid, IID_IClassFactory, (void**)&p);
@@ -164,9 +165,8 @@ bool qax_stopServer()
 
     qAxIsServer = false;
 
-    const QStringList keys = qAxFactory()->featureList();
-    int object = 0;
-    for (QStringList::ConstIterator key = keys.begin(); key != keys.end(); ++key, ++object)
+    const int keyCount = qAxFactory()->featureList().size();
+    for (int object = 0; object < keyCount; ++object)
         CoRevokeClassObject(classRegistration[object]);
 
     delete []classRegistration;

@@ -389,6 +389,8 @@ private:
         int id;
         QMenu *subMenu;
     };
+    typedef QMap<QAction*, OleMenuItem> MenuItemMap;
+
     QMenu *generatePopup(HMENU subMenu, QWidget *parent);
 
     IOleObject *m_spOleObject;
@@ -412,7 +414,7 @@ private:
     QAxWidget *widget;
     QAxHostWidget *host;
     QPointer<QMenuBar> menuBar;
-    QMap<QAction*,OleMenuItem> menuItemMap;
+    MenuItemMap menuItemMap;
 };
 
 static const ushort mouseTbl[] = {
@@ -1345,11 +1347,9 @@ HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND
         }
     } else if (menuBar) {
         m_menuOwner = 0;
-        QMap<QAction*, OleMenuItem>::Iterator it;
-        for (it = menuItemMap.begin(); it != menuItemMap.end(); ++it) {
-            QAction *action = it.key();
-            delete action;
-        }
+        const MenuItemMap::Iterator mend = menuItemMap.end();
+        for (MenuItemMap::Iterator it = menuItemMap.begin(); it != mend; ++it)
+            delete it.key();
         menuItemMap.clear();
     }
 
@@ -1378,11 +1378,10 @@ int QAxClientSite::qt_metacall(QMetaObject::Call call, int isignal, void **argv)
 HRESULT WINAPI QAxClientSite::RemoveMenus(HMENU /*hmenuShared*/)
 {
     AX_DEBUG(QAxClientSite::RemoveMenus);
-    QMap<QAction*, OleMenuItem>::Iterator it;
-    for (it = menuItemMap.begin(); it != menuItemMap.end(); ++it) {
-        QAction *action = it.key();
-        action->setVisible(false);
-        delete action;
+    const MenuItemMap::Iterator mend = menuItemMap.end();
+    for (MenuItemMap::Iterator it = menuItemMap.begin(); it != mend; ++it) {
+        it.key()->setVisible(false);
+        delete it.key();
     }
     menuItemMap.clear();
     return S_OK;

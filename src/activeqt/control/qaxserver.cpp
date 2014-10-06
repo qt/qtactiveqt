@@ -262,13 +262,12 @@ HRESULT UpdateRegistry(BOOL bRegister)
         }
 
         QStringList keys = qAxFactory()->featureList();
-        for (QStringList::Iterator key = keys.begin(); key != keys.end(); ++key) {
-            QString className = *key;
-            QObject *object = qAxFactory()->createObject(className);
-            const QMetaObject *mo = qAxFactory()->metaObject(className);
-            const QString classId = qAxFactory()->classID(className).toString().toUpper();
+        foreach (const QString &classNameIn, keys) {
+            QObject *object = qAxFactory()->createObject(classNameIn);
+            const QMetaObject *mo = qAxFactory()->metaObject(classNameIn);
+            const QString classId = qAxFactory()->classID(classNameIn).toString().toUpper();
 
-            className = qax_clean_type(className, mo);
+            const QString className = qax_clean_type(classNameIn, mo);
 
             if (object) { // don't register subobject classes
                 QString classVersion = mo ? QString::fromLatin1(mo->classInfo(mo->indexOfClassInfo("Version")).value()) : QString();
@@ -348,7 +347,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
                 delete object;
             }
 
-            qAxFactory()->registerClass(*key, &settings);
+            qAxFactory()->registerClass(classNameIn, &settings);
         }
     } else {
         if (qAxOutProcServer) {
@@ -356,18 +355,17 @@ HRESULT UpdateRegistry(BOOL bRegister)
             settings.remove(QLatin1String("/AppID/") + module + QLatin1String(".EXE"));
         }
         QStringList keys = qAxFactory()->featureList();
-        for (QStringList::Iterator key = keys.begin(); key != keys.end(); ++key) {
-            QString className = *key;
-            const QMetaObject *mo = qAxFactory()->metaObject(className);
-            const QString classId = qAxFactory()->classID(className).toString().toUpper();
-            className = qax_clean_type(className, mo);
+        foreach (const QString &classNameIn, keys) {
+            const QMetaObject *mo = qAxFactory()->metaObject(classNameIn);
+            const QString classId = qAxFactory()->classID(classNameIn).toString().toUpper();
+            const QString className = qax_clean_type(classNameIn, mo);
 
             QString classVersion = mo ? QString::fromLatin1(mo->classInfo(mo->indexOfClassInfo("Version")).value()) : QString();
             if (classVersion.isNull())
                 classVersion = QLatin1String("1.0");
             const QString classMajorVersion = classVersion.left(classVersion.indexOf(QLatin1Char('.')));
 
-            qAxFactory()->unregisterClass(*key, &settings);
+            qAxFactory()->unregisterClass(classNameIn, &settings);
 
             settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion + QLatin1String("/CLSID/."));
             settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion + QLatin1String("/Insertable/."));
@@ -1188,12 +1186,11 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out << "\t/* Forward declaration of classes that might be used as parameters */" << endl << endl;
 
     int res = S_OK;
-    for (key = keys.begin(); key != keys.end(); ++key) {
-        QByteArray className = (*key).toLatin1();
-        const QMetaObject *mo = qAxFactory()->metaObject(QString::fromLatin1(className.constData()));
+    foreach (const QString &className, keys) {
+        const QMetaObject *mo = qAxFactory()->metaObject(className);
         // We have meta object information for this type. Forward declare it.
         if (mo) {
-            QByteArray cleanType = qax_clean_type(*key, mo).toLatin1();
+            QByteArray cleanType = qax_clean_type(className, mo).toLatin1();
             out << "\tcoclass " << cleanType << ';' << endl;
             subtypes.append(cleanType);
             if (!QMetaType::type(cleanType))
@@ -1206,15 +1203,14 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     }
     out << endl;
 
-    for (key = keys.begin(); key != keys.end(); ++key) {
-        QByteArray className = (*key).toLatin1();
-        const QMetaObject *mo = qAxFactory()->metaObject(QString::fromLatin1(className.constData()));
+    foreach (const QString &className, keys) {
+        const QMetaObject *mo = qAxFactory()->metaObject(className);
         // We have meta object information for this type. Define it.
         if (mo) {
-            QObject *o = qAxFactory()->createObject(QString::fromLatin1(className.constData()));
+            QObject *o = qAxFactory()->createObject(className);
             // It's not a control class, so it is actually a subtype. Define it.
             if (!o)
-                res = classIDL(0, mo, QString::fromLatin1(className), false, out);
+                res = classIDL(0, mo, className, false, out);
             delete o;
         }
     }
@@ -1223,19 +1219,18 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     if (res != S_OK)
         goto ErrorInClass;
 
-    for (key = keys.begin(); key != keys.end(); ++key) {
-        QByteArray className = (*key).toLatin1();
-        QObject *o = qAxFactory()->createObject(QString::fromLatin1(className.constData()));
+    foreach (const QString &className, keys) {
+        QObject *o = qAxFactory()->createObject(className);
         if (!o)
             continue;
         const QMetaObject *mo = o->metaObject();
         QAxBindable *bind = (QAxBindable*)o->qt_metacast("QAxBindable");
         bool isBindable =  bind != 0;
 
-        QByteArray cleanType = qax_clean_type(*key, mo).toLatin1();
+        const QByteArray cleanType = qax_clean_type(className, mo).toLatin1();
         subtypes.append(cleanType);
         subtypes.append(cleanType + '*');
-        res = classIDL(o, mo, QString::fromLatin1(className.constData()), isBindable, out);
+        res = classIDL(o, mo, className, isBindable, out);
         delete o;
         if (res != S_OK)
             break;

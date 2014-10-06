@@ -1246,9 +1246,8 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
         } else if (proptype == QVariant::StringList && var.type() == QVariant::List) {
             bool allStrings = true;
             QStringList strings;
-            const QList<QVariant> list(var.toList());
-            for (QList<QVariant>::ConstIterator it(list.begin()); it != list.end(); ++it) {
-                QVariant variant = *it;
+            const QVariantList list(var.toList());
+            foreach (const QVariant &variant, list) {
                 if (variant.canConvert(QVariant::String))
                     strings << variant.toString();
                 else

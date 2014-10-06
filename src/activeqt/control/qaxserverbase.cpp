@@ -620,12 +620,8 @@ public:
         connections = old.connections;
         that = old.that;
         iid = old.iid;
-        QList<CONNECTDATA>::Iterator it = connections.begin();
-        while (it != connections.end()) {
-            CONNECTDATA connection = *it;
-            ++it;
+        foreach (const CONNECTDATA &connection, connections)
             connection.pUnk->AddRef();
-        }
     }
     ~QAxConnection()
     {
@@ -832,9 +828,9 @@ public:
 
         // COM only knows the CLSID, but QAxFactory is class name based...
         QStringList keys = qAxFactory()->featureList();
-        for (QStringList::Iterator  key = keys.begin(); key != keys.end(); ++key) {
-            if (qAxFactory()->classID(*key) == clsid) {
-                className = *key;
+        foreach (const QString &key, keys) {
+            if (qAxFactory()->classID(key) == clsid) {
+                className = key;
                 break;
             }
         }
@@ -1113,9 +1109,9 @@ QAxServerBase::~QAxServerBase()
 
     revokeActiveObject();
 
-    for (QAxServerBase::ConnectionPointsIterator it = points.begin(); it != points.end(); ++it) {
-        if (it.value())
-            (*it)->Release();
+    foreach (IConnectionPoint *point, points) {
+        if (point)
+            point->Release();
     }
     delete aggregatedObject;
     aggregatedObject = 0;
@@ -1329,12 +1325,9 @@ bool QAxServerBase::internalCreate()
     // install an event filter for stock events
     if (isWidget) {
         qt.object->installEventFilter(this);
-        const QList<QWidget*> children = qt.object->findChildren<QWidget*>();
-        QList<QWidget*>::ConstIterator it = children.constBegin();
-        while (it != children.constEnd()) {
-            (*it)->installEventFilter(this);
-            ++it;
-        }
+        const QWidgetList children = qt.object->findChildren<QWidget*>();
+        foreach (QWidget *child, children)
+            child->installEventFilter(this);
     }
     return true;
 }

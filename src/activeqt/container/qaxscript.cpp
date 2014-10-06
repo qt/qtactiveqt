@@ -712,13 +712,8 @@ bool QAxScript::load(const QString &code, const QString &language)
         if (code.contains(QLatin1String("End Sub"), Qt::CaseInsensitive))
             lang = QLatin1String("VBScript");
 
-        QList<QAxEngineDescriptor>::ConstIterator it;
-        for (it = engines.begin(); it != engines.end(); ++it) {
-            QAxEngineDescriptor engine = *it;
-            if (engine.code.isEmpty())
-                continue;
-
-            if (code.contains(engine.code)) {
+        foreach (const QAxEngineDescriptor &engine, engines) {
+            if (!engine.code.isEmpty() && code.contains(engine.code)) {
                 lang = engine.name;
                 break;
             }
@@ -944,13 +939,9 @@ QAxScriptManager::~QAxScriptManager()
 QStringList QAxScriptManager::functions(QAxScript::FunctionFlags flags) const
 {
     QStringList functions;
-
-    QHash<QString, QAxScript*>::ConstIterator scriptIt;
-    for (scriptIt = d->scriptDict.begin(); scriptIt != d->scriptDict.end(); ++scriptIt) {
-        QAxScript *script = scriptIt.value();
-        functions += script->functions(flags);
-    }
-
+    functions.reserve(d->scriptDict.size());
+    foreach (const QAxScript *script, d->scriptDict)
+        functions.append(script->functions(flags));
     return functions;
 }
 
@@ -959,14 +950,7 @@ QStringList QAxScriptManager::functions(QAxScript::FunctionFlags flags) const
 */
 QStringList QAxScriptManager::scriptNames() const
 {
-    QStringList scripts;
-
-    QHash<QString, QAxScript*>::ConstIterator scriptIt;
-    for (scriptIt = d->scriptDict.begin(); scriptIt != d->scriptDict.end(); ++scriptIt) {
-        scripts << scriptIt.key();
-    }
-
-    return scripts;
+    return d->scriptDict.keys();
 }
 
 /*!
@@ -1072,13 +1056,8 @@ QAxScript *QAxScriptManager::load(const QString &file, const QString &name)
     if (file.endsWith(QLatin1String(".js"))) {
         language = QLatin1String("JScript");
     } else {
-        QList<QAxEngineDescriptor>::ConstIterator it;
-        for (it = engines.begin(); it != engines.end(); ++it) {
-            QAxEngineDescriptor engine = *it;
-            if (engine.extension.isEmpty())
-                continue;
-
-            if (file.endsWith(engine.extension)) {
+        foreach (const QAxEngineDescriptor &engine, engines) {
+            if (!engine.extension.isEmpty() && file.endsWith(engine.extension)) {
                 language = engine.name;
                 break;
             }
@@ -1200,14 +1179,12 @@ QString QAxScriptManager::scriptFileFilter()
     QString specialFiles = QLatin1String(";;VBScript Files (*.vbs *.dsm)"
         ";;JavaScript Files (*.js)");
 
-    QList<QAxEngineDescriptor>::ConstIterator it;
-    for (it = engines.begin(); it != engines.end(); ++it) {
-        QAxEngineDescriptor engine = *it;
-        if (engine.extension.isEmpty())
-            continue;
-
-        allFiles += QLatin1String(" *") + engine.extension;
-        specialFiles += QLatin1String(";;") + engine.name + QLatin1String(" Files (*") + engine.extension + QLatin1Char(')');
+    foreach (const QAxEngineDescriptor &engine, engines) {
+        if (!engine.extension.isEmpty()) {
+            allFiles += QLatin1String(" *") + engine.extension;
+            specialFiles += QLatin1String(";;") + engine.name
+                + QLatin1String(" Files (*") + engine.extension + QLatin1Char(')');
+        }
     }
     allFiles += QLatin1Char(')');
 
@@ -1238,10 +1215,7 @@ QAxScript *QAxScriptManager::scriptForFunction(const QString &function) const
 {
     // check full prototypes if included
     if (function.contains(QLatin1Char('('))) {
-        QHash<QString, QAxScript*>::ConstIterator scriptIt;
-        for (scriptIt = d->scriptDict.begin(); scriptIt != d->scriptDict.end(); ++scriptIt) {
-            QAxScript *script = scriptIt.value();
-
+        foreach (QAxScript *script, d->scriptDict) {
             if (script->functions(QAxScript::FunctionSignatures).contains(function))
                 return script;
         }
@@ -1250,10 +1224,7 @@ QAxScript *QAxScriptManager::scriptForFunction(const QString &function) const
     QString funcName = function;
     funcName = funcName.left(funcName.indexOf(QLatin1Char('(')));
     // second try, checking only names, not prototypes
-    QHash<QString, QAxScript*>::ConstIterator scriptIt;
-    for (scriptIt = d->scriptDict.begin(); scriptIt != d->scriptDict.end(); ++scriptIt) {
-        QAxScript *script = scriptIt.value();
-
+    foreach (QAxScript *script, d->scriptDict) {
         if (script->functions(QAxScript::FunctionNames).contains(funcName))
             return script;
     }
