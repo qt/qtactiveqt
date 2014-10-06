@@ -403,20 +403,15 @@ void MainWindow::logSignal(const QString &signal, int argc, void *argv)
     if (!container)
         return;
 
-    QString paramlist;
+    QString paramlist = QLatin1String(" - {");
     VARIANT *params = (VARIANT*)argv;
     for (int a = argc-1; a >= 0; --a) {
-        if (a == argc-1)
-            paramlist = QLatin1String(" - {");
-        QVariant qvar = VARIANTToQVariant(params[a], 0);
-        paramlist += QLatin1String(" ") + qvar.toString();
-        if (a > 0)
-            paramlist += QLatin1String(",");
-        else
-            paramlist += QLatin1String(" ");
+        paramlist += QLatin1Char(' ');
+        paramlist += VARIANTToQVariant(params[a], 0).toString();
+        paramlist += a > 0 ? QLatin1Char(',') : QLatin1Char(' ');
     }
     if (argc)
-        paramlist += QLatin1String("}");
+        paramlist += QLatin1Char('}');
     logSignals->append(container->windowTitle() + QLatin1String(": ") + signal + paramlist);
 }
 
@@ -444,12 +439,14 @@ void MainWindow::logMacro(int code, const QString &description, int sourcePositi
      * that it can be translated in a sane way. */
     QString message = tr("Script: ");
     if (code)
-        message += QString::number(code) + QLatin1String(" ");
-    message += QLatin1String("'") + description + QLatin1String("'");
+        message += QString::number(code) + QLatin1Char(' ');
+
+    const QChar singleQuote = QLatin1Char('\'');
+    message += singleQuote + description + singleQuote;
     if (sourcePosition)
         message += tr(" at position ") + QString::number(sourcePosition);
     if (!sourceText.isEmpty())
-        message += QLatin1String(" '") + sourceText + QLatin1String("'");
+        message += QLatin1String(" '") + sourceText + singleQuote;
 
     logMacros->append(message);
 }

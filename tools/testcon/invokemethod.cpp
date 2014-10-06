@@ -101,9 +101,8 @@ void InvokeMethod::on_buttonInvoke_clicked()
         parameter->setText(2, vars[v++].toString());
     }
 
-    QString resString = result.toString();
-    QString resType = QString::fromLatin1(result.typeName());
-    editReturn->setText(resType + QLatin1String(" ") + resString);
+    editReturn->setText(QString::fromLatin1(result.typeName())
+                        + QLatin1Char(' ') + result.toString());
 }
 
 void InvokeMethod::on_comboMethods_activated(const QString &method)
