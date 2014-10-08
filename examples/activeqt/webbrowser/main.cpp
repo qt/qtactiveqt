@@ -45,6 +45,8 @@
 #include <QLabel>
 #include <QStatusBar>
 #include <QMainWindow>
+#include <QDesktopWidget>
+#include <QVersionNumber>
 #include <QAbstractEventDispatcher>
 #include <QSignalMapper>
 #include <QVariant>
@@ -57,8 +59,10 @@
 #include "ui_mainwindow.h"
 #endif
 
-static const char qtProjectUrl[] = "qt-project.org";
+static const char qtUrl[] = "qt.io";
 static const char iWebBrowser2DocumentationUrl[] = "http://msdn.microsoft.com/en-us/library/aa752127%28v=vs.85%29.aspx";
+static const char versionKey[] = "Version";
+static const char geometryKey[] = "Geometry";
 
 struct Location {
     Location(const QString &t = QString(), const QString &a = QString()) : title(t), address(a) {}
@@ -72,7 +76,7 @@ Q_DECLARE_METATYPE(Location)
 static QList<Location> defaultBookmarks()
 {
     QList<Location> result;
-    result.append(Location(QStringLiteral("Qt Project"), QLatin1String(qtProjectUrl)));
+    result.append(Location(QStringLiteral("Qt"), QLatin1String(qtUrl)));
     result.append(Location(QStringLiteral("Digia"), QStringLiteral("http://qt.digia.com/")));
     result.append(Location(QStringLiteral("IWebBrowser2 MSDN Documentation"), QLatin1String(iWebBrowser2DocumentationUrl)));
     return result;
@@ -186,8 +190,16 @@ MainWindow::MainWindow()
 
     QSettings settings(QSettings::IniFormat, QSettings::UserScope,
                        QCoreApplication::organizationName(), QCoreApplication::applicationName());
+    const QByteArray restoredGeometry = settings.value(QLatin1String(geometryKey)).toByteArray();
+    if (restoredGeometry.isEmpty() || !restoreGeometry(restoredGeometry)) {
+        const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
+        const QSize size = (availableGeometry.size() * 4) / 5;
+        resize(size);
+        move(availableGeometry.center() - QPoint(size.width(), size.height()) / 2);
+    }
+    QVersionNumber restoredVersion = QVersionNumber::fromString(settings.value(QLatin1String(versionKey)).toString());
     QList<Location> bookmarks = readBookMarks(settings);
-    if (bookmarks.isEmpty())
+    if (bookmarks.isEmpty() || restoredVersion.isNull())
         bookmarks = defaultBookmarks();
     foreach (const Location &bookmark, bookmarks)
         addBookmark(bookmark);
@@ -200,6 +212,8 @@ MainWindow::~MainWindow()
     QSettings settings(QSettings::IniFormat, QSettings::UserScope,
                        QCoreApplication::organizationName(), QCoreApplication::applicationName());
     saveBookMarks(bookmarks(), settings);
+    settings.setValue(QLatin1String(versionKey), QLatin1String(QT_VERSION_STR));
+    settings.setValue(QLatin1String(geometryKey), saveGeometry());
 }
 
 QAction *MainWindow::addLocation(const Location &location, QMenu *menu)
@@ -334,7 +348,7 @@ int main(int argc, char ** argv)
     MainWindow w;
     const QStringList arguments = QCoreApplication::arguments();
     const QString url = arguments.size() > 1 ?
-        arguments.at(1) : QString::fromLatin1(qtProjectUrl);
+        arguments.at(1) : QString::fromLatin1(qtUrl);
     w.navigate(url);
 #if defined(Q_OS_WINCE)
     w.showMaximized();
