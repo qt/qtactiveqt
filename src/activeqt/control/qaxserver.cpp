@@ -121,18 +121,18 @@ QString qAxInit()
     if (LoadTypeLibEx((wchar_t*)libFile.utf16(), REGKIND_NONE, &qAxTypeLibrary) == S_OK)
         return libFile;
 
-    int lastDot = libFile.lastIndexOf(QLatin1Char('.'));
-    libFile = libFile.left(lastDot) + QLatin1String(".tlb");
+    const int lastDot = libFile.lastIndexOf(QLatin1Char('.'));
+    libFile.truncate(lastDot);
+    libFile += QLatin1String(".tlb");
     if (LoadTypeLibEx((wchar_t*)libFile.utf16(), REGKIND_NONE, &qAxTypeLibrary) == S_OK)
         return libFile;
 
-    lastDot = libFile.lastIndexOf(QLatin1Char('.'));
-    libFile = libFile.left(lastDot) + QLatin1String(".olb");
+    libFile.truncate(lastDot);
+    libFile += QLatin1String(".olb");
     if (LoadTypeLibEx((wchar_t*)libFile.utf16(), REGKIND_NONE, &qAxTypeLibrary) == S_OK)
         return libFile;
 
-    libFile = QString();
-    return libFile;
+    return QString();
 }
 
 void qAxCleanup()
@@ -210,7 +210,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
     QString file = QString::fromWCharArray(qAxModuleFilename);
     QString path = file.left(file.lastIndexOf(QLatin1Char('\\'))+1);
     QString module = file.right(file.length() - path.length());
-    module = module.left(module.lastIndexOf(QLatin1Char('.')));
+    module.truncate(module.lastIndexOf(QLatin1Char('.')));
 
     const QString appId = qAxFactory()->appID().toString().toUpper();
     const QString libId = qAxFactory()->typeLibID().toString().toUpper();
@@ -326,7 +326,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
                         QString extension;
                         while (mime.contains(QLatin1Char(':'))) {
                             extension = mime.mid(mime.lastIndexOf(QLatin1Char(':')) + 1);
-                            mime = mime.left(mime.length() - extension.length() - 1);
+                            mime.chop(extension.length() - 1);
                             // Prepend '.' before extension, if required.
                             extension = extension.trimmed();
                             if (extension[0] != QLatin1Char('.'))
@@ -403,7 +403,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
                     QString extension;
                     while (mime.contains(QLatin1Char(':'))) {
                         extension = mime.mid(mime.lastIndexOf(QLatin1Char(':')) + 1);
-                        mime = mime.left(mime.length() - extension.length() - 1);
+                        mime.chop(extension.length() - 1);
                         // Prepend '.' before extension, if required.
                         extension = extension.trimmed();
                         if (extension[0] != QLatin1Char('.'))
@@ -1072,7 +1072,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     file.remove();
 
     QString filebase = QString::fromWCharArray(qAxModuleFilename);
-    filebase = filebase.left(filebase.lastIndexOf(QLatin1Char('.')));
+    filebase.truncate(filebase.lastIndexOf(QLatin1Char('.')));
 
     QString appID = qAxFactory()->appID().toString().toUpper();
     if (QUuid(appID).isNull())
@@ -1092,7 +1092,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     QString version(ver.unicode(), ver.length());
     while (version.count(QLatin1Char('.')) > 1) {
         int lastdot = version.lastIndexOf(QLatin1Char('.'));
-        version = version.left(lastdot) + version.right(version.length() - lastdot - 1);
+        version.remove(lastdot, 1);
     }
     if (version.isEmpty())
         version = QLatin1String("1.0");

@@ -1242,7 +1242,7 @@ QMenu *QAxClientSite::generatePopup(HMENU subMenu, QWidget *parent)
                 QString keyString = text.right(text.length() - lastSep);
                 accel = keyString;
                 if (!accel.isEmpty())
-                    text = text.left(lastSep);
+                    text.truncate(lastSep);
             }
 
             if (popupMenu)

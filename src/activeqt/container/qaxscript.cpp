@@ -1222,7 +1222,7 @@ QAxScript *QAxScriptManager::scriptForFunction(const QString &function) const
     }
 
     QString funcName = function;
-    funcName = funcName.left(funcName.indexOf(QLatin1Char('(')));
+    funcName.truncate(funcName.indexOf(QLatin1Char('(')));
     // second try, checking only names, not prototypes
     foreach (QAxScript *script, d->scriptDict) {
         if (script->functions(QAxScript::FunctionNames).contains(funcName))

@@ -278,7 +278,8 @@ bool QAxFactory::validateLicenseKey(const QString &key, const QString &licenseKe
     if (licenseKey.isEmpty()) {
         QString licFile(QString::fromWCharArray(qAxModuleFilename));
         int lastDot = licFile.lastIndexOf(QLatin1Char('.'));
-        licFile = licFile.left(lastDot) + QLatin1String(".lic");
+        licFile.truncate(lastDot);
+        licFile += QLatin1String(".lic");
         if (QFile::exists(licFile))
             return true;
         return false;

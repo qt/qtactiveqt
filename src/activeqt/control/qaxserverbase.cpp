@@ -2343,7 +2343,8 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                     if (index == -1) {
                         QRegExp regexp(QLatin1String("_([0-9])\\("));
                         if (regexp.lastIndexIn(QString::fromLatin1(name.constData())) != -1) {
-                            name = name.left(name.length() - regexp.cap(0).length()) + '(';
+                            name.chop(regexp.cap(0).length());
+                            name += '(';
                             int overload = regexp.cap(1).toInt() + 1;
 
                             for (int s = 0; s < qt.object->metaObject()->methodCount(); ++s) {
@@ -2602,11 +2603,11 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 int br = context.indexOf(QLatin1Char('['));
                 if (br != -1) {
                     context = context.mid(br+1);
-                    context = context.left(context.length() - 1);
+                    context.chop(1);
                     contextID = context.toInt();
 
                     context = exception->context;
-                    context = context.left(br-1);
+                    context.truncate(br-1);
                 }
                 pexcepinfo->bstrHelpFile = QStringToBSTR(context);
                 pexcepinfo->dwHelpContext = contextID;
@@ -2706,7 +2707,7 @@ HRESULT WINAPI QAxServerBase::Load(IStream *pStm)
     QBuffer qtbuffer(&qtarray);
     QByteArray mimeType = mo->classInfo(mo->indexOfClassInfo("MIME")).value();
     if (!mimeType.isEmpty()) {
-        mimeType = mimeType.left(mimeType.indexOf(':')); // first type
+        mimeType.truncate(mimeType.indexOf(':')); // first type
         QAxBindable *axb = (QAxBindable*)qt.object->qt_metacast("QAxBindable");
         if (axb && axb->readData(&qtbuffer, QString::fromLatin1(mimeType)))
             return S_OK;
@@ -3024,13 +3025,13 @@ HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD /* mode */)
             continue;
         }
 
-        mimeType = mime.left(mimeType.indexOf(QLatin1Char(':'))); // first type
+        mimeType.truncate(mimeType.indexOf(QLatin1Char(':'))); // first type
         if (mimeType.isEmpty()) {
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
             continue;
         }
         QString mimeExtension = mime.mid(mimeType.length() + 1);
-        mimeExtension = mimeExtension.left(mimeExtension.indexOf(QLatin1Char(':')));
+        mimeExtension.truncate(mimeExtension.indexOf(QLatin1Char(':')));
         if (mimeExtension != fileExtension)
             continue;
 
@@ -3068,13 +3069,13 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
             continue;
         }
-        mimeType = mime.left(mimeType.indexOf(QLatin1Char(':'))); // first type
+        mimeType.truncate(mimeType.indexOf(QLatin1Char(':'))); // first type
         if (mimeType.isEmpty()) {
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
             continue;
         }
         QString mimeExtension = mime.mid(mimeType.length() + 1);
-        mimeExtension = mimeExtension.left(mimeExtension.indexOf(QLatin1Char(':')));
+        mimeExtension.truncate(mimeExtension.indexOf(QLatin1Char(':')));
         if (mimeExtension != fileExtension)
             continue;
         if (axb->writeData(&file)) {

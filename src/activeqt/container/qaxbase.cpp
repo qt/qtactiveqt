@@ -1410,7 +1410,7 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
         at = user.indexOf(QChar::fromLatin1(':'));
         if (at != -1) {
             passwd = user.mid(at+1);
-            user = user.left(at);
+            user.truncate(at);
         }
         at = user.indexOf(QChar::fromLatin1('/'));
         if (at != -1) {
@@ -1422,7 +1422,7 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
     at = clsid.lastIndexOf(QLatin1String("}:"));
     if (at != -1) {
         key = clsid.mid(at+2);
-        clsid = clsid.left(at);
+        clsid.truncate(at);
     }
 
     d->ctrl = server + QChar::fromLatin1('/') + clsid;
@@ -2175,11 +2175,13 @@ void MetaObjectGenerator::readClassInfo()
         if (!tlfile.isEmpty()) {
             LoadTypeLib((OLECHAR*)tlfile.utf16(), &typelib);
             if (!typelib) {
-                tlfile = tlfile.left(tlfile.lastIndexOf(QLatin1Char('.'))) + QLatin1String(".tlb");
+                tlfile.truncate(tlfile.lastIndexOf(QLatin1Char('.')));
+                tlfile += QLatin1String(".tlb");
                 LoadTypeLib((OLECHAR*)tlfile.utf16(), &typelib);
             }
             if (!typelib) {
-                tlfile = tlfile.left(tlfile.lastIndexOf(QLatin1Char('.'))) + QLatin1String(".olb");
+                tlfile.truncate(tlfile.lastIndexOf(QLatin1Char('.')));
+                tlfile.append(QLatin1String(".olb"));
                 LoadTypeLib((OLECHAR*)tlfile.utf16(), &typelib);
             }
         }
@@ -3637,7 +3639,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
 
     if (dispid == DISPID_UNKNOWN && slotname.toLower().startsWith("set")) {
         // see if we are calling a property set function as a slot
-        slotname = slotname.right(slotname.length() - 3);
+        slotname.remove(0, slotname.length() - 3);
         dispid = d->metaobj->dispIDofName(slotname, disp);
         isProperty = true;
     }

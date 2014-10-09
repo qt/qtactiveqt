@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     QByteArray subobject = object;
     int index = subobject.indexOf('/');
     if (index != -1)
-        subobject = subobject.left(index);
+        subobject.truncate(index);
 
     QAxObject topobject(QString::fromLatin1(subobject.constData()));
 

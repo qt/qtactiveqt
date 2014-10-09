@@ -1155,8 +1155,8 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
                     if (refTypeLib.contains(' ')) {
                         refType = refTypeLib.left(refTypeLib.indexOf(' ')) + ' ' + refType;
                     }
-                    refTypeLib = refTypeLib.left(refTypeLib.indexOf("::"));
-                    refTypeLib = refTypeLib.mid(refTypeLib.lastIndexOf(' ') + 1);
+                    refTypeLib.truncate(refTypeLib.indexOf("::"));
+                    refTypeLib.remove(0, refTypeLib.lastIndexOf(' ') + 1);
                     namespaces[refTypeLib].append(refType);
                 } else {
                     namespaces[libName.toLatin1()].append(refType);
