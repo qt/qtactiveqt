@@ -1912,20 +1912,20 @@ QByteArray MetaObjectGenerator::usertypeToString(const TYPEDESC &tdesc, ITypeInf
                             userTypeName = "IDispatch";
                         } else {
                             if (typeLibName != current_typelib)
-                                userTypeName = typeLibName + "::" + userTypeName;
+                                userTypeName.prepend(typeLibName + "::");
                             if (!qax_qualified_usertypes.contains(userTypeName))
                                 qax_qualified_usertypes << userTypeName;
                         }
                         break;
                     case TKIND_ENUM:
                         if (typeLibName != current_typelib)
-                            userTypeName = typeLibName + "::" + userTypeName;
+                            userTypeName.prepend(typeLibName + "::");
                         if (!qax_qualified_usertypes.contains("enum " + userTypeName))
                             qax_qualified_usertypes << "enum " + userTypeName;
                         break;
                     case TKIND_INTERFACE:
                         if (typeLibName != current_typelib)
-                            userTypeName = typeLibName + "::" + userTypeName;
+                            userTypeName.prepend(typeLibName + "::");
                         if (!qax_qualified_usertypes.contains(userTypeName))
                             qax_qualified_usertypes << userTypeName;
                         break;

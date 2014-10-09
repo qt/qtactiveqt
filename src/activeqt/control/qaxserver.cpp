@@ -329,8 +329,8 @@ HRESULT UpdateRegistry(BOOL bRegister)
                             mime.chop(extension.length() - 1);
                             // Prepend '.' before extension, if required.
                             extension = extension.trimmed();
-                            if (extension[0] != QLatin1Char('.'))
-                                extension = QLatin1Char('.') + extension;
+                            if (!extension.startsWith(QLatin1Char('.')))
+                                extension.prepend(QLatin1Char('.'));
                         }
 
                         if (!extension.isEmpty()) {

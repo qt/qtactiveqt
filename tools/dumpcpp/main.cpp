@@ -287,7 +287,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         if (!propertyType.contains("::") &&
             (qax_qualified_usertypes.contains(simplePropType) || qax_qualified_usertypes.contains("enum "+ simplePropType))
            ) {
-            propertyType = nameSpace + "::" + propertyType;
+            propertyType.prepend(nameSpace + "::");
             foreignNamespace = false;
         }
 
@@ -402,7 +402,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         QByteArray simpleSlotType = slotType;
         simpleSlotType.replace('*', "");
         if (!slotType.contains("::") && qax_qualified_usertypes.contains(simpleSlotType))
-            slotType = nameSpace + "::" + slotType;
+            slotType.prepend(nameSpace + "::");
 
 
         QByteArray slotNamedSignature;
@@ -425,7 +425,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
             for (int i = 0; i < signatureSplit.count(); ++i) {
                 QByteArray parameterType = signatureSplit.at(i);
                 if (!parameterType.contains("::") && namespaceForType.contains(parameterType))
-                    parameterType = namespaceForType.value(parameterType) + "::" + parameterType;
+                    parameterType.prepend(namespaceForType.value(parameterType) + "::");
 
                 slotNamedSignature += constRefify(parameterType);
                 slotNamedSignature += " ";
@@ -1124,10 +1124,10 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
                         SysFreeString(bstr);
                         switch (typekind) {
                         case TKIND_RECORD:
-                            className = "struct " + className;
+                            className.prepend("struct ");
                             break;
                         case TKIND_ENUM:
-                            className = "enum " + className;
+                            className.prepend("enum ");
                             break;
                         default:
                             break;
