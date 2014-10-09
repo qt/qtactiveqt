@@ -104,7 +104,7 @@
     to run the project. This is a bug in the original version of
     Visual Studio.NET, and is fixed in the 2003 edition.
 
-    \section1 Walkthrough: .NET interop with MC++ and IJW
+    \section1 Walkthrough: .NET Interop with MC++ and IJW
 
     Normal C++ classes and functions can be used from managed .NET code by
     providing thin wrapper classes written in MC++. The wrapper class will
