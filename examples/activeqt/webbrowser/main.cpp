@@ -46,7 +46,6 @@
 #include <QStatusBar>
 #include <QMainWindow>
 #include <QDesktopWidget>
-#include <QVersionNumber>
 #include <QAbstractEventDispatcher>
 #include <QSignalMapper>
 #include <QVariant>
@@ -192,9 +191,9 @@ MainWindow::MainWindow()
         resize(size);
         move(availableGeometry.center() - QPoint(size.width(), size.height()) / 2);
     }
-    QVersionNumber restoredVersion = QVersionNumber::fromString(settings.value(QLatin1String(versionKey)).toString());
+    const QString restoredVersion = settings.value(QLatin1String(versionKey)).toString();
     QList<Location> bookmarks = readBookMarks(settings);
-    if (bookmarks.isEmpty() || restoredVersion.isNull())
+    if (bookmarks.isEmpty() || restoredVersion.isEmpty())
         bookmarks = defaultBookmarks();
     foreach (const Location &bookmark, bookmarks)
         addBookmark(bookmark);
