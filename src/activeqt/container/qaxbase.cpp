@@ -1693,7 +1693,7 @@ private:
         }
         if (flags & Writable)
             flags |= Stored;
-        prop.flags = flags;
+        prop.flags |= flags;
     }
 
     inline bool hasProperty(const QByteArray &name)
