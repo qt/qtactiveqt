@@ -696,6 +696,7 @@ public:
         const int count = connections.count();
         for (int i = 0; i < count; ++i) {
             if (connections.at(i).dwCookie == dwCookie) {
+                connections.at(i).pUnk->Release();
                 connections.removeAt(i);
                 if (current >= i && current != 0)
                     --current;
