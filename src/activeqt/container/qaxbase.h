@@ -137,6 +137,11 @@ protected:
     void initializeFrom(QAxBase *that);
     void connectNotify();
     long indexOfVerb(const QString &verb) const;
+    QVariant dynamicCall(const char *name, QList<QVariant> &vars, unsigned flags);
+    static QVariantList argumentsToList(const QVariant &var1, const QVariant &var2,
+                                        const QVariant &var3, const QVariant &var4,
+                                        const QVariant &var5, const QVariant &var6,
+                                        const QVariant &var7, const QVariant &var8);
 
     virtual const QMetaObject *fallbackMetaObject() const = 0;
 
@@ -148,6 +153,11 @@ protected:
     static const uint qt_meta_data_QAxBase[];
 
 private:
+    enum DynamicCallHelperFlags {
+        NoPropertyGet = 0x1 // Suppresses DISPATCH_PROPERTYGET, use for plain functions.
+    };
+
+    friend class QAxScript;
     friend class QAxEventSink;
     friend void *qax_createObjectWrapper(int, IUnknown*);
     bool initializeLicensedHelper(void *factory, const QString &key, IUnknown **ptr);
@@ -157,7 +167,8 @@ private:
     virtual const QMetaObject *parentMetaObject() const = 0;
     int internalProperty(QMetaObject::Call, int index, void **v);
     int internalInvoke(QMetaObject::Call, int index, void **v);
-    bool dynamicCallHelper(const char *name, void *out, QList<QVariant> &var, QByteArray &type);
+    bool dynamicCallHelper(const char *name, void *out, QList<QVariant> &var,
+                           QByteArray &type, unsigned flags = 0);
 };
 
 template <> inline QAxBase *qobject_cast<QAxBase*>(const QObject *o)

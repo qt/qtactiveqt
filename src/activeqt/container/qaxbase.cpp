@@ -3814,7 +3814,8 @@ static void qax_noSuchFunction(int disptype, const QByteArray &name, const QByte
 
     \a name is already normalized?
 */
-bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &vars, QByteArray &type)
+bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &vars,
+                                QByteArray &type, unsigned flags)
 {
     if (isNull()) {
         qWarning("QAxBase::dynamicCallHelper: Object is not initialized, or initialization failed");
@@ -3845,7 +3846,9 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     bool parse = false;
 
     if (function.contains('(')) {
-        disptype = DISPATCH_METHOD | DISPATCH_PROPERTYGET;
+        disptype = DISPATCH_METHOD;
+        if (!(flags & NoPropertyGet))
+            disptype |= DISPATCH_PROPERTYGET; // Support Excel/VB.
         if (d->useMetaObject)
             id = mo->indexOfSlot(function);
         if (id >= 0) {
@@ -4026,6 +4029,32 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     return checkHRESULT(hres, &excepinfo, this, QLatin1String(function), varc-argerr-1);
 }
 
+/*!
+    \internal
+*/
+QVariantList QAxBase::argumentsToList(const QVariant &var1, const QVariant &var2,
+                                      const QVariant &var3, const QVariant &var4,
+                                      const QVariant &var5, const QVariant &var6,
+                                      const QVariant &var7, const QVariant &var8)
+{
+    QVariantList vars;
+    QVariant var = var1;
+    int argc = 1;
+    while (var.isValid()) {
+        vars << var;
+        switch (++argc) {
+        case 2: var = var2; break;
+        case 3: var = var3; break;
+        case 4: var = var4; break;
+        case 5: var = var5; break;
+        case 6: var = var6; break;
+        case 7: var = var7; break;
+        case 8: var = var8; break;
+        default:var = QVariant(); break;
+        }
+    }
+    return vars;
+}
 
 /*!
     Calls the COM object's method \a function, passing the
@@ -4086,24 +4115,8 @@ QVariant QAxBase::dynamicCall(const char *function,
                               const QVariant &var7,
                               const QVariant &var8)
 {
-    QList<QVariant> vars;
-    QVariant var = var1;
-    int argc = 1;
-    while(var.isValid()) {
-        vars << var;
-        switch(++argc) {
-        case 2: var = var2; break;
-        case 3: var = var3; break;
-        case 4: var = var4; break;
-        case 5: var = var5; break;
-        case 6: var = var6; break;
-        case 7: var = var7; break;
-        case 8: var = var8; break;
-        default:var = QVariant(); break;
-        }
-    }
-
-    return dynamicCall(function, vars);
+    QVariantList vars = QAxBase::argumentsToList(var1, var2, var3, var4, var5, var6, var7, var8);
+    return dynamicCall(function, vars); // Use overload taking "QVariantList &" to avoid recursion
 }
 
 /*!
@@ -4120,11 +4133,19 @@ QVariant QAxBase::dynamicCall(const char *function,
 */
 QVariant QAxBase::dynamicCall(const char *function, QList<QVariant> &vars)
 {
+    return dynamicCall(function, vars, 0);
+}
+
+/*!
+    \internal
+*/
+QVariant QAxBase::dynamicCall(const char *function, QList<QVariant> &vars, unsigned flags)
+{
     VARIANTARG res;
     VariantInit(&res);
 
     QByteArray rettype;
-    if (!dynamicCallHelper(function, &res, vars, rettype))
+    if (!dynamicCallHelper(function, &res, vars, rettype, flags))
         return QVariant();
 
     QVariant qvar = VARIANTToQVariant(res, rettype);
