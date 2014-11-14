@@ -1437,15 +1437,6 @@ bool generateTypeLibrary(const QByteArray &typeLib, const QByteArray &outname, O
             declOut << "template<>" << endl;
             declOut << "struct QMetaTypeFunctionHelper<" << libName << "::" << subType << ", /* Accepted */ true> {" << endl;
 
-            declOut << "    static void Delete(void *t) { delete static_cast<" << libName << "::" << subType << "*>(t); }" << endl;
-
-            declOut << "    static void *Create(const void *t)" << endl;
-            declOut << "    {" << endl;
-            declOut << "        Q_ASSERT(!t);" << endl;
-            declOut << "        Q_UNUSED(t)" << endl; // Silence warnings for release builds
-            declOut << "        return new " << libName << "::" << subType << "();" << endl;
-            declOut << "    }" << endl;
-
             declOut << "    static void Destruct(void *t)" << endl;
             declOut << "    {" << endl;
             declOut << "        Q_UNUSED(t)" << endl; // Silence MSVC that warns for POD types.
