@@ -782,7 +782,7 @@ LRESULT QT_WIN_CALLBACK axs_FilterProc(int nCode, WPARAM wParam, LPARAM lParam)
 class QAxWinEventFilter : public QAbstractNativeEventFilter
 {
 public:
-    virtual bool nativeEventFilter(const QByteArray &, void *message, long *) Q_DECL_OVERRIDE;
+    bool nativeEventFilter(const QByteArray &, void *message, long *) Q_DECL_OVERRIDE;
 };
 
 bool QAxWinEventFilter::nativeEventFilter(const QByteArray &, void *message, long *)

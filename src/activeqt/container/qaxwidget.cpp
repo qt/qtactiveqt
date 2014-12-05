@@ -463,7 +463,7 @@ static const wchar_t *qaxatom = L"QAxContainer4_Atom";
 class QAxNativeEventFilter : public QAbstractNativeEventFilter
 {
 public:
-    virtual bool nativeEventFilter(const QByteArray &eventType, void *message, long *) Q_DECL_OVERRIDE;
+    bool nativeEventFilter(const QByteArray &eventType, void *message, long *) Q_DECL_OVERRIDE;
 };
 Q_GLOBAL_STATIC(QAxNativeEventFilter, s_nativeEventFilter)
 

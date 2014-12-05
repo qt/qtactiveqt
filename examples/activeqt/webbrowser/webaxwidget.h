@@ -53,7 +53,7 @@ public:
     {
     }
 protected:
-    virtual bool translateKeyEvent(int message, int keycode) const
+    bool translateKeyEvent(int message, int keycode) const Q_DECL_OVERRIDE
     {
         if (message >= WM_KEYFIRST && message <= WM_KEYLAST)
             return true;

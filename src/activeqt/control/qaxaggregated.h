@@ -74,10 +74,10 @@ private:
 };
 
 #define QAXAGG_IUNKNOWN \
-    HRESULT WINAPI QueryInterface(REFIID iid, LPVOID *iface) { \
-    return controllingUnknown()->QueryInterface(iid, iface); } \
-    ULONG WINAPI AddRef() {return controllingUnknown()->AddRef(); } \
-    ULONG WINAPI Release() {return controllingUnknown()->Release(); } \
+    HRESULT WINAPI QueryInterface(REFIID iid, LPVOID *iface) Q_DECL_OVERRIDE \
+        { return controllingUnknown()->QueryInterface(iid, iface); } \
+    ULONG WINAPI AddRef() Q_DECL_OVERRIDE { return controllingUnknown()->AddRef(); } \
+    ULONG WINAPI Release() Q_DECL_OVERRIDE { return controllingUnknown()->Release(); } \
 
 QT_END_NAMESPACE
 
