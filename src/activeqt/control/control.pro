@@ -10,7 +10,8 @@ HEADERS =   qaxaggregated.h \
             qaxfactory.h \
             ../shared/qaxtypes.h
 
-SOURCES =   qaxserver.cpp \
+SOURCES =   qaxaggregated.cpp \
+            qaxserver.cpp \
             qaxserverbase.cpp \
             qaxbindable.cpp \
             qaxfactory.cpp \

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2013 Digia Plc and/or its subsidiary(-ies).
+** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
 ** This file is part of the ActiveQt framework of the Qt Toolkit.
@@ -47,6 +47,8 @@ struct IUnknown;
 
 QT_BEGIN_NAMESPACE
 
+class QWidget;
+
 class QUuid;
 
 class QAxAggregated
@@ -62,10 +64,7 @@ protected:
 
     inline IUnknown *controllingUnknown() const
     { return controlling_unknown; }
-    inline QWidget *widget() const
-    {
-        return qobject_cast<QWidget*>(the_object);
-    }
+    QWidget *widget() const;
     inline QObject *object() const { return the_object; }
 
 private:
