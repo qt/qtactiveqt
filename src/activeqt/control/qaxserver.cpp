@@ -47,6 +47,8 @@
 #include <qmap.h>
 #include <qmenubar.h>
 #include <qmetaobject.h>
+#include <qscopedpointer.h>
+#include <qfileinfo.h>
 #include <qsettings.h>
 #include <qvariant.h>
 #include <qtextstream.h>
@@ -207,26 +209,21 @@ QString qax_clean_type(const QString &type, const QMetaObject *mo)
 HRESULT UpdateRegistry(BOOL bRegister)
 {
     qAxIsServer = false;
+    const QChar dot(QLatin1Char('.'));
+    const QChar slash(QLatin1Char('/'));
     QString file = QString::fromWCharArray(qAxModuleFilename);
-    QString path = file.left(file.lastIndexOf(QLatin1Char('\\'))+1);
-    QString module = file.right(file.length() - path.length());
-    module.truncate(module.lastIndexOf(QLatin1Char('.')));
+    const QString module = QFileInfo(file).baseName();
 
     const QString appId = qAxFactory()->appID().toString().toUpper();
     const QString libId = qAxFactory()->typeLibID().toString().toUpper();
 
-    QString libFile = qAxInit();
-    QString typeLibVersion;
+    const QString libFile = qAxInit();
 
     TLIBATTR *libAttr = 0;
     if (qAxTypeLibrary)
         qAxTypeLibrary->GetLibAttr(&libAttr);
     if (!libAttr)
         return SELFREG_E_TYPELIB;
-
-    DWORD major = libAttr->wMajorVerNum;
-    DWORD minor = libAttr->wMinorVerNum;
-    typeLibVersion = QString::number((uint)major) + QLatin1Char('.') + QString::number((uint)minor);
 
     if (bRegister)
         RegisterTypeLib(qAxTypeLibrary, (wchar_t*)libFile.utf16(), 0);
@@ -235,17 +232,14 @@ HRESULT UpdateRegistry(BOOL bRegister)
 
     qAxTypeLibrary->ReleaseTLibAttr(libAttr);
 
-    if (typeLibVersion.isEmpty())
-        typeLibVersion = QLatin1String("1.0");
-
     // check whether the user has permission to write to HKLM\Software\Classes
     // if not, use HKCU\Software\Classes
     QString keyPath(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"));
-    QSettings test(keyPath, QSettings::NativeFormat);
-    if (!test.isWritable())
+    QScopedPointer<QSettings> settings(new QSettings(keyPath, QSettings::NativeFormat));
+    if (!settings->isWritable()) {
         keyPath = QLatin1String("HKEY_CURRENT_USER\\Software\\Classes");
-
-    QSettings settings(keyPath, QSettings::NativeFormat);
+        settings.reset(new QSettings(keyPath, QSettings::NativeFormat));
+    }
 
     // we try to create the ActiveX widgets later on...
     bool delete_qApp = false;
@@ -257,8 +251,8 @@ HRESULT UpdateRegistry(BOOL bRegister)
 
     if (bRegister) {
         if (qAxOutProcServer) {
-            settings.setValue(QLatin1String("/AppID/") + appId + QLatin1String("/."), module);
-            settings.setValue(QLatin1String("/AppID/") + module + QLatin1String(".EXE/AppID"), appId);
+            settings->setValue(QLatin1String("/AppID/") + appId + QLatin1String("/."), module);
+            settings->setValue(QLatin1String("/AppID/") + module + QLatin1String(".EXE/AppID"), appId);
         }
 
         QStringList keys = qAxFactory()->featureList();
@@ -275,7 +269,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
                     classVersion = QLatin1String("1.0");
                 bool insertable = mo && !qstricmp(mo->classInfo(mo->indexOfClassInfo("Insertable")).value(), "yes");
                 bool control = object->isWidgetType();
-                const QString classMajorVersion = classVersion.left(classVersion.indexOf(QLatin1Char('.')));
+                QString classMajorVersion = classVersion.left(classVersion.indexOf(dot));
                 uint olemisc = OLEMISC_SETCLIENTSITEFIRST
                     |OLEMISC_ACTIVATEWHENVISIBLE
                     |OLEMISC_INSIDEOUT
@@ -286,35 +280,41 @@ HRESULT UpdateRegistry(BOOL bRegister)
                 else if (object->findChild<QMenuBar*>() && !qax_disable_inplaceframe)
                     olemisc |= OLEMISC_WANTSTOMENUMERGE;
 
-                settings.setValue(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion + QLatin1String("/."), className + QLatin1String(" Class"));
-                settings.setValue(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion + QLatin1String("/CLSID/."), classId);
+                const QString versionLessProgId = module + dot + className;
+                const QString progId = versionLessProgId + dot + classMajorVersion;
+                QString key = slash + progId;
+                settings->setValue(key + QLatin1String("/."), className + QLatin1String(" Class"));
+                settings->setValue(key + QLatin1String("/CLSID/."), classId);
                 if (insertable)
-                    settings.setValue(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion + QLatin1String("/Insertable/."), QVariant(QLatin1String("")));
+                    settings->setValue(key + QLatin1String("/Insertable/."), QVariant(QLatin1String("")));
 
-                settings.setValue(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1String("/."), className + QLatin1String(" Class"));
-                settings.setValue(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1String("/CLSID/."), classId);
-                settings.setValue(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1String("/CurVer/."), module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion);
+                key = slash + module + dot + className;
+                settings->setValue(key + QLatin1String("/."), className + QLatin1String(" Class"));
+                settings->setValue(key + QLatin1String("/CLSID/."), classId);
+                settings->setValue(key + QLatin1String("/CurVer/."), progId);
 
-                settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/."), className + QLatin1String(" Class"));
+                key = QLatin1String("/CLSID/") + classId;
+                settings->setValue(key + QLatin1String("/."), className + QLatin1String(" Class"));
                 if (file.endsWith(QLatin1String("exe"), Qt::CaseInsensitive))
-                    settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/AppID"), appId);
+                    settings->setValue(key + QLatin1String("/AppID"), appId);
                 if (control)
-                    settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/Control/."), QVariant(QLatin1String("")));
+                    settings->setValue(key + QLatin1String("/Control/."), QVariant(QLatin1String("")));
                 if (insertable)
-                    settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/Insertable/."), QVariant(QLatin1String("")));
+                    settings->setValue(key + QLatin1String("/Insertable/."), QVariant(QLatin1String("")));
                 if (file.endsWith(QLatin1String("dll"), Qt::CaseInsensitive))
-                    settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/InProcServer32/."), file);
+                    settings->setValue(key + QLatin1String("/InProcServer32/."), file);
                 else
-                    settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/LocalServer32/."),
+                    settings->setValue(key + QLatin1String("/LocalServer32/."),
                                       QLatin1Char('\"') + file + QLatin1String("\" -activex"));
-                settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/MiscStatus/."), control ? QLatin1String("1") : QLatin1String("0"));
-                settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/MiscStatus/1/."), QString::number(olemisc));
-                settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/Programmable/."), QVariant(QLatin1String("")));
-                settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/ToolboxBitmap32/."), QLatin1Char('\"') +
+                settings->setValue(key + QLatin1String("/MiscStatus/."), control ? QLatin1String("1") : QLatin1String("0"));
+                settings->setValue(key + QLatin1String("/MiscStatus/1/."), QString::number(olemisc));
+                settings->setValue(key + QLatin1String("/Programmable/."), QVariant(QLatin1String("")));
+                settings->setValue(key + QLatin1String("/ToolboxBitmap32/."), QLatin1Char('\"') +
                                   file + QLatin1String("\", 101"));
-                settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/TypeLib/."), libId); settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/Version/."), classVersion);
-                settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/VersionIndependentProgID/."), module + QLatin1Char('.') + className);
-                settings.setValue(QLatin1String("/CLSID/") + classId + QLatin1String("/ProgID/."), module + QLatin1Char('.') + className + QLatin1Char('.') + classVersion.left(classVersion.indexOf(QLatin1Char('.'))));
+                settings->setValue(key + QLatin1String("/TypeLib/."), libId);
+                settings->setValue(key + QLatin1String("/Version/."), classVersion);
+                settings->setValue(key + QLatin1String("/VersionIndependentProgID/."), versionLessProgId);
+                settings->setValue(key + QLatin1String("/ProgID/."), progId);
 
                 QString mime = QLatin1String(mo->classInfo(mo->indexOfClassInfo("MIME")).value());
                 if (!mime.isEmpty()) {
@@ -329,17 +329,19 @@ HRESULT UpdateRegistry(BOOL bRegister)
                             mime.chop(extension.length() - 1);
                             // Prepend '.' before extension, if required.
                             extension = extension.trimmed();
-                            if (!extension.startsWith(QLatin1Char('.')))
-                                extension.prepend(QLatin1Char('.'));
+                            if (!extension.startsWith(dot))
+                                extension.prepend(dot);
                         }
 
                         if (!extension.isEmpty()) {
-                            settings.setValue(QLatin1Char('/') + extension + QLatin1String("/."), module + QLatin1Char('.') + className);
-                            settings.setValue(QLatin1Char('/') + extension + QLatin1String("/Content Type"), mime);
+                            key = slash + extension;
+                            settings->setValue(key + QLatin1String("/."), module + dot + className);
+                            settings->setValue(key + QLatin1String("/Content Type"), mime);
 
-                            mime = mime.replace(QLatin1Char('/'), QLatin1Char('\\'));
-                            settings.setValue(QLatin1String("/MIME/Database/Content Type/") + mime + QLatin1String("/CLSID"), classId);
-                            settings.setValue(QLatin1String("/MIME/Database/Content Type/") + mime + QLatin1String("/Extension"), extension);
+                            mime.replace(slash, QLatin1Char('\\'));
+                            key = QLatin1String("/MIME/Database/Content Type/") + mime;
+                            settings->setValue(key + QLatin1String("/CLSID"), classId);
+                            settings->setValue(key + QLatin1String("/Extension"), extension);
                         }
                     }
                 }
@@ -347,12 +349,12 @@ HRESULT UpdateRegistry(BOOL bRegister)
                 delete object;
             }
 
-            qAxFactory()->registerClass(classNameIn, &settings);
+            qAxFactory()->registerClass(classNameIn, settings.data());
         }
     } else {
         if (qAxOutProcServer) {
-            settings.remove(QLatin1String("/AppID/") + appId + QLatin1String("/."));
-            settings.remove(QLatin1String("/AppID/") + module + QLatin1String(".EXE"));
+            settings->remove(QLatin1String("/AppID/") + appId + QLatin1String("/."));
+            settings->remove(QLatin1String("/AppID/") + module + QLatin1String(".EXE"));
         }
         QStringList keys = qAxFactory()->featureList();
         foreach (const QString &classNameIn, keys) {
@@ -363,35 +365,38 @@ HRESULT UpdateRegistry(BOOL bRegister)
             QString classVersion = mo ? QString::fromLatin1(mo->classInfo(mo->indexOfClassInfo("Version")).value()) : QString();
             if (classVersion.isNull())
                 classVersion = QLatin1String("1.0");
-            const QString classMajorVersion = classVersion.left(classVersion.indexOf(QLatin1Char('.')));
+            const QString classMajorVersion = classVersion.left(classVersion.indexOf(dot));
 
-            qAxFactory()->unregisterClass(classNameIn, &settings);
+            qAxFactory()->unregisterClass(classNameIn, settings.data());
+            const QString progId = module + dot + className + dot + classMajorVersion;
+            QString key = slash + progId;
+            settings->remove(key + QLatin1String("/CLSID/."));
+            settings->remove(key + QLatin1String("/Insertable/."));
+            settings->remove(key + QLatin1String("/."));
+            settings->remove(key);
 
-            settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion + QLatin1String("/CLSID/."));
-            settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion + QLatin1String("/Insertable/."));
-            settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion + QLatin1String("/."));
-            settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1Char('.') + classMajorVersion);
+            key = slash + module + dot + className;
+            settings->remove(key + QLatin1String("/CLSID/."));
+            settings->remove(key + QLatin1String("/CurVer/."));
+            settings->remove(key + QLatin1String("/."));
+            settings->remove(key);
 
-            settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1String("/CLSID/."));
-            settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1String("/CurVer/."));
-            settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className + QLatin1String("/."));
-            settings.remove(QLatin1Char('/') + module + QLatin1Char('.') + className);
-
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/AppID"));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/Control/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/Insertable/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/InProcServer32/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/LocalServer32/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/MiscStatus/1/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/MiscStatus/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/Programmable/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/ToolboxBitmap32/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/TypeLib/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/Version/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/VersionIndependentProgID/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/ProgID/."));
-            settings.remove(QLatin1String("/CLSID/") + classId + QLatin1String("/."));
-            settings.remove(QLatin1String("/CLSID/") + classId);
+            key = QLatin1String("/CLSID/") + classId;
+            settings->remove(key + QLatin1String("/AppID"));
+            settings->remove(key + QLatin1String("/Control/."));
+            settings->remove(key + QLatin1String("/Insertable/."));
+            settings->remove(key + QLatin1String("/InProcServer32/."));
+            settings->remove(key + QLatin1String("/LocalServer32/."));
+            settings->remove(key + QLatin1String("/MiscStatus/1/."));
+            settings->remove(key + QLatin1String("/MiscStatus/."));
+            settings->remove(key + QLatin1String("/Programmable/."));
+            settings->remove(key + QLatin1String("/ToolboxBitmap32/."));
+            settings->remove(key + QLatin1String("/TypeLib/."));
+            settings->remove(key + QLatin1String("/Version/."));
+            settings->remove(key + QLatin1String("/VersionIndependentProgID/."));
+            settings->remove(key + QLatin1String("/ProgID/."));
+            settings->remove(key + QLatin1String("/."));
+            settings->remove(key);
 
             QString mime = QLatin1String(mo->classInfo(mo->indexOfClassInfo("MIME")).value());
             if (!mime.isEmpty()) {
@@ -406,18 +411,20 @@ HRESULT UpdateRegistry(BOOL bRegister)
                         mime.chop(extension.length() - 1);
                         // Prepend '.' before extension, if required.
                         extension = extension.trimmed();
-                        if (extension[0] != QLatin1Char('.'))
-                            extension.prepend(QLatin1Char('.'));
+                        if (extension[0] != dot)
+                            extension.prepend(dot);
                     }
                     if (!extension.isEmpty()) {
-                        settings.remove(QLatin1Char('/') + extension + QLatin1String("/Content Type"));
-                        settings.remove(QLatin1Char('/') + extension + QLatin1String("/."));
-                        settings.remove(QLatin1Char('/') + extension);
-                        mime.replace(QLatin1Char('/'), QLatin1Char('\\'));
-                        settings.remove(QLatin1String("/MIME/Database/Content Type/") + mime + QLatin1String("/Extension"));
-                        settings.remove(QLatin1String("/MIME/Database/Content Type/") + mime + QLatin1String("/CLSID"));
-                        settings.remove(QLatin1String("/MIME/Database/Content Type/") + mime + QLatin1String("/."));
-                        settings.remove(QLatin1String("/MIME/Database/Content Type/") + mime);
+                        key = slash + extension;
+                        settings->remove(key + QLatin1String("/Content Type"));
+                        settings->remove(key + QLatin1String("/."));
+                        settings->remove(key);
+                        mime.replace(slash, QLatin1Char('\\'));
+                        key = QLatin1String("/MIME/Database/Content Type/") + mime;
+                        settings->remove(key + QLatin1String("/Extension"));
+                        settings->remove(key + QLatin1String("/CLSID"));
+                        settings->remove(key + QLatin1String("/."));
+                        settings->remove(key);
                     }
                 }
             }
@@ -428,7 +435,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
         delete qApp;
 
     qAxCleanup();
-    if (settings.status() == QSettings::NoError)
+    if (settings->status() == QSettings::NoError)
         return S_OK;
     return SELFREG_E_CLASS;
 }
