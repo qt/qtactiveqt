@@ -52,6 +52,8 @@
 #include <qsettings.h>
 #include <qvariant.h>
 #include <qtextstream.h>
+#include <qloggingcategory.h>
+#include <qdebug.h>
 
 #include <qt_windows.h>
 #include <olectl.h>
@@ -108,6 +110,8 @@ static CRITICAL_SECTION qAxModuleSection;
 /////////////////////////////////////////////////////////////////////////////
 
 static int initCount = 0;
+
+Q_LOGGING_CATEGORY(lcAxRegistration, "qt.activeqt.registration")
 
 QString qAxInit()
 {
@@ -347,6 +351,11 @@ HRESULT UpdateRegistry(BOOL bRegister)
                 }
 
                 delete object;
+                qCDebug(lcAxRegistration).nospace().noquote() << "Registered \"" << progId
+                    << "\"/" << classId << ", \"" << file << "\" at \"" << keyPath
+                    << "\", insertable=" << insertable << ", control=" << control
+                    << ", olemisc=" << hex << showbase << olemisc
+                    << ", mime=" << mime;
             }
 
             qAxFactory()->registerClass(classNameIn, settings.data());
@@ -428,6 +437,9 @@ HRESULT UpdateRegistry(BOOL bRegister)
                     }
                 }
             }
+            qCDebug(lcAxRegistration).nospace().noquote() << "Unregistered \""
+                << progId << "\"/" << classId << ", \"" << file << "\" from \""
+                << keyPath << '"';
         }
     }
 
@@ -437,6 +449,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
     qAxCleanup();
     if (settings->status() == QSettings::NoError)
         return S_OK;
+    qWarning() << module << ": Error writing to " << keyPath;
     return SELFREG_E_CLASS;
 }
 
