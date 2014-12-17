@@ -85,8 +85,8 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(mdiArea);
     layout->setMargin(0);
 
-    connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(updateGUI()));
-    connect(actionFileExit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(mdiArea, &QMdiArea::subWindowActivated, this, &MainWindow::updateGUI);
+    connect(actionFileExit, &QAction::triggered, QCoreApplication::quit);
 }
 
 MainWindow::~MainWindow()
@@ -340,8 +340,7 @@ void MainWindow::on_actionScriptingLoad_triggered()
 
     QAxScript *script = scripts->load(file, file);
     if (script) {
-        connect(script, SIGNAL(error(int,QString,int,QString)),
-                this,   SLOT(logMacro(int,QString,int,QString)));
+        connect(script, &QAxScript::error, this, &MainWindow::logMacro);
         actionScriptingRun->setEnabled(true);
     }
 #else

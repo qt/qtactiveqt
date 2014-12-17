@@ -45,7 +45,7 @@ AmbientProperties::AmbientProperties(QWidget *parent)
 {
     setupUi(this);
 
-    connect(buttonClose, SIGNAL(clicked()), this, SLOT(close()));
+    connect(buttonClose, &QAbstractButton::clicked, this, &QWidget::close);
 }
 
 void AmbientProperties::setControl(QWidget *widget)

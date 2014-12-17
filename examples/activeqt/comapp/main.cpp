@@ -264,7 +264,7 @@ int main(int argc, char **argv)
 
     appobject.setVisible(true);
 
-    QObject::connect(qApp, SIGNAL(lastWindowClosed()), &appobject, SLOT(quit()));
+    QObject::connect(&app, &QGuiApplication::lastWindowClosed, &appobject, &Application::quit);
 
     return app.exec();
 }

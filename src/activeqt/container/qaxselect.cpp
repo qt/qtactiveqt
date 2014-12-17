@@ -298,20 +298,20 @@ QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags flags)
     d->filterModel->setSourceModel(new ControlList(this));
     d->selectUi.ActiveXList->setModel(d->filterModel);
 
-    connect(d->selectUi.ActiveXList->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)),
-            this, SLOT(onActiveXListCurrentChanged(QModelIndex)));
-    connect(d->selectUi.ActiveXList, SIGNAL(activated(QModelIndex)),
-            this, SLOT(onActiveXListActivated()));
+    connect(d->selectUi.ActiveXList->selectionModel(), &QItemSelectionModel::currentChanged,
+            this, &QAxSelect::onActiveXListCurrentChanged);
+    connect(d->selectUi.ActiveXList, &QAbstractItemView::activated,
+            this, &QAxSelect::onActiveXListActivated);
 
 #ifndef QT_NO_CURSOR
     QApplication::restoreOverrideCursor();
 #endif
     d->selectUi.ActiveXList->setFocus();
 
-    connect(d->selectUi.buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-    connect(d->selectUi.buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-    connect(d->selectUi.filterLineEdit, SIGNAL(textChanged(QString)),
-            this, SLOT(onFilterLineEditChanged(QString)));
+    connect(d->selectUi.buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    connect(d->selectUi.buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    connect(d->selectUi.filterLineEdit, &QLineEdit::textChanged,
+            this, &QAxSelect::onFilterLineEditChanged);
 }
 
 /*!

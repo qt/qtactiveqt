@@ -63,8 +63,8 @@ public:
         LCD = new QLCDNumber( 3, this );
         edit = new QLineEdit( this );
 
-        connect( slider, SIGNAL(valueChanged(int)), this, SLOT(setValue(int)) );
-        connect( edit, SIGNAL(textChanged(QString)), this, SLOT(setText(QString)) );
+        connect( slider, &QAbstractSlider::valueChanged, this, &QSimpleAX::setValue );
+        connect( edit, &QLineEdit::textChanged, this, &QSimpleAX::setText );
 
         vbox->addWidget( slider );
         vbox->addWidget( LCD );
