@@ -2463,19 +2463,18 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
             // return value
             if (!type.isEmpty() && type != "void") {
                 QVariant::Type vt = QVariant::nameToType(type);
-                if (vt == QVariant::UserType)
-                    vt = QVariant::Invalid;
-                varp[0] = QVariant(vt);
-                if (varp[0].type() == QVariant::Invalid && mo->indexOfEnumerator(slot.typeName()) != -1)
-                    varp[0] = QVariant(QVariant::Int);
-
-                if (varp[0].type() == QVariant::Invalid) {
-                    if (type == "QVariant")
-                        argv[0] = varp;
-                    else
-                        argv[0] = 0;
+                if (vt == int(QMetaType::QVariant)) {
+                    argv[0] = varp;
                 } else {
-                    argv[0] = const_cast<void*>(varp[0].constData());
+                    if (vt == QVariant::UserType)
+                        vt = QVariant::Invalid;
+                    else if (vt == QVariant::Invalid && mo->indexOfEnumerator(slot.typeName()) != -1)
+                        vt = QVariant::Int;
+                    varp[0] = QVariant(vt);
+                    if (varp[0].type() == QVariant::Invalid)
+                        argv[0] = Q_NULLPTR;
+                    else
+                        argv[0] = const_cast<void*>(varp[0].constData());
                 }
                 if (type.endsWith('*')) {
                     argv_pointer[0] = argv[0];
