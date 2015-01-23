@@ -50,6 +50,7 @@
 #include <qpixmap.h>
 #include <qpainter.h>
 #include <qobject.h>
+#include <qdebug.h>
 #ifdef QAX_SERVER
 #   include <qaxfactory.h>
 #   include <private/qsystemlibrary_p.h>
@@ -215,6 +216,12 @@ static DATE QDateTimeToDATE(const QDateTime &dt)
     SystemTimeToVariantTime(&stime, &vtime);
 
     return vtime;
+}
+
+static QByteArray msgOutParameterNotSupported(const QByteArray &type)
+{
+    return QByteArrayLiteral("QVariantToVARIANT: out-parameter not supported for \"")
+        + type + QByteArrayLiteral("\".");
 }
 
 /*
@@ -706,13 +713,15 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 break;
             }
 
+            if (out) {
+                qWarning().noquote() << msgOutParameterNotSupported("records");
+                arg.vt = VT_EMPTY;
+                arg.byref = Q_NULLPTR;
+                return false;
+            }
             arg.vt = VT_RECORD;
             arg.pRecInfo = recordInfo,
             arg.pvRecord = record;
-            if (out) {
-                qWarning("QVariantToVARIANT: out-parameter not supported for records");
-                return false;
-           }
         }
         break;
 #endif // QAX_SERVER
@@ -724,30 +733,40 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 subType.truncate(subType.length() - 1);
 #endif
             if (!qstrcmp(qvar.typeName(), "IDispatch*")) {
+                if (out) {
+                    qWarning().noquote() << msgOutParameterNotSupported(qvar.typeName());
+                    arg.vt = VT_EMPTY;
+                    arg.byref = Q_NULLPTR;
+                    return false;
+                }
                 arg.vt = VT_DISPATCH;
                 arg.pdispVal = *(IDispatch**)qvar.data();
                 if (arg.pdispVal)
                     arg.pdispVal->AddRef();
-                if (out) {
-                    qWarning("QVariantToVARIANT: out-parameter not supported for IDispatch");
-                    return false;
-                }
             } else if (!qstrcmp(qvar.typeName(), "IDispatch**")) {
                 arg.vt = VT_DISPATCH;
                 arg.ppdispVal = *(IDispatch***)qvar.data();
                 if (out)
                     arg.vt |= VT_BYREF;
             } else if (!qstrcmp(qvar.typeName(), "IUnknown*")) {
+                if (out) {
+                    qWarning().noquote() << msgOutParameterNotSupported(qvar.typeName());
+                    arg.vt = VT_EMPTY;
+                    arg.byref = Q_NULLPTR;
+                    return false;
+                }
                 arg.vt = VT_UNKNOWN;
                 arg.punkVal = *(IUnknown**)qvar.data();
                 if (arg.punkVal)
                     arg.punkVal->AddRef();
-                if (out) {
-                    qWarning("QVariantToVARIANT: out-parameter not supported for IUnknown");
-                    return false;
-                }
 #ifdef QAX_SERVER
             } else if (qAxFactory()->metaObject(QString::fromLatin1(subType.constData()))) {
+                if (out) {
+                    qWarning().noquote() << msgOutParameterNotSupported("subtype");
+                    arg.vt = VT_EMPTY;
+                    arg.byref = Q_NULLPTR;
+                    return false;
+                }
                 arg.vt = VT_DISPATCH;
                 void *user = *(void**)qvar.constData();
 //                qVariantGet(qvar, user, qvar.typeName());
@@ -756,20 +775,18 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 } else {
                     qAxFactory()->createObjectWrapper(static_cast<QObject*>(user), &arg.pdispVal);
                 }
-                if (out) {
-                    qWarning("QVariantToVARIANT: out-parameter not supported for subtype");
-                    return false;
-                }
 #else
             } else if (QMetaType::type(subType)) {
+                if (out) {
+                    qWarning().noquote() << msgOutParameterNotSupported("subtype");
+                    arg.vt = VT_EMPTY;
+                    arg.byref = Q_NULLPTR;
+                    return false;
+                }
                 QAxObject *object = *(QAxObject**)qvar.constData();
 //                qVariantGet(qvar, object, subType);
                 arg.vt = VT_DISPATCH;
                 object->queryInterface(IID_IDispatch, (void**)&arg.pdispVal);
-                if (out) {
-                    qWarning("QVariantToVARIANT: out-parameter not supported for subtype");
-                    return false;
-                }
 #endif
             } else {
                 return false;
