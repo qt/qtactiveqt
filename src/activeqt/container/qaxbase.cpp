@@ -3663,6 +3663,8 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
         else
             params.rgvarg = new VARIANTARG[params.cArgs];
     }
+    for (VARIANTARG *vp = params.rgvarg, *vEnd = params.rgvarg + params.cArgs; vp < vEnd; ++vp)
+        VariantInit(vp);
 
     int p;
     for (p = 0; p < (int)params.cArgs; ++p) {

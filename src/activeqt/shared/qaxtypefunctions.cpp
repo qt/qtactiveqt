@@ -207,8 +207,11 @@ void clearVARIANT(VARIANT *var)
             delete var->pdate;
             break;
         case VT_DISPATCH|VT_BYREF:
-            (*var->ppdispVal)->Release();
-            delete var->ppdispVal;
+            if (var->ppdispVal) {
+                if (*var->ppdispVal)
+                    (*var->ppdispVal)->Release();
+                delete var->ppdispVal;
+            }
             break;
         case VT_ARRAY|VT_VARIANT|VT_BYREF:
         case VT_ARRAY|VT_UI1|VT_BYREF:
