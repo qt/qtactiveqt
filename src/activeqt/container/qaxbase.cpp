@@ -69,6 +69,7 @@
 #include <ctype.h>
 
 #include "../shared/qaxtypes.h"
+#include "../shared/qaxutils_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -3676,16 +3677,20 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
             qvar = QVariant(vt, v[p + 1]);
 
         if (!qvar.isValid()) {
-            if (type == "IDispatch*")
-                qvar.setValue(*(IDispatch**)v[p+1]);
-            else if (type == "IUnknown*")
-                qvar.setValue(*(IUnknown**)v[p+1]);
-            else if (type == "QVariant")
+            if (type == "IDispatch*") {
+                if (out)
+                    qvar.setValue(*(IDispatch***)v[p+1]);
+                else
+                    qvar.setValue(*(IDispatch**)v[p+1]);
+            } else if (type == "IUnknown*") {
+                    qvar.setValue(*(IUnknown**)v[p+1]);
+            } else if (type == "QVariant") {
                 qvar = *(QVariant*)v[p + 1];
-            else if (mo->indexOfEnumerator(type) != -1)
+            } else if (mo->indexOfEnumerator(type) != -1) {
                 qvar = *(int*)v[p + 1];
-            else
+            } else {
                 qvar = QVariant(QMetaType::type(type), v[p + 1]);
+            }
         }
 
         QVariantToVARIANT(qvar, params.rgvarg[params.cArgs - p - 1], type, out);
@@ -3710,8 +3715,12 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     for (p = 0; p < (int)params.cArgs; ++p) {
         bool out;
         QByteArray ptype = d->metaobj->paramType(signature, p, &out);
-        if (out)
-            QVariantToVoidStar(VARIANTToQVariant(params.rgvarg[params.cArgs - p - 1], ptype), v[p+1], ptype);
+        if (out) {
+            VARIANTARG &var = params.rgvarg[params.cArgs - p - 1];
+            QVariantToVoidStar(VARIANTToQVariant(var, ptype), v[p+1], ptype);
+            if (var.vt == (VT_DISPATCH | VT_BYREF))
+                VariantInit(&var); // Prevent clearVARIANT() from releasing returned IDispatch* out parameters.
+        }
     }
     // clean up
     for (p = 0; p < (int)params.cArgs; ++p)
