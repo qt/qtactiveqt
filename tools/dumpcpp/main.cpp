@@ -40,6 +40,9 @@
 #include <QStringList>
 #include <QTemporaryFile>
 #include <QUuid>
+#include <QCoreApplication>
+#include <QCommandLineOption>
+#include <QCommandLineParser>
 #include <QWidget>
 #include <QFileInfo>
 #include <qt_windows.h>
@@ -48,6 +51,12 @@
 QT_BEGIN_NAMESPACE
 
 static ITypeInfo *currentTypeInfo = 0;
+
+enum ProgramMode {
+    GenerateMode,
+    TypeLibID,
+    DoNothing
+};
 
 enum ObjectCategory
 {
@@ -59,9 +68,7 @@ enum ObjectCategory
     NoDeclaration    = 0x010,
     NoInlines        = 0x020,
     OnlyInlines      = 0x040,
-    DoNothing        = 0x080,
     Licensed         = 0x100,
-    TypeLibID        = 0x101
 };
 
 extern QMetaObject *qax_readEnumInfo(ITypeLib *typeLib, const QMetaObject *parentObject);
@@ -1372,107 +1379,124 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-int main(int argc, char **argv)
+struct Options
 {
-    qax_dispatchEqualsIDispatch = false;
+    Options() : mode(GenerateMode), category(DefaultObject), dispatchEqualsIDispatch(false) {}
 
-    if (FAILED(CoInitialize(0))) {
-        qErrnoWarning("CoInitialize() failed.");
-        return -1;
-    }
-
-    uint category = DefaultObject;
-
-    enum State {
-        Default = 0,
-        Output,
-        NameSpace,
-        GetTypeLib
-    } state;
-    state = Default;
+    ProgramMode mode;
+    uint category;
+    bool dispatchEqualsIDispatch;
 
     QString outname;
     QString typeLib;
     QString nameSpace;
+};
 
-    for (int a = 1; a < argc; ++a) {
-        QByteArray arg(argv[a]);
-        const char first = arg[0];
-        switch(state) {
-        case Default:
-            if (first == '-' || first == '/') {
-                arg = arg.mid(1).toLower();
+static void parseOptions(Options *options)
+{
+    const char helpText[] =
+        "\nGenerate a C++ namespace from a type library.\n\n"
+        "Examples:\n"
+        "   dumpcpp -o ieframe %WINDIR%\\system32\\ieframe.dll\n"
+        "   dumpcpp -o outlook Outlook.Application\n"
+        "   dumpcpp {3B756301-0075-4E40-8BE8-5A81DE2426B7}\n"
+        "   dumpcpp -getfile {21D6D480-A88B-11D0-83DD-00AA003CCABD}\n";
 
-                if (arg == "o") {
-                    state = Output;
-                } else if (arg == "n") {
-                    state = NameSpace;
-                } else if (arg == "v") {
-                    qWarning("dumpcpp: Version 1.0");
-                    return 0;
-                } else if (arg == "nometaobject") {
-                    category |= NoMetaObject;
-                } else if (arg == "impl") {
-                    category |= NoDeclaration;
-                } else if (arg == "decl") {
-                    category |= NoImplementation;
-                } else if (arg == "donothing") {
-                    category = DoNothing;
-                    break;
-                } else if (arg == "compat") {
-                    qax_dispatchEqualsIDispatch = true;
-                    break;
-                } else if (arg == "getfile") {
-                    state = GetTypeLib;
-                    break;
-                } else if (arg == "h") {
-                    qWarning("dumpcpp Version1.0\n\n"
-                        "Generate a C++ namespace from a type library.\n\n"
-                        "Usage:\n"
-                        "dumpcpp input [-[-n <namespace>] [-o <filename>]\n\n"
-                        "   input:     A type library file, type library ID, ProgID or CLSID\n\n"
-                        "Optional parameters:\n"
-                        "   namespace: The name of the generated C++ namespace\n"
-                        "   filename:  The file name (without extension) of the generated files\n"
-                        "\n"
-                        "Other parameters:\n"
-                        "   -nometaobject Don't generate meta object information (no .cpp file)\n"
-                        "   -impl Only generate the .cpp file\n"
-                        "   -decl Only generate the .h file\n"
-                        "   -compat Treat all coclass parameters as IDispatch\n"
-                        "\n"
-                        "Examples:\n"
-                        "   dumpcpp Outlook.Application -o outlook\n"
-                        "   dumpcpp {3B756301-0075-4E40-8BE8-5A81DE2426B7}\n"
-                        "\n");
-                    return 0;
-                }
-            } else {
-                typeLib = arg;
-            }
-            break;
+    const char outputOptionC[] = "-o";
+    const char nameSpaceOptionC[] = "-n";
+    const char getfileOptionC[] = "-getfile";
 
-        case Output:
-            outname = QFile::decodeName(arg);
-            state = Default;
-            break;
-
-        case NameSpace:
-            nameSpace = QString::fromLocal8Bit(arg);
-            state = Default;
-            break;
-
-        case GetTypeLib:
-            typeLib = QFile::decodeName(arg);
-            state = Default;
-            category = TypeLibID;
-            break;
-        default:
-            break;
-        }
+    QStringList args = QCoreApplication::arguments();
+    // Convert Windows-style '/option' into '-option'.
+    for (int i = 1; i < args.size(); ) {
+        QString &arg = args[i];
+        if (arg.startsWith(QLatin1Char('/')))
+            arg[0] = QLatin1Char('-');
+        const bool takesOptionValue = arg == QLatin1String(outputOptionC)
+            || arg == QLatin1String(nameSpaceOptionC)
+            || arg == QLatin1String(getfileOptionC);
+        i += takesOptionValue ? 2 : 1;
     }
 
-    if (category == TypeLibID) {
+    QCommandLineParser parser;
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
+    parser.setApplicationDescription(QLatin1String(helpText));
+
+
+    parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
+    parser.addHelpOption();
+    parser.addVersionOption();
+    QCommandLineOption outputOption(QLatin1String(outputOptionC + 1),
+                                    QStringLiteral("Write output to file."),
+                                    QStringLiteral("file"));
+    parser.addOption(outputOption);
+    QCommandLineOption nameSpaceOption(QLatin1String(nameSpaceOptionC + 1),
+                                       QStringLiteral("The name of the generated C++ namespace."),
+                                       QStringLiteral("namespace"));
+    parser.addOption(nameSpaceOption);
+    QCommandLineOption noMetaObjectOption(QStringLiteral("nometaobject"),
+                                          QStringLiteral("Don't generate meta object information (no .cpp file). The meta object is then generated in runtime."));
+    parser.addOption(noMetaObjectOption);
+    QCommandLineOption noDeclarationOption(QStringLiteral("impl"),
+                                           QStringLiteral("Only generate the .cpp file."));
+    parser.addOption(noDeclarationOption);
+    QCommandLineOption noImplementationOption(QStringLiteral("decl"),
+                                              QStringLiteral("Only generate the .h file."));
+    parser.addOption(noImplementationOption);
+    QCommandLineOption doNothingOption(QStringLiteral("donothing"),
+                                       QStringLiteral("Do not generate any files."));
+    parser.addOption(doNothingOption);
+    QCommandLineOption compatOption(QStringLiteral("compat"),
+                                    QStringLiteral("Treat all coclass parameters as IDispatch."));
+    parser.addOption(compatOption);
+    QCommandLineOption getFileOption(QLatin1String(getfileOptionC + 1),
+                                     QStringLiteral("Print the filename for the type library it to standard output."),
+                                     QStringLiteral("id"));
+    parser.addOption(getFileOption);
+    parser.addPositionalArgument(QStringLiteral("input"),
+                                 QStringLiteral("A type library file, type library ID, ProgID or CLSID."));
+    parser.process(args);
+
+    if (parser.isSet(outputOption))
+        options->outname = parser.value(outputOption);
+    if (parser.isSet(nameSpaceOption))
+        options->nameSpace = parser.value(nameSpaceOption);
+    if (parser.isSet(noMetaObjectOption))
+         options->category |= NoMetaObject;
+    if (parser.isSet(noDeclarationOption))
+        options->category |= NoDeclaration;
+    if (parser.isSet(noImplementationOption))
+        options->category |= NoImplementation;
+    if (parser.isSet(doNothingOption))
+        options->mode = DoNothing;
+    options->dispatchEqualsIDispatch = parser.isSet(compatOption);
+    if (parser.isSet(getFileOption)) {
+        options->typeLib = parser.value(getFileOption);
+        options->mode = TypeLibID;
+    }
+    if (!parser.positionalArguments().isEmpty())
+        options->typeLib = parser.positionalArguments().first();
+
+    if (options->mode == GenerateMode && options->typeLib.isEmpty()) {
+        qWarning("dumpcpp: No object class or type library name provided.\n");
+        parser.showHelp(1);
+    }
+}
+
+int main(int argc, char **argv)
+{
+    if (FAILED(CoInitialize(0))) {
+        qErrnoWarning("CoInitialize() failed.");
+        return -1;
+    }
+    QCoreApplication app(argc, argv);
+
+    Options options;
+    parseOptions(&options);
+    qax_dispatchEqualsIDispatch = options.dispatchEqualsIDispatch;
+    QString typeLib = options.typeLib;
+
+    if (options.mode == TypeLibID) {
         QSettings settings(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes\\TypeLib\\") +
                            typeLib, QSettings::NativeFormat);
         typeLib.clear();
@@ -1488,7 +1512,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    if (category == DoNothing)
+    if (options.mode == DoNothing)
         return 0;
 
     if (typeLib.isEmpty()) {
@@ -1551,7 +1575,7 @@ int main(int argc, char **argv)
         return -2;
     }
 
-    if (!generateTypeLibrary(typeLib, outname, nameSpace, (ObjectCategory)category)) {
+    if (!generateTypeLibrary(typeLib, options.outname, options.nameSpace, (ObjectCategory)options.category)) {
         qWarning("dumpcpp: error processing type library '%s'", qPrintable(typeLib));
         return -1;
     }
