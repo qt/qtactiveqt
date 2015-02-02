@@ -984,6 +984,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
 
         UINT typeCount = typelib->GetTypeInfoCount();
         if (declFile.isOpen()) {
+            QByteArrayList opaquePointerTypes;
             declOut << endl;
             declOut << "// Referenced namespace" << endl;
             for (UINT index = 0; index < typeCount; ++index) {
@@ -1082,6 +1083,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                             namespaceForType.insert(className.mid(className.indexOf(' ') + 1), nspace);
                         } else {
                             declOut << "    class " << className << ';' << endl;
+                            opaquePointerTypes.append(nspace + "::" + className);
                             namespaceForType.insert(className, nspace);
                             namespaceForType.insert(className + '*', nspace);
                             namespaceForType.insert(className + "**", nspace);
@@ -1090,7 +1092,8 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                     declOut << '}' << endl << endl;
                 }
             }
-
+            foreach (const QByteArray &opaquePointerType, opaquePointerTypes)
+                declOut << "Q_DECLARE_OPAQUE_POINTER(" << opaquePointerType << "*)" << endl;
             declOut << endl;
         }
         generateNameSpace(declOut, namespaceObject, libName.toLatin1());
