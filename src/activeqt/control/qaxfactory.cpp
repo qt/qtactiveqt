@@ -366,7 +366,7 @@ extern wchar_t qAxModuleFilename[MAX_PATH];
     Returns the directory that contains the server binary.
 
     For out-of-process servers this is the same as
-    QApplication::applicationDirPath(). For in-process servers
+    \l {QCoreApplication::applicationDirPath()}. For in-process servers
     that function returns the directory that contains the hosting
     application.
 */
@@ -379,7 +379,7 @@ QString QAxFactory::serverDirPath()
     Returns the file path of the server binary.
 
     For out-of-process servers this is the same as
-    QApplication::applicationFilePath(). For in-process servers
+    \l {QCoreApplication::applicationFilePath()}. For in-process servers
     that function returns the file path of the hosting application.
 */
 QString QAxFactory::serverFilePath()
@@ -547,8 +547,8 @@ bool QAxFactory::registerActiveObject(QObject *object)
     \a IDTypeLib, and if the server is an executable server then it will have the
     application id \a IDApp.
 
-    This macro needs to be used together with the QAXCLASS(), QAXTYPE()
-    and QAXFACTORY_END() macros.
+    This macro needs to be used together with the \l {QAxFactory::}{QAXCLASS()}, \c {QAxFactory::}{QAXTYPE()}
+    and \c {QAxFactory::}{QAXFACTORY_END()} macros.
 
     \snippet src_activeqt_control_qaxfactory.cpp 9
 */

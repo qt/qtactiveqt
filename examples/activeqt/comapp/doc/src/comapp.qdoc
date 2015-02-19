@@ -73,8 +73,8 @@
     name (accessible through the \c id property) is set to \c "From QAxFactory"
     to indicate that this COM object has been created by COM. Note that there is
     no destructor that would delete the QTabWidget - this is instead done in the
-    \c quit() slot, before calling QApplication::quit() through a single-shot-timer,
-    which is necessary ensure that the COM call to the slot is complete.
+    \c quit() slot, before calling \l {QApplication::}{quit()} through a single-shot-timer,
+    which is necessary to ensure that the COM call to the slot is complete.
 
     \snippet  activeqt/comapp/main.cpp 6
     The classes are exported from the server using the QAxFactory macros. Only

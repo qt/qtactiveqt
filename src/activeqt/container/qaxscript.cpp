@@ -696,7 +696,7 @@ QAxScript::~QAxScript()
     heuristically. If \a code contains the string \c {End Sub} it will
     be interpreted as VBScript, otherwise as JScript. Additional
     scripting languages can be registered using
-    QAxScript::registerEngine().
+    QAxScriptManager::registerEngine().
 
     This function can only be called once for each QAxScript object,
     which is done automatically when using QAxScriptManager::load().
@@ -875,7 +875,7 @@ QAxBase *QAxScript::findObject(const QString &name)
 /*! \fn void QAxScript::stateChanged(int state);
 
     This signal is emitted when a script engine changes state.
-    \a state can be any value in the QAxScriptEngineState enumeration.
+    \a state can be any value in the \c QAxScriptEngine::State enumeration.
 */
 
 /*!
