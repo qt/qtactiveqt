@@ -700,7 +700,7 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
 
     Properties exposed by the object's IDispatch implementation can
     be read and written through the property system provided by the
-    Qt Object Model (both subclasses are QObjects, so you can use
+    Qt Object Model (both subclasses are \l{QObject}s, so you can use
     QObject::setProperty() and QObject::property()). Properties with
     multiple parameters are not supported.
 

@@ -222,7 +222,7 @@
     the Qt objects we want to use in our form. Right-click on the empty
     space, and select "Customize". This opens a dialog that has two
     tabs, "COM Components" and ".NET Framework Components". We used
-    ActiveQt to wrap QWidgets into COM objects, so we select the "COM
+    ActiveQt to wrap \l {QWidget}s into COM objects, so we select the "COM
     Components" page, and look for the classes we want to use, e.g.
     "QPushButton" and "QAxWidget2".
 
