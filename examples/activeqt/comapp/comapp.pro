@@ -1,3 +1,5 @@
+include(../shared.pri)
+
 TEMPLATE = app
 QT  += axserver
 
