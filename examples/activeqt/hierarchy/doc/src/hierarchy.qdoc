@@ -47,7 +47,7 @@
     this class.
 
     \snippet activeqt/hierarchy/objects.cpp 0
-    The constructor of QParentWidget creates a vertical box layout.
+    The constructor of \c QParentWidget creates a vertical box layout.
     New child widgets are automatically added to the layout.
 
     \snippet activeqt/hierarchy/objects.cpp 1
@@ -69,7 +69,7 @@
 
     \snippet activeqt/hierarchy/objects.cpp 3
     \snippet activeqt/hierarchy/objects.cpp 4
-    The implementation of the QSubWidget class is self-explanatory.
+    The implementation of the \c QSubWidget class is self-explanatory.
 
     \snippet activeqt/hierarchy/main.cpp 0
     The classes are then exported using a QAxFactory. \c QParentWidget is
