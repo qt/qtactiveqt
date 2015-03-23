@@ -548,8 +548,8 @@ bool QAxFactory::registerActiveObject(QObject *object)
     \a IDTypeLib, and if the server is an executable server then it will have the
     application id \a IDApp.
 
-    This macro needs to be used together with the \l {QAxFactory::}{QAXCLASS()}, \c {QAxFactory::}{QAXTYPE()}
-    and \c {QAxFactory::}{QAXFACTORY_END()} macros.
+    This macro needs to be used together with the QAXCLASS(), QAXTYPE()
+    and QAXFACTORY_END() macros.
 
     \snippet src_activeqt_control_qaxfactory.cpp 9
 */
