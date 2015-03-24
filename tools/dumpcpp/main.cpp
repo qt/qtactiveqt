@@ -54,8 +54,7 @@ static ITypeInfo *currentTypeInfo = 0;
 
 enum ProgramMode {
     GenerateMode,
-    TypeLibID,
-    DoNothing
+    TypeLibID
 };
 
 enum ObjectCategory
@@ -1446,9 +1445,6 @@ static void parseOptions(Options *options)
     QCommandLineOption noImplementationOption(QStringLiteral("decl"),
                                               QStringLiteral("Only generate the .h file."));
     parser.addOption(noImplementationOption);
-    QCommandLineOption doNothingOption(QStringLiteral("donothing"),
-                                       QStringLiteral("Do not generate any files."));
-    parser.addOption(doNothingOption);
     QCommandLineOption compatOption(QStringLiteral("compat"),
                                     QStringLiteral("Treat all coclass parameters as IDispatch."));
     parser.addOption(compatOption);
@@ -1470,8 +1466,6 @@ static void parseOptions(Options *options)
         options->category |= NoDeclaration;
     if (parser.isSet(noImplementationOption))
         options->category |= NoImplementation;
-    if (parser.isSet(doNothingOption))
-        options->mode = DoNothing;
     options->dispatchEqualsIDispatch = parser.isSet(compatOption);
     if (parser.isSet(getFileOption)) {
         options->typeLib = parser.value(getFileOption);
@@ -1514,9 +1508,6 @@ int main(int argc, char **argv)
             fprintf(stdout, "\"%s\"\n", qPrintable(typeLib));
         return 0;
     }
-
-    if (options.mode == DoNothing)
-        return 0;
 
     if (typeLib.isEmpty()) {
         qWarning("dumpcpp: No object class or type library name provided.\n"
