@@ -40,9 +40,7 @@
 #ifndef QAXTYPEFUNCTIONS_P_H
 #define QAXTYPEFUNCTIONS_P_H
 
-#if !defined(_WINDOWS_) && !defined(_WINDOWS_H) && !defined(__WINDOWS__)
-#error Must include windows.h first!
-#endif
+#include <QtCore/qt_windows.h>
 
 #include <QtGui/qcolor.h>
 #include <QtGui/qfont.h>
