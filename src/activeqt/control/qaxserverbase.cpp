@@ -423,7 +423,7 @@ public:
         InitializeCriticalSection(&refCountSection);
         InitializeCriticalSection(&createWindowSection);
     }
-    ~QAxServerAggregate()
+    virtual ~QAxServerAggregate()
     {
         DeleteCriticalSection(&refCountSection);
         DeleteCriticalSection(&createWindowSection);
@@ -504,7 +504,7 @@ public:
         for (int i = 0; i < count; ++i)
             cpoints.at(i)->AddRef();
     }
-    ~QAxSignalVec()
+    virtual ~QAxSignalVec()
     {
         const int count = cpoints.count();
         for (int i = 0; i < count; ++i)
@@ -623,7 +623,7 @@ public:
         foreach (const CONNECTDATA &connection, connections)
             connection.pUnk->AddRef();
     }
-    ~QAxConnection()
+    virtual ~QAxConnection()
     {
         DeleteCriticalSection(&refCountSection);
     }
@@ -843,7 +843,7 @@ public:
         }
     }
 
-    ~QClassFactory()
+    virtual ~QClassFactory()
     {
         DeleteCriticalSection(&refCountSection);
     }
