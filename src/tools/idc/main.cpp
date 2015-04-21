@@ -140,7 +140,7 @@ static bool runWithQtInEnvironment(const QString &cmd)
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
     if (exitCode)
-        fprintf(stderr, "\"%s\" returned exit code: %ul\n", qPrintable(cmd), exitCode);
+        fprintf(stderr, "\"%s\" returned exit code: %lu (0x%lx)\n", qPrintable(cmd), exitCode, exitCode);
     return exitCode == 0;
 }
 

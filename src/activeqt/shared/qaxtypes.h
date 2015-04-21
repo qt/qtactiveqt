@@ -53,10 +53,10 @@ QT_BEGIN_NAMESPACE
 #   define VARIANTToQVariantFunc VARIANTToQVariant_container
 #endif
 
-extern bool QVariantToVARIANTFunc(const QVariant &var, VARIANT &arg, const QByteArray &typeName = 0, bool out = false);
+extern bool QVariantToVARIANTFunc(const QVariant &var, VARIANT &arg, const QByteArray &typeName = QByteArray(), bool out = false);
 extern QVariant VARIANTToQVariantFunc(const VARIANT &arg, const QByteArray &typeName, uint type = 0);
 
-inline bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &typeName = 0, bool out = false)
+inline bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &typeName = QByteArray(), bool out = false)
 {
     return QVariantToVARIANTFunc(var, arg, typeName, out);
 }

@@ -1,5 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
+    conversion \
     qaxobject \
     qaxscript \
     dumpcpp \

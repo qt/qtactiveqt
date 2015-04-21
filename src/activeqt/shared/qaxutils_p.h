@@ -53,7 +53,7 @@
 //
 
 #include <QtCore/qt_windows.h>
-#include <QtCore/QtGlobal>
+#include <QtCore/QMetaType>
 
 QT_BEGIN_NAMESPACE
 
@@ -75,5 +75,7 @@ QPixmap qaxPixmapFromWinHBITMAP(HBITMAP bitmap, HBitmapFormat format = HBitmapNo
 HRGN qaxHrgnFromQRegion(const QRegion &region);
 
 QT_END_NAMESPACE
+
+Q_DECLARE_METATYPE(IDispatch**)
 
 #endif
