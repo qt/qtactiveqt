@@ -91,6 +91,7 @@ class QAxScriptSite : public IActiveScriptSite, public IActiveScriptSiteWindow
 {
 public:
     QAxScriptSite(QAxScript *script);
+    virtual ~QAxScriptSite() {}
 
     ULONG WINAPI AddRef();
     ULONG WINAPI Release();
