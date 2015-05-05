@@ -741,14 +741,15 @@ QAxClientSite::~QAxClientSite()
 
 void QAxClientSite::releaseAll()
 {
+    if (m_spOleControl)
+        m_spOleControl->Release();
+    m_spOleControl = Q_NULLPTR;
     if (m_spOleObject) {
         m_spOleObject->SetClientSite(0);
         m_spOleObject->Unadvise(m_dwOleObject);
         m_spOleObject->Release();
     }
     m_spOleObject = 0;
-    if (m_spOleControl) m_spOleControl->Release();
-    m_spOleControl = 0;
     if (m_spInPlaceObject) m_spInPlaceObject->Release();
     m_spInPlaceObject = 0;
     if (m_spInPlaceActiveObject) m_spInPlaceActiveObject->Release();
