@@ -42,7 +42,9 @@
 #include "../shared/qaxutils_p.h"
 
 #if defined(Q_CC_GNU)
-# define QT_NO_QAXSCRIPT
+// Workaround for mingw-w64 bug #464
+// See https://sourceforge.net/p/mingw-w64/bugs/464/
+# define _NO_SCRIPT_GUIDS
 #elif defined(Q_CC_BOR) && __BORLANDC__ < 0x560
 # define QT_NO_QAXSCRIPT
 #endif
@@ -89,6 +91,7 @@ class QAxScriptSite : public IActiveScriptSite, public IActiveScriptSiteWindow
 {
 public:
     QAxScriptSite(QAxScript *script);
+    virtual ~QAxScriptSite() {}
 
     ULONG WINAPI AddRef();
     ULONG WINAPI Release();
@@ -383,8 +386,7 @@ HRESULT WINAPI QAxScriptSite::EnableModeless(BOOL fEnable)
     Direct access to the script engine is provided through
     queryInterface().
 
-    \warning This class is not available with the bcc5.5 and MingW
-    compilers.
+    \warning This class is not available with the bcc5.5 compiler.
 
     \sa QAxScript, QAxScriptManager, QAxBase, {ActiveQt Framework}
 */
@@ -632,8 +634,7 @@ void QAxScriptEngine::addItem(const QString &name)
     error() signal. Direct access to the QAxScriptEngine is provided
     through the scriptEngine() function.
 
-    \warning This class is not available with the bcc5.5 and MingW
-    compilers.
+    \warning This class is not available with the bcc5.5 compiler.
 
     \sa QAxScriptEngine, QAxScriptManager, QAxBase, {ActiveQt Framework}
 */
@@ -901,8 +902,7 @@ QAxBase *QAxScript::findObject(const QString &name)
     using addObject(). Then load() the script sources and invoke the
     functions using call().
 
-    \warning This class is not available with the bcc5.5 and MingW
-    compilers.
+    \warning This class is not available with the bcc5.5 compiler.
 
     \sa QAxScript, QAxScriptEngine, QAxBase, {ActiveQt Framework}
 */

@@ -48,6 +48,8 @@
 #include <QtCore/qvariant.h>
 
 QT_BEGIN_NAMESPACE
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wnon-virtual-dtor") // gcc complains about IAxServerBase inheriting IUnknown with non virtual destructor.
 
 extern GUID IID_IAxServerBase;
 struct IAxServerBase : public IUnknown
@@ -81,6 +83,7 @@ extern void clearVARIANT(VARIANT *var);
 #define QAX_INPROC_SERVER  (0x51540001)
 #define QAX_OUTPROC_SERVER (0x51540002)
 
+QT_WARNING_POP
 QT_END_NAMESPACE
 
 #endif // QAXTYPEFUNCTIONS_P_H

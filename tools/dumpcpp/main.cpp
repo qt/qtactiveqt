@@ -431,9 +431,16 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
                 if (!parameterType.contains("::") && namespaceForType.contains(parameterType))
                     parameterType.prepend(namespaceForType.value(parameterType) + "::");
 
+                QByteArray arraySpec; // transform array method signature "foo(int[4])" ->"foo(int p[4])"
+                const int arrayPos = parameterType.lastIndexOf('[');
+                if (arrayPos != -1) {
+                    arraySpec = parameterType.right(parameterType.size() - arrayPos);
+                    parameterType.truncate(arrayPos);
+                }
                 slotNamedSignature += constRefify(parameterType);
                 slotNamedSignature += ' ';
                 slotNamedSignature += parameterSplit.at(i);
+                slotNamedSignature += arraySpec;
                 if (defaultArguments >= signatureSplit.count() - i) {
                     slotNamedSignature += " = ";
                     slotNamedSignature += parameterType + "()";
