@@ -82,6 +82,7 @@ extern void qax_deleteMetaObject(QMetaObject *mo);
 QMap<QByteArray, QByteArray> namespaceForType;
 QVector<QByteArray> strings;
 QHash<QByteArray, int> stringIndex; // Optimization, speeds up generation
+QByteArrayList vTableOnlyStubs;
 
 void writeEnums(QTextStream &out, const QMetaObject *mo)
 {
@@ -491,7 +492,8 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
                     QByteArray simpleSlotTypeWithNamespace = slotType;
                     simpleSlotTypeWithNamespace.replace('*', "");
                     out << indent << "    qRegisterMetaType<" << simpleSlotTypeWithNamespace << "*>(\"" << simpleSlotType << "*\", &qax_result);" << endl;
-                    out << indent << "    qRegisterMetaType<" << simpleSlotTypeWithNamespace << ">(\"" << simpleSlotType << "\", qax_result);" << endl;
+                    if (!vTableOnlyStubs.contains(simpleSlotTypeWithNamespace))
+                        out << indent << "    qRegisterMetaType<" << simpleSlotTypeWithNamespace << ">(\"" << simpleSlotType << "\", qax_result);" << endl;
                     if (foreignNamespace)
                         out << "#endif" << endl;
                 }
@@ -902,6 +904,35 @@ static void formatCommentBlockFooter(const QString &typeLibFile, QTextStream &st
         << "****************************************************************************/\n\n";
 }
 
+static QByteArray classNameFromTypeInfo(ITypeInfo *typeinfo)
+{
+    BSTR bstr;
+    QByteArray result;
+    if (SUCCEEDED(typeinfo->GetDocumentation(-1, &bstr, 0, 0, 0))) {
+        result = QString::fromWCharArray(bstr).toLatin1();
+        SysFreeString(bstr);
+    }
+    return result;
+}
+
+// Extract a list of VTable only stubs from a ITypeLib.
+static QByteArrayList vTableOnlyStubsFromTypeLib(ITypeLib *typelib, const QString &nameSpace)
+{
+    QByteArrayList result;
+    const QByteArray nameSpacePrefix = nameSpace.toLatin1() + "::";
+    for (UINT i = 0, typeCount = typelib->GetTypeInfoCount(); i < typeCount; ++i) {
+        TYPEKIND typekind;
+        if (SUCCEEDED(typelib->GetTypeInfoType(i, &typekind)) && typekind == TKIND_INTERFACE) {
+            ITypeInfo *typeinfo = Q_NULLPTR;
+            if (SUCCEEDED(typelib->GetTypeInfo(i, &typeinfo) && typeinfo)) {
+                result.append(nameSpacePrefix + classNameFromTypeInfo(typeinfo));
+                typeinfo->Release();
+            }
+        }
+    }
+    return result;
+}
+
 bool generateTypeLibrary(QString typeLibFile, QString outname,
                          const QString &nameSpace, ObjectCategory category)
 {
@@ -922,6 +953,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
             SysFreeString(nameString);
         }
     }
+    vTableOnlyStubs = vTableOnlyStubsFromTypeLib(typelib, libName);
 
     QString libVersion(QLatin1String("1.0"));
 
@@ -1031,12 +1063,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 case TKIND_ENUM:
                 case TKIND_INTERFACE: // only for forward declarations
                     {
-                        QByteArray className;
-                        BSTR bstr;
-                        if (S_OK != typeinfo->GetDocumentation(-1, &bstr, 0, 0, 0))
-                            break;
-                        className = QString::fromWCharArray(bstr).toLatin1();
-                        SysFreeString(bstr);
+                        QByteArray className = classNameFromTypeInfo(typeinfo);
                         switch (typekind) {
                         case TKIND_RECORD:
                             className.prepend("struct ");
@@ -1174,17 +1201,12 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
             else
                 metaObject = qax_readInterfaceInfo(typelib, typeinfo, &QObject::staticMetaObject);
             break;
-        case TKIND_INTERFACE: // only stub
-            {
-                QByteArray className;
-                BSTR bstr;
-                if (S_OK != typeinfo->GetDocumentation(-1, &bstr, 0, 0, 0))
-                    break;
-                className = QString::fromWCharArray(bstr).toLatin1();
-                SysFreeString(bstr);
-
-                declOut << "// stub for vtable-only interface" << endl;
-                declOut << "class " << className << " : public QAxObject {};" << endl << endl;
+        case TKIND_INTERFACE: { // only stub: QTBUG-27792, explicitly disable copy in inherited
+                                // class to make related error messages clearer
+                const QByteArray className = classNameFromTypeInfo(typeinfo);
+                declOut << "// stub for vtable-only interface\n"
+                    << "class " << className << " : public QAxObject { Q_DISABLE_COPY("
+                    << className << ") };\n\n";
             }
             break;
         default:
