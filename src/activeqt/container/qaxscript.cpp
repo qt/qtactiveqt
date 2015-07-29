@@ -41,7 +41,7 @@
 #include "qaxscript.h"
 #include "../shared/qaxutils_p.h"
 
-#if defined(Q_CC_GNU) && __MINGW64_VERSION_MAJOR == 3 && __MINGW64_VERSION_MINOR > 0
+#if defined(Q_CC_GNU) && (__MINGW64_VERSION_MAJOR == 3 && __MINGW64_VERSION_MINOR > 0 || __MINGW64_VERSION_MAJOR >= 4)
 // Workaround for mingw-w64 bug #464
 // See https://sourceforge.net/p/mingw-w64/bugs/464/
 # define _NO_SCRIPT_GUIDS
