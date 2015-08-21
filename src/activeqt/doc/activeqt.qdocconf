@@ -45,3 +45,13 @@ exampledirs += ../../../examples/ \
 imagedirs   += images
 
 navigation.landingpage = "Active Qt"
+
+#add a generic thumbnail image for example docs that does not have an image
+manifestmeta.thumbnail.names    = "ActiveQt/COM App Example*" \
+                                  "ActiveQt/Hierarchy*" \
+                                  "ActiveQt/Menus*" \
+                                  "ActiveQt/Multiple*" \
+                                  "ActiveQt/OpenGL*" \
+                                  "ActiveQt/Qutlook*" \
+                                  "ActiveQt/Simple*" \
+                                  "ActiveQt/Wrapper*"
