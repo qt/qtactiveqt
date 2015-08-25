@@ -46,6 +46,7 @@
 #include <QtCore/qfactoryinterface.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/qsettings.h>
 
 struct IUnknown;
 struct IDispatch;
@@ -198,6 +199,36 @@ public:
         if (!qstrcmp(mo.classInfo(mo.indexOfClassInfo("Creatable")).value(), "no"))
             return 0;
         return new T(0);
+    }
+
+    void registerClass(const QString &key, QSettings *settings) const Q_DECL_OVERRIDE
+    {
+        const QStringList categories = getImplementedCategories();
+
+        for (QStringList::const_iterator it = categories.begin(), end = categories.end(); it != end; ++it) {
+            settings->setValue(QLatin1String("/CLSID/") + classID(key).toString()
+                             + QLatin1String("/Implemented Categories/") + *it + QLatin1String("/."),
+                               QString());
+        }
+    }
+
+    void unregisterClass(const QString &key, QSettings *settings) const Q_DECL_OVERRIDE
+    {
+        const QStringList categories = getImplementedCategories();
+
+        for (QStringList::const_iterator it = categories.begin(), end = categories.end(); it != end; ++it) {
+            settings->remove(QLatin1String("/CLSID/") + classID(key).toString()
+                           + QLatin1String("/Implemented Categories/") + *it + QLatin1String("/."));
+        }
+    }
+
+private:
+    /*! Retrieve list of comma-separated "Implemented Categories" Q_CLASSINFO UUIDs from T. */
+    static QStringList getImplementedCategories()
+    {
+        const QMetaObject &mo = T::staticMetaObject;
+        QString catids = mo.classInfo(mo.indexOfClassInfo("Implemented Categories")).value();
+        return catids.split(QLatin1Char(','));
     }
 };
 

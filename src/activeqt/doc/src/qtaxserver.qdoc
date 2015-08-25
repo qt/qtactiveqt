@@ -812,6 +812,14 @@
     \li The classname used in the generated IDL and in the registry. This is
        esp. useful for C++ classes that live in a namespace - by default,
        ActiveQt just removes the "::" to make the IDL compile.
+    \row
+    \li Implemented Categories
+    \li List of comma-separated Category ID (CATID) UUIDs. Generic mechanism
+       for specifying additional container capabilities, in addition to
+       "control", "insertable" etc. Typical CATIDs include
+       \c CATID_InternetAware ("{0DE86A58-2BAA-11CF-A229-00AA003D7352}"),
+       \c CATID_SafeForScripting ("{7DD95801-9882-11CF-9FA9-00AA006C42C4}") as
+       well as user-defined CATID values.
     \endtable
 
     Note that both keys and values are case sensitive.
