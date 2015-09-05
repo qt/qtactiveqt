@@ -54,13 +54,11 @@
 //! [0]
 #include <QAxFactory>
 
-QAXFACTORY_DEFAULT( GLBox,
-                    "{5fd9c22e-ed45-43fa-ba13-1530bb6b03e0}",
-                    "{33b051af-bb25-47cf-a390-5cfd2987d26a}",
-                    "{8c996c29-eafa-46ac-a6f9-901951e765b5}",
-                    "{2c3c183a-eeda-41a4-896e-3d9c12c3577d}",
-                    "{83e16271-6480-45d5-aaf1-3f40b7661ae4}"
-                  )
+QAXFACTORY_BEGIN(
+    "{2c3c183a-eeda-41a4-896e-3d9c12c3577d}", // type library ID
+    "{83e16271-6480-45d5-aaf1-3f40b7661ae4}") // application ID
+    QAXCLASS(GLBox)
+QAXFACTORY_END()
 
 //! [0] //! [1]
 /*

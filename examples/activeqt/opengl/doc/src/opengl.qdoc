@@ -71,9 +71,9 @@
     Qt to render an OpenGL scene in an ActiveX. The control exposes a few
     methods to change the scene.
 
-    The application uses the default factory as provided by the
-    QAXFACTORY_DEFAULT macro to expose the \c GLBox widget as an ActiveX
-    control.
+    The application uses QAxFactory through the \c QAXFACTORY_BEGIN(),
+    \c QAXCLASS() and \c QAXFACTORY_END() macros to expose the
+    \c GLBox widget as an ActiveX control.
     \snippet activeqt/opengl/main.cpp 0
     The implementation of \c main initializes the QApplication object,
     and uses \c QAxFactory::isServer() to determine whether or not it is

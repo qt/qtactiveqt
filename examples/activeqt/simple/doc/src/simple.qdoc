@@ -75,9 +75,9 @@
     \title Simple Example (ActiveQt)
 
     The Simple example demonstrates the use of
-    QAxBindable::requestPropertyChange() and
-    QAxBindable::propertyChanged(), and the use of the default
-    QAxFactory through the \c QAXFACTORY_DEFAULT() macro.
+    QAxBindable::requestPropertyChange() and QAxBindable::propertyChanged(),
+    and the use of QAxFactory through the \c QAXFACTORY_BEGIN(),
+    \c QAXCLASS() and \c QAXFACTORY_END() macros.
 
     The ActiveX control in this example is a laid out QWidget with a
     QSlider, a QLCDNumber and a QLineEdit. It provides a

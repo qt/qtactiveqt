@@ -57,7 +57,10 @@ class GLBox : public QGLWidget,
               public QAxBindable
 {
     Q_OBJECT
-//! [0] //! [1]
+    Q_CLASSINFO("ClassID",     "{5fd9c22e-ed45-43fa-ba13-1530bb6b03e0}")
+    Q_CLASSINFO("InterfaceID", "{33b051af-bb25-47cf-a390-5cfd2987d26a}")
+    Q_CLASSINFO("EventsID",    "{8c996c29-eafa-46ac-a6f9-901951e765b5}")
+    //! [0] //! [1]
 
 public:
 

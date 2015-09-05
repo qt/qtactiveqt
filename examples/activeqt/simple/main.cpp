@@ -51,6 +51,9 @@
 class QSimpleAX : public QWidget, public QAxBindable
 {
     Q_OBJECT
+    Q_CLASSINFO("ClassID",     "{DF16845C-92CD-4AAB-A982-EB9840E74669}")
+    Q_CLASSINFO("InterfaceID", "{616F620B-91C5-4410-A74E-6B81C76FFFE0}")
+    Q_CLASSINFO("EventsID",    "{E1816BBA-BF5D-4A31-9855-D6BA432055FF}")
     Q_PROPERTY( QString text READ text WRITE setText )
     Q_PROPERTY( int value READ value WRITE setValue )
 public:
@@ -127,10 +130,9 @@ private:
 #include "main.moc"
 
 //! [1]
-QAXFACTORY_DEFAULT(QSimpleAX,
-           "{DF16845C-92CD-4AAB-A982-EB9840E74669}",
-           "{616F620B-91C5-4410-A74E-6B81C76FFFE0}",
-           "{E1816BBA-BF5D-4A31-9855-D6BA432055FF}",
-           "{EC08F8FC-2754-47AB-8EFE-56A54057F34E}",
-           "{A095BA0C-224F-4933-A458-2DD7F6B85D8F}")
+QAXFACTORY_BEGIN(
+    "{EC08F8FC-2754-47AB-8EFE-56A54057F34E}", // type library ID
+    "{A095BA0C-224F-4933-A458-2DD7F6B85D8F}") // application ID
+    QAXCLASS(QSimpleAX)
+QAXFACTORY_END()
 //! [1]
