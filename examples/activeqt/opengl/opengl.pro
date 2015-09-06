@@ -11,6 +11,7 @@ SOURCES  = glbox.cpp \
            main.cpp
 
 RC_FILE = opengl.rc
+DEF_FILE = opengl.def
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/activeqt/opengl
