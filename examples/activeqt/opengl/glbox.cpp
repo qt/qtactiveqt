@@ -78,7 +78,9 @@ GLBox::GLBox( QWidget* parent, const char* name )
 GLBox::~GLBox()
 {
     makeCurrent();
-    glDeleteLists( object, 1 );
+
+    if (object)
+        glDeleteLists( object, 1 );
 }
 
 
@@ -109,6 +111,8 @@ void GLBox::paintGL()
 
 void GLBox::initializeGL()
 {
+    initializeOpenGLFunctions();
+
     qglClearColor(Qt::black);           // Let OpenGL clear to black
     object = makeObject();              // Generate an OpenGL display list
     glShadeModel( GL_FLAT );
