@@ -82,7 +82,7 @@ public:
     long queryInterface(const QUuid &, void**) const;
 
 protected:
-    bool initialize(IUnknown** ptr);
+    bool initialize(IUnknown** ptr) Q_DECL_OVERRIDE;
 
 private:
     QAxScript *script_code;

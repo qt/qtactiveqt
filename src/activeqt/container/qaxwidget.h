@@ -56,19 +56,19 @@ class QAxWidget : public QWidget, public QAxBase
 {
     Q_OBJECT_FAKE
 public:
-    QObject* qObject() const { return (QWidget*)this; }
-    const char *className() const;
+    QObject* qObject() const Q_DECL_OVERRIDE { return (QWidget*)this; }
+    const char *className() const Q_DECL_OVERRIDE;
 
     QAxWidget(QWidget* parent = 0, Qt::WindowFlags f = 0);
     QAxWidget(const QString &c, QWidget *parent = 0, Qt::WindowFlags f = 0);
     QAxWidget(IUnknown *iface, QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~QAxWidget();
 
-    void clear();
+    void clear() Q_DECL_OVERRIDE;
     bool doVerb(const QString &verb);
 
-    QSize sizeHint() const;
-    QSize minimumSizeHint() const;
+    QSize sizeHint() const Q_DECL_OVERRIDE;
+    QSize minimumSizeHint() const Q_DECL_OVERRIDE;
 
     virtual QAxAggregated *createAggregate();
 
@@ -77,13 +77,13 @@ protected:
     virtual bool createHostWindow(bool);
     bool createHostWindow(bool, const QByteArray&);
 
-    void changeEvent(QEvent *e);
-    void resizeEvent(QResizeEvent *);
+    void changeEvent(QEvent *e) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
 
     virtual bool translateKeyEvent(int message, int keycode) const;
 
-    void connectNotify(const QMetaMethod &signal);
-    const QMetaObject *fallbackMetaObject() const;
+    void connectNotify(const QMetaMethod &signal) Q_DECL_OVERRIDE;
+    const QMetaObject *fallbackMetaObject() const Q_DECL_OVERRIDE;
 private:
     friend class QAxClientSite;
     QAxClientSite *container;

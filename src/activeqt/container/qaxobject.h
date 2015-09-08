@@ -61,11 +61,11 @@ public:
     bool doVerb(const QString &verb);
 
 protected:
-    void connectNotify(const QMetaMethod &signal);
-    const QMetaObject *fallbackMetaObject() const;
+    void connectNotify(const QMetaMethod &signal) Q_DECL_OVERRIDE;
+    const QMetaObject *fallbackMetaObject() const Q_DECL_OVERRIDE;
 
 private:
-    const QMetaObject *parentMetaObject() const;
+    const QMetaObject *parentMetaObject() const Q_DECL_OVERRIDE;
 };
 
 template <> inline QAxObject *qobject_cast<QAxObject*>(const QObject *o)
