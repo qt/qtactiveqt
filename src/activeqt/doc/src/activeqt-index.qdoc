@@ -39,7 +39,7 @@
     \page activeqt-index.html
     \ingroup qt-activex
     \keyword ActiveQt
-    \target ActiveQt Framework
+    \keyword ActiveQt Framework
     \title Active Qt
     \brief Provides ActiveX and COM integration on Windows
 
