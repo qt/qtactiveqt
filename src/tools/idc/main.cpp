@@ -170,13 +170,31 @@ static bool attachTypeLibrary(const QString &applicationName, int resource, cons
     return true;
 }
 
+// Manually add defines that are missing from pre-VS2012 compilers
+#ifndef LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR
+#  define LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR 0x00000100
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+#  define LOAD_LIBRARY_SEARCH_DEFAULT_DIRS 0x00001000
+#endif
+
+static HMODULE loadLibraryQt(const QString &input)
+{
+    if (QSysInfo::windowsVersion() < QSysInfo::WV_VISTA)
+        return LoadLibrary((const wchar_t *)input.utf16()); // fallback for Windows XP and older
+
+    // Load DLL with the folder containing the DLL temporarily added to the search path when loading dependencies
+    return LoadLibraryEx((const wchar_t *)input.utf16(), NULL,
+                         LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+}
+
 static bool registerServer(const QString &input)
 {
     bool ok = false;
     if (hasExeExtension(input)) {
         ok = runWithQtInEnvironment(quotePath(input) + QLatin1String(" -regserver"));
     } else {
-        HMODULE hdll = LoadLibrary((const wchar_t *)input.utf16());
+        HMODULE hdll = loadLibraryQt(input);
         if (!hdll) {
             fprintf(stderr, "Couldn't load library file %s\n", (const char*)input.toLocal8Bit().data());
             return false;
@@ -198,7 +216,7 @@ static bool unregisterServer(const QString &input)
     if (hasExeExtension(input)) {
         ok = runWithQtInEnvironment(quotePath(input) + QLatin1String(" -unregserver"));
     } else {
-        HMODULE hdll = LoadLibrary((const wchar_t *)input.utf16());
+        HMODULE hdll = loadLibraryQt(input);
         if (!hdll) {
             fprintf(stderr, "Couldn't load library file %s\n", (const char*)input.toLocal8Bit().data());
             return false;
@@ -222,7 +240,7 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
         if (runWithQtInEnvironment(quotePath(input) + QLatin1String(" -dumpidl ") + idlfile + QLatin1String(" -version ") + version))
             res = S_OK;
     } else {
-        HMODULE hdll = LoadLibrary((const wchar_t *)input.utf16());
+        HMODULE hdll = loadLibraryQt(input);
         if (!hdll) {
             fprintf(stderr, "Couldn't load library file %s\n", (const char*)input.toLocal8Bit().data());
             return 3;
@@ -297,6 +315,9 @@ int runIdc(int argc, char **argv)
         } else {
             input = QLatin1String(argv[i]);
             input = input.trimmed();
+            // LoadLibraryEx requires a fully qualified path when used together with LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR
+            input = QFileInfo(input).absoluteFilePath();
+            input = QDir::toNativeSeparators(input);
         }
         i++;
     }
@@ -317,7 +338,6 @@ int runIdc(int argc, char **argv)
         fprintf(stderr, "No interface definition file and no type library file specified!\n");
         return 3;
     }
-    input = QDir::toNativeSeparators(input);
     if (!tlbfile.isEmpty()) {
         tlbfile = QDir::toNativeSeparators(tlbfile);
         QFile file(tlbfile);
