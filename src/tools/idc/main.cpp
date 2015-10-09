@@ -258,6 +258,26 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
     return res;
 }
 
+const char usage[] =
+"Usage: idc [options] [input_file]\n"
+"Interface Description Compiler " QT_VERSION_STR "\n\n"
+"Options:\n"
+"  -?, /h, -h, -help                 Displays this help.\n"
+"  /v, -v                            Displays version information.\n"
+"  /version, -version <version>      Specify the interface version.\n"
+"  /idl, -idl <file>                 Specify the interface definition file.\n"
+"  /tlb, -tlb <file>                 Specify the type library file.\n"
+"  /regserver, -regserver            Register server.\n"
+"  /unregserver, -unregserver        Unregister server.\n\n"
+"Examples:\n"
+"idc -regserver l.dll                Register the COM server l.dll\n"
+"idc -unregserver l.dll              Unregister the COM server l.dll\n"
+"idc l.dll -idl l.idl -version 2.3   Writes the IDL of the server dll to the file idl.\n"
+"                                    The type library will have version 2.3\n"
+"idc l.dll -tlb l.tlb                Replaces the type library in l.dll with l.tlb\n";
+
+enum Mode { RegisterServer, UnregisterServer, Other };
+
 int runIdc(int argc, char **argv)
 {
     QString error;
@@ -265,6 +285,7 @@ int runIdc(int argc, char **argv)
     QString idlfile;
     QString input;
     QString version = QLatin1String("1.0");
+    Mode mode = Other;
 
     int i = 1;
     while (i < argc) {
@@ -291,22 +312,15 @@ int runIdc(int argc, char **argv)
             }
             tlbfile = QFile::decodeName(argv[i]).trimmed();
         } else if (p == QLatin1String("/v") || p == QLatin1String("-v")) {
-            fprintf(stdout, "Qt Interface Definition Compiler version 1.0\n");
+            fprintf(stdout, "Qt Interface Definition Compiler version 1.0 using Qt %s\n", QT_VERSION_STR);
+            return 0;
+        } else if (p == QLatin1String("/h") || p == QLatin1String("-h") || p == QLatin1String("-?") || p == QLatin1String("/?")) {
+            fprintf(stdout, "%s\n", usage);
             return 0;
         } else if (p == QLatin1String("/regserver") || p == QLatin1String("-regserver")) {
-            if (!registerServer(input)) {
-                fprintf(stderr, "Failed to register server!\n");
-                return 1;
-            }
-            fprintf(stderr, "Server registered successfully!\n");
-            return 0;
+            mode = RegisterServer;
         } else if (p == QLatin1String("/unregserver") || p == QLatin1String("-unregserver")) {
-            if (!unregisterServer(input)) {
-                fprintf(stderr, "Failed to unregister server!\n");
-                return 1;
-            }
-            fprintf(stderr, "Server unregistered successfully!\n");
-            return 0;
+            mode = UnregisterServer;
         } else if (p[0] == QLatin1Char('/') || p[0] == QLatin1Char('-')) {
             error = QLatin1String("Unknown option \"") + p + QLatin1Char('"');
             break;
@@ -323,9 +337,29 @@ int runIdc(int argc, char **argv)
         return 5;
     }
     if (input.isEmpty()) {
-        fprintf(stderr, "No input file specified!\n");
+        fprintf(stderr, "No input file specified!\n\n%s\n", usage);
         return 1;
     }
+
+    switch (mode) {
+    case RegisterServer:
+        if (!registerServer(input)) {
+            fprintf(stderr, "Failed to register server!\n");
+            return 1;
+        }
+        fprintf(stderr, "Server registered successfully!\n");
+        return 0;
+    case UnregisterServer:
+        if (!unregisterServer(input)) {
+            fprintf(stderr, "Failed to unregister server!\n");
+            return 1;
+        }
+        fprintf(stderr, "Server unregistered successfully!\n");
+        return 0;
+    case Other:
+        break;
+    }
+
     if (hasExeExtension(input) && tlbfile.isEmpty() && idlfile.isEmpty()) {
         fprintf(stderr, "No type output file specified!\n");
         return 2;
