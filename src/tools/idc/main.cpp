@@ -196,13 +196,13 @@ static bool registerServer(const QString &input)
     } else {
         HMODULE hdll = loadLibraryQt(input);
         if (!hdll) {
-            fprintf(stderr, "Couldn't load library file %s\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Couldn't load library file %s\n", qPrintable(input));
             return false;
         }
         typedef HRESULT(__stdcall* RegServerProc)();
         RegServerProc DllRegisterServer = (RegServerProc)GetProcAddress(hdll, "DllRegisterServer");
         if (!DllRegisterServer) {
-            fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
             return false;
         }
         ok = DllRegisterServer() == S_OK;
@@ -218,13 +218,13 @@ static bool unregisterServer(const QString &input)
     } else {
         HMODULE hdll = loadLibraryQt(input);
         if (!hdll) {
-            fprintf(stderr, "Couldn't load library file %s\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Couldn't load library file %s\n", qPrintable(input));
             return false;
         }
         typedef HRESULT(__stdcall* RegServerProc)();
         RegServerProc DllUnregisterServer = (RegServerProc)GetProcAddress(hdll, "DllUnregisterServer");
         if (!DllUnregisterServer) {
-            fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
             return false;
         }
         ok = DllUnregisterServer() == S_OK;
@@ -242,13 +242,13 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
     } else {
         HMODULE hdll = loadLibraryQt(input);
         if (!hdll) {
-            fprintf(stderr, "Couldn't load library file %s\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Couldn't load library file %s\n", qPrintable(input));
             return 3;
         }
         typedef HRESULT(__stdcall* DumpIDLProc)(const QString&, const QString&);
         DumpIDLProc DumpIDL = (DumpIDLProc)GetProcAddress(hdll, "DumpIDL");
         if (!DumpIDL) {
-            fprintf(stderr, "Couldn't resolve 'DumpIDL' symbol in %s\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Couldn't resolve 'DumpIDL' symbol in %s\n", qPrintable(input));
             return 3;
         }
         res = DumpIDL(idlfile, version);
@@ -276,8 +276,7 @@ int runIdc(int argc, char **argv)
                 error = QLatin1String("Missing name for interface definition file!");
                 break;
             }
-            idlfile = QLatin1String(argv[i]);
-            idlfile = idlfile.trimmed();
+            idlfile = QFile::decodeName(argv[i]).trimmed();
         } else if (p == QLatin1String("/version") || p == QLatin1String("-version")) {
             ++i;
             if (i > argc)
@@ -290,8 +289,7 @@ int runIdc(int argc, char **argv)
                 error = QLatin1String("Missing name for type library file!");
                 break;
             }
-            tlbfile = QLatin1String(argv[i]);
-            tlbfile = tlbfile.trimmed();
+            tlbfile = QFile::decodeName(argv[i]).trimmed();
         } else if (p == QLatin1String("/v") || p == QLatin1String("-v")) {
             fprintf(stdout, "Qt Interface Definition Compiler version 1.0\n");
             return 0;
@@ -310,11 +308,10 @@ int runIdc(int argc, char **argv)
             fprintf(stderr, "Server unregistered successfully!\n");
             return 0;
         } else if (p[0] == QLatin1Char('/') || p[0] == QLatin1Char('-')) {
-            error = QLatin1String("Unknown option \"") + p + QLatin1Char('\"');
+            error = QLatin1String("Unknown option \"") + p + QLatin1Char('"');
             break;
         } else {
-            input = QLatin1String(argv[i]);
-            input = input.trimmed();
+            input = QFile::decodeName(argv[i]).trimmed();
             // LoadLibraryEx requires a fully qualified path when used together with LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR
             input = QFileInfo(input).absoluteFilePath();
             input = QDir::toNativeSeparators(input);
@@ -322,8 +319,7 @@ int runIdc(int argc, char **argv)
         i++;
     }
     if (!error.isEmpty()) {
-        fprintf(stderr, "%s", error.toLatin1().data());
-        fprintf(stderr, "\n");
+        fprintf(stderr, "%s\n", qPrintable(error));
         return 5;
     }
     if (input.isEmpty()) {
@@ -342,52 +338,48 @@ int runIdc(int argc, char **argv)
         tlbfile = QDir::toNativeSeparators(tlbfile);
         QFile file(tlbfile);
         if (!file.open(QIODevice::ReadOnly)) {
-            fprintf(stderr, "Couldn't open %s for read\n", (const char*)tlbfile.toLocal8Bit().data());
+            fprintf(stderr, "Couldn't open %s for read: %s\n", qPrintable(tlbfile), qPrintable(file.errorString()));
             return 4;
         }
-        QByteArray data = file.readAll();
         QString error;
-        bool ok = attachTypeLibrary(input, 1, data, &error);
-        fprintf(stderr, "%s", error.toLatin1().data());
-        fprintf(stderr, "\n");
+        const bool ok = attachTypeLibrary(input, 1, file.readAll(), &error);
+        fprintf(stderr, "%s\n", qPrintable(error));
         return ok ? 0 : 4;
     } else if (!idlfile.isEmpty()) {
-        idlfile = QDir::toNativeSeparators(idlfile);
-        idlfile = quotePath(idlfile);
-        fprintf(stderr, "\n\n%s\n\n", (const char*)idlfile.toLocal8Bit().data());
-        quotePath(input);
-        HRESULT res = dumpIdl(input, idlfile, version);
+        idlfile = quotePath(QDir::toNativeSeparators(idlfile));
+        fprintf(stderr, "\n\n%s\n\n", qPrintable(idlfile));
+        const HRESULT res = dumpIdl(input, idlfile, version);
 
         switch (res) {
         case S_OK:
             break;
         case E_FAIL:
-            fprintf(stderr, "IDL generation failed trying to run program %s!\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "IDL generation failed trying to run program %s!\n", qPrintable(input));
             return res;
         case -1:
-            fprintf(stderr, "Couldn't open %s for writing!\n", (const char*)idlfile.toLocal8Bit().data());
+            fprintf(stderr, "Couldn't open %s for writing!\n", qPrintable(idlfile));
             return res;
         case 1:
-            fprintf(stderr, "Malformed appID value in %s!\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Malformed appID value in %s!\n", qPrintable(input));
             return res;
         case 2:
-            fprintf(stderr, "Malformed typeLibID value in %s!\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Malformed typeLibID value in %s!\n", qPrintable(input));
             return res;
         case 3:
-            fprintf(stderr, "Class has no metaobject information (error in %s)!\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Class has no metaobject information (error in %s)!\n", qPrintable(input));
             return res;
         case 4:
-            fprintf(stderr, "Malformed classID value in %s!\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Malformed classID value in %s!\n", qPrintable(input));
             return res;
         case 5:
-            fprintf(stderr, "Malformed interfaceID value in %s!\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Malformed interfaceID value in %s!\n", qPrintable(input));
             return res;
         case 6:
-            fprintf(stderr, "Malformed eventsID value in %s!\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Malformed eventsID value in %s!\n", qPrintable(input));
             return res;
 
         default:
-            fprintf(stderr, "Unknown error writing IDL from %s\n", (const char*)input.toLocal8Bit().data());
+            fprintf(stderr, "Unknown error writing IDL from %s\n", qPrintable(input));
             return 7;
         }
     }
