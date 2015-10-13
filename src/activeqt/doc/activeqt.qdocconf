@@ -4,7 +4,7 @@ project                 = ActiveQt
 description             = ActiveQt
 version                 = $QT_VERSION
 
-examplesinstallpath     =
+examplesinstallpath     = qtactiveqt
 
 qhp.projects            = ActiveQt
 
