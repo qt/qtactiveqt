@@ -221,10 +221,10 @@
     the interface definition, and to register the server. If a dynamic
     link library the server links against is not in the path this
     might fail (e.g. Visual Studio calls the server using the
-    enivronment settings specified in the "Directories" option). Make
-    sure that all DLLs required by your server are located in a
-    directory that is listed in the path as printed in the error
-    message box.
+    environment settings specified in the "Directories" option).
+    Make sure that all DLLs and plugins required by your server are located
+    in a directory that is listed in the path as printed in the error
+    message box (see also \l{The Windows Deployment Tool}).
 
     \section3 "Cannot open file ..."
 
@@ -233,6 +233,10 @@
     the application to terminate, but you might have to use the task
     manager to kill the process (e.g. when a client doesn't release
     the controls properly).
+
+    \section3 The Control Cannot be Instantiated
+
+    In this case, it may help to register the server as Administrator.
 
     \section1 Implementing Controls
 
