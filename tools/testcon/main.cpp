@@ -35,6 +35,8 @@
 
 #include <QApplication>
 #include <QAxFactory>
+#include <QCommandLineParser>
+#include <QCommandLineOption>
 
 QAXFACTORY_DEFAULT(MainWindow,
                    QLatin1String("{5f5ce700-48a8-47b1-9b06-3b7f79e41d7c}"),
@@ -48,8 +50,30 @@ QT_USE_NAMESPACE
 int main( int argc, char **argv )
 {
     QApplication app( argc, argv );
+    QCoreApplication::setApplicationName(QLatin1String("TestCon"));
+    QCoreApplication::setOrganizationName(QLatin1String("QtProject"));
+    QCoreApplication::setApplicationVersion(QLatin1String(QT_VERSION_STR));
+    QCommandLineParser parser;
+    parser.setApplicationDescription(QLatin1String("ActiveX Control Test Container"));
+    parser.addHelpOption();
+    parser.addVersionOption();
+    QCommandLineOption scriptOption(QLatin1String("script"),
+                                    QLatin1String("A script to load."),
+                                    QLatin1String("script"));
+    parser.addOption(scriptOption);
+    parser.addPositionalArgument(QLatin1String("clsid/file"),
+                                 QLatin1String("The clsid/file to show."));
+    parser.process(app);
 
     MainWindow mw;
+    foreach (const QString &a, parser.positionalArguments()) {
+        if (a.startsWith(QLatin1Char('{')) && a.endsWith(QLatin1Char('}')))
+            mw.addControlFromClsid(a);
+        else
+            mw.addControlFromFile(a);
+    }
+    if (parser.isSet(scriptOption))
+        mw.loadScript(parser.value(scriptOption));
     mw.show();
 
     return app.exec();;

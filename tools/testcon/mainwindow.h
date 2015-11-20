@@ -57,6 +57,10 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    bool addControlFromClsid(const QString &clsid);
+    bool addControlFromFile(const QString &fileName);
+    bool loadScript(const QString &file);
+
 protected slots:
     void on_actionFileNew_triggered();
     void on_actionFileLoad_triggered();

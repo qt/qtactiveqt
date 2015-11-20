@@ -111,29 +111,48 @@ QList<QAxWidget *> MainWindow::axWidgets() const
     return result;
 }
 
-void MainWindow::on_actionFileNew_triggered()
+bool MainWindow::addControlFromClsid(const QString &clsid)
 {
-    QAxSelect select(this);
-    if (select.exec()) {
-        QAxWidget *container = new QAxWidget;
-        container->setControl(select.clsid());
+    QAxWidget *container = new QAxWidget;
+    const bool result = container->setControl(clsid);
+    if (result) {
         container->setObjectName(container->windowTitle());
         mdiArea->addSubWindow(container);
         container->show();
+        updateGUI();
+    } else {
+        delete container;
+        QMessageBox::information(this,
+                                 tr("Error Loading Control"),
+                                 tr("The control \"%1\" could not be loaded.").arg(clsid));
     }
-    updateGUI();
+    return result;
+}
+
+void MainWindow::on_actionFileNew_triggered()
+{
+    QAxSelect select(this);
+    while (select.exec() && !addControlFromClsid(select.clsid())) { }
 }
 
 void MainWindow::on_actionFileLoad_triggered()
 {
-    QString fname = QFileDialog::getOpenFileName(this, tr("Load"), QString(), QLatin1String("*.qax"));
-    if (fname.isEmpty())
-        return;
+    while (true) {
+        const QString fname = QFileDialog::getOpenFileName(this, tr("Load"), QString(), QLatin1String("*.qax"));
+        if (fname.isEmpty() || addControlFromFile(fname))
+            break;
+    }
+}
 
-    QFile file(fname);
+bool MainWindow::addControlFromFile(const QString &fileName)
+{
+    QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::information(this, tr("Error Loading File"), tr("The file could not be opened for reading.\n%1").arg(fname));
-        return;
+        QMessageBox::information(this,
+                                 tr("Error Loading File"),
+                                 tr("The file could not be opened for reading.\n%1\n%2")
+                                 .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return false;
     }
 
     QAxWidget *container = new QAxWidget(mdiArea);
@@ -146,6 +165,7 @@ void MainWindow::on_actionFileLoad_triggered()
     container->show();
 
     updateGUI();
+    return true;
 }
 
 void MainWindow::on_actionFileSave_triggered()
@@ -320,14 +340,29 @@ void MainWindow::on_actionScriptingRun_triggered()
 #endif
 }
 
+#ifdef QT_NO_QAXSCRIPT
+static inline void noScriptMessage(QWidget *parent)
+{
+    QMessageBox::information(parent, MainWindow::tr("Function not available"),
+                             MainWindow::tr("QAxScript functionality is not available with this compiler."));
+}
+#endif // !QT_NO_QAXSCRIPT
+
 void MainWindow::on_actionScriptingLoad_triggered()
 {
 #ifndef QT_NO_QAXSCRIPT
     QString file = QFileDialog::getOpenFileName(this, tr("Open Script"), QString(), QAxScriptManager::scriptFileFilter());
 
-    if (file.isEmpty())
-        return;
+    if (!file.isEmpty())
+        loadScript(file);
+#else // !QT_NO_QAXSCRIPT
+    noScriptMessage(this);
+#endif
+}
 
+bool MainWindow::loadScript(const QString &file)
+{
+#ifndef QT_NO_QAXSCRIPT
     if (!scripts) {
         scripts = new QAxScriptManager(this);
         scripts->addObject(this);
@@ -343,9 +378,11 @@ void MainWindow::on_actionScriptingLoad_triggered()
         connect(script, &QAxScript::error, this, &MainWindow::logMacro);
         actionScriptingRun->setEnabled(true);
     }
-#else
-    QMessageBox::information(this, tr("Function not available"),
-        tr("QAxScript functionality is not available with this compiler."));
+    return script;
+#else // !QT_NO_QAXSCRIPT
+    Q_UNUSED(file)
+    noScriptMessage(this);
+    return false;
 #endif
 }
 
