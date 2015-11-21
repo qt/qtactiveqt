@@ -5,6 +5,8 @@ CONFIG  += static
 
 DEFINES += QAX_SERVER
 
+mingw: DEFINES += QT_NEEDS_QMAIN
+
 HEADERS =   qaxaggregated.h \
             qaxbindable.h \
             qaxfactory.h \

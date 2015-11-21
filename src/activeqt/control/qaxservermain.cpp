@@ -243,15 +243,23 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR,
 
     if (run) {
         if (SUCCEEDED(CoInitialize(0))) {
-            int argc;
-            QVector<char*> argv(8);
-            qWinMain(hInstance, hPrevInstance, unprocessed.data(), nShowCmd, argc, argv);
-            qAxInit();
-            if (runServer)
-                QAxFactory::startServer();
-            nRet = ::main(argc, argv.data());
-            QAxFactory::stopServer();
-            qAxCleanup();
+            {
+                struct Arg {
+                    int c;
+                    QVector<char*> v;
+
+                    Arg() : v(8) {}
+                    ~Arg() { Q_FOREACH (char *arg, v) free(arg); }
+                } arg;
+
+                qWinMain(hInstance, hPrevInstance, unprocessed.data(), nShowCmd, arg.c, arg.v);
+                qAxInit();
+                if (runServer)
+                    QAxFactory::startServer();
+                nRet = ::main(arg.c, arg.v.data());
+                QAxFactory::stopServer();
+                qAxCleanup();
+            }
             CoUninitialize();
         } else {
             qErrnoWarning("CoInitialize() failed.");
