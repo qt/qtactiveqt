@@ -61,6 +61,9 @@ public:
     bool addControlFromFile(const QString &fileName);
     bool loadScript(const QString &file);
 
+protected:
+    void closeEvent(QCloseEvent *) Q_DECL_OVERRIDE;
+
 protected slots:
     void on_actionFileNew_triggered();
     void on_actionFileLoad_triggered();

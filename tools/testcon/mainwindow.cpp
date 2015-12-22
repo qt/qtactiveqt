@@ -43,6 +43,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QMessageBox>
+#include <QtGui/QCloseEvent>
 #include <QtCore/QDebug>
 #include <QtCore/qt_windows.h>
 #include <ActiveQt/QAxScriptManager>
@@ -145,6 +146,14 @@ bool MainWindow::addControlFromClsid(const QString &clsid)
                                  tr("The control \"%1\" could not be loaded.").arg(clsid));
     }
     return result;
+}
+
+void MainWindow::closeEvent(QCloseEvent *e)
+{
+    // Controls using the same version of Qt may set this to false, causing hangs.
+    QGuiApplication::setQuitOnLastWindowClosed(true);
+    m_mdiArea->closeAllSubWindows();
+    e->accept();
 }
 
 void MainWindow::on_actionFileNew_triggered()
