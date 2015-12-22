@@ -37,6 +37,7 @@
 #include <QAxFactory>
 #include <QCommandLineParser>
 #include <QCommandLineOption>
+#include <QDebug>
 
 QAXFACTORY_DEFAULT(MainWindow,
                    QLatin1String("{5f5ce700-48a8-47b1-9b06-3b7f79e41d7c}"),
@@ -46,6 +47,12 @@ QAXFACTORY_DEFAULT(MainWindow,
                    QLatin1String("{16ee5998-77d2-412f-ad91-8596e29f123f}"))
 
 QT_USE_NAMESPACE
+
+static void redirectDebugOutput(QtMsgType, const QMessageLogContext &, const QString &msg)
+{
+    if (MainWindow *mainWindow = MainWindow::instance())
+        mainWindow->appendLogText(msg);
+}
 
 int main( int argc, char **argv )
 {
@@ -61,9 +68,15 @@ int main( int argc, char **argv )
                                     QLatin1String("A script to load."),
                                     QLatin1String("script"));
     parser.addOption(scriptOption);
+    QCommandLineOption noMessageHandlerOption(QLatin1String("no-messagehandler"),
+                                              QLatin1String("Suppress installation of the message handler."));
+    parser.addOption(noMessageHandlerOption);
     parser.addPositionalArgument(QLatin1String("clsid/file"),
                                  QLatin1String("The clsid/file to show."));
     parser.process(app);
+
+    if (!parser.isSet(noMessageHandlerOption))
+        qInstallMessageHandler(redirectDebugOutput);
 
     MainWindow mw;
     foreach (const QString &a, parser.positionalArguments()) {

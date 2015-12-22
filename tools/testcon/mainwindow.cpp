@@ -53,16 +53,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QAxObject *ax_mainWindow = 0;
-
-static QTextEdit *debuglog = 0;
-
-static void redirectDebugOutput(QtMsgType type, const QMessageLogContext &, const QString &msg)
-{
-    Q_UNUSED(type);
-    debuglog->append(msg);
-}
-
 QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
@@ -77,6 +67,8 @@ static const ScriptLanguage scriptLanguages[] = {
     {"Python", ".py"}
 };
 
+MainWindow *MainWindow::m_instance = Q_NULLPTR;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_dlgInvoke(Q_NULLPTR)
@@ -84,11 +76,10 @@ MainWindow::MainWindow(QWidget *parent)
     , m_dlgAmbient(Q_NULLPTR)
     , m_scripts(Q_NULLPTR)
 {
+    MainWindow::m_instance = this;
+
     setupUi(this);
     setObjectName(QLatin1String("MainWindow"));
-
-    debuglog = logDebug;
-    m_oldDebugHandler = qInstallMessageHandler(redirectDebugOutput);
 
     const int scriptCount = int(sizeof(scriptLanguages) / sizeof(scriptLanguages[0]));
     for (int s = 0; s < scriptCount; ++s) {
@@ -110,8 +101,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    qInstallMessageHandler(m_oldDebugHandler);
-    debuglog = 0;
+    MainWindow::m_instance = Q_NULLPTR;
 }
 
 QAxWidget *MainWindow::activeAxWidget() const
@@ -154,6 +144,11 @@ void MainWindow::closeEvent(QCloseEvent *e)
     QGuiApplication::setQuitOnLastWindowClosed(true);
     m_mdiArea->closeAllSubWindows();
     e->accept();
+}
+
+void MainWindow::appendLogText(const QString &message)
+{
+    logDebug->append(message);
 }
 
 void MainWindow::on_actionFileNew_triggered()
