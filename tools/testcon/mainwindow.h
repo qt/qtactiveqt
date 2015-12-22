@@ -84,13 +84,13 @@ private:
     QAxWidget *activeAxWidget() const;
     QList<QAxWidget *> axWidgets() const;
 
-    InvokeMethod *dlgInvoke;
-    ChangeProperties *dlgProperties;
-    AmbientProperties *dlgAmbient;
-    QAxScriptManager *scripts;
-    QMdiArea *mdiArea;
+    InvokeMethod *m_dlgInvoke;
+    ChangeProperties *m_dlgProperties;
+    AmbientProperties *m_dlgAmbient;
+    QAxScriptManager *m_scripts;
+    QMdiArea *m_mdiArea;
 
-    QtMessageHandler oldDebugHandler;
+    QtMessageHandler m_oldDebugHandler;
 
 private slots:
     void updateGUI();
