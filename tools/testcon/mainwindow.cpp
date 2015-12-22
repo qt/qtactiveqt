@@ -43,6 +43,7 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QMessageBox>
+#include <QtCore/QDebug>
 #include <QtCore/qt_windows.h>
 #include <ActiveQt/QAxScriptManager>
 #include <ActiveQt/QAxSelect>
@@ -65,6 +66,16 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
+struct ScriptLanguage {
+    const char *name;
+    const char *suffix;
+};
+
+static const ScriptLanguage scriptLanguages[] = {
+    {"PerlScript", ".pl"},
+    {"Python", ".py"}
+};
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , m_dlgInvoke(Q_NULLPTR)
@@ -75,11 +86,18 @@ MainWindow::MainWindow(QWidget *parent)
     setupUi(this);
     setObjectName(QLatin1String("MainWindow"));
 
-    QAxScriptManager::registerEngine(QLatin1String("PerlScript"), QLatin1String(".pl"));
-    QAxScriptManager::registerEngine(QLatin1String("Python"), QLatin1String(".py"));
-
     debuglog = logDebug;
     m_oldDebugHandler = qInstallMessageHandler(redirectDebugOutput);
+
+    const int scriptCount = int(sizeof(scriptLanguages) / sizeof(scriptLanguages[0]));
+    for (int s = 0; s < scriptCount; ++s) {
+        const QString name = QLatin1String(scriptLanguages[s].name);
+        const QString suffix = QLatin1String(scriptLanguages[s].suffix);
+        if (!QAxScriptManager::registerEngine(name, suffix))
+            qWarning().noquote().nospace() << "Failed to register \"" << name
+                << "\" (*" << suffix << ") with QAxScriptManager.";
+    }
+
     QHBoxLayout *layout = new QHBoxLayout(Workbase);
     m_mdiArea = new QMdiArea(Workbase);
     layout->addWidget(m_mdiArea);
