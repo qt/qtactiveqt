@@ -3640,7 +3640,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
 
     if (dispid == DISPID_UNKNOWN && slotname.toLower().startsWith("set")) {
         // see if we are calling a property set function as a slot
-        slotname.remove(0, slotname.length() - 3);
+        slotname.remove(0, 3);
         dispid = d->metaobj->dispIDofName(slotname, disp);
         isProperty = true;
     }
