@@ -74,6 +74,9 @@
     \example activeqt/simple
     \title Simple Example (ActiveQt)
 
+    \brief The Simple example demonstrates the use
+    of QAxBindable and QAxFactory.
+
     The Simple example demonstrates the use of
     QAxBindable::requestPropertyChange() and
     QAxBindable::propertyChanged(), and the use of the default
