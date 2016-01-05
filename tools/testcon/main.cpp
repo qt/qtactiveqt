@@ -38,6 +38,7 @@
 #include <QCommandLineParser>
 #include <QCommandLineOption>
 #include <QDebug>
+#include <QDesktopWidget>
 
 QAXFACTORY_DEFAULT(MainWindow,
                    QLatin1String("{5f5ce700-48a8-47b1-9b06-3b7f79e41d7c}"),
@@ -87,6 +88,9 @@ int main( int argc, char **argv )
     }
     if (parser.isSet(scriptOption))
         mw.loadScript(parser.value(scriptOption));
+
+    const QRect availableGeometry = QApplication::desktop()->availableGeometry(&mw);
+    mw.resize(availableGeometry.size() * 2 / 3);
     mw.show();
 
     return app.exec();;

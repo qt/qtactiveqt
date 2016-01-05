@@ -47,6 +47,7 @@
 #include <QtCore/QSysInfo>
 #include <QtCore/QTextStream>
 #include <QtCore/QRegExp>
+#include <QtWidgets/QDesktopWidget>
 #include <QtWidgets/QPushButton>
 
 #include <qt_windows.h>
@@ -288,6 +289,9 @@ QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags flags)
     setWindowFlags(windowFlags() &~ Qt::WindowContextHelpButtonHint);
     d->selectUi.setupUi(this);
     d->setOkButtonEnabled(false);
+
+    const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
+    resize(availableGeometry.width() / 4, availableGeometry.height() * 2 / 3);
 
 #ifndef QT_NO_CURSOR
     QApplication::setOverrideCursor(Qt::WaitCursor);
