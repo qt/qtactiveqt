@@ -76,9 +76,9 @@ MainWindow::MainWindow(QWidget *parent)
     , m_dlgAmbient(Q_NULLPTR)
     , m_scripts(Q_NULLPTR)
 {
-    MainWindow::m_instance = this;
-
     setupUi(this);
+    MainWindow::m_instance = this; // Logging handler needs the UI
+
     setObjectName(QLatin1String("MainWindow"));
 
     const int scriptCount = int(sizeof(scriptLanguages) / sizeof(scriptLanguages[0]));
