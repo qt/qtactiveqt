@@ -54,6 +54,8 @@
 
 #include <QtCore/qt_windows.h>
 #include <QtCore/QMetaType>
+#include <QtCore/QPair>
+#include <QtCore/QRect>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,6 +63,7 @@ class QWidget;
 class QPixmap;
 class QRect;
 class QRegion;
+class QWindow;
 
 enum HBitmapFormat
 {
@@ -72,7 +75,50 @@ enum HBitmapFormat
 HWND hwndForWidget(QWidget *widget);
 HBITMAP qaxPixmapToWinHBITMAP(const QPixmap &p, HBitmapFormat format = HBitmapNoAlpha);
 QPixmap qaxPixmapFromWinHBITMAP(HBITMAP bitmap, HBitmapFormat format = HBitmapNoAlpha);
-HRGN qaxHrgnFromQRegion(const QRegion &region);
+HRGN qaxHrgnFromQRegion(QRegion region, const QWindow *window);
+
+typedef QPair<qreal, qreal> QDpi;
+
+extern SIZEL qaxMapPixToLogHiMetrics(const QSize &s, const QDpi &d, const QWindow *w);
+extern QSize qaxMapLogHiMetricsToPix(const SIZEL &s, const QDpi &d, const QWindow *w);
+
+void qaxClearCachedSystemLogicalDpi(); // Call from WM_DISPLAYCHANGE
+
+static inline RECT qaxQRect2Rect(const QRect &r)
+{
+    RECT result = { r.x(), r.y(), r.x() + r.width(), r.y() + r.height() };
+    return result;
+}
+
+static inline QSize qaxSizeOfRect(const RECT &rect)
+{
+    return QSize(rect.right -rect.left, rect.bottom - rect.top);
+}
+
+static inline QRect qaxRect2QRect(const RECT &rect)
+{
+    return QRect(QPoint(rect.left, rect.top), qaxSizeOfRect(rect));
+}
+
+static inline RECT qaxContentRect(const QSize &size)  // Size with topleft = 0,0
+{
+    RECT result = { 0, 0, size.width(), size.height() };
+    return result;
+}
+
+#ifdef QT_WIDGETS_LIB
+SIZEL qaxMapPixToLogHiMetrics(const QSize &s, const QWidget *widget);
+QSize qaxMapLogHiMetricsToPix(const SIZEL &s, const QWidget *widget);
+
+QPoint qaxFromNativePosition(const QWidget *w, const QPoint &nativePos);
+QPoint qaxNativeWidgetPosition(const QWidget *w);
+QSize qaxToNativeSize(const QWidget *w, const QSize &size);
+QSize qaxFromNativeSize(const QWidget *w, const QSize &size);
+QSize qaxNativeWidgetSize(const QWidget *w);
+RECT qaxNativeWidgetRect(const QWidget *w);
+QRect qaxFromNativeRect(const RECT &r, const QWidget *w);
+HRGN qaxHrgnFromQRegion(const QRegion &region, const QWidget *widget);
+#endif // QT_WIDGETS_LIB
 
 QT_END_NAMESPACE
 
