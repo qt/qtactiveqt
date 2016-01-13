@@ -1965,8 +1965,9 @@ bool QAxWidget::createHostWindow(bool initialized)
 */
 bool QAxWidget::createHostWindow(bool initialized, const QByteArray &data)
 {
+    if (!container) // Potentially called repeatedly from QAxBase::metaObject(), QAxWidget::initialize()
+        container = new QAxClientSite(this);
 
-    container = new QAxClientSite(this);
     container->activateObject(initialized, data);
 
     ATOM filter_ref = FindAtom(qaxatom);
