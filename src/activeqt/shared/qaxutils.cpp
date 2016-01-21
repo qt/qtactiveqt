@@ -45,6 +45,7 @@
 #include <QtGui/QRegion>
 #include <QtGui/QWindow>
 #include <QtGui/QGuiApplication>
+#include <private/qhighdpiscaling_p.h>
 #include <qpa/qplatformnativeinterface.h>
 #include <qpa/qplatformpixmap.h>
 #include <QtGui/private/qpixmap_raster_p.h>
@@ -208,8 +209,9 @@ static void addRectToHrgn(HRGN &winRegion, const QRect &r)
     }
 }
 
-HRGN qaxHrgnFromQRegion(const QRegion &region)
+HRGN qaxHrgnFromQRegion(QRegion region, const QWindow *window)
 {
+    region = QHighDpi::toNativeLocalRegion(region, window);
     HRGN hRegion = CreateRectRgn(0, 0, 0, 0);
     if (region.rectCount() == 1) {
         addRectToHrgn(hRegion, region.boundingRect());
@@ -219,5 +221,129 @@ HRGN qaxHrgnFromQRegion(const QRegion &region)
         addRectToHrgn(hRegion, rect);
     return hRegion;
 }
+
+// HIMETRICS scaling
+static const qreal himetricsPerInch = 2540;
+
+static inline long qaxMapPixToLogHiMetrics(int x, qreal logicalDpi, qreal factor)
+{
+    return qRound((qreal(x) * himetricsPerInch * factor) / logicalDpi);
+}
+
+static inline int qaxMapLogHiMetricsToPix(long x, qreal logicalDpi, qreal factor)
+{
+    return qRound(logicalDpi * qreal(x) / (himetricsPerInch * factor));
+}
+
+SIZEL qaxMapPixToLogHiMetrics(const QSize &s, const QDpi &d, const QWindow *w)
+{
+    const qreal factor = QHighDpiScaling::factor(w);
+    const SIZEL result = {
+        qaxMapPixToLogHiMetrics(s.width(), d.first, factor),
+        qaxMapPixToLogHiMetrics(s.height(), d.second, factor)
+    };
+    return result;
+}
+
+QSize qaxMapLogHiMetricsToPix(const SIZEL &s, const QDpi &d, const QWindow *w)
+{
+    const qreal factor = QHighDpiScaling::factor(w);
+    const QSize result(qaxMapLogHiMetricsToPix(s.cx, d.first, factor),
+                       qaxMapLogHiMetricsToPix(s.cy, d.second, factor));
+    return result;
+}
+
+// Cache logical DPI in case High DPI scaling is active (which case
+// the fake logical DPI it calculates is not suitable).
+
+static QDpi cachedSystemLogicalDpi(-1, -1);
+
+void qaxClearCachedSystemLogicalDpi() // Call from WM_DISPLAYCHANGE
+{
+    cachedSystemLogicalDpi = QDpi(-1, -1);
+}
+
+static inline QDpi systemLogicalDpi()
+{
+    if (cachedSystemLogicalDpi.first < 0) {
+        const HDC displayDC = GetDC(0);
+        cachedSystemLogicalDpi = QDpi(GetDeviceCaps(displayDC, LOGPIXELSX), GetDeviceCaps(displayDC, LOGPIXELSY));
+        ReleaseDC(0, displayDC);
+    }
+    return cachedSystemLogicalDpi;
+}
+
+static inline QDpi paintDeviceLogicalDpi(const QPaintDevice *d)
+{
+    return QDpi(d->logicalDpiX(), d->logicalDpiY());
+}
+
+#ifdef QT_WIDGETS_LIB
+
+SIZEL qaxMapPixToLogHiMetrics(const QSize &s, const QWidget *widget)
+{
+    return qaxMapPixToLogHiMetrics(s,
+                                   QHighDpiScaling::isActive() ? systemLogicalDpi() : paintDeviceLogicalDpi(widget),
+                                   widget->windowHandle());
+}
+
+QSize qaxMapLogHiMetricsToPix(const SIZEL &s, const QWidget *widget)
+{
+    return qaxMapLogHiMetricsToPix(s,
+                                   QHighDpiScaling::isActive() ? systemLogicalDpi() : paintDeviceLogicalDpi(widget),
+                                   widget->windowHandle());
+}
+
+QPoint qaxFromNativePosition(const QWidget *w, const QPoint &nativePos)
+{
+    const qreal factor = QHighDpiScaling::factor(w->windowHandle());
+    return qFuzzyCompare(factor, 1)
+        ? nativePos : (QPointF(nativePos) / factor).toPoint();
+}
+
+QPoint qaxNativeWidgetPosition(const QWidget *w)
+{
+    return qaxFromNativePosition(w, w->geometry().topLeft());
+}
+
+QSize qaxToNativeSize(const QWidget *w, const QSize &size)
+{
+    const qreal factor = QHighDpiScaling::factor(w->windowHandle());
+    return qFuzzyCompare(factor, 1) ? size : (QSizeF(size) * factor).toSize();
+}
+
+QSize qaxNativeWidgetSize(const QWidget *w)
+{
+    return qaxToNativeSize(w, w->size());
+}
+
+QSize qaxFromNativeSize(const QWidget *w, const QSize &size)
+{
+    const qreal factor = QHighDpiScaling::factor(w->windowHandle());
+    return qFuzzyCompare(factor, 1) ? size : (QSizeF(size) / factor).toSize();
+}
+
+RECT qaxNativeWidgetRect(const QWidget *w)
+{
+    return QHighDpiScaling::isActive()
+        ? qaxQRect2Rect(QRect(qaxNativeWidgetPosition(w), qaxNativeWidgetSize(w)))
+        : qaxQRect2Rect(w->geometry());
+}
+
+QRect qaxFromNativeRect(const RECT &r, const QWidget *w)
+{
+    const QRect qr = qaxRect2QRect(r);
+    const qreal factor = QHighDpiScaling::factor(w->windowHandle());
+    return qFuzzyCompare(factor, 1)
+        ? qr
+        : QRect((QPointF(qr.topLeft()) / factor).toPoint(), (QSizeF(qr.size()) / factor).toSize());
+}
+
+HRGN qaxHrgnFromQRegion(const QRegion &region, const QWidget *widget)
+{
+    return qaxHrgnFromQRegion(region, widget->windowHandle());
+}
+
+#endif // QT_WIDGETS_LIB
 
 QT_END_NAMESPACE

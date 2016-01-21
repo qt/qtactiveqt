@@ -192,7 +192,7 @@ public:
         if (!host)
             return OLE_E_NOT_INPLACEACTIVE;
 
-        RECT rcPos = { host->x(), host->y(), host->x()+host->width(), host->y()+host->height() };
+        RECT rcPos = qaxNativeWidgetRect(host);
         return m_spOleObject->DoVerb(index, 0, this, 0,
                                      (HWND)host->winId(),
                                      &rcPos);
@@ -471,6 +471,8 @@ bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *
 {
     MSG *msg = (MSG*)m;
     const uint message = msg->message;
+    if (message == WM_DISPLAYCHANGE)
+        qaxClearCachedSystemLogicalDpi();
     if ((message >= WM_MOUSEFIRST && message <= WM_MOUSELAST) || (message >= WM_KEYFIRST && message <= WM_KEYLAST)) {
         HWND hwnd = msg->hwnd;
         QAxWidget *ax = 0;
@@ -508,7 +510,8 @@ bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *
                             button = 0;
 
                         DWORD ol_pos = GetMessagePos();
-                        QPoint gpos(GET_X_LPARAM(ol_pos), GET_Y_LPARAM(ol_pos));
+                        const QPoint nativeGlobalPos(GET_X_LPARAM(ol_pos), GET_Y_LPARAM(ol_pos));
+                        const QPoint gpos = qaxFromNativePosition(ax, nativeGlobalPos);
                         QPoint pos = ax->mapFromGlobal(gpos);
 
                         QMouseEvent e(type, pos, gpos, (Qt::MouseButton)button,
@@ -662,15 +665,12 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
         m_spOleObject->SetHostNames(OLESTR("AXWIN"), 0);
 
         if (!(dwMiscStatus & OLEMISC_INVISIBLEATRUNTIME)) {
-            SIZEL hmSize;
-            hmSize.cx = MAP_PIX_TO_LOGHIM(250, widget->logicalDpiX());
-            hmSize.cy = MAP_PIX_TO_LOGHIM(250, widget->logicalDpiY());
+            SIZEL hmSize = qaxMapPixToLogHiMetrics(QSize(250, 250), widget);
 
             m_spOleObject->SetExtent(DVASPECT_CONTENT, &hmSize);
             m_spOleObject->GetExtent(DVASPECT_CONTENT, &hmSize);
 
-            sizehint.setWidth(MAP_LOGHIM_TO_PIX(hmSize.cx, widget->logicalDpiX()));
-            sizehint.setHeight(MAP_LOGHIM_TO_PIX(hmSize.cy, widget->logicalDpiY()));
+            sizehint = qaxMapLogHiMetricsToPix(hmSize, widget);
             showHost = true;
         } else {
             sizehint = QSize(0, 0);
@@ -682,7 +682,7 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
             host->setFocusPolicy(Qt::NoFocus);
         }
 
-        RECT rcPos = { host->x(), host->y(), host->x()+sizehint.width(), host->y()+sizehint.height() };
+        RECT rcPos = qaxQRect2Rect(QRect(qaxNativeWidgetPosition(host), qaxToNativeSize(host, sizehint)));
 
         m_spOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, 0, (IOleClientSite*)this, 0,
                               (HWND)host->winId(),
@@ -1564,12 +1564,8 @@ QSize QAxClientSite::minimumSizeHint() const
 
     SIZE sz = { 0, 0 };
     m_spOleObject->SetExtent(DVASPECT_CONTENT, &sz);
-    HRESULT res = m_spOleObject->GetExtent(DVASPECT_CONTENT, &sz);
-    if (SUCCEEDED(res)) {
-        return QSize(MAP_LOGHIM_TO_PIX(sz.cx, widget->logicalDpiX()),
-            MAP_LOGHIM_TO_PIX(sz.cy, widget->logicalDpiY()));
-    }
-    return QSize();
+    return SUCCEEDED(m_spOleObject->GetExtent(DVASPECT_CONTENT, &sz))
+        ? qaxMapLogHiMetricsToPix(sz, widget) : QSize();
 }
 
 void QAxClientSite::windowActivationChange()
@@ -1662,14 +1658,11 @@ void QAxHostWidget::resizeObject()
         return;
     }
 
-    SIZEL hmSize;
-    hmSize.cx = MAP_PIX_TO_LOGHIM(width(), logicalDpiX());
-    hmSize.cy = MAP_PIX_TO_LOGHIM(height(), logicalDpiY());
-
+    SIZEL hmSize = qaxMapPixToLogHiMetrics(size(), this);
     if (axhost->m_spOleObject)
         axhost->m_spOleObject->SetExtent(DVASPECT_CONTENT, &hmSize);
     if (axhost->m_spInPlaceObject) {
-        RECT rcPos = { x(), y(), x()+width(), y()+height() };
+        RECT rcPos = qaxNativeWidgetRect(this);
         axhost->m_spInPlaceObject->SetObjectRects(&rcPos, &rcPos);
     }
 }
@@ -1709,7 +1702,7 @@ bool QAxHostWidget::event(QEvent *e)
         if (axhost && ((QTimerEvent*)e)->timerId() == setFocusTimer) {
             killTimer(setFocusTimer);
             setFocusTimer = 0;
-            RECT rcPos = { x(), y(), x()+size().width(), y()+size().height() };
+            RECT rcPos = qaxNativeWidgetRect(this);
             axhost->m_spOleObject->DoVerb(OLEIVERB_UIACTIVATE, 0, (IOleClientSite*)axhost, 0,
                 (HWND)winId(),
                 &rcPos);
@@ -1801,7 +1794,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     if (!view)
         return;
 
-    QPixmap pm(size());
+    QPixmap pm(qaxNativeWidgetSize(this));
     pm.fill();
 
     HBITMAP hBmp = qaxPixmapToWinHBITMAP(pm);
@@ -1818,7 +1811,9 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     view->Release();
 
     QPainter painter(this);
-    painter.drawPixmap(0, 0, qaxPixmapFromWinHBITMAP(hBmp));
+    QPixmap pixmap = qaxPixmapFromWinHBITMAP(hBmp);
+    pixmap.setDevicePixelRatio(devicePixelRatioF());
+    painter.drawPixmap(0, 0, pixmap);
 
     SelectObject(hBmp_hdc, old_hBmp);
     DeleteObject(hBmp);
@@ -1965,8 +1960,9 @@ bool QAxWidget::createHostWindow(bool initialized)
 */
 bool QAxWidget::createHostWindow(bool initialized, const QByteArray &data)
 {
+    if (!container) // Potentially called repeatedly from QAxBase::metaObject(), QAxWidget::initialize()
+        container = new QAxClientSite(this);
 
-    container = new QAxClientSite(this);
     container->activateObject(initialized, data);
 
     ATOM filter_ref = FindAtom(qaxatom);

@@ -346,10 +346,8 @@ public:
     RECT rcPosRect() const
     {
         RECT result = {0, 0, 1, 1};
-        if (qt.widget) {
-            result.right = qt.widget->width() + 1;
-            result.bottom = qt.widget->height() + 1;
-        }
+        if (qt.widget)
+            result = qaxContentRect(QSize(1, 1) + qaxNativeWidgetSize(qt.widget));
         return result;
     }
 
@@ -419,7 +417,7 @@ private:
     IOleInPlaceFrame *m_spInPlaceFrame;
     ITypeInfo *m_spTypeInfo;
     IStorage *m_spStorage;
-    QSize m_currentExtent;
+    QSize m_currentExtent; // device independent pixels.
 };
 
 static inline QAxServerBase *axServerBaseFromWindow(HWND hWnd)
@@ -1447,7 +1445,7 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
 
     case WM_SIZE:
         if (QAxServerBase *that = axServerBaseFromWindow(hWnd))
-            that->resize(QSize(LOWORD(lParam), HIWORD(lParam)));
+            that->resize(qaxFromNativeSize(that->qt.widget, QSize(LOWORD(lParam), HIWORD(lParam))));
         break;
 
     case WM_SETFOCUS:
@@ -1562,6 +1560,9 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
             }
         }
         break;
+
+    case WM_DISPLAYCHANGE:
+        qaxClearCachedSystemLogicalDpi();
 
     default:
         break;
@@ -1868,7 +1869,7 @@ void QAxServerBase::updateMask()
         return;
 
     QRegion rgn = qt.widget->mask();
-    HRGN hrgn = qaxHrgnFromQRegion(rgn);
+    HRGN hrgn = qaxHrgnFromQRegion(rgn, qt.widget);
 
     // Since SetWindowRegion takes ownership
     HRGN wr = CreateRectRgn(0,0,0,0);
@@ -2636,11 +2637,10 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
         exception = 0;
         return DISP_E_EXCEPTION;
     } else if (isWidget) {
-        QSize sizeHint = qt.widget->sizeHint();
-        if (oldSizeHint != sizeHint) {
+        if (oldSizeHint != qt.widget->sizeHint()) {
             updateGeometry();
             if (m_spInPlaceSite) {
-                RECT rect = {0, 0, sizeHint.width(), sizeHint.height()};
+                RECT rect = qaxContentRect(qaxToNativeSize(qt.widget, qt.widget->sizeHint()));
                 m_spInPlaceSite->OnPosRectChange(&rect);
             }
         }
@@ -3474,8 +3474,9 @@ HRESULT WINAPI QAxServerBase::SetObjectRects(LPCRECT prcPos, LPCRECT prcClip)
     }
 
     //Save the new extent.
-    m_currentExtent.rwidth() = qBound(qt.widget->minimumWidth(), int(prcPos->right - prcPos->left), qt.widget->maximumWidth());
-    m_currentExtent.rheight() = qBound(qt.widget->minimumHeight(), int(prcPos->bottom - prcPos->top), qt.widget->maximumHeight());
+    const QRect qr = qaxFromNativeRect(*prcPos, qt.widget);
+    m_currentExtent.rwidth() = qBound(qt.widget->minimumWidth(), qr.width(), qt.widget->maximumWidth());
+    m_currentExtent.rheight() = qBound(qt.widget->minimumHeight(), qr.height(), qt.widget->maximumHeight());
 
     return S_OK;
 }
@@ -3944,8 +3945,7 @@ HRESULT WINAPI QAxServerBase::GetExtent(DWORD dwDrawAspect, SIZEL* psizel)
     if (!psizel)
         return E_POINTER;
 
-    psizel->cx = MAP_PIX_TO_LOGHIM(m_currentExtent.width(), qt.widget->logicalDpiX());
-    psizel->cy = MAP_PIX_TO_LOGHIM(m_currentExtent.height(), qt.widget->logicalDpiY());
+    *psizel = qaxMapPixToLogHiMetrics(m_currentExtent, qt.widget);
     return S_OK;
 }
 
@@ -4034,8 +4034,7 @@ HRESULT WINAPI QAxServerBase::SetExtent(DWORD dwDrawAspect, SIZEL* psizel)
     if (!isWidget || !qt.widget) // nothing to do
         return S_OK;
 
-    QSize proposedSize(MAP_LOGHIM_TO_PIX(psizel->cx, qt.widget->logicalDpiX()),
-        MAP_LOGHIM_TO_PIX(psizel->cy, qt.widget->logicalDpiY()));
+    QSize proposedSize(qaxMapLogHiMetricsToPix(*psizel, qt.widget));
 
     // can the widget be resized at all?
     if (qt.widget->minimumSize() == qt.widget->maximumSize() && qt.widget->minimumSize() != proposedSize)
@@ -4112,8 +4111,7 @@ HRESULT WINAPI QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmediu
 
         HRESULT hres = m_spInPlaceSite->GetWindowContext(&m_spInPlaceFrame, &spInPlaceUIWindow, &rcPos, &rcClip, &frameInfo);
         if (hres == S_OK) {
-            QSize size(rcPos.right - rcPos.left, rcPos.bottom - rcPos.top);
-            resize(size);
+            resize(qaxFromNativeSize(qt.widget, qaxSizeOfRect(rcPos)));
         } else {
             qt.widget->adjustSize();
         }
@@ -4145,8 +4143,9 @@ HRESULT WINAPI QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmediu
     LPMETAFILEPICT pMF = (LPMETAFILEPICT)GlobalLock(hMem);
     pMF->hMF = hMF;
     pMF->mm = MM_ANISOTROPIC;
-    pMF->xExt = MAP_PIX_TO_LOGHIM(width, qt.widget->logicalDpiX());
-    pMF->yExt = MAP_PIX_TO_LOGHIM(height, qt.widget->logicalDpiY());
+    const SIZEL sizeL = qaxMapPixToLogHiMetrics(QSize(width, height), qt.widget);
+    pMF->xExt = sizeL.cx;
+    pMF->yExt = sizeL.cy;
     GlobalUnlock(hMem);
 
     memset(pmedium, 0, sizeof(STGMEDIUM));
@@ -4267,7 +4266,7 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
         }
         updateGeometry();
         if (m_spInPlaceSite && qt.widget->sizeHint().isValid()) {
-            RECT rect = {0, 0, qt.widget->sizeHint().width(), qt.widget->sizeHint().height()};
+            RECT rect = qaxContentRect(qaxToNativeSize(qt.widget, qt.widget->sizeHint()));
             m_spInPlaceSite->OnPosRectChange(&rect);
         }
     }

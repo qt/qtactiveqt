@@ -57,6 +57,18 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    static MainWindow *instance() { return m_instance; }
+
+    bool addControlFromClsid(const QString &clsid);
+    bool addControlFromFile(const QString &fileName);
+    bool loadScript(const QString &file);
+
+protected:
+    void closeEvent(QCloseEvent *) Q_DECL_OVERRIDE;
+
+public slots:
+    void appendLogText(const QString &);
+
 protected slots:
     void on_actionFileNew_triggered();
     void on_actionFileLoad_triggered();
@@ -80,13 +92,15 @@ private:
     QAxWidget *activeAxWidget() const;
     QList<QAxWidget *> axWidgets() const;
 
-    InvokeMethod *dlgInvoke;
-    ChangeProperties *dlgProperties;
-    AmbientProperties *dlgAmbient;
-    QAxScriptManager *scripts;
-    QMdiArea *mdiArea;
+    static MainWindow *m_instance;
 
-    QtMessageHandler oldDebugHandler;
+    InvokeMethod *m_dlgInvoke;
+    ChangeProperties *m_dlgProperties;
+    AmbientProperties *m_dlgAmbient;
+    QAxScriptManager *m_scripts;
+    QMdiArea *m_mdiArea;
+
+    QtMessageHandler m_oldDebugHandler;
 
 private slots:
     void updateGUI();

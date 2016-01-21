@@ -38,14 +38,6 @@
     <property name="objectName" >
       <string notr="true" >MainWindow</string>
     </property>
-    <property name="geometry" >
-      <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>929</width>
-        <height>620</height>
-      </rect>
-    </property>
     <property name="windowTitle" >
       <string>ActiveX Control Test Container</string>
     </property>

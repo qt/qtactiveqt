@@ -43,6 +43,8 @@
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QMessageBox>
+#include <QtGui/QCloseEvent>
+#include <QtCore/QDebug>
 #include <QtCore/qt_windows.h>
 #include <ActiveQt/QAxScriptManager>
 #include <ActiveQt/QAxSelect>
@@ -51,53 +53,60 @@
 
 QT_BEGIN_NAMESPACE
 
-QAxObject *ax_mainWindow = 0;
-
-static QTextEdit *debuglog = 0;
-
-static void redirectDebugOutput(QtMsgType type, const QMessageLogContext &, const QString &msg)
-{
-    Q_UNUSED(type);
-    debuglog->append(msg);
-}
-
 QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
+struct ScriptLanguage {
+    const char *name;
+    const char *suffix;
+};
+
+static const ScriptLanguage scriptLanguages[] = {
+    {"PerlScript", ".pl"},
+    {"Python", ".py"}
+};
+
+MainWindow *MainWindow::m_instance = Q_NULLPTR;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , m_dlgInvoke(Q_NULLPTR)
+    , m_dlgProperties(Q_NULLPTR)
+    , m_dlgAmbient(Q_NULLPTR)
+    , m_scripts(Q_NULLPTR)
 {
     setupUi(this);
+    MainWindow::m_instance = this; // Logging handler needs the UI
+
     setObjectName(QLatin1String("MainWindow"));
 
-    QAxScriptManager::registerEngine(QLatin1String("PerlScript"), QLatin1String(".pl"));
-    QAxScriptManager::registerEngine(QLatin1String("Python"), QLatin1String(".py"));
+    const int scriptCount = int(sizeof(scriptLanguages) / sizeof(scriptLanguages[0]));
+    for (int s = 0; s < scriptCount; ++s) {
+        const QString name = QLatin1String(scriptLanguages[s].name);
+        const QString suffix = QLatin1String(scriptLanguages[s].suffix);
+        if (!QAxScriptManager::registerEngine(name, suffix))
+            qWarning().noquote().nospace() << "Failed to register \"" << name
+                << "\" (*" << suffix << ") with QAxScriptManager.";
+    }
 
-    dlgInvoke = 0;
-    dlgProperties = 0;
-    dlgAmbient = 0;
-    scripts = 0;
-    debuglog = logDebug;
-    oldDebugHandler = qInstallMessageHandler(redirectDebugOutput);
     QHBoxLayout *layout = new QHBoxLayout(Workbase);
-    mdiArea = new QMdiArea(Workbase);
-    layout->addWidget(mdiArea);
+    m_mdiArea = new QMdiArea(Workbase);
+    layout->addWidget(m_mdiArea);
     layout->setMargin(0);
 
-    connect(mdiArea, &QMdiArea::subWindowActivated, this, &MainWindow::updateGUI);
+    connect(m_mdiArea, &QMdiArea::subWindowActivated, this, &MainWindow::updateGUI);
     connect(actionFileExit, &QAction::triggered, QCoreApplication::quit);
 }
 
 MainWindow::~MainWindow()
 {
-    qInstallMessageHandler(oldDebugHandler);
-    debuglog = 0;
+    MainWindow::m_instance = Q_NULLPTR;
 }
 
 QAxWidget *MainWindow::activeAxWidget() const
 {
-    if (const QMdiSubWindow *activeSubWindow = mdiArea->currentSubWindow())
+    if (const QMdiSubWindow *activeSubWindow = m_mdiArea->currentSubWindow())
         return qobject_cast<QAxWidget*>(activeSubWindow->widget());
     return 0;
 }
@@ -105,47 +114,80 @@ QAxWidget *MainWindow::activeAxWidget() const
 QList<QAxWidget *> MainWindow::axWidgets() const
 {
     QList<QAxWidget *> result;
-    foreach (const QMdiSubWindow *subWindow, mdiArea->subWindowList())
+    foreach (const QMdiSubWindow *subWindow, m_mdiArea->subWindowList())
         if (QAxWidget *axWidget = qobject_cast<QAxWidget *>(subWindow->widget()))
             result.push_back(axWidget);
     return result;
 }
 
+bool MainWindow::addControlFromClsid(const QString &clsid)
+{
+    QAxWidget *container = new QAxWidget;
+    const bool result = container->setControl(clsid);
+    if (result) {
+        container->setObjectName(container->windowTitle());
+        m_mdiArea->addSubWindow(container);
+        container->show();
+        updateGUI();
+    } else {
+        delete container;
+        QMessageBox::information(this,
+                                 tr("Error Loading Control"),
+                                 tr("The control \"%1\" could not be loaded.").arg(clsid));
+    }
+    return result;
+}
+
+void MainWindow::closeEvent(QCloseEvent *e)
+{
+    // Controls using the same version of Qt may set this to false, causing hangs.
+    QGuiApplication::setQuitOnLastWindowClosed(true);
+    m_mdiArea->closeAllSubWindows();
+    e->accept();
+}
+
+void MainWindow::appendLogText(const QString &message)
+{
+    logDebug->append(message);
+}
+
 void MainWindow::on_actionFileNew_triggered()
 {
     QAxSelect select(this);
-    if (select.exec()) {
-        QAxWidget *container = new QAxWidget;
-        container->setControl(select.clsid());
-        container->setObjectName(container->windowTitle());
-        mdiArea->addSubWindow(container);
-        container->show();
-    }
-    updateGUI();
+    while (select.exec() && !addControlFromClsid(select.clsid())) { }
 }
 
 void MainWindow::on_actionFileLoad_triggered()
 {
-    QString fname = QFileDialog::getOpenFileName(this, tr("Load"), QString(), QLatin1String("*.qax"));
-    if (fname.isEmpty())
-        return;
+    while (true) {
+        const QString fname = QFileDialog::getOpenFileName(this, tr("Load"), QString(), QLatin1String("*.qax"));
+        if (fname.isEmpty() || addControlFromFile(fname))
+            break;
+    }
+}
 
-    QFile file(fname);
+bool MainWindow::addControlFromFile(const QString &fileName)
+{
+    QFile file(fileName);
     if (!file.open(QIODevice::ReadOnly)) {
-        QMessageBox::information(this, tr("Error Loading File"), tr("The file could not be opened for reading.\n%1").arg(fname));
-        return;
+        QMessageBox::information(this,
+                                 tr("Error Loading File"),
+                                 tr("The file could not be opened for reading.\n%1\n%2")
+                                 .arg(QDir::toNativeSeparators(fileName), file.errorString()));
+        return false;
     }
 
-    QAxWidget *container = new QAxWidget(mdiArea);
+    QAxWidget *container = new QAxWidget(m_mdiArea);
     container->setObjectName(container->windowTitle());
 
     QDataStream d(&file);
     d >> *container;
 
-    mdiArea->addSubWindow(container);
+    m_mdiArea->addSubWindow(container);
     container->show();
 
     updateGUI();
+    return true;
 }
 
 void MainWindow::on_actionFileSave_triggered()
@@ -190,11 +232,11 @@ void MainWindow::on_actionContainerClear_triggered()
 
 void MainWindow::on_actionContainerProperties_triggered()
 {
-    if (!dlgAmbient) {
-        dlgAmbient = new AmbientProperties(this);
-        dlgAmbient->setControl(mdiArea);
+    if (!m_dlgAmbient) {
+        m_dlgAmbient = new AmbientProperties(this);
+        m_dlgAmbient->setControl(m_mdiArea);
     }
-    dlgAmbient->show();
+    m_dlgAmbient->show();
 }
 
 
@@ -215,12 +257,12 @@ void MainWindow::on_actionControlProperties_triggered()
     if (!container)
         return;
 
-    if (!dlgProperties) {
-        dlgProperties = new ChangeProperties(this);
-        connect(container, SIGNAL(propertyChanged(QString)), dlgProperties, SLOT(updateProperties()));
+    if (!m_dlgProperties) {
+        m_dlgProperties = new ChangeProperties(this);
+        connect(container, SIGNAL(propertyChanged(QString)), m_dlgProperties, SLOT(updateProperties()));
     }
-    dlgProperties->setControl(container);
-    dlgProperties->show();
+    m_dlgProperties->setControl(container);
+    m_dlgProperties->show();
 }
 
 void MainWindow::on_actionControlMethods_triggered()
@@ -229,10 +271,10 @@ void MainWindow::on_actionControlMethods_triggered()
     if (!container)
         return;
 
-    if (!dlgInvoke)
-        dlgInvoke = new InvokeMethod(this);
-    dlgInvoke->setControl(container);
-    dlgInvoke->show();
+    if (!m_dlgInvoke)
+        m_dlgInvoke = new InvokeMethod(this);
+    m_dlgInvoke->setControl(container);
+    m_dlgInvoke->show();
 }
 
 void MainWindow::on_VerbMenu_aboutToShow()
@@ -273,7 +315,7 @@ void MainWindow::on_actionControlDocumentation_triggered()
         return;
 
     DocuWindow *docwindow = new DocuWindow(docu);
-    QMdiSubWindow *subWindow = mdiArea->addSubWindow(docwindow);
+    QMdiSubWindow *subWindow = m_mdiArea->addSubWindow(docwindow);
     subWindow->setWindowTitle(DocuWindow::tr("%1 - Documentation").arg(container->windowTitle()));
     docwindow->show();
 }
@@ -286,7 +328,7 @@ void MainWindow::on_actionControlPixmap_triggered()
 
     QLabel *label = new QLabel;
     label->setPixmap(QPixmap::grabWidget(container));
-    QMdiSubWindow *subWindow = mdiArea->addSubWindow(label);
+    QMdiSubWindow *subWindow = m_mdiArea->addSubWindow(label);
     subWindow->setWindowTitle(tr("%1 - Pixmap").arg(container->windowTitle()));
     label->show();
 }
@@ -294,58 +336,75 @@ void MainWindow::on_actionControlPixmap_triggered()
 void MainWindow::on_actionScriptingRun_triggered()
 {
 #ifndef QT_NO_QAXSCRIPT
-    if (!scripts)
+    if (!m_scripts)
         return;
 
     // If we have only one script loaded we can use the cool dialog
-    QStringList scriptList = scripts->scriptNames();
+    QStringList scriptList = m_scripts->scriptNames();
     if (scriptList.count() == 1) {
         InvokeMethod scriptInvoke(this);
         scriptInvoke.setWindowTitle(tr("Execute Script Function"));
-        scriptInvoke.setControl(scripts->script(scriptList[0])->scriptEngine());
+        scriptInvoke.setControl(m_scripts->script(scriptList[0])->scriptEngine());
         scriptInvoke.exec();
         return;
     }
 
     bool ok = false;
-    QStringList macroList = scripts->functions(QAxScript::FunctionNames);
+    QStringList macroList = m_scripts->functions(QAxScript::FunctionNames);
     QString macro = QInputDialog::getItem(this, tr("Select Macro"), tr("Macro:"), macroList, 0, true, &ok);
 
     if (!ok)
         return;
 
-    QVariant result = scripts->call(macro);
+    QVariant result = m_scripts->call(macro);
     if (result.isValid())
         logMacros->append(tr("Return value of %1: %2").arg(macro).arg(result.toString()));
 #endif
 }
+
+#ifdef QT_NO_QAXSCRIPT
+static inline void noScriptMessage(QWidget *parent)
+{
+    QMessageBox::information(parent, MainWindow::tr("Function not available"),
+                             MainWindow::tr("QAxScript functionality is not available with this compiler."));
+}
+#endif // !QT_NO_QAXSCRIPT
 
 void MainWindow::on_actionScriptingLoad_triggered()
 {
 #ifndef QT_NO_QAXSCRIPT
     QString file = QFileDialog::getOpenFileName(this, tr("Open Script"), QString(), QAxScriptManager::scriptFileFilter());
 
-    if (file.isEmpty())
-        return;
+    if (!file.isEmpty())
+        loadScript(file);
+#else // !QT_NO_QAXSCRIPT
+    noScriptMessage(this);
+#endif
+}
 
-    if (!scripts) {
-        scripts = new QAxScriptManager(this);
-        scripts->addObject(this);
+bool MainWindow::loadScript(const QString &file)
+{
+#ifndef QT_NO_QAXSCRIPT
+    if (!m_scripts) {
+        m_scripts = new QAxScriptManager(this);
+        m_scripts->addObject(this);
     }
 
     foreach (QAxWidget *axWidget, axWidgets()) {
         QAxBase *ax = axWidget;
-        scripts->addObject(ax);
+        m_scripts->addObject(ax);
     }
 
-    QAxScript *script = scripts->load(file, file);
+    QAxScript *script = m_scripts->load(file, file);
     if (script) {
         connect(script, &QAxScript::error, this, &MainWindow::logMacro);
         actionScriptingRun->setEnabled(true);
     }
-#else
-    QMessageBox::information(this, tr("Function not available"),
-        tr("QAxScript functionality is not available with this compiler."));
+    return script;
+#else // !QT_NO_QAXSCRIPT
+    Q_UNUSED(file)
+    noScriptMessage(this);
+    return false;
 #endif
 }
 
@@ -365,10 +424,10 @@ void MainWindow::updateGUI()
     actionControlDocumentation->setEnabled(hasControl);
     actionControlPixmap->setEnabled(hasControl);
     VerbMenu->setEnabled(hasControl);
-    if (dlgInvoke)
-        dlgInvoke->setControl(hasControl ? container : 0);
-    if (dlgProperties)
-        dlgProperties->setControl(hasControl ? container : 0);
+    if (m_dlgInvoke)
+        m_dlgInvoke->setControl(hasControl ? container : 0);
+    if (m_dlgProperties)
+        m_dlgProperties->setControl(hasControl ? container : 0);
 
     foreach (QAxWidget *container, axWidgets()) {
         container->disconnect(SIGNAL(signal(QString,int,void*)));
