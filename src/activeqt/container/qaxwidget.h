@@ -73,7 +73,7 @@ public:
     virtual QAxAggregated *createAggregate();
 
 protected:
-    bool initialize(IUnknown**);
+    bool initialize(IUnknown **) Q_DECL_OVERRIDE;
     virtual bool createHostWindow(bool);
     bool createHostWindow(bool, const QByteArray&);
 
@@ -89,7 +89,7 @@ private:
     QAxClientSite *container;
 
     QAxWidgetPrivate *d;
-    const QMetaObject *parentMetaObject() const;
+    const QMetaObject *parentMetaObject() const Q_DECL_OVERRIDE;
 };
 
 template <> inline QAxWidget *qobject_cast<QAxWidget*>(const QObject *o)
