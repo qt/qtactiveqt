@@ -433,7 +433,7 @@ class QAxServerAggregate : public IUnknown
 {
 public:
     QAxServerAggregate(const QString &className, IUnknown *outerUnknown)
-        : m_outerUnknown(outerUnknown), ref(0)
+        : ref(0)
     {
         object = new QAxServerBase(className, outerUnknown);
         object->registerActiveObject(this);
@@ -476,7 +476,6 @@ public:
 
 private:
     QAxServerBase *object;
-    IUnknown *m_outerUnknown;
     LONG ref;
 
     CRITICAL_SECTION refCountSection;
