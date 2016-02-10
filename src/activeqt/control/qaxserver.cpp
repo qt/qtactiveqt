@@ -496,13 +496,11 @@ static const char* const type_map[][2] =
     // Userdefined Qt datatypes - some not on Borland though
     { "QCursor",         "enum MousePointer" },
     { "Qt::FocusPolicy", "enum FocusPolicy" },
-#ifndef Q_CC_BOR
-# if __REQUIRED_RPCNDR_H_VERSION__ >= Q_REQUIRED_RPCNDR_H_VERSION
+#if __REQUIRED_RPCNDR_H_VERSION__ >= Q_REQUIRED_RPCNDR_H_VERSION
     { "QRect",          "struct QRect" },
     { "QSize",          "struct QSize" },
     { "QPoint",         "struct QPoint" },
-# endif
-#endif
+#endif // __REQUIRED_RPCNDR_H_VERSION__ >= Q_REQUIRED_RPCNDR_H_VERSION
     // And we support COM data types
     { "BOOL",           "BOOL" },
     { "BSTR",           "BSTR" },
@@ -1082,11 +1080,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
     return S_OK;
 }
 
-#if defined(Q_CC_BOR)
-extern "C" __stdcall HRESULT DumpIDL(const QString &outfile, const QString &ver)
-#else
 extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
-#endif
 {
     qAxIsServer = false;
     QTextStream out;
@@ -1172,7 +1166,6 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out << "\t** use the correct files." << endl;
     out << "\t**" << endl;
 
-#ifndef Q_CC_BOR
 #if __REQUIRED_RPCNDR_H_VERSION__ < Q_REQUIRED_RPCNDR_H_VERSION
     out << "\t** Required version of MIDL could not be verified. QRect, QSize and QPoint" << endl;
     out << "\t** support needs an updated Platform SDK to be installed." << endl;
@@ -1203,10 +1196,6 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out << "\t};" << endl;
 #if __REQUIRED_RPCNDR_H_VERSION__ < Q_REQUIRED_RPCNDR_H_VERSION
     out << "\t*/" << endl;
-#endif
-#else
-    out << "\t** Custom data types not supported with Borland." << endl;
-    out << "\t*************************************************************************" << endl;
 #endif
     out << endl;
 

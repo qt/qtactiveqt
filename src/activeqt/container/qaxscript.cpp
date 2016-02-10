@@ -45,8 +45,6 @@
 // Workaround for mingw-w64 bug #464
 // See https://sourceforge.net/p/mingw-w64/bugs/464/
 # define _NO_SCRIPT_GUIDS
-#elif defined(Q_CC_BOR) && __BORLANDC__ < 0x560
-# define QT_NO_QAXSCRIPT
 #endif
 
 #include <qapplication.h>
