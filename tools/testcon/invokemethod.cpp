@@ -114,7 +114,7 @@ void InvokeMethod::on_comboMethods_activated(const QString &method)
     const QMetaObject *mo = activex->metaObject();
     const QMetaMethod slot = mo->method(mo->indexOfSlot(method.toLatin1()));
     QString signature = QString::fromLatin1(slot.methodSignature());
-    signature = signature.mid(signature.indexOf(QLatin1Char('(')) + 1);
+    signature.remove(0, signature.indexOf(QLatin1Char('(')) + 1);
     signature.truncate(signature.length()-1);
 
     QList<QByteArray> pnames = slot.parameterNames();

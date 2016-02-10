@@ -1403,7 +1403,7 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
     at = server.indexOf(QChar::fromLatin1('@'));
     if (at != -1) {
         user = server.left(at);
-        server = server.mid(at+1);
+        server.remove(0, at + 1);
 
         at = user.indexOf(QChar::fromLatin1(':'));
         if (at != -1) {
@@ -1413,7 +1413,7 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
         at = user.indexOf(QChar::fromLatin1('/'));
         if (at != -1) {
             domain = user.left(at);
-            user = user.mid(at+1);
+            user.remove(0, at + 1);
         }
     }
 
@@ -3832,7 +3832,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
         parse = !varc && normFunction.length() > function.length() + 2;
         if (parse) {
             QString args = QLatin1String(normFunction);
-            args = args.mid(function.length() + 1);
+            args.remove(0, function.length() + 1);
             // parse argument string int list of arguments
             QString curArg;
             const QChar *c = args.unicode();
@@ -4452,7 +4452,8 @@ QVariant QAxBase::asVariant() const
         else if (d->ptr)
             qvar.setValue(d->ptr);
     } else {
-        cn = cn.mid(cn.lastIndexOf(':') + 1) + '*';
+        cn.remove(0, cn.lastIndexOf(':') + 1);
+        cn += '*';
         QObject *object = qObject();
         int typeId = QMetaType::type(cn);
         if (typeId == QMetaType::UnknownType)

@@ -113,7 +113,7 @@ static QByteArray toType(const QByteArray &t)
         type = "int";
 
     if (type.at(0) == 'Q')
-        type = type.mid(1);
+        type.remove(0, 1);
     type[0] = toupper(type.at(0));
     if (type == "VariantList")
         type = "List";

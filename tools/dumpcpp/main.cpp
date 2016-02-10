@@ -414,7 +414,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         if (slotSignature.endsWith("()")) { // no parameters - no names
             slotNamedSignature = slotSignature;
         } else {
-            slotNamedSignature = slotSignature.left(slotSignature.indexOf('(') + 1);
+            slotNamedSignature.truncate(slotSignature.indexOf('(') + 1);
             QByteArray slotSignatureTruncated(slotSignature.mid(slotNamedSignature.length()));
             slotSignatureTruncated.truncate(slotSignatureTruncated.length() - 1);
 
@@ -1092,7 +1092,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 QByteArray refTypeLib;
                 if (refType.contains("::")) {
                     refTypeLib = refType;
-                    refType = refType.mid(refType.lastIndexOf("::") + 2);
+                    refType.remove(0, refType.lastIndexOf("::") + 2);
                     if (refTypeLib.contains(' ')) {
                         refType = refTypeLib.left(refTypeLib.indexOf(' ')) + ' ' + refType;
                     }

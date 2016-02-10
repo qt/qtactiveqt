@@ -948,7 +948,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
         if (i <= qtSlots && ignoreSlots(name))
             continue;
 
-        signature = signature.mid(name.length() + 1);
+        signature.remove(0, name.length() + 1);
         signature.truncate(signature.length() - 1);
         name = renameOverloads(replaceKeyword(name));
         if (ignoreSlots(name))
@@ -968,7 +968,8 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
         if (!ok)
             outBuffer += "\t/****** Slot parameter uses unsupported datatype\n";
 
-        outBuffer += "\t\t[id(" + QString::number(id).toLatin1() + ")] " + type + ' ' + name + '(' + ptype + ");\n";
+        outBuffer += "\t\t[id(" + QByteArray::number(id) + ")] " + type + ' '
+            + name + '(' + ptype + ");\n";
 
         if (!ok)
             outBuffer += "\t******/\n";
@@ -1014,7 +1015,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
 
             QByteArray signature(signal.methodSignature());
             QByteArray name(signature.left(signature.indexOf('(')));
-            signature = signature.mid(name.length() + 1);
+            signature.remove(0, name.length() + 1);
             signature.truncate(signature.length() - 1);
 
             QList<QByteArray> parameterTypes(signal.parameterTypes());

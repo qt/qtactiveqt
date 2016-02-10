@@ -1969,7 +1969,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                 }
             }
 
-            signature = signature.mid(name.length() + 1);
+            signature.remove(0, name.length() + 1);
             signature.truncate(signature.length() - 1);
 
             if (!signature.isEmpty())
@@ -2615,13 +2615,9 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
             if (!exception->context.isNull()) {
                 QString context = exception->context;
                 int contextID = 0;
-                int br = context.indexOf(QLatin1Char('['));
+                const int br = context.indexOf(QLatin1Char('[')); // "error[42]"
                 if (br != -1) {
-                    context = context.mid(br+1);
-                    context.chop(1);
-                    contextID = context.toInt();
-
-                    context = exception->context;
+                    contextID = context.midRef(br + 1, context.size() - br - 2).toInt();
                     context.truncate(br-1);
                 }
                 pexcepinfo->bstrHelpFile = QStringToBSTR(context);
