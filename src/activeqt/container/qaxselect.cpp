@@ -209,9 +209,9 @@ public:
         std::sort(m_controls.begin(), m_controls.end());
     }
 
-    int rowCount(const QModelIndex & = QModelIndex()) const { return m_controls.count(); }
-    QVariant data(const QModelIndex &index, int role) const;
-    Qt::ItemFlags flags(const QModelIndex &index) const;
+    int rowCount(const QModelIndex & = QModelIndex()) const override { return m_controls.count(); }
+    QVariant data(const QModelIndex &index, int role) const override ;
+    Qt::ItemFlags flags(const QModelIndex &index) const override ;
 
 private:
     QList<Control> m_controls;

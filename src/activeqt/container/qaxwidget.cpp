@@ -111,11 +111,11 @@ public:
     QAxHostWidget(QWidget *parent, QAxClientSite *ax);
     ~QAxHostWidget();
 
-    QSize sizeHint() const;
-    QSize minimumSizeHint() const;
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
 
-    int qt_metacall(QMetaObject::Call, int isignal, void **argv);
-    void* qt_metacast(const char *clname);
+    int qt_metacall(QMetaObject::Call, int isignal, void **argv) override;
+    void *qt_metacast(const char *clname) override;
 
     inline QAxClientSite *clientSite() const
     {
@@ -125,15 +125,15 @@ public:
     QWindow *hostWindow() const;
 
 protected:
-    bool nativeEvent(const QByteArray &eventType, void *message, long *result);
-    bool event(QEvent *e);
-    bool eventFilter(QObject *o, QEvent *e);
-    void resizeEvent(QResizeEvent *e);
-    void focusInEvent(QFocusEvent *e);
-    void focusOutEvent(QFocusEvent *e);
-    void paintEvent(QPaintEvent *e);
-    void showEvent(QShowEvent *e);
-    QPaintEngine* paintEngine() const
+    bool nativeEvent(const QByteArray &eventType, void *message, long *result) override;
+    bool event(QEvent *e) override;
+    bool eventFilter(QObject *o, QEvent *e) override;
+    void resizeEvent(QResizeEvent *e) override;
+    void focusInEvent(QFocusEvent *e) override;
+    void focusOutEvent(QFocusEvent *e) override;
+    void paintEvent(QPaintEvent *e) override;
+    void showEvent(QShowEvent *e) override;
+    QPaintEngine *paintEngine() const override
     {
         return 0;
     }

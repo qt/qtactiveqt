@@ -139,37 +139,37 @@ inline bool QAxFactory::stopServer()
     public: \
         QAxDefaultFactory(const QUuid &app, const QUuid &lib) \
         : QAxFactory(app, lib), className(QLatin1String(#Class)) {} \
-        QStringList featureList() const \
+        QStringList featureList() const override \
         { \
             QStringList list; \
             list << className; \
             return list; \
         } \
-        const QMetaObject *metaObject(const QString &key) const \
+        const QMetaObject *metaObject(const QString &key) const override \
         { \
             if (key == className) \
             return &Class::staticMetaObject; \
             return 0; \
         } \
-        QObject *createObject(const QString &key) \
+        QObject *createObject(const QString &key) override \
         { \
             if (key == className) \
                 return new Class(0); \
             return 0; \
         } \
-        QUuid classID(const QString &key) const \
+        QUuid classID(const QString &key) const override \
         { \
             if (key == className) \
                 return QUuid(IIDClass); \
             return QUuid(); \
         } \
-        QUuid interfaceID(const QString &key) const \
+        QUuid interfaceID(const QString &key) const override \
         { \
             if (key == className) \
                 return QUuid(IIDInterface); \
             return QUuid(); \
         } \
-        QUuid eventsID(const QString &key) const \
+        QUuid eventsID(const QString &key) const override \
         { \
             if (key == className) \
                 return QUuid(IIDEvents); \
