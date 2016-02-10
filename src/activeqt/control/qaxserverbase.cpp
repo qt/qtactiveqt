@@ -789,7 +789,7 @@ private:
 LRESULT QT_WIN_CALLBACK axs_FilterProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     if (qApp && !invokeCount)
-        qApp->sendPostedEvents();
+        QCoreApplication::sendPostedEvents();
 
     return CallNextHookEx(qax_hhook, nCode, wParam, lParam);
 }
@@ -905,7 +905,7 @@ public:
             int argc = 0;
             new QApplication(argc, 0);
         }
-        qApp->setQuitOnLastWindowClosed(false);
+        QGuiApplication::setQuitOnLastWindowClosed(false);
 
         if (qAxOutProcServer)
             QAbstractEventDispatcher::instance()->installNativeEventFilter(qax_winEventFilter());
@@ -920,7 +920,7 @@ public:
         // If we created QApplication instance, ensure native event loop starts properly
         // by calling processEvents.
         if (qax_ownQApp)
-            qApp->processEvents();
+            QCoreApplication::processEvents();
 
         HRESULT res;
         // Create the ActiveX wrapper - aggregate if requested
@@ -1320,7 +1320,7 @@ bool QAxServerBase::internalCreate()
     if (isWidget) {
         if (!stayTopLevel) {
             QEvent e(QEvent::EmbeddingControl);
-            QApplication::sendEvent(qt.widget, &e);
+            QCoreApplication::sendEvent(qt.widget, &e);
         }
         qt.widget->setAttribute(Qt::WA_QuitOnClose, false);
         qt.widget->move(0, 0);
@@ -3342,7 +3342,7 @@ HRESULT WINAPI QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
     case DISPID_AMBIENT_RIGHTTOLEFT:
         if (var.vt != VT_BOOL)
             break;
-        qApp->setLayoutDirection(var.boolVal?Qt::RightToLeft:Qt::LeftToRight);
+        QGuiApplication::setLayoutDirection(var.boolVal ? Qt::RightToLeft : Qt::LeftToRight);
         break;
     }
 
@@ -3581,7 +3581,7 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
 
             QKeyEvent override(QEvent::ShortcutOverride, key, (Qt::KeyboardModifiers)state);
             override.ignore();
-            QApplication::sendEvent(qt.widget->focusWidget(), &override);
+            QCoreApplication::sendEvent(qt.widget->focusWidget(), &override);
             if (override.isAccepted())
                 return S_FALSE;
         }

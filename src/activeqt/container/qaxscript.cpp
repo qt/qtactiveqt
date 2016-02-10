@@ -327,7 +327,7 @@ QWidget *QAxScriptSite::window() const
     if (w)
         w = w->window();
     if (!w && qApp)
-        w = qApp->activeWindow();
+        w = QApplication::activeWindow();
 
     return w;
 }
