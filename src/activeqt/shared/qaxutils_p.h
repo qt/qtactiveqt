@@ -120,6 +120,9 @@ QRect qaxFromNativeRect(const RECT &r, const QWidget *w);
 HRGN qaxHrgnFromQRegion(const QRegion &region, const QWidget *widget);
 #endif // QT_WIDGETS_LIB
 
+QByteArray qaxTypeInfoName(ITypeInfo *typeInfo, MEMBERID memId);
+QByteArrayList qaxTypeInfoNames(ITypeInfo *typeInfo, MEMBERID memId);
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(IDispatch**)

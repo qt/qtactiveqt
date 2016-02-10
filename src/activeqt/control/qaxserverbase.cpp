@@ -2290,15 +2290,11 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 index = mo->indexOfProperty(name);
             }
         } else {
-            BSTR bname;
-            UINT cname = 0;
-            if (m_spTypeInfo)
-                m_spTypeInfo->GetNames(dispidMember, &bname, 1, &cname);
-            if (!cname)
+            if (!m_spTypeInfo)
                 return res;
-
-            name = QString::fromWCharArray(bname).toLatin1();
-            SysFreeString(bname);
+            name = qaxTypeInfoName(m_spTypeInfo, dispidMember);
+            if (name.isEmpty())
+                return res;
         }
     }
 

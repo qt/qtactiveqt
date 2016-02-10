@@ -663,13 +663,10 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     if (!typeinfo)
         return propname;
 
-    BSTR names;
-    UINT cNames;
-    typeinfo->GetNames(dispID, &names, 1, &cNames);
-    if (cNames) {
-        propname = QString::fromWCharArray(names).toLatin1();
-        SysFreeString(names);
-    }
+
+    const QByteArray propnameI = qaxTypeInfoName(typeinfo, dispID);
+    if (!propnameI.isEmpty())
+        propname = propnameI;
     typeinfo->Release();
 
     QByteArray propsignal(propname + "Changed(");
@@ -2298,17 +2295,9 @@ void MetaObjectGenerator::readEnumInfo()
                         int value = vardesc->lpvarValue->lVal;
                         int memid = vardesc->memid;
                         // Get the name of the value
-                        BSTR valuename;
-                        QByteArray valueName;
-                        UINT maxNamesOut;
-                        enuminfo->GetNames(memid, &valuename, 1, &maxNamesOut);
-                        if (maxNamesOut) {
-                            valueName = QString::fromWCharArray(valuename).toLatin1();
-                            SysFreeString(valuename);
-                        } else {
+                        QByteArray valueName = qaxTypeInfoName(enuminfo, memid);
+                        if (valueName.isEmpty())
                             valueName = "value" + QByteArray::number(valueindex++);
-                        }
-
                         if (clashCheck.contains(QString::fromLatin1(valueName)))
                             valueName += QByteArray::number(++clashIndex);
 
@@ -2457,25 +2446,15 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
         if (!funcdesc)
             break;
 
-        QByteArray function;
         QByteArray type;
         QByteArray prototype;
         QList<QByteArray> parameters;
 
         // parse function description
-        BSTR bstrNames[256];
-        UINT maxNames = 255;
-        UINT maxNamesOut;
-        typeinfo->GetNames(funcdesc->memid, (BSTR*)&bstrNames, maxNames, &maxNamesOut);
-        QList<QByteArray> names;
-        int p;
-        for (p = 0; p < (int)maxNamesOut; ++p) {
-            names << QString::fromWCharArray(bstrNames[p]).toLatin1();
-            SysFreeString(bstrNames[p]);
-        }
-
+        const QByteArrayList names = qaxTypeInfoNames(typeinfo, funcdesc->memid);
+        const int maxNamesOut = names.size();
         // function name
-        function = names.at(0);
+        const QByteArray &function = names.at(0);
         if ((maxNamesOut == 3 && function == "QueryInterface") ||
             (maxNamesOut == 1 && function == "AddRef") ||
             (maxNamesOut == 1 && function == "Release") ||
@@ -2574,7 +2553,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
                 bool defargs;
                 do {
                     QByteArray pnames;
-                    for (p = 0; p < parameters.count(); ++p) {
+                    for (int p = 0; p < parameters.count(); ++p) {
                         pnames += parameters.at(p);
                         if (p < parameters.count() - 1)
                             pnames += ',';
@@ -2640,24 +2619,17 @@ void MetaObjectGenerator::readVarsInfo(ITypeInfo *typeinfo, ushort nVars)
         }
 
         // get variable name
-        BSTR bstrName;
-        UINT maxNames = 1;
-        UINT maxNamesOut;
-        typeinfo->GetNames(vardesc->memid, &bstrName, maxNames, &maxNamesOut);
-        if (maxNamesOut != 1 || !bstrName) {
+        const QByteArray variableName = qaxTypeInfoName(typeinfo, vardesc->memid);
+        if (variableName.isEmpty()) {
             typeinfo->ReleaseVarDesc(vardesc);
             continue;
         }
-        QByteArray variableType;
-        QByteArray variableName;
-        uint flags = 0;
 
-        variableName = QString::fromWCharArray(bstrName).toLatin1();
-        SysFreeString(bstrName);
+        uint flags = 0;
 
         // get variable type
         TYPEDESC typedesc = vardesc->elemdescVar.tdesc;
-        variableType = guessTypes(typedesc, typeinfo, variableName);
+        const QByteArray variableType = guessTypes(typedesc, typeinfo, variableName);
 
         // generate meta property
         if (!hasProperty(variableName)) {
@@ -2798,29 +2770,17 @@ void MetaObjectGenerator::readEventInterface(ITypeInfo *eventinfo, IConnectionPo
             continue;
         }
 
-        QByteArray function;
         QByteArray prototype;
         QList<QByteArray> parameters;
 
-        // parse event function description
-        BSTR bstrNames[256];
-        UINT maxNames = 255;
-        UINT maxNamesOut;
-        eventinfo->GetNames(funcdesc->memid, (BSTR*)&bstrNames, maxNames, &maxNamesOut);
-        QList<QByteArray> names;
-        int p;
-        for (p = 0; p < (int)maxNamesOut; ++p) {
-            names << QString::fromWCharArray(bstrNames[p]).toLatin1();
-            SysFreeString(bstrNames[p]);
-        }
+        // parse event function description, get event function prototype
+        const QByteArrayList names = qaxTypeInfoNames(eventinfo, funcdesc->memid);
 
-        // get event function prototype
-        function = names.at(0);
         QByteArray type; // dummy - we don't care about return values for signals
         prototype = createPrototype(/*in*/ funcdesc, eventinfo, names, /*out*/type, parameters);
         if (!hasSignal(prototype)) {
             QByteArray pnames;
-            for (p = 0; p < parameters.count(); ++p) {
+            for (int p = 0; p < parameters.count(); ++p) {
                 pnames += parameters.at(p);
                 if (p < parameters.count() - 1)
                     pnames += ',';
