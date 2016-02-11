@@ -702,7 +702,15 @@ bool ignoreProps(const char *test)
     return ignore(test, ignore_props);
 }
 
-#define STRIPCB(x) x = x.mid(1, x.length()-2)
+static QString stripCurlyBraces(const QUuid &uuid)
+{
+    if (uuid.isNull())
+        return QString();
+    QString result = uuid.toString().toUpper();
+    result.chop(1);
+    result.remove(0, 1);
+    return result;
+}
 
 static QByteArray prototype(const QList<QByteArray> &parameterTypes, const QList<QByteArray> &parameterNames, bool *ok)
 {
@@ -802,17 +810,14 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
         control = true;
     }
 
-    QString classID = qAxFactory()->classID(className).toString().toUpper();
-    if (QUuid(classID).isNull())
+    const QString classID = stripCurlyBraces(qAxFactory()->classID(className));
+    if (classID.isEmpty())
         return 4;
-    STRIPCB(classID);
-    QString interfaceID = qAxFactory()->interfaceID(className).toString().toUpper();
-    if (QUuid(interfaceID).isNull())
+    const QString interfaceID = stripCurlyBraces(qAxFactory()->interfaceID(className));
+    if (interfaceID.isEmpty())
         return 5;
-    STRIPCB(interfaceID);
-    QString eventsID = qAxFactory()->eventsID(className).toString().toUpper();
-    bool hasEvents = !QUuid(eventsID).isNull();
-    STRIPCB(eventsID);
+    const QString eventsID = stripCurlyBraces(qAxFactory()->eventsID(className));
+    const bool hasEvents = !eventsID.isEmpty();
 
     QString cleanClassName = qax_clean_type(className, mo);
     QString defProp(QLatin1String(mo->classInfo(mo->indexOfClassInfo("DefaultProperty")).value()));
@@ -1096,14 +1101,12 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     QString filebase = QString::fromWCharArray(qAxModuleFilename);
     filebase.truncate(filebase.lastIndexOf(QLatin1Char('.')));
 
-    QString appID = qAxFactory()->appID().toString().toUpper();
-    if (QUuid(appID).isNull())
+    const QString appID = stripCurlyBraces(qAxFactory()->appID());
+    if (appID.isEmpty())
         return 1;
-    STRIPCB(appID);
-    QString typeLibID = qAxFactory()->typeLibID().toString().toUpper();
-    if (QUuid(typeLibID).isNull())
+    const QString typeLibID = stripCurlyBraces(qAxFactory()->typeLibID());
+    if (typeLibID.isEmpty())
         return 2;
-    STRIPCB(typeLibID);
     QString typelib = filebase.right(filebase.length() - filebase.lastIndexOf(QLatin1String("\\"))-1);
 
     if (!file.open(QIODevice::WriteOnly))
@@ -1119,12 +1122,9 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     if (version.isEmpty())
         version = QLatin1String("1.0");
 
-    QString idQRect(QUuid(CLSID_QRect).toString());
-    STRIPCB(idQRect);
-    QString idQSize(QUuid(CLSID_QSize).toString());
-    STRIPCB(idQSize);
-    QString idQPoint(QUuid(CLSID_QPoint).toString());
-    STRIPCB(idQPoint);
+    const QString idQRect = stripCurlyBraces(QUuid(CLSID_QRect));
+    const QString idQSize = stripCurlyBraces(QUuid(CLSID_QSize));
+    const QString idQPoint = stripCurlyBraces(QUuid(CLSID_QPoint));
 
     out << "/****************************************************************************" << endl;
     out << "** Interface definition generated for ActiveQt project" << endl;
