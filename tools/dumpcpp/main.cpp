@@ -70,6 +70,9 @@ enum ObjectCategory
     Licensed         = 0x100,
 };
 
+Q_DECLARE_FLAGS(ObjectCategories, ObjectCategory)
+Q_DECLARE_OPERATORS_FOR_FLAGS(ObjectCategories)
+
 extern QMetaObject *qax_readEnumInfo(ITypeLib *typeLib, const QMetaObject *parentObject);
 extern QMetaObject *qax_readClassInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const QMetaObject *parentObject);
 extern QMetaObject *qax_readInterfaceInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const QMetaObject *parentObject);
@@ -154,7 +157,9 @@ QByteArray constRefify(const QByteArray &type)
     return ctype;
 }
 
-void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaObject *mo, const QByteArray &className, const QByteArray &nameSpace, ObjectCategory category)
+void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaObject *mo,
+                       const QByteArray &className, const QByteArray &nameSpace,
+                       ObjectCategories category)
 {
     QList<QByteArray> functions;
 
@@ -689,7 +694,8 @@ void generateMethodParameters(QTextStream &out, const QMetaObject *mo, const QMe
     out << endl;
 }
 
-void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray &className, const QByteArray &nameSpace, ObjectCategory category)
+void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray &className,
+                       const QByteArray &nameSpace, ObjectCategories category)
 {
     Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 7, "dumpcpp should generate the same version as moc");
 
@@ -933,7 +939,7 @@ static QByteArrayList vTableOnlyStubsFromTypeLib(ITypeLib *typelib, const QStrin
 }
 
 bool generateTypeLibrary(QString typeLibFile, QString outname,
-                         const QString &nameSpace, ObjectCategory category)
+                         const QString &nameSpace, ObjectCategories category)
 {
     typeLibFile.replace(QLatin1Char('/'), QLatin1Char('\\'));
 
@@ -1170,7 +1176,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         TYPEKIND typekind;
         typelib->GetTypeInfoType(index, &typekind);
 
-        uint object_category = category;
+        ObjectCategories object_category = category;
         if (!(typeattr->wTypeFlags & TYPEFLAG_FCANCREATE))
             object_category |= SubObject;
         else if (typeattr->wTypeFlags & TYPEFLAG_FCONTROL)
@@ -1224,18 +1230,22 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                     if (typeattr->wTypeFlags & TYPEFLAG_FLICENSED)
                         object_category |= Licensed;
                     if (typekind == TKIND_COCLASS) { // write those later...
-                        generateClassDecl(classesOut, guid.toString(), metaObject, className, libName.toLatin1(), (ObjectCategory)(object_category|NoInlines));
+                        generateClassDecl(classesOut, guid.toString(), metaObject, className, libName.toLatin1(),
+                                          object_category | NoInlines);
                         classesOut << endl;
                     } else {
-                        generateClassDecl(declOut, guid.toString(), metaObject, className, libName.toLatin1(), (ObjectCategory)(object_category|NoInlines));
+                        generateClassDecl(declOut, guid.toString(), metaObject, className, libName.toLatin1(),
+                                          object_category | NoInlines);
                         declOut << endl;
                     }
                     subtypes << className;
-                    generateClassDecl(inlinesOut, guid.toString(), metaObject, className, libName.toLatin1(), (ObjectCategory)(object_category|OnlyInlines));
+                    generateClassDecl(inlinesOut, guid.toString(), metaObject, className, libName.toLatin1(),
+                                      object_category | OnlyInlines);
                     inlinesOut << endl;
                 }
                 if (implFile.isOpen())
-                    generateClassImpl(classImplOut, metaObject, className, libName.toLatin1(), (ObjectCategory)object_category);
+                    generateClassImpl(classImplOut, metaObject, className, libName.toLatin1(),
+                                      object_category);
             }
             currentTypeInfo = 0;
         }
@@ -1416,7 +1426,7 @@ struct Options
     Options() : mode(GenerateMode), category(DefaultObject), dispatchEqualsIDispatch(false) {}
 
     ProgramMode mode;
-    uint category;
+    ObjectCategories category;
     bool dispatchEqualsIDispatch;
 
     QString outname;
@@ -1599,7 +1609,7 @@ int main(int argc, char **argv)
         return -2;
     }
 
-    if (!generateTypeLibrary(typeLib, options.outname, options.nameSpace, (ObjectCategory)options.category)) {
+    if (!generateTypeLibrary(typeLib, options.outname, options.nameSpace, options.category)) {
         qWarning("dumpcpp: error processing type library '%s'", qPrintable(typeLib));
         return -1;
     }
