@@ -248,7 +248,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
     // we try to create the ActiveX widgets later on...
     bool delete_qApp = false;
     if (!qApp) {
-        int argc = 0;
+        static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
         (void)new QApplication(argc, 0);
         delete_qApp = true;
     }
@@ -496,13 +496,11 @@ static const char* const type_map[][2] =
     // Userdefined Qt datatypes - some not on Borland though
     { "QCursor",         "enum MousePointer" },
     { "Qt::FocusPolicy", "enum FocusPolicy" },
-#ifndef Q_CC_BOR
-# if __REQUIRED_RPCNDR_H_VERSION__ >= Q_REQUIRED_RPCNDR_H_VERSION
+#if __REQUIRED_RPCNDR_H_VERSION__ >= Q_REQUIRED_RPCNDR_H_VERSION
     { "QRect",          "struct QRect" },
     { "QSize",          "struct QSize" },
     { "QPoint",         "struct QPoint" },
-# endif
-#endif
+#endif // __REQUIRED_RPCNDR_H_VERSION__ >= Q_REQUIRED_RPCNDR_H_VERSION
     // And we support COM data types
     { "BOOL",           "BOOL" },
     { "BSTR",           "BSTR" },
@@ -704,7 +702,15 @@ bool ignoreProps(const char *test)
     return ignore(test, ignore_props);
 }
 
-#define STRIPCB(x) x = x.mid(1, x.length()-2)
+static QString stripCurlyBraces(const QUuid &uuid)
+{
+    if (uuid.isNull())
+        return QString();
+    QString result = uuid.toString().toUpper();
+    result.chop(1);
+    result.remove(0, 1);
+    return result;
+}
 
 static QByteArray prototype(const QList<QByteArray> &parameterTypes, const QList<QByteArray> &parameterNames, bool *ok)
 {
@@ -804,17 +810,14 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
         control = true;
     }
 
-    QString classID = qAxFactory()->classID(className).toString().toUpper();
-    if (QUuid(classID).isNull())
+    const QString classID = stripCurlyBraces(qAxFactory()->classID(className));
+    if (classID.isEmpty())
         return 4;
-    STRIPCB(classID);
-    QString interfaceID = qAxFactory()->interfaceID(className).toString().toUpper();
-    if (QUuid(interfaceID).isNull())
+    const QString interfaceID = stripCurlyBraces(qAxFactory()->interfaceID(className));
+    if (interfaceID.isEmpty())
         return 5;
-    STRIPCB(interfaceID);
-    QString eventsID = qAxFactory()->eventsID(className).toString().toUpper();
-    bool hasEvents = !QUuid(eventsID).isNull();
-    STRIPCB(eventsID);
+    const QString eventsID = stripCurlyBraces(qAxFactory()->eventsID(className));
+    const bool hasEvents = !eventsID.isEmpty();
 
     QString cleanClassName = qax_clean_type(className, mo);
     QString defProp(QLatin1String(mo->classInfo(mo->indexOfClassInfo("DefaultProperty")).value()));
@@ -950,7 +953,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
         if (i <= qtSlots && ignoreSlots(name))
             continue;
 
-        signature = signature.mid(name.length() + 1);
+        signature.remove(0, name.length() + 1);
         signature.truncate(signature.length() - 1);
         name = renameOverloads(replaceKeyword(name));
         if (ignoreSlots(name))
@@ -970,7 +973,8 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
         if (!ok)
             outBuffer += "\t/****** Slot parameter uses unsupported datatype\n";
 
-        outBuffer += "\t\t[id(" + QString::number(id).toLatin1() + ")] " + type + ' ' + name + '(' + ptype + ");\n";
+        outBuffer += "\t\t[id(" + QByteArray::number(id) + ")] " + type + ' '
+            + name + '(' + ptype + ");\n";
 
         if (!ok)
             outBuffer += "\t******/\n";
@@ -1016,7 +1020,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
 
             QByteArray signature(signal.methodSignature());
             QByteArray name(signature.left(signature.indexOf('(')));
-            signature = signature.mid(name.length() + 1);
+            signature.remove(0, name.length() + 1);
             signature.truncate(signature.length() - 1);
 
             QList<QByteArray> parameterTypes(signal.parameterTypes());
@@ -1082,11 +1086,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
     return S_OK;
 }
 
-#if defined(Q_CC_BOR)
-extern "C" __stdcall HRESULT DumpIDL(const QString &outfile, const QString &ver)
-#else
 extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
-#endif
 {
     qAxIsServer = false;
     QTextStream out;
@@ -1101,14 +1101,12 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     QString filebase = QString::fromWCharArray(qAxModuleFilename);
     filebase.truncate(filebase.lastIndexOf(QLatin1Char('.')));
 
-    QString appID = qAxFactory()->appID().toString().toUpper();
-    if (QUuid(appID).isNull())
+    const QString appID = stripCurlyBraces(qAxFactory()->appID());
+    if (appID.isEmpty())
         return 1;
-    STRIPCB(appID);
-    QString typeLibID = qAxFactory()->typeLibID().toString().toUpper();
-    if (QUuid(typeLibID).isNull())
+    const QString typeLibID = stripCurlyBraces(qAxFactory()->typeLibID());
+    if (typeLibID.isEmpty())
         return 2;
-    STRIPCB(typeLibID);
     QString typelib = filebase.right(filebase.length() - filebase.lastIndexOf(QLatin1String("\\"))-1);
 
     if (!file.open(QIODevice::WriteOnly))
@@ -1124,12 +1122,9 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     if (version.isEmpty())
         version = QLatin1String("1.0");
 
-    QString idQRect(QUuid(CLSID_QRect).toString());
-    STRIPCB(idQRect);
-    QString idQSize(QUuid(CLSID_QSize).toString());
-    STRIPCB(idQSize);
-    QString idQPoint(QUuid(CLSID_QPoint).toString());
-    STRIPCB(idQPoint);
+    const QString idQRect = stripCurlyBraces(QUuid(CLSID_QRect));
+    const QString idQSize = stripCurlyBraces(QUuid(CLSID_QSize));
+    const QString idQPoint = stripCurlyBraces(QUuid(CLSID_QPoint));
 
     out << "/****************************************************************************" << endl;
     out << "** Interface definition generated for ActiveQt project" << endl;
@@ -1147,7 +1142,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     // dummy application to create widgets
     bool delete_qApp = false;
     if (!qApp) {
-        int argc=0;
+        static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
         (void)new QApplication(argc, 0);
         delete_qApp = true;
     }
@@ -1172,7 +1167,6 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out << "\t** use the correct files." << endl;
     out << "\t**" << endl;
 
-#ifndef Q_CC_BOR
 #if __REQUIRED_RPCNDR_H_VERSION__ < Q_REQUIRED_RPCNDR_H_VERSION
     out << "\t** Required version of MIDL could not be verified. QRect, QSize and QPoint" << endl;
     out << "\t** support needs an updated Platform SDK to be installed." << endl;
@@ -1203,10 +1197,6 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out << "\t};" << endl;
 #if __REQUIRED_RPCNDR_H_VERSION__ < Q_REQUIRED_RPCNDR_H_VERSION
     out << "\t*/" << endl;
-#endif
-#else
-    out << "\t** Custom data types not supported with Borland." << endl;
-    out << "\t*************************************************************************" << endl;
 #endif
     out << endl;
 

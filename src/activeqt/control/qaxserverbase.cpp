@@ -433,7 +433,7 @@ class QAxServerAggregate : public IUnknown
 {
 public:
     QAxServerAggregate(const QString &className, IUnknown *outerUnknown)
-        : m_outerUnknown(outerUnknown), ref(0)
+        : ref(0)
     {
         object = new QAxServerBase(className, outerUnknown);
         object->registerActiveObject(this);
@@ -476,7 +476,6 @@ public:
 
 private:
     QAxServerBase *object;
-    IUnknown *m_outerUnknown;
     LONG ref;
 
     CRITICAL_SECTION refCountSection;
@@ -790,7 +789,7 @@ private:
 LRESULT QT_WIN_CALLBACK axs_FilterProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     if (qApp && !invokeCount)
-        qApp->sendPostedEvents();
+        QCoreApplication::sendPostedEvents();
 
     return CallNextHookEx(qax_hhook, nCode, wParam, lParam);
 }
@@ -906,7 +905,7 @@ public:
             int argc = 0;
             new QApplication(argc, 0);
         }
-        qApp->setQuitOnLastWindowClosed(false);
+        QGuiApplication::setQuitOnLastWindowClosed(false);
 
         if (qAxOutProcServer)
             QAbstractEventDispatcher::instance()->installNativeEventFilter(qax_winEventFilter());
@@ -921,7 +920,7 @@ public:
         // If we created QApplication instance, ensure native event loop starts properly
         // by calling processEvents.
         if (qax_ownQApp)
-            qApp->processEvents();
+            QCoreApplication::processEvents();
 
         HRESULT res;
         // Create the ActiveX wrapper - aggregate if requested
@@ -1321,7 +1320,7 @@ bool QAxServerBase::internalCreate()
     if (isWidget) {
         if (!stayTopLevel) {
             QEvent e(QEvent::EmbeddingControl);
-            QApplication::sendEvent(qt.widget, &e);
+            QCoreApplication::sendEvent(qt.widget, &e);
         }
         qt.widget->setAttribute(Qt::WA_QuitOnClose, false);
         qt.widget->move(0, 0);
@@ -1970,7 +1969,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                 }
             }
 
-            signature = signature.mid(name.length() + 1);
+            signature.remove(0, name.length() + 1);
             signature.truncate(signature.length() - 1);
 
             if (!signature.isEmpty())
@@ -2291,15 +2290,11 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 index = mo->indexOfProperty(name);
             }
         } else {
-            BSTR bname;
-            UINT cname = 0;
-            if (m_spTypeInfo)
-                m_spTypeInfo->GetNames(dispidMember, &bname, 1, &cname);
-            if (!cname)
+            if (!m_spTypeInfo)
                 return res;
-
-            name = QString::fromWCharArray(bname).toLatin1();
-            SysFreeString(bname);
+            name = qaxTypeInfoName(m_spTypeInfo, dispidMember);
+            if (name.isEmpty())
+                return res;
         }
     }
 
@@ -2620,13 +2615,9 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
             if (!exception->context.isNull()) {
                 QString context = exception->context;
                 int contextID = 0;
-                int br = context.indexOf(QLatin1Char('['));
+                const int br = context.indexOf(QLatin1Char('[')); // "error[42]"
                 if (br != -1) {
-                    context = context.mid(br+1);
-                    context.chop(1);
-                    contextID = context.toInt();
-
-                    context = exception->context;
+                    contextID = context.midRef(br + 1, context.size() - br - 2).toInt();
                     context.truncate(br-1);
                 }
                 pexcepinfo->bstrHelpFile = QStringToBSTR(context);
@@ -3343,7 +3334,7 @@ HRESULT WINAPI QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
     case DISPID_AMBIENT_RIGHTTOLEFT:
         if (var.vt != VT_BOOL)
             break;
-        qApp->setLayoutDirection(var.boolVal?Qt::RightToLeft:Qt::LeftToRight);
+        QGuiApplication::setLayoutDirection(var.boolVal ? Qt::RightToLeft : Qt::LeftToRight);
         break;
     }
 
@@ -3582,7 +3573,7 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
 
             QKeyEvent override(QEvent::ShortcutOverride, key, (Qt::KeyboardModifiers)state);
             override.ignore();
-            QApplication::sendEvent(qt.widget->focusWidget(), &override);
+            QCoreApplication::sendEvent(qt.widget->focusWidget(), &override);
             if (override.isAccepted())
                 return S_FALSE;
         }

@@ -96,7 +96,7 @@ STDAPI DllCanUnloadNow()
         return S_OK;
 
     // check if qApp still runs widgets (in other DLLs)
-    QWidgetList widgets = qApp->allWidgets();
+    QWidgetList widgets = QApplication::allWidgets();
     int count = widgets.count();
     for (int w = 0; w < widgets.count(); ++w) {
         // remove all Qt generated widgets

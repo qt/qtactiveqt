@@ -44,6 +44,15 @@ QAXFACTORY_DEFAULT(MainWindow,
 
 QT_USE_NAMESPACE
 
+static bool isOptionSet(int argc, char *argv[], const char *option)
+{
+    for (int i = 1; i < argc; ++i) {
+        if (!qstrcmp(argv[i], option))
+            return true;
+    }
+    return false;
+}
+
 static void redirectDebugOutput(QtMsgType, const QMessageLogContext &, const QString &msg)
 {
     if (MainWindow *mainWindow = MainWindow::instance())
@@ -52,6 +61,11 @@ static void redirectDebugOutput(QtMsgType, const QMessageLogContext &, const QSt
 
 int main( int argc, char **argv )
 {
+    if (isOptionSet(argc, argv, "--no-scaling"))
+        QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
+    if (isOptionSet(argc, argv, "--no-native-siblings"))
+        QCoreApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
+
     QApplication app( argc, argv );
     QCoreApplication::setApplicationName(QLatin1String("TestCon"));
     QCoreApplication::setOrganizationName(QLatin1String("QtProject"));
@@ -67,6 +81,12 @@ int main( int argc, char **argv )
     QCommandLineOption noMessageHandlerOption(QLatin1String("no-messagehandler"),
                                               QLatin1String("Suppress installation of the message handler."));
     parser.addOption(noMessageHandlerOption);
+    QCommandLineOption noScalingDummy(QLatin1String("no-scaling"),
+                                      QLatin1String("Set Qt::AA_DisableHighDpiScaling."));
+    parser.addOption(noScalingDummy);
+    QCommandLineOption noNativeSiblingsDummy(QLatin1String("no-native-siblings"),
+                                             QLatin1String("Set Qt::AA_DontCreateNativeWidgetSiblings."));
+    parser.addOption(noNativeSiblingsDummy);
     parser.addPositionalArgument(QLatin1String("clsid/file"),
                                  QLatin1String("The clsid/file to show."));
     parser.process(app);

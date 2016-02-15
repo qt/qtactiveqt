@@ -346,4 +346,32 @@ HRGN qaxHrgnFromQRegion(const QRegion &region, const QWidget *widget)
 
 #endif // QT_WIDGETS_LIB
 
+QByteArray qaxTypeInfoName(ITypeInfo *typeInfo, MEMBERID memId)
+{
+    QByteArray result;
+    BSTR names;
+    UINT cNames = 0;
+    typeInfo->GetNames(memId, &names, 1, &cNames);
+    if (cNames && names) {
+        result = QString::fromWCharArray(names).toLatin1();
+        SysFreeString(names);
+    }
+    return result;
+}
+
+QByteArrayList qaxTypeInfoNames(ITypeInfo *typeInfo, MEMBERID memId)
+{
+    QByteArrayList result;
+    BSTR bstrNames[256];
+    UINT maxNames = 255;
+    UINT maxNamesOut = 0;
+    typeInfo->GetNames(memId, reinterpret_cast<BSTR *>(&bstrNames), maxNames, &maxNamesOut);
+    result.reserve(maxNamesOut);
+    for (UINT p = 0; p < maxNamesOut; ++p) {
+        result.append(QString::fromWCharArray(bstrNames[p]).toLatin1());
+        SysFreeString(bstrNames[p]);
+    }
+    return result;
+}
+
 QT_END_NAMESPACE

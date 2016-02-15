@@ -517,7 +517,7 @@ bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *
                         QMouseEvent e(type, pos, gpos, (Qt::MouseButton)button,
                             translateMouseButtonState(msg->wParam),
                             translateModifierState(msg->wParam));
-                        QApplication::sendEvent(ax, &e);
+                        QCoreApplication::sendEvent(ax, &e);
                     }
                 }
             }
@@ -1391,7 +1391,7 @@ HRESULT WINAPI QAxClientSite::RemoveMenus(HMENU /*hmenuShared*/)
 HRESULT WINAPI QAxClientSite::SetStatusText(LPCOLESTR pszStatusText)
 {
     QStatusTipEvent tip(QString::fromWCharArray(pszStatusText));
-    QApplication::sendEvent(widget, &tip);
+    QCoreApplication::sendEvent(widget, &tip);
     return S_OK;
 }
 

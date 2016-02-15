@@ -73,11 +73,7 @@ extern HRESULT GetClassObject(const GUID &clsid, const GUID &iid, void **ppUnk);
 extern ulong qAxLockCount();
 extern bool qax_winEventFilter(void *message);
 
-#if defined(Q_CC_BOR)
-extern "C" __stdcall HRESULT DumpIDL(const QString &outfile, const QString &ver);
-#else
 STDAPI DumpIDL(const QString &outfile, const QString &ver);
-#endif
 
 // Monitors the shutdown event
 static DWORD WINAPI MonitorProc(void* /* pv */)

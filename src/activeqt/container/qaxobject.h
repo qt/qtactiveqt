@@ -50,8 +50,8 @@ class QAxObject : public QObject, public QAxBase
     friend class QAxEventSink;
     Q_OBJECT_FAKE
 public:
-    QObject* qObject() const { return (QObject*)this; }
-    const char *className() const;
+    QObject* qObject() const Q_DECL_OVERRIDE { return static_cast<QObject *>(const_cast<QAxObject *>(this)); }
+    const char *className() const Q_DECL_OVERRIDE;
 
     QAxObject(QObject *parent = 0);
     QAxObject(const QString &c, QObject *parent = 0);
