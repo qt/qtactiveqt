@@ -3097,6 +3097,8 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
     return E_FAIL;
 }
 
+Q_GUI_EXPORT HBITMAP qt_pixmapToWinHBITMAP(const QPixmap &p, int hbitmapFormat = 0);
+
 //**** IViewObject
 /*
     Draws the widget into the provided device context.
@@ -3135,7 +3137,7 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* 
         ::LPtoDP(hicTargetDev, (LPPOINT)&rc, 2);
 
     const QPixmap pm = qt.widget->grab();
-    HBITMAP hbm = qaxPixmapToWinHBITMAP(pm);
+    HBITMAP hbm = qt_pixmapToWinHBITMAP(pm);
     HDC hdc = CreateCompatibleDC(0);
     SelectObject(hdc, hbm);
     ::StretchBlt(hdcDraw, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hdc, 0, 0,pm.width(), pm.height(), SRCCOPY);

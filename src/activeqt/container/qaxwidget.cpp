@@ -1779,6 +1779,8 @@ void QAxHostWidget::focusOutEvent(QFocusEvent *e)
     axhost->m_spInPlaceObject->UIDeactivate();
 }
 
+Q_GUI_EXPORT HBITMAP qt_pixmapToWinHBITMAP(const QPixmap &p, int hbitmapFormat = 0);
+Q_GUI_EXPORT QPixmap qt_pixmapFromWinHBITMAP(HBITMAP bitmap, int hbitmapFormat = 0);
 
 void QAxHostWidget::paintEvent(QPaintEvent*)
 {
@@ -1797,7 +1799,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     QPixmap pm(qaxNativeWidgetSize(this));
     pm.fill();
 
-    HBITMAP hBmp = qaxPixmapToWinHBITMAP(pm);
+    HBITMAP hBmp = qt_pixmapToWinHBITMAP(pm);
     HDC hBmp_hdc = CreateCompatibleDC(qt_win_display_dc());
     HGDIOBJ old_hBmp = SelectObject(hBmp_hdc, hBmp);
 
@@ -1811,7 +1813,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     view->Release();
 
     QPainter painter(this);
-    QPixmap pixmap = qaxPixmapFromWinHBITMAP(hBmp);
+    QPixmap pixmap = qt_pixmapFromWinHBITMAP(hBmp);
     pixmap.setDevicePixelRatio(devicePixelRatioF());
     painter.drawPixmap(0, 0, pixmap);
 
