@@ -128,6 +128,9 @@ static QFont IFontToQFont(IFont *f)
     return font;
 }
 
+Q_GUI_EXPORT HBITMAP qt_pixmapToWinHBITMAP(const QPixmap &p, int hbitmapFormat = 0);
+Q_GUI_EXPORT QPixmap qt_pixmapFromWinHBITMAP(HBITMAP bitmap, int hbitmapFormat = 0);
+
 static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
 {
     IPictureDisp *pic = 0;
@@ -140,7 +143,7 @@ static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
     desc.bmp.hpal = 0;
 
     if (!pixmap.isNull()) {
-        desc.bmp.hbitmap = qaxPixmapToWinHBITMAP(pixmap);
+        desc.bmp.hbitmap = qt_pixmapToWinHBITMAP(pixmap);
         Q_ASSERT(desc.bmp.hbitmap);
     }
 
@@ -167,7 +170,7 @@ static QPixmap IPictureToQPixmap(IPicture *ipic)
     if (!hbm)
         return QPixmap();
 
-    return qaxPixmapFromWinHBITMAP(hbm);
+    return qt_pixmapFromWinHBITMAP(hbm);
 }
 
 static QDateTime DATEToQDateTime(DATE ole)
