@@ -53,9 +53,9 @@ public:
     QObject* qObject() const Q_DECL_OVERRIDE { return static_cast<QObject *>(const_cast<QAxObject *>(this)); }
     const char *className() const Q_DECL_OVERRIDE;
 
-    QAxObject(QObject *parent = Q_NULLPTR);
-    QAxObject(const QString &c, QObject *parent = Q_NULLPTR);
-    QAxObject(IUnknown *iface, QObject *parent = Q_NULLPTR);
+    explicit QAxObject(QObject *parent = Q_NULLPTR);
+    explicit QAxObject(const QString &c, QObject *parent = Q_NULLPTR);
+    explicit QAxObject(IUnknown *iface, QObject *parent = Q_NULLPTR);
     ~QAxObject();
 
     bool doVerb(const QString &verb);

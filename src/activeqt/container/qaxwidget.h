@@ -59,9 +59,9 @@ public:
     QObject* qObject() const { return (QWidget*)this; }
     const char *className() const;
 
-    QAxWidget(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
-    QAxWidget(const QString &c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
-    QAxWidget(IUnknown *iface, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit QAxWidget(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit QAxWidget(const QString &c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit QAxWidget(IUnknown *iface, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
     ~QAxWidget();
 
     void clear();

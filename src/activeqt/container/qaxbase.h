@@ -64,7 +64,7 @@ class QAxBase
 public:
     typedef QMap<QString, QVariant> PropertyBag;
 
-    QAxBase(IUnknown *iface = Q_NULLPTR);
+    explicit QAxBase(IUnknown *iface = Q_NULLPTR);
     virtual ~QAxBase();
 
     QString control() const;
