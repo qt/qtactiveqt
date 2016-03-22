@@ -56,7 +56,7 @@ class QAxWidget : public QWidget, public QAxBase
 {
     Q_OBJECT_FAKE
 public:
-    QObject* qObject() const { return (QWidget*)this; }
+    QObject* qObject() const { return const_cast<QAxWidget *>(this); }
     const char *className() const;
 
     explicit QAxWidget(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
