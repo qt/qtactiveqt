@@ -81,10 +81,10 @@ extern QString qax_docuFromName(ITypeInfo *typeInfo, const QString &name);
 extern bool qax_dispatchEqualsIDispatch;
 extern void qax_deleteMetaObject(QMetaObject *mo);
 
-QMap<QByteArray, QByteArray> namespaceForType;
-QVector<QByteArray> strings;
-QHash<QByteArray, int> stringIndex; // Optimization, speeds up generation
-QByteArrayList vTableOnlyStubs;
+static QMap<QByteArray, QByteArray> namespaceForType;
+static QVector<QByteArray> strings;
+static QHash<QByteArray, int> stringIndex; // Optimization, speeds up generation
+static QByteArrayList vTableOnlyStubs;
 
 void writeEnums(QTextStream &out, const QMetaObject *mo)
 {
@@ -347,7 +347,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
             if (isupper(setter.at(0))) {
                 setter = "Set" + setter;
             } else {
-                setter[0] = toupper(setter[0]);
+                setter[0] = char(toupper(setter[0]));
                 setter = "set" + setter;
             }
 
@@ -572,13 +572,13 @@ QT_FOR_EACH_STATIC_TYPE(RETURN_METATYPENAME_STRING)
     return 0;
 }
 
-uint nameToBuiltinType(const QByteArray &name)
+int nameToBuiltinType(const QByteArray &name)
 {
     if (name.isEmpty())
         return 0;
 
-    uint tp = QMetaType::type(name.constData());
-    return tp < uint(QMetaType::User) ? tp : uint(QMetaType::UnknownType);
+    const int tp = QMetaType::type(name.constData());
+    return tp < QMetaType::User ? tp : QMetaType::UnknownType;
 }
 
 void copyFileToStream(QFile *file, QTextStream *stream)

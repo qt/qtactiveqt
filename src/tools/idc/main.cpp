@@ -74,7 +74,7 @@ static bool prependPath()
         return false;
     *ptr++ = L';';
     const wchar_t pathVariable[] = L"PATH";
-    if (!GetEnvironmentVariable(pathVariable, ptr, maxEnvironmentSize - (ptr - buffer))
+    if (!GetEnvironmentVariable(pathVariable, ptr, DWORD(maxEnvironmentSize - (ptr - buffer)))
         || !SetEnvironmentVariable(pathVariable, buffer)) {
         return false;
     }
@@ -86,9 +86,9 @@ static QString errorString(DWORD errorCode)
     wchar_t *resultW = 0;
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
                   NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  (LPWSTR)&resultW, 0, NULL);
+                  reinterpret_cast<LPWSTR>(&resultW), 0, NULL);
     const QString result = QString::fromWCharArray(resultW);
-    LocalFree((HLOCAL)resultW);
+    LocalFree(resultW);
     return result;
 }
 
@@ -146,13 +146,14 @@ static bool runWithQtInEnvironment(const QString &cmd)
 
 static bool attachTypeLibrary(const QString &applicationName, int resource, const QByteArray &data, QString *errorMessage)
 {
-    HANDLE hExe = BeginUpdateResource((const wchar_t *)applicationName.utf16(), false);
+    HANDLE hExe = BeginUpdateResource(reinterpret_cast<const wchar_t *>(applicationName.utf16()), false);
     if (hExe == 0) {
         if (errorMessage)
             *errorMessage = QString::fromLatin1("Failed to attach type library to binary %1 - could not open file.").arg(applicationName);
         return false;
     }
-    if (!UpdateResource(hExe, L"TYPELIB", MAKEINTRESOURCE(resource), 0, (void*)data.data(), data.count())) {
+    if (!UpdateResource(hExe, L"TYPELIB", MAKEINTRESOURCE(resource), 0,
+                        const_cast<char *>(data.data()), DWORD(data.count()))) {
         EndUpdateResource(hExe, true);
         if (errorMessage)
             *errorMessage = QString::fromLatin1("Failed to attach type library to binary %1 - could not update file.").arg(applicationName);
@@ -181,10 +182,10 @@ static bool attachTypeLibrary(const QString &applicationName, int resource, cons
 static HMODULE loadLibraryQt(const QString &input)
 {
     if (QSysInfo::windowsVersion() < QSysInfo::WV_VISTA)
-        return LoadLibrary((const wchar_t *)input.utf16()); // fallback for Windows XP and older
+        return LoadLibrary(reinterpret_cast<const wchar_t *>(input.utf16())); // fallback for Windows XP and older
 
     // Load DLL with the folder containing the DLL temporarily added to the search path when loading dependencies
-    return LoadLibraryEx((const wchar_t *)input.utf16(), NULL,
+    return LoadLibraryEx(reinterpret_cast<const wchar_t *>(input.utf16()), NULL,
                          LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
 }
 
@@ -200,7 +201,7 @@ static bool registerServer(const QString &input)
             return false;
         }
         typedef HRESULT(__stdcall* RegServerProc)();
-        RegServerProc DllRegisterServer = (RegServerProc)GetProcAddress(hdll, "DllRegisterServer");
+        RegServerProc DllRegisterServer = reinterpret_cast<RegServerProc>(GetProcAddress(hdll, "DllRegisterServer"));
         if (!DllRegisterServer) {
             fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
             return false;
@@ -222,7 +223,7 @@ static bool unregisterServer(const QString &input)
             return false;
         }
         typedef HRESULT(__stdcall* RegServerProc)();
-        RegServerProc DllUnregisterServer = (RegServerProc)GetProcAddress(hdll, "DllUnregisterServer");
+        RegServerProc DllUnregisterServer = reinterpret_cast<RegServerProc>(GetProcAddress(hdll, "DllUnregisterServer"));
         if (!DllUnregisterServer) {
             fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
             return false;
@@ -246,7 +247,7 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
             return 3;
         }
         typedef HRESULT(__stdcall* DumpIDLProc)(const QString&, const QString&);
-        DumpIDLProc DumpIDL = (DumpIDLProc)GetProcAddress(hdll, "DumpIDL");
+        DumpIDLProc DumpIDL = reinterpret_cast<DumpIDLProc>(GetProcAddress(hdll, "DumpIDL"));
         if (!DumpIDL) {
             fprintf(stderr, "Couldn't resolve 'DumpIDL' symbol in %s\n", qPrintable(input));
             return 3;

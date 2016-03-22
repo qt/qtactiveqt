@@ -95,13 +95,13 @@ private:
 template <> inline QAxWidget *qobject_cast<QAxWidget*>(const QObject *o)
 {
     void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxWidget") : Q_NULLPTR;
-    return (QAxWidget*)(result);
+    return static_cast<QAxWidget *>(result);
 }
 
 template <> inline QAxWidget *qobject_cast<QAxWidget*>(QObject *o)
 {
     void *result = o ? o->qt_metacast("QAxWidget") : Q_NULLPTR;
-    return (QAxWidget*)(result);
+    return static_cast<QAxWidget *>(result);
 }
 
 QT_END_NAMESPACE

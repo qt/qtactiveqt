@@ -174,13 +174,13 @@ private:
 template <> inline QAxBase *qobject_cast<QAxBase*>(const QObject *o)
 {
     void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxBase") : Q_NULLPTR;
-    return (QAxBase*)(result);
+    return static_cast<QAxBase *>(result);
 }
 
 template <> inline QAxBase *qobject_cast<QAxBase*>(QObject *o)
 {
     void *result = o ? o->qt_metacast("QAxBase") : Q_NULLPTR;
-    return (QAxBase*)(result);
+    return static_cast<QAxBase *>(result);
 }
 
 extern QString qax_generateDocumentation(QAxBase *);
