@@ -148,13 +148,13 @@ inline bool QAxFactory::stopServer()
         { \
             if (key == className) \
             return &Class::staticMetaObject; \
-            return 0; \
+            return Q_NULLPTR; \
         } \
         QObject *createObject(const QString &key) \
         { \
             if (key == className) \
-                return new Class(0); \
-            return 0; \
+                return new Class(Q_NULLPTR); \
+            return Q_NULLPTR; \
         } \
         QUuid classID(const QString &key) const \
         { \
@@ -194,10 +194,10 @@ public:
     {
         const QMetaObject &mo = T::staticMetaObject;
         if (key != QLatin1String(mo.className()))
-            return 0;
+            return Q_NULLPTR;
         if (!qstrcmp(mo.classInfo(mo.indexOfClassInfo("Creatable")).value(), "no"))
-            return 0;
-        return new T(0);
+            return Q_NULLPTR;
+        return new T(Q_NULLPTR);
     }
 };
 
@@ -212,7 +212,7 @@ public:
         QAxFactoryList() \
         : QAxFactory(IDTypeLib, IDApp) \
         { \
-            QAxFactory *factory = 0; \
+            QAxFactory *factory = Q_NULLPTR; \
             QStringList keys; \
             QStringList::Iterator it; \
 
@@ -242,13 +242,13 @@ public:
         QStringList featureList() const {  return factoryKeys; } \
         const QMetaObject *metaObject(const QString&key) const { \
             QAxFactory *f = factories[key]; \
-            return f ? f->metaObject(key) : 0; \
+            return f ? f->metaObject(key) : Q_NULLPTR; \
         } \
         QObject *createObject(const QString &key) { \
             if (!creatable.value(key)) \
-                return 0; \
+                return Q_NULLPTR; \
             QAxFactory *f = factories[key]; \
-            return f ? f->createObject(key) : 0; \
+            return f ? f->createObject(key) : Q_NULLPTR; \
         } \
         QUuid classID(const QString &key) { \
             QAxFactory *f = factories.value(key); \

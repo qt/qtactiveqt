@@ -64,7 +64,7 @@ class QAxBase
 public:
     typedef QMap<QString, QVariant> PropertyBag;
 
-    QAxBase(IUnknown *iface = 0);
+    QAxBase(IUnknown *iface = Q_NULLPTR);
     virtual ~QAxBase();
 
     QString control() const;
@@ -173,13 +173,13 @@ private:
 
 template <> inline QAxBase *qobject_cast<QAxBase*>(const QObject *o)
 {
-    void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxBase") : 0;
+    void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxBase") : Q_NULLPTR;
     return (QAxBase*)(result);
 }
 
 template <> inline QAxBase *qobject_cast<QAxBase*>(QObject *o)
 {
-    void *result = o ? o->qt_metacast("QAxBase") : 0;
+    void *result = o ? o->qt_metacast("QAxBase") : Q_NULLPTR;
     return (QAxBase*)(result);
 }
 
