@@ -71,13 +71,13 @@ private:
 template <> inline QAxObject *qobject_cast<QAxObject*>(const QObject *o)
 {
     void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxObject") : Q_NULLPTR;
-    return (QAxObject*)(result);
+    return reinterpret_cast<QAxObject*>(result);
 }
 
 template <> inline QAxObject *qobject_cast<QAxObject*>(QObject *o)
 {
     void *result = o ? o->qt_metacast("QAxObject") : Q_NULLPTR;
-    return (QAxObject*)(result);
+    return reinterpret_cast<QAxObject*>(result);
 }
 
 QT_END_NAMESPACE
