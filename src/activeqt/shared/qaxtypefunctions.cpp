@@ -71,8 +71,8 @@ bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeN
     if (!data)
         return true;
 
-    if (type == QMetaType::QVariant || type == QVariant::LastType || (type == 0 && typeName == "QVariant")) {
-        *(QVariant*)data = var;
+    if (type == QMetaType::QVariant || type == uint(QVariant::LastType) || (type == 0 && typeName == "QVariant")) {
+        *reinterpret_cast<QVariant *>(data) = var;
         return true;
     }
 
@@ -80,69 +80,70 @@ bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeN
     case QVariant::Invalid:
         break;
     case QVariant::String:
-        *(QString*)data = var.toString();
+        *reinterpret_cast<QString *>(data) = var.toString();
         break;
     case QVariant::Int:
-        *(int*)data = var.toInt();
+        *reinterpret_cast<int *>(data) = var.toInt();
         break;
     case QVariant::UInt:
-        *(uint*)data = var.toUInt();
+        *reinterpret_cast<uint *>(data) = var.toUInt();
         break;
     case QVariant::Bool:
-        *(bool*)data = var.toBool();
+        *reinterpret_cast<bool *>(data) = var.toBool();
         break;
     case QVariant::Double:
-        *(double*)data = var.toDouble();
+        *reinterpret_cast<double *>(data) = var.toDouble();
         break;
     case QVariant::Color:
-        *(QColor*)data = qvariant_cast<QColor>(var);
+        *reinterpret_cast<QColor *>(data) = qvariant_cast<QColor>(var);
         break;
     case QVariant::Date:
-        *(QDate*)data = var.toDate();
+        *reinterpret_cast<QDate *>(data) = var.toDate();
         break;
     case QVariant::Time:
-        *(QTime*)data = var.toTime();
+        *reinterpret_cast<QTime *>(data) = var.toTime();
         break;
     case QVariant::DateTime:
-        *(QDateTime*)data = var.toDateTime();
+        *reinterpret_cast<QDateTime *>(data) = var.toDateTime();
         break;
     case QVariant::Font:
-        *(QFont*)data = qvariant_cast<QFont>(var);
+        *reinterpret_cast<QFont *>(data) = qvariant_cast<QFont>(var);
         break;
     case QVariant::Pixmap:
-        *(QPixmap*)data = qvariant_cast<QPixmap>(var);
+        *reinterpret_cast<QPixmap *>(data) = qvariant_cast<QPixmap>(var);
         break;
 #ifndef QT_NO_CURSOR
     case QVariant::Cursor:
-        *(QCursor*)data = qvariant_cast<QCursor>(var);
+        *reinterpret_cast<QCursor *>(data) = qvariant_cast<QCursor>(var);
         break;
 #endif
     case QVariant::List:
-        *(QList<QVariant>*)data = var.toList();
+        *reinterpret_cast<QList<QVariant> *>(data) = var.toList();
         break;
     case QVariant::StringList:
-        *(QStringList*)data = var.toStringList();
+        *reinterpret_cast<QStringList *>(data) = var.toStringList();
         break;
     case QVariant::ByteArray:
-        *(QByteArray*)data = var.toByteArray();
+        *reinterpret_cast<QByteArray *>(data) = var.toByteArray();
         break;
     case QVariant::LongLong:
-        *(qint64*)data = var.toLongLong();
+        *reinterpret_cast<qint64 *>(data) = var.toLongLong();
         break;
     case QVariant::ULongLong:
-        *(quint64*)data = var.toULongLong();
+        *reinterpret_cast<quint64 *>(data) = var.toULongLong();
         break;
     case QVariant::Rect:
-        *(QRect*)data = var.toRect();
+        *reinterpret_cast<QRect *>(data) = var.toRect();
         break;
     case QVariant::Size:
-        *(QSize*)data = var.toSize();
+        *reinterpret_cast<QSize *>(data) = var.toSize();
         break;
     case QVariant::Point:
-        *(QPoint*)data = var.toPoint();
+        *reinterpret_cast<QPoint *>(data) = var.toPoint();
         break;
     case QVariant::UserType:
-        *(void**)data = *(void**)var.constData();
+        *reinterpret_cast<void **>(data) =
+            *reinterpret_cast<void **>(const_cast<void *>(var.constData()));
 //        qVariantGet(var, *(void**)data, typeName);
         break;
     default:

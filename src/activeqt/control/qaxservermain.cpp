@@ -138,7 +138,7 @@ bool qax_startServer(QAxFactory::ServerType type)
         CLSID clsid = qAxFactory()->classID(keys.at(object));
 
         // Create a QClassFactory (implemented in qaxserverbase.cpp)
-        HRESULT hRes = GetClassObject(clsid, IID_IClassFactory, (void**)&p);
+        HRESULT hRes = GetClassObject(clsid, IID_IClassFactory, reinterpret_cast<void **>(&p));
         if (SUCCEEDED(hRes))
             hRes = CoRegisterClassObject(clsid, p, CLSCTX_LOCAL_SERVER,
                 type == QAxFactory::MultipleInstances ? REGCLS_MULTIPLEUSE : REGCLS_SINGLEUSE,

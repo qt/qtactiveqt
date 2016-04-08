@@ -151,11 +151,11 @@ HRESULT WINAPI QAxScriptSite::QueryInterface(REFIID iid, void **ppvObject)
 {
     *ppvObject = 0;
     if (iid == IID_IUnknown)
-        *ppvObject = (IUnknown*)(IActiveScriptSite*)this;
+        *ppvObject = static_cast<IUnknown *>(static_cast<IActiveScriptSite *>(this));
     else if (iid == IID_IActiveScriptSite)
-        *ppvObject = (IActiveScriptSite*)this;
+        *ppvObject = static_cast<IActiveScriptSite *>(this);
     else if (iid == IID_IActiveScriptSiteWindow)
-        *ppvObject = (IActiveScriptSiteWindow*)this;
+        *ppvObject = static_cast<IActiveScriptSiteWindow *>(this);
     else
         return E_NOINTERFACE;
 
@@ -196,10 +196,10 @@ HRESULT WINAPI QAxScriptSite::GetItemInfo(LPCOLESTR pstrName, DWORD mask, IUnkno
         return TYPE_E_ELEMENTNOTFOUND;
 
     if (mask & SCRIPTINFO_IUNKNOWN)
-        object->queryInterface(IID_IUnknown, (void**)item);
+        object->queryInterface(IID_IUnknown, reinterpret_cast<void **>(item));
     if (mask & SCRIPTINFO_ITYPEINFO) {
         IProvideClassInfo *classInfo = 0;
-        object->queryInterface(IID_IProvideClassInfo, (void**)&classInfo);
+        object->queryInterface(IID_IProvideClassInfo, reinterpret_cast<void **>(&classInfo));
         if (classInfo) {
             classInfo->GetClassInfo(type);
             classInfo->Release();
@@ -291,7 +291,8 @@ HRESULT WINAPI QAxScriptSite::OnScriptError(IActiveScriptError *error)
     SysFreeString(exception.bstrDescription);
     SysFreeString(exception.bstrHelpFile);
 
-    emit script->error(exception.wCode, QString::fromWCharArray(exception.bstrDescription), lineNumber, lineText);
+    emit script->error(exception.wCode, QString::fromWCharArray(exception.bstrDescription),
+                       int(lineNumber), lineText);
 
     return S_OK;
 }
@@ -461,16 +462,16 @@ bool QAxScriptEngine::initialize(IUnknown **ptr)
         return false;
 
     CLSID clsid;
-    HRESULT hres = CLSIDFromProgID((wchar_t*)script_language.utf16(), &clsid);
+    HRESULT hres = CLSIDFromProgID(reinterpret_cast<const wchar_t *>(script_language.utf16()), &clsid);
     if(FAILED(hres))
         return false;
 
-    CoCreateInstance(clsid, 0, CLSCTX_INPROC_SERVER, IID_IActiveScript, (void**)&engine);
+    CoCreateInstance(clsid, 0, CLSCTX_INPROC_SERVER, IID_IActiveScript, reinterpret_cast<void **>(&engine));
     if (!engine)
         return false;
 
     IActiveScriptParse *parser = 0;
-    engine->QueryInterface(IID_IActiveScriptParse, (void**)&parser);
+    engine->QueryInterface(IID_IActiveScriptParse, reinterpret_cast<void **>(&parser));
     if (!parser) {
         engine->Release();
         engine = 0;
@@ -510,7 +511,7 @@ bool QAxScriptEngine::initialize(IUnknown **ptr)
     IDispatch *scriptDispatch = 0;
     engine->GetScriptDispatch(0, &scriptDispatch);
     if (scriptDispatch) {
-        scriptDispatch->QueryInterface(IID_IUnknown, (void**)ptr);
+        scriptDispatch->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(ptr));
         scriptDispatch->Release();
     }
 #endif
@@ -535,7 +536,7 @@ bool QAxScriptEngine::hasIntrospection() const
         return false;
 
     IDispatch *scriptDispatch = 0;
-    QAxBase::queryInterface(IID_IDispatch, (void**)&scriptDispatch);
+    QAxBase::queryInterface(IID_IDispatch, reinterpret_cast<void **>(&scriptDispatch));
     if (!scriptDispatch)
         return false;
 
@@ -579,7 +580,7 @@ QAxScriptEngine::State QAxScriptEngine::state() const
 #ifndef QT_NO_QAXSCRIPT
     SCRIPTSTATE state;
     engine->GetScriptState(&state);
-    return (State)state;
+    return State(state);
 #else
     return Uninitialized;
 #endif
@@ -595,7 +596,7 @@ void QAxScriptEngine::setState(State st)
     if (!engine)
         return;
 
-    engine->SetScriptState((SCRIPTSTATE)st);
+    engine->SetScriptState(SCRIPTSTATE(st));
 #else
     Q_UNUSED(st);
 #endif
@@ -611,7 +612,8 @@ void QAxScriptEngine::addItem(const QString &name)
     if (!engine)
         return;
 
-    engine->AddNamedItem((wchar_t*)name.utf16(), SCRIPTITEM_ISSOURCE|SCRIPTITEM_ISVISIBLE);
+    engine->AddNamedItem(reinterpret_cast<const wchar_t *>(name.utf16()),
+                         SCRIPTITEM_ISSOURCE|SCRIPTITEM_ISVISIBLE);
 #else
     Q_UNUSED(name);
 #endif
@@ -1153,7 +1155,7 @@ bool QAxScriptManager::registerEngine(const QString &name, const QString &extens
         return false;
 
     CLSID clsid;
-    HRESULT hres = CLSIDFromProgID((wchar_t*)name.utf16(), &clsid);
+    const HRESULT hres = CLSIDFromProgID(reinterpret_cast<const wchar_t *>(name.utf16()), &clsid);
     if (hres != S_OK)
         return false;
 

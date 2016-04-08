@@ -59,7 +59,7 @@ QString qax_docuFromName(ITypeInfo *typeInfo, const QString &name)
 
     MEMBERID memId;
     BSTR names = QStringToBSTR(name);
-    typeInfo->GetIDsOfNames((BSTR*)&names, 1, &memId);
+    typeInfo->GetIDsOfNames(&names, 1, &memId);
     SysFreeString(names);
     if (memId != DISPID_UNKNOWN) {
         BSTR docStringBstr, helpFileBstr;
@@ -73,7 +73,8 @@ QString qax_docuFromName(ITypeInfo *typeInfo, const QString &name)
             if (!docString.isEmpty())
                 docu += docString + QLatin1String("\n");
             if (!helpFile.isEmpty())
-                docu += QString::fromLatin1("For more information, see help context %1 in %2.").arg((uint)helpContext).arg(helpFile);
+                docu += QString::fromLatin1("For more information, see help context %1 in %2.")
+                        .arg(uint(helpContext)).arg(helpFile);
         }
     }
 
@@ -134,7 +135,7 @@ QString qax_generateDocumentation(QAxBase *that)
 
     ITypeInfo *typeInfo = 0;
     IDispatch *dispatch = 0;
-    that->queryInterface(IID_IDispatch, (void**)&dispatch);
+    that->queryInterface(IID_IDispatch, reinterpret_cast<void **>(&dispatch));
     if (dispatch)
         dispatch->GetTypeInfo(0, LOCALE_SYSTEM_DEFAULT, &typeInfo);
 
@@ -151,7 +152,7 @@ QString qax_generateDocumentation(QAxBase *that)
     stream << "<h3>Interfaces</h3>" << endl;
     stream << "<ul>" << endl;
     const char *inter = 0;
-    int interCount = 1;
+    UINT interCount = 1;
     while ((inter = mo->classInfo(mo->indexOfClassInfo("Interface " + QByteArray::number(interCount))).value())) {
         stream << "<li>" << inter << endl;
         interCount++;
@@ -352,7 +353,7 @@ QString qax_generateDocumentation(QAxBase *that)
                     setterSlot = "Set" + name;
                 } else {
                     QByteArray nameUp = name;
-                    nameUp[0] = toupper(nameUp.at(0));
+                    nameUp[0] = char(toupper(nameUp.at(0)));
                     setterSlot = "set" + nameUp;
                 }
                 detail += QLatin1String("<a href=\"#") + QString::fromLatin1(setterSlot) + QLatin1String("\">") +

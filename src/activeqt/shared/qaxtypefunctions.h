@@ -68,7 +68,7 @@ struct IAxServerBase : public IUnknown
 
 static inline BSTR QStringToBSTR(const QString &str)
 {
-    return SysAllocStringLen((OLECHAR*)str.unicode(), str.length());
+    return SysAllocStringLen(reinterpret_cast<const OLECHAR*>(str.unicode()), UINT(str.length()));
 }
 
 static inline uint QColorToOLEColor(const QColor &col)
