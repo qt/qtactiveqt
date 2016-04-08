@@ -194,7 +194,7 @@ public:
 
         RECT rcPos = qaxNativeWidgetRect(host);
         return m_spOleObject->DoVerb(index, 0, this, 0,
-                                     (HWND)host->winId(),
+                                     reinterpret_cast<HWND>(host->winId()),
                                      &rcPos);
     }
 
@@ -383,11 +383,11 @@ public:
 private:
     struct OleMenuItem {
         OleMenuItem(HMENU hm = 0, int ID = 0, QMenu *menu = 0)
-            : hMenu(hm), id(ID), subMenu(menu)
+            : hMenu(hm), subMenu(menu), id(ID)
         {}
         HMENU hMenu;
-        int id;
         QMenu *subMenu;
+        int id;
     };
     typedef QMap<QAction*, OleMenuItem> MenuItemMap;
 
@@ -469,7 +469,7 @@ Q_GLOBAL_STATIC(QAxNativeEventFilter, s_nativeEventFilter)
 
 bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *)
 {
-    MSG *msg = (MSG*)m;
+    MSG *msg = static_cast<MSG *>(m);
     const uint message = msg->message;
     if (message == WM_DISPLAYCHANGE)
         qaxClearCachedSystemLogicalDpi();
@@ -486,7 +486,7 @@ bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *
         }
         if (host)
             ax = qobject_cast<QAxWidget*>(host->parentWidget());
-        if (ax && msg->hwnd != (HWND)host->winId()) {
+        if (ax && msg->hwnd != reinterpret_cast<HWND>(host->winId())) {
             if (message >= WM_KEYFIRST && message <= WM_KEYLAST) {
                 QAxClientSite *site = host->clientSite();
                 site->eventTranslated = true; // reset in QAxClientSite::TranslateAccelerator
@@ -503,7 +503,7 @@ bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *
                     ;
 
                 if (mouseTbl[i]) {
-                    QEvent::Type type = (QEvent::Type)mouseTbl[++i];
+                    const QEvent::Type type = static_cast<QEvent::Type>(mouseTbl[++i]);
                     int button = mouseTbl[++i];
                     if (type != QEvent::MouseMove || ax->hasMouseTracking() || button) {
                         if (type == QEvent::MouseMove)
@@ -514,9 +514,9 @@ bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *
                         const QPoint gpos = qaxFromNativePosition(ax, nativeGlobalPos);
                         QPoint pos = ax->mapFromGlobal(gpos);
 
-                        QMouseEvent e(type, pos, gpos, (Qt::MouseButton)button,
-                            translateMouseButtonState(msg->wParam),
-                            translateModifierState(msg->wParam));
+                        QMouseEvent e(type, pos, gpos, static_cast<Qt::MouseButton>(button),
+                            translateMouseButtonState(int(msg->wParam)),
+                            translateModifierState(int(msg->wParam)));
                         QCoreApplication::sendEvent(ax, &e);
                     }
                 }
@@ -532,7 +532,7 @@ QAxClientSite::QAxClientSite(QAxWidget *c)
 {
     aggregatedObject = widget->createAggregate();
     if (aggregatedObject) {
-        aggregatedObject->controlling_unknown = (IUnknown*)(IDispatch*)this;
+        aggregatedObject->controlling_unknown = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
         aggregatedObject->the_object = c;
     }
 
@@ -617,13 +617,12 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
                     spPSI->Release();
                 } else if (data.length()) { //try initializing using a IPersistStorage
                     IPersistStorage *spPS = 0;
-                    m_spOleObject->QueryInterface( IID_IPersistStorage, (void**)&spPS );
+                    m_spOleObject->QueryInterface( IID_IPersistStorage, reinterpret_cast<void **>(&spPS));
                     if (spPS) {
-                        HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, data.length());
+                        HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, size_t(data.length()));
                         if (hGlobal) {
-                            BYTE* pbData = (BYTE*)GlobalLock(hGlobal);
-                            if (pbData)
-                                memcpy(pbData, data.data(), data.length());
+                            if (BYTE* pbData = static_cast<BYTE *>(GlobalLock(hGlobal)))
+                                memcpy(pbData, data.data(), size_t(data.length()));
                             GlobalUnlock(hGlobal);
                             // open an IStorage on the data and pass it to Load
                             LPLOCKBYTES pLockBytes = 0;
@@ -648,11 +647,11 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
         }
 
         IViewObject *spViewObject = 0;
-        m_spOleObject->QueryInterface(IID_IViewObject, (void**) &spViewObject);
+        m_spOleObject->QueryInterface(IID_IViewObject, reinterpret_cast<void **>(&spViewObject));
 
         m_spOleObject->Advise(this, &m_dwOleObject);
         IAdviseSink *spAdviseSink = 0;
-        QueryInterface(IID_IAdviseSink, (void**)&spAdviseSink);
+        QueryInterface(IID_IAdviseSink, reinterpret_cast<void **>(&spAdviseSink));
         if (spAdviseSink && spViewObject) {
             if (spViewObject)
                 spViewObject->SetAdvise(DVASPECT_CONTENT, 0, spAdviseSink);
@@ -684,12 +683,12 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
 
         RECT rcPos = qaxQRect2Rect(QRect(qaxNativeWidgetPosition(host), qaxToNativeSize(host, sizehint)));
 
-        m_spOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, 0, (IOleClientSite*)this, 0,
-                              (HWND)host->winId(),
+        m_spOleObject->DoVerb(OLEIVERB_INPLACEACTIVATE, 0, static_cast<IOleClientSite *>(this), 0,
+                              reinterpret_cast<HWND>(host->winId()),
                               &rcPos);
 
         if (!m_spOleControl)
-            m_spOleObject->QueryInterface(IID_IOleControl, (void**)&m_spOleControl);
+            m_spOleObject->QueryInterface(IID_IOleControl, reinterpret_cast<void **>(&m_spOleControl));
         if (m_spOleControl) {
             m_spOleControl->OnAmbientPropertyChange(DISPID_AMBIENT_BACKCOLOR);
             m_spOleControl->OnAmbientPropertyChange(DISPID_AMBIENT_FORECOLOR);
@@ -708,9 +707,9 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
         }
     } else {
         IObjectWithSite *spSite = 0;
-        widget->queryInterface(IID_IObjectWithSite, (void**)&spSite);
+        widget->queryInterface(IID_IObjectWithSite, reinterpret_cast<void **>(&spSite));
         if (spSite) {
-            spSite->SetSite((IUnknown*)(IDispatch*)this);
+            spSite->SetSite(static_cast<IUnknown *>(static_cast<IDispatch *>(this)));
             spSite->Release();
         }
     }
@@ -785,7 +784,7 @@ HRESULT WINAPI QAxClientSite::QueryInterface(REFIID iid, void **iface)
     *iface = 0;
 
     if (iid == IID_IUnknown) {
-        *iface = (IUnknown*)(IDispatch*)this;
+        *iface = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
     } else {
         HRESULT res = S_OK;
         if (aggregatedObject)
@@ -796,29 +795,29 @@ HRESULT WINAPI QAxClientSite::QueryInterface(REFIID iid, void **iface)
 
     if (!(*iface)) {
         if (iid == IID_IDispatch)
-            *iface = (IDispatch*)this;
+            *iface = static_cast<IDispatch *>(this);
         else if (iid == IID_IOleClientSite)
-            *iface = (IOleClientSite*)this;
+            *iface = static_cast<IOleClientSite *>(this);
         else if (iid == IID_IOleControlSite)
-            *iface = (IOleControlSite*)this;
+            *iface = static_cast<IOleControlSite *>(this);
         else if (iid == IID_IOleWindow)
-            *iface = (IOleWindow*)(IOleInPlaceSite*)this;
+            *iface = static_cast<IOleWindow *>(static_cast<IOleInPlaceSite *>(this));
         else if (iid == IID_IOleInPlaceSite)
-            *iface = (IOleInPlaceSite*)this;
+            *iface = static_cast<IOleInPlaceSite *>(this);
 #ifdef QAX_SUPPORT_WINDOWLESS
         else if (iid == IID_IOleInPlaceSiteEx)
-            *iface = (IOleInPlaceSiteEx*)this;
+            *iface = static_cast<IOleInPlaceSiteEx *>(this);
         else if (iid == IID_IOleInPlaceSiteWindowless)
-            *iface = (IOleInPlaceSiteWindowless*)this;
+            *iface = static_cast<IOleInPlaceSiteWindowless *>(this);
 #endif
         else if (iid == IID_IOleInPlaceFrame)
-            *iface = (IOleInPlaceFrame*)this;
+            *iface = static_cast<IOleInPlaceFrame *>(this);
         else if (iid == IID_IOleInPlaceUIWindow)
-            *iface = (IOleInPlaceUIWindow*)this;
+            *iface = static_cast<IOleInPlaceUIWindow *>(this);
         else if (iid == IID_IOleDocumentSite && canHostDocument)
-            *iface = (IOleDocumentSite*)this;
+            *iface = static_cast<IOleDocumentSite *>(this);
         else if (iid == IID_IAdviseSink)
-            *iface = (IAdviseSink*)this;
+            *iface = static_cast<IAdviseSink *>(this);
     }
     if (!*iface)
         return E_NOINTERFACE;
@@ -994,7 +993,7 @@ HRESULT WINAPI QAxClientSite::TranslateAccelerator(LPMSG lpMsg, DWORD /*grfModif
         // if the request is coming from an out-of-proc server or a non ActiveQt server,
         // we send the message to the host window. This will make sure this key event
         // comes to Qt for processing.
-        SendMessage((HWND)host->winId(), lpMsg->message, lpMsg->wParam, lpMsg->lParam);
+        SendMessage(reinterpret_cast<HWND>(host->winId()), lpMsg->message, lpMsg->wParam, lpMsg->lParam);
         if (ActiveQtDetected && !fromInProcServer) {
             // ActiveQt based servers will need further processing of the event
             // (eg. <SPACE> key for a checkbox), so we return false.
@@ -1029,7 +1028,7 @@ HRESULT WINAPI QAxClientSite::GetWindow(HWND *phwnd)
     if (!phwnd)
         return E_POINTER;
 
-    *phwnd = (HWND)host->winId();
+    *phwnd = reinterpret_cast<HWND>(host->winId());
     return S_OK;
 }
 
@@ -1062,7 +1061,7 @@ HRESULT WINAPI QAxClientSite::OnInPlaceActivate()
             inPlaceObjectWindowless = true;
         } else {
             inPlaceObjectWindowless = false;
-            m_spOleObject->QueryInterface(IID_IOleInPlaceObject, (void**) &m_spInPlaceObject);
+            m_spOleObject->QueryInterface(IID_IOleInPlaceObject, reinterpret_cast<void **>(&m_spInPlaceObject));
         }
     }
 
@@ -1080,10 +1079,10 @@ HRESULT WINAPI QAxClientSite::GetWindowContext(IOleInPlaceFrame **ppFrame, IOleI
     if (!ppFrame || !ppDoc || !lprcPosRect || !lprcClipRect || !lpFrameInfo)
         return E_POINTER;
 
-    QueryInterface(IID_IOleInPlaceFrame, (void**)ppFrame);
-    QueryInterface(IID_IOleInPlaceUIWindow, (void**)ppDoc);
+    QueryInterface(IID_IOleInPlaceFrame, reinterpret_cast<void **>(ppFrame));
+    QueryInterface(IID_IOleInPlaceUIWindow, reinterpret_cast<void **>(ppDoc));
 
-    const HWND hwnd = (HWND)host->winId();
+    const HWND hwnd = reinterpret_cast<HWND>(host->winId());
     ::GetClientRect(hwnd, lprcPosRect);
     ::GetClientRect(hwnd, lprcClipRect);
 
@@ -1186,7 +1185,7 @@ static int menuItemEntry(HMENU menu, int index, MENUITEMINFO item, QString &text
         wchar_t *titlebuf = new wchar_t[item.cch + 1];
         item.dwTypeData = titlebuf;
         item.cch++;
-        ::GetMenuItemInfo(menu, index, true, &item);
+        ::GetMenuItemInfo(menu, UINT(index), true, &item);
         text = QString::fromWCharArray(titlebuf);
         delete [] titlebuf;
         return MFT_STRING;
@@ -1225,7 +1224,7 @@ QMenu *QAxClientSite::generatePopup(HMENU subMenu, QWidget *parent)
         memset(&item, 0, sizeof(MENUITEMINFO));
         item.cbSize = sizeof(MENUITEMINFO);
         item.fMask = MIIM_ID | MIIM_TYPE | MIIM_SUBMENU;
-        ::GetMenuItemInfo(subMenu, i, true, &item);
+        ::GetMenuItemInfo(subMenu, UINT(i), true, &item);
 
         QAction *action = 0;
         QMenu *popupMenu = 0;
@@ -1273,7 +1272,7 @@ QMenu *QAxClientSite::generatePopup(HMENU subMenu, QWidget *parent)
         }
 
         if (action) {
-            OleMenuItem oleItem(subMenu, item.wID, popupMenu);
+            OleMenuItem oleItem(subMenu, int(item.wID), popupMenu);
             menuItemMap.insert(action, oleItem);
         }
     }
@@ -1299,7 +1298,7 @@ HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND
             memset(&item, 0, sizeof(MENUITEMINFO));
             item.cbSize = sizeof(MENUITEMINFO);
             item.fMask = MIIM_ID | MIIM_TYPE | MIIM_SUBMENU;
-            ::GetMenuItemInfo(hmenuShared, i, true, &item);
+            ::GetMenuItemInfo(hmenuShared, UINT(i), true, &item);
 
             QAction *action = 0;
             QMenu *popupMenu = 0;
@@ -1335,7 +1334,7 @@ HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND
             }
 
             if (action) {
-                OleMenuItem oleItem(hmenuShared, item.wID, popupMenu);
+                OleMenuItem oleItem(hmenuShared, int(item.wID), popupMenu);
                 menuItemMap.insert(action, oleItem);
             }
         }
@@ -1366,12 +1365,12 @@ int QAxClientSite::qt_metacall(QMetaObject::Call call, int isignal, void **argv)
     if (isignal != menuBar->metaObject()->indexOfSignal("triggered(QAction*)"))
         return isignal;
 
-    QAction *action = *(QAction**)argv[1];
+    QAction *action = *reinterpret_cast<QAction **>(argv[1]);
     // ###
 
     OleMenuItem oleItem = menuItemMap.value(action);
     if (oleItem.hMenu)
-        ::PostMessage(m_menuOwner, WM_COMMAND, oleItem.id, 0);
+        ::PostMessage(m_menuOwner, WM_COMMAND, WPARAM(oleItem.id), 0);
     return -1;
 }
 
@@ -1419,7 +1418,7 @@ HRESULT WINAPI QAxClientSite::EnableModeless(BOOL fEnable)
 
 HRESULT WINAPI QAxClientSite::TranslateAccelerator(LPMSG lpMsg, WORD grfModifiers)
 {
-    return TranslateAccelerator(lpMsg, (DWORD)grfModifiers);
+    return TranslateAccelerator(lpMsg, DWORD(grfModifiers));
 }
 
 //**** IOleInPlaceUIWindow
@@ -1531,7 +1530,7 @@ HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
 
     if (!pViewToActivate) {
         IOleDocument *document = 0;
-        m_spOleObject->QueryInterface(IID_IOleDocument, (void**)&document);
+        m_spOleObject->QueryInterface(IID_IOleDocument, reinterpret_cast<void **>(&document));
         if (!document)
             return E_FAIL;
 
@@ -1652,7 +1651,7 @@ void QAxHostWidget::resizeObject()
     // document server - talk to view?
     if (axhost->m_spActiveView) {
         RECT rect;
-        GetClientRect((HWND)winId(), &rect);
+        GetClientRect(reinterpret_cast<HWND>(winId()), &rect);
         axhost->m_spActiveView->SetRect(&rect);
 
         return;
@@ -1683,7 +1682,7 @@ bool QAxHostWidget::nativeEvent(const QByteArray &eventType, void *message, long
         && eventType == QByteArrayLiteral("windows_generic_MSG")) {
         Q_ASSERT(axhost->m_spInPlaceObject);
         MSG *msg = static_cast<MSG *>(message);
-        IOleInPlaceObjectWindowless *windowless = (IOleInPlaceObjectWindowless*)axhost->m_spInPlaceObject;
+        IOleInPlaceObjectWindowless *windowless = axhost->m_spInPlaceObject;
         Q_ASSERT(windowless);
         LRESULT lres;
         HRESULT hres = windowless->OnWindowMessage(msg->message, msg->wParam, msg->lParam, &lres);
@@ -1699,20 +1698,19 @@ bool QAxHostWidget::event(QEvent *e)
 {
     switch (e->type()) {
     case QEvent::Timer:
-        if (axhost && ((QTimerEvent*)e)->timerId() == setFocusTimer) {
+        if (axhost && static_cast<const QTimerEvent *>(e)->timerId() == setFocusTimer) {
             killTimer(setFocusTimer);
             setFocusTimer = 0;
             RECT rcPos = qaxNativeWidgetRect(this);
-            axhost->m_spOleObject->DoVerb(OLEIVERB_UIACTIVATE, 0, (IOleClientSite*)axhost, 0,
-                (HWND)winId(),
-                &rcPos);
+            axhost->m_spOleObject->DoVerb(OLEIVERB_UIACTIVATE, 0, static_cast<IOleClientSite *>(axhost), 0,
+                                          reinterpret_cast<HWND>(winId()), &rcPos);
             if (axhost->m_spActiveView)
                 axhost->m_spActiveView->UIActivate(TRUE);
         }
         break;
     case QEvent::WindowBlocked:
-        if (IsWindowEnabled((HWND)winId())) {
-            EnableWindow((HWND)winId(), false);
+        if (IsWindowEnabled(reinterpret_cast<HWND>(winId()))) {
+            EnableWindow(reinterpret_cast<HWND>(winId()), false);
             if (axhost && axhost->m_spInPlaceActiveObject) {
                 axhost->inPlaceModelessEnabled = false;
                 axhost->m_spInPlaceActiveObject->EnableModeless(false);
@@ -1720,8 +1718,8 @@ bool QAxHostWidget::event(QEvent *e)
         }
         break;
     case QEvent::WindowUnblocked:
-        if (!IsWindowEnabled((HWND)winId())) {
-            EnableWindow((HWND)winId(), true);
+        if (!IsWindowEnabled(reinterpret_cast<HWND>(winId()))) {
+            EnableWindow(reinterpret_cast<HWND>(winId()), true);
             if (axhost && axhost->m_spInPlaceActiveObject) {
                 axhost->inPlaceModelessEnabled = true;
                 axhost->m_spInPlaceActiveObject->EnableModeless(true);
@@ -1779,6 +1777,8 @@ void QAxHostWidget::focusOutEvent(QFocusEvent *e)
     axhost->m_spInPlaceObject->UIDeactivate();
 }
 
+Q_GUI_EXPORT HBITMAP qt_pixmapToWinHBITMAP(const QPixmap &p, int hbitmapFormat = 0);
+Q_GUI_EXPORT QPixmap qt_pixmapFromWinHBITMAP(HBITMAP bitmap, int hbitmapFormat = 0);
 
 void QAxHostWidget::paintEvent(QPaintEvent*)
 {
@@ -1790,14 +1790,14 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
 
     IViewObject *view = 0;
     if (axhost)
-        axhost->widget->queryInterface(IID_IViewObject, (void**)&view);
+        axhost->widget->queryInterface(IID_IViewObject, reinterpret_cast<void **>(&view));
     if (!view)
         return;
 
     QPixmap pm(qaxNativeWidgetSize(this));
     pm.fill();
 
-    HBITMAP hBmp = qaxPixmapToWinHBITMAP(pm);
+    HBITMAP hBmp = qt_pixmapToWinHBITMAP(pm);
     HDC hBmp_hdc = CreateCompatibleDC(qt_win_display_dc());
     HGDIOBJ old_hBmp = SelectObject(hBmp_hdc, hBmp);
 
@@ -1811,7 +1811,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     view->Release();
 
     QPainter painter(this);
-    QPixmap pixmap = qaxPixmapFromWinHBITMAP(hBmp);
+    QPixmap pixmap = qt_pixmapFromWinHBITMAP(hBmp);
     pixmap.setDevicePixelRatio(devicePixelRatioF());
     painter.drawPixmap(0, 0, pixmap);
 
@@ -2080,8 +2080,8 @@ const QMetaObject *QAxWidget::parentMetaObject() const
 */
 void *QAxWidget::qt_metacast(const char *cname)
 {
-    if (!qstrcmp(cname, "QAxWidget")) return (void*)this;
-    if (!qstrcmp(cname, "QAxBase")) return (QAxBase*)this;
+    if (!qstrcmp(cname, "QAxWidget")) return static_cast<void *>(this);
+    if (!qstrcmp(cname, "QAxBase")) return static_cast<QAxBase *>(this);
     return QWidget::qt_metacast(cname);
 }
 

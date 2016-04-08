@@ -65,16 +65,7 @@ class QRect;
 class QRegion;
 class QWindow;
 
-enum HBitmapFormat
-{
-    HBitmapNoAlpha,
-    HBitmapPremultipliedAlpha,
-    HBitmapAlpha
-};
-
 HWND hwndForWidget(QWidget *widget);
-HBITMAP qaxPixmapToWinHBITMAP(const QPixmap &p, HBitmapFormat format = HBitmapNoAlpha);
-QPixmap qaxPixmapFromWinHBITMAP(HBITMAP bitmap, HBitmapFormat format = HBitmapNoAlpha);
 HRGN qaxHrgnFromQRegion(QRegion region, const QWindow *window);
 
 typedef QPair<qreal, qreal> QDpi;

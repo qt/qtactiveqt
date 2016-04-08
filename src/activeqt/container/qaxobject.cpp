@@ -162,8 +162,8 @@ const QMetaObject *QAxObject::parentMetaObject() const
 */
 void *QAxObject::qt_metacast(const char *cname)
 {
-    if (!qstrcmp(cname, "QAxObject")) return (void*)this;
-    if (!qstrcmp(cname, "QAxBase")) return (QAxBase*)this;
+    if (!qstrcmp(cname, "QAxObject")) return static_cast<void *>(this);
+    if (!qstrcmp(cname, "QAxBase")) return static_cast<QAxBase *>(this);
     return QObject::qt_metacast(cname);
 }
 
@@ -212,7 +212,7 @@ bool QAxObject::doVerb(const QString &verb)
     if (!verbs().contains(verb))
         return false;
     IOleObject *ole = 0;
-    queryInterface(IID_IOleObject, (void**)&ole);
+    queryInterface(IID_IOleObject, reinterpret_cast<void **>(&ole));
     if (!ole)
         return false;
 

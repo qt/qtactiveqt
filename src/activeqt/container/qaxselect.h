@@ -51,7 +51,7 @@ class QAxSelect : public QDialog
 {
     Q_OBJECT
 public:
-    QAxSelect(QWidget *parent = 0, Qt::WindowFlags flags = 0);
+    explicit QAxSelect(QWidget *parent = Q_NULLPTR, Qt::WindowFlags flags = Qt::WindowFlags());
     ~QAxSelect();
     QString clsid() const;
 

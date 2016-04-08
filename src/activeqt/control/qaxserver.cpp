@@ -124,18 +124,21 @@ QString qAxInit()
 
     libFile = QString::fromWCharArray(qAxModuleFilename);
     libFile = libFile.toLower();
-    if (LoadTypeLibEx((wchar_t*)libFile.utf16(), REGKIND_NONE, &qAxTypeLibrary) == S_OK)
+    if (LoadTypeLibEx(reinterpret_cast<const wchar_t *>(libFile.utf16()),
+                      REGKIND_NONE, &qAxTypeLibrary) == S_OK)
         return libFile;
 
     const int lastDot = libFile.lastIndexOf(QLatin1Char('.'));
     libFile.truncate(lastDot);
     libFile += QLatin1String(".tlb");
-    if (LoadTypeLibEx((wchar_t*)libFile.utf16(), REGKIND_NONE, &qAxTypeLibrary) == S_OK)
+    if (LoadTypeLibEx(reinterpret_cast<const wchar_t *>(libFile.utf16()),
+                      REGKIND_NONE, &qAxTypeLibrary) == S_OK)
         return libFile;
 
     libFile.truncate(lastDot);
     libFile += QLatin1String(".olb");
-    if (LoadTypeLibEx((wchar_t*)libFile.utf16(), REGKIND_NONE, &qAxTypeLibrary) == S_OK)
+    if (LoadTypeLibEx(reinterpret_cast<const wchar_t *>(libFile.utf16()),
+                      REGKIND_NONE, &qAxTypeLibrary) == S_OK)
         return libFile;
 
     return QString();
@@ -230,7 +233,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
         return SELFREG_E_TYPELIB;
 
     if (bRegister)
-        RegisterTypeLib(qAxTypeLibrary, (wchar_t*)libFile.utf16(), 0);
+        RegisterTypeLib(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), 0);
     else
         UnRegisterTypeLib(libAttr->guid, libAttr->wMajorVerNum, libAttr->wMinorVerNum, libAttr->lcid, libAttr->syskind);
 
@@ -838,7 +841,7 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
                 key += '_';
             }
             enumValues.append(key);
-            uint value = (uint)enumerator.value(j);
+            const uint value = uint(enumerator.value(j));
             key = key.leftJustified(20);
             out << "\t\t" << key << "\t= ";
             if (enumerator.isFlag())
@@ -1158,7 +1161,6 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out << "\timportlib(\"stdole2.tlb\");" << endl << endl;
 
     QStringList keys = qAxFactory()->featureList();
-    QStringList::ConstIterator key;
 
     out << "\t/************************************************************************" << endl;
     out << "\t** If this causes a compile error in MIDL you need to upgrade the" << endl;
@@ -1241,7 +1243,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
         if (!o)
             continue;
         const QMetaObject *mo = o->metaObject();
-        QAxBindable *bind = (QAxBindable*)o->qt_metacast("QAxBindable");
+        QAxBindable *bind = static_cast<QAxBindable *>(o->qt_metacast("QAxBindable"));
         bool isBindable =  bind != 0;
 
         const QByteArray cleanType = qax_clean_type(className, mo).toLatin1();

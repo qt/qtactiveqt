@@ -170,18 +170,20 @@ static QList<Control> readControls(const wchar_t *rootKey, unsigned wordSize)
             if (result == ERROR_SUCCESS) {
                 RegCloseKey(subKey);
                 szBuffer = sizeof(buffer) / sizeof(wchar_t);
-                RegistryQueryValue(classesKey, buffer, (LPBYTE)buffer, &szBuffer);
+                RegistryQueryValue(classesKey, buffer, reinterpret_cast<LPBYTE>(buffer), &szBuffer);
                 Control control;
                 control.clsid = clsid;
                 control.wordSize = wordSize;
                 control.name = QString::fromWCharArray(buffer);
                 szBuffer = sizeof(buffer) / sizeof(wchar_t);
-                if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\InprocServer32"), (LPBYTE)buffer, &szBuffer)) {
+                if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\InprocServer32"),
+                                     reinterpret_cast<LPBYTE>(buffer), &szBuffer)) {
                     control.dll = QString::fromWCharArray(buffer);
                     control.dll.replace(systemRootPattern, systemRoot);
                 }
                 szBuffer = sizeof(buffer) / sizeof(wchar_t);
-                if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\VERSION"), (LPBYTE)buffer, &szBuffer))
+                if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\VERSION"),
+                                     reinterpret_cast<LPBYTE>(buffer), &szBuffer))
                     control.version = QString::fromWCharArray(buffer);
                 controls.push_back(control);
             }
