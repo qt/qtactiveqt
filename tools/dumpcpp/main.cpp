@@ -835,8 +835,9 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
             if (property.isEditable())
                 flags |= Editable;
 
-            out << "0x" << QString::number(flags, 16).rightJustified(8, '0') << ", \t\t // " << property.typeName() << ' ' << property.name();
-            out << endl;
+            out << "0x" << QString::number(flags, 16).rightJustified(8, QLatin1Char('0'))
+                << ", \t\t // " << property.typeName() << ' ' << property.name()
+                << endl;
         }
         out << endl;
     }
@@ -1556,7 +1557,7 @@ int main(int argc, char **argv)
         QSettings settings(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"), QSettings::NativeFormat);
 
         // regular string and not a file - must be ProgID
-        if (typeLib.at(0) != '{') {
+        if (typeLib.at(0) != QLatin1Char('{')) {
             CLSID clsid;
             if (CLSIDFromProgID(reinterpret_cast<const wchar_t *>(typeLib.utf16()), &clsid) != S_OK) {
                 qWarning("dumpcpp: '%s' is not a type library and not a registered ProgID",
