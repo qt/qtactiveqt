@@ -419,7 +419,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         if (slotSignature.endsWith("()")) { // no parameters - no names
             slotNamedSignature = slotSignature;
         } else {
-            slotNamedSignature.truncate(slotSignature.indexOf('(') + 1);
+            slotNamedSignature = slotSignature.left(slotSignature.indexOf('(') + 1);
             QByteArray slotSignatureTruncated(slotSignature.mid(slotNamedSignature.length()));
             slotSignatureTruncated.truncate(slotSignatureTruncated.length() - 1);
 
