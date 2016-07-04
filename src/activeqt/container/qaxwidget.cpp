@@ -1798,7 +1798,8 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     pm.fill();
 
     HBITMAP hBmp = qt_pixmapToWinHBITMAP(pm);
-    HDC hBmp_hdc = CreateCompatibleDC(qt_win_display_dc());
+    const HDC displayDc = GetDC(0);
+    HDC hBmp_hdc = CreateCompatibleDC(displayDc);
     HGDIOBJ old_hBmp = SelectObject(hBmp_hdc, hBmp);
 
     RECTL bounds;
@@ -1818,6 +1819,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     SelectObject(hBmp_hdc, old_hBmp);
     DeleteObject(hBmp);
     DeleteDC(hBmp_hdc);
+    ReleaseDC(0, displayDc);
 }
 
 /*!
