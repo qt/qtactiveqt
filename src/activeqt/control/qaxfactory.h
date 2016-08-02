@@ -227,7 +227,7 @@ private:
     static QStringList getImplementedCategories()
     {
         const QMetaObject &mo = T::staticMetaObject;
-        QString catids = mo.classInfo(mo.indexOfClassInfo("Implemented Categories")).value();
+        QString catids = QLatin1String(mo.classInfo(mo.indexOfClassInfo("Implemented Categories")).value());
         return catids.split(QLatin1Char(','));
     }
 };
