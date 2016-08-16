@@ -243,7 +243,9 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
     HRESULT res = E_FAIL;
 
     if (hasExeExtension(input)) {
-        if (runWithQtInEnvironment(quotePath(input) + QLatin1String(" -dumpidl ") + idlfile + QLatin1String(" -version ") + version))
+        const QString command = quotePath(input) + QLatin1String(" -dumpidl ")
+            + quotePath(idlfile) + QLatin1String(" -version ") + version;
+        if (runWithQtInEnvironment(command))
             res = S_OK;
     } else {
         HMODULE hdll = loadLibraryQt(input);
@@ -386,7 +388,7 @@ int runIdc(int argc, char **argv)
         fprintf(stderr, "%s\n", qPrintable(error));
         return ok ? 0 : 4;
     } else if (!idlfile.isEmpty()) {
-        idlfile = quotePath(QDir::toNativeSeparators(idlfile));
+        idlfile = QDir::toNativeSeparators(idlfile);
         fprintf(stderr, "\n\n%s\n\n", qPrintable(idlfile));
         const HRESULT res = dumpIdl(input, idlfile, version);
 
