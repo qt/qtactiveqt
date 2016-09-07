@@ -194,13 +194,12 @@ inline QString QAxBase::generateDocumentation()
 inline QDataStream &operator >>(QDataStream &s, QAxBase &c)
 {
     QAxBase::PropertyBag bag;
-    c.qObject()->blockSignals(true);
+    const QSignalBlocker blocker(c.qObject());
     QString control;
     s >> control;
     c.setControl(control);
     s >> bag;
     c.setPropertyBag(bag);
-    c.qObject()->blockSignals(false);
 
     return s;
 }
