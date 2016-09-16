@@ -176,12 +176,17 @@ static bool attachTypeLibrary(const QString &applicationName, int resource, cons
 
 static HMODULE loadLibraryQt(const QString &input)
 {
+    const wchar_t *inputC = reinterpret_cast<const wchar_t *>(input.utf16());
     if (QSysInfo::windowsVersion() < QSysInfo::WV_VISTA)
-        return LoadLibrary(reinterpret_cast<const wchar_t *>(input.utf16())); // fallback for Windows XP and older
+        return LoadLibrary(inputC); // fallback for Windows XP and older
 
     // Load DLL with the folder containing the DLL temporarily added to the search path when loading dependencies
-    return LoadLibraryEx(reinterpret_cast<const wchar_t *>(input.utf16()), NULL,
-                         LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    HMODULE result =
+        LoadLibraryEx(inputC, NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    // If that fails, call with flags=0 to get LoadLibrary() behavior (search %PATH%).
+    if (!result)
+        result = LoadLibraryEx(inputC, NULL, 0);
+    return result;
 }
 
 static bool registerServer(const QString &input)
@@ -233,7 +238,9 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
     HRESULT res = E_FAIL;
 
     if (hasExeExtension(input)) {
-        if (runWithQtInEnvironment(quotePath(input) + QLatin1String(" -dumpidl ") + idlfile + QLatin1String(" -version ") + version))
+        const QString command = quotePath(input) + QLatin1String(" -dumpidl ")
+            + quotePath(idlfile) + QLatin1String(" -version ") + version;
+        if (runWithQtInEnvironment(command))
             res = S_OK;
     } else {
         HMODULE hdll = loadLibraryQt(input);
@@ -376,7 +383,7 @@ int runIdc(int argc, char **argv)
         fprintf(stderr, "%s\n", qPrintable(error));
         return ok ? 0 : 4;
     } else if (!idlfile.isEmpty()) {
-        idlfile = quotePath(QDir::toNativeSeparators(idlfile));
+        idlfile = QDir::toNativeSeparators(idlfile);
         fprintf(stderr, "\n\n%s\n\n", qPrintable(idlfile));
         const HRESULT res = dumpIdl(input, idlfile, version);
 
