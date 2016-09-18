@@ -83,6 +83,8 @@ protected slots:
     void on_actionScriptingLoad_triggered();
     void on_actionScriptingRun_triggered();
 
+    void on_actionFreeUnusedDLLs_triggered();
+
 private:
     QAxWidget *activeAxWidget() const;
     QList<QAxWidget *> axWidgets() const;
