@@ -364,6 +364,7 @@
         <addaction name="actionFreezeEvents" />
         <addaction name="actionGroupLogging" />
         <addaction name="LoggingMenu" />
+        <addaction name="actionFreeUnusedDLLs"/>
       </widget>
       <addaction name="FileMenu" />
       <addaction name="ContainerMenu" />
@@ -600,6 +601,11 @@
       </property>
       <property name="text" >
         <string>&amp;Run Macro...</string>
+      </property>
+    </action>
+    <action name="actionFreeUnusedDLLs">
+      <property name="text" >
+        <string>Free Unused DLLs</string>
       </property>
     </action>
     <actiongroup name="actionGroupLogging" >

@@ -357,6 +357,16 @@ void MainWindow::on_actionScriptingRun_triggered()
 #endif
 }
 
+void MainWindow::on_actionFreeUnusedDLLs_triggered()
+{
+    // Explicitly unload unused DLLs with no remaining references.
+    // This is also done automatically after 10min and in low memory situations.
+
+    // must call twice due to DllCanUnloadNow implementation in qaxserverdll
+    CoFreeUnusedLibrariesEx(0, 0);
+    CoFreeUnusedLibrariesEx(0, 0);
+}
+
 #ifdef QT_NO_QAXSCRIPT
 static inline void noScriptMessage(QWidget *parent)
 {
