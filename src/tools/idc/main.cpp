@@ -176,9 +176,6 @@ static bool attachTypeLibrary(const QString &applicationName, int resource, cons
 
 static HMODULE loadLibraryQt(const QString &input)
 {
-    if (QSysInfo::windowsVersion() < QSysInfo::WV_VISTA)
-        return LoadLibrary(reinterpret_cast<const wchar_t *>(input.utf16())); // fallback for Windows XP and older
-
     // Load DLL with the folder containing the DLL temporarily added to the search path when loading dependencies
     return LoadLibraryEx(reinterpret_cast<const wchar_t *>(input.utf16()), NULL,
                          LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
