@@ -130,9 +130,11 @@ bool MainWindow::addControlFromClsid(const QString &clsid)
         updateGUI();
     } else {
         delete container;
-        QMessageBox::information(this,
-                                 tr("Error Loading Control"),
-                                 tr("The control \"%1\" could not be loaded.").arg(clsid));
+        logTabWidget->setCurrentIndex(logTabWidget->count() - 1);
+        const QString message =
+            tr("The control \"%1\" could not be loaded."
+               " See the \"Debug log\" tab for details.").arg(clsid);
+        QMessageBox::information(this, tr("Error Loading Control"), message);
     }
     return result;
 }

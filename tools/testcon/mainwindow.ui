@@ -103,9 +103,9 @@
                     <enum>Raised</enum>
                   </property>
                 </widget>
-                <widget class="QTabWidget" name="TabWidget2" >
+                <widget class="QTabWidget" name="logTabWidget" >
                   <property name="objectName" >
-                    <string notr="true" >TabWidget2</string>
+                    <string notr="true" >logTabWidget</string>
                   </property>
                   <property name="sizePolicy" >
                     <sizepolicy>
