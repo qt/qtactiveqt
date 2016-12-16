@@ -43,6 +43,8 @@
 
 #include "qaxfactory.h"
 
+#include <string.h>
+
 #include <qt_windows.h>
 
 QT_BEGIN_NAMESPACE
@@ -173,8 +175,6 @@ bool qax_stopServer()
     return true;
 }
 
-extern void qWinMain(HINSTANCE, HINSTANCE, LPSTR, int, int &, QVector<char *> &);
-
 QT_END_NAMESPACE
 
 #if defined(QT_NEEDS_QMAIN)
@@ -184,8 +184,47 @@ int qMain(int, char **);
 extern "C" int main(int, char **);
 #endif
 
+static inline QStringList commandLineArguments()
+{
+    QStringList result;
+    int size;
+    if (wchar_t **argv = CommandLineToArgvW(GetCommandLine(), &size)) {
+        result.reserve(size);
+        wchar_t **argvEnd = argv + size;
+        for (wchar_t **a = argv; a < argvEnd; ++a)
+            result.append(QString::fromWCharArray(*a));
+        LocalFree(argv);
+    }
+    return result;
+}
 
-EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR, int nShowCmd)
+static inline bool matchesOption(const QString &arg, const char *option)
+{
+    return (arg.startsWith(QLatin1Char('/')) || arg.startsWith(QLatin1Char('-')))
+        && arg.rightRef(arg.size() - 1).compare(QLatin1String(option), Qt::CaseInsensitive) == 0;
+}
+
+namespace {
+struct Arg {
+    explicit Arg(const QStringList &args)
+    {
+        argv.reserve(args.size() + 1);
+        for (const QString &a : args)
+            argv.append(_strdup(a.toLocal8Bit().constData()));
+        argv.append(nullptr);
+    }
+
+    ~Arg()
+    {
+        for (int i = 0, last = argv.size() - 1; i < last; ++i)
+            free(argv.at(i));
+    }
+
+    QVector<char *> argv;
+};
+} // namespace
+
+EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, LPSTR, int /* nShowCmd */)
 {
     QT_USE_NAMESPACE
 
@@ -193,66 +232,58 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR,
     GetModuleFileName(0, qAxModuleFilename, MAX_PATH);
     qAxInstance = hInstance;
 
-    QByteArray cmdParam = QString::fromWCharArray(GetCommandLine()).toLocal8Bit();
-    QList<QByteArray> cmds = cmdParam.split(' ');
-    QByteArray unprocessed;
+    const QStringList cmds = commandLineArguments();
+    QStringList unprocessed;
+    unprocessed.reserve(cmds.size());
 
     int nRet = 0;
     bool run = true;
     bool runServer = false;
     for (int i = 0; i < cmds.count(); ++i) {
-        QByteArray cmd = cmds.at(i).toLower();
-        if (cmd == "-activex" || cmd == "/activex" || cmd == "-embedding" || cmd == "/embedding") {
+        const QString &cmd = cmds.at(i);
+        if (matchesOption(cmd, "activex") || matchesOption(cmd, "embedding")) {
             runServer = true;
-        } else if (cmd == "-unregserver" || cmd == "/unregserver") {
+        } else if (matchesOption(cmd, "unregserver")) {
             nRet = UpdateRegistry(false);
             run = false;
             break;
-        } else if (cmd == "-regserver" || cmd == "/regserver") {
+        } else if (matchesOption(cmd, "regserver")) {
             nRet = UpdateRegistry(true);
             run = false;
             break;
-        } else if (cmd == "-dumpidl" || cmd == "/dumpidl") {
+        } else if (matchesOption(cmd, "dumpidl")) {
             ++i;
             if (i < cmds.count()) {
-                QByteArray outfile = cmds.at(i);
+                const QString &outfile = cmds.at(i);
                 ++i;
-                QByteArray version;
-                if (i < cmds.count() && (cmds.at(i) == "-version" || cmds.at(i) == "/version")) {
+                QString version;
+                if (i < cmds.count() && matchesOption(cmds.at(i), "version")) {
                     ++i;
                     if (i < cmds.count())
                         version = cmds.at(i);
                     else
-                        version = "1.0";
+                        version = QStringLiteral("1.0");
                 }
 
-                nRet = DumpIDL(QString::fromLatin1(outfile.constData()), QString::fromLatin1(version.constData()));
+                nRet = DumpIDL(outfile, version);
             } else {
                 qWarning("Wrong commandline syntax: <app> -dumpidl <idl file> [-version <x.y.z>]");
             }
             run = false;
             break;
         } else {
-            unprocessed += cmds.at(i) + ' ';
+            unprocessed.append(cmds.at(i));
         }
     }
 
     if (run) {
         if (SUCCEEDED(CoInitialize(0))) {
             {
-                struct Arg {
-                    int c;
-                    QVector<char*> v;
-
-                    Arg() : v(8) {}
-                    ~Arg() { Q_FOREACH (char *arg, v) free(arg); }
-                } arg;
-
-                qWinMain(hInstance, hPrevInstance, unprocessed.data(), nShowCmd, arg.c, arg.v);
+                Arg args(unprocessed);
                 qAxInit();
                 if (runServer)
                     QAxFactory::startServer();
-                nRet = ::main(arg.c, arg.v.data());
+                nRet = ::main(args.argv.size() - 1, args.argv.data());
                 QAxFactory::stopServer();
                 qAxCleanup();
             }

@@ -23,6 +23,8 @@ SOURCES =   qaxaggregated.cpp \
             qaxmain.cpp \
             ../shared/qaxtypes.cpp
 
+LIBS += -lshell32
+
 MODULE = axserver
 MODULE_DEFINES = QAXSERVER
 MODULE_CONFIG = idcidl force_import_plugins
