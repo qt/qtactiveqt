@@ -109,7 +109,8 @@ QAxWidget *MainWindow::activeAxWidget() const
 QList<QAxWidget *> MainWindow::axWidgets() const
 {
     QList<QAxWidget *> result;
-    foreach (const QMdiSubWindow *subWindow, m_mdiArea->subWindowList())
+    const QList<QMdiSubWindow *> mdiSubWindows = m_mdiArea->subWindowList();
+    for (const QMdiSubWindow *subWindow : mdiSubWindows)
         if (QAxWidget *axWidget = qobject_cast<QAxWidget *>(subWindow->widget()))
             result.push_back(axWidget);
     return result;
@@ -395,7 +396,8 @@ bool MainWindow::loadScript(const QString &file)
         m_scripts->addObject(this);
     }
 
-    foreach (QAxWidget *axWidget, axWidgets()) {
+    const QList<QAxWidget *> axw = axWidgets();
+    for (QAxWidget *axWidget : axw) {
         QAxBase *ax = axWidget;
         m_scripts->addObject(ax);
     }
@@ -434,7 +436,8 @@ void MainWindow::updateGUI()
     if (m_dlgProperties)
         m_dlgProperties->setControl(hasControl ? container : 0);
 
-    foreach (QAxWidget *container, axWidgets()) {
+    const QList<QAxWidget *> axw = axWidgets();
+    for (QAxWidget *container : axw) {
         container->disconnect(SIGNAL(signal(QString,int,void*)));
         if (actionLogSignals->isChecked())
             connect(container, SIGNAL(signal(QString,int,void*)), this, SLOT(logSignal(QString,int,void*)));

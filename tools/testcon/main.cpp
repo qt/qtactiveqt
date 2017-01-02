@@ -95,7 +95,8 @@ int main( int argc, char **argv )
         qInstallMessageHandler(redirectDebugOutput);
 
     MainWindow mw;
-    foreach (const QString &a, parser.positionalArguments()) {
+    const QStringList positionalArguments = parser.positionalArguments();
+    for (const QString &a : positionalArguments) {
         if (a.startsWith(QLatin1Char('{')) && a.endsWith(QLatin1Char('}')))
             mw.addControlFromClsid(a);
         else

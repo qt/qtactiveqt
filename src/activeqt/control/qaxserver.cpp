@@ -262,8 +262,8 @@ HRESULT UpdateRegistry(BOOL bRegister)
             settings->setValue(QLatin1String("/AppID/") + module + QLatin1String(".EXE/AppID"), appId);
         }
 
-        QStringList keys = qAxFactory()->featureList();
-        foreach (const QString &classNameIn, keys) {
+        const QStringList keys = qAxFactory()->featureList();
+        for (const QString &classNameIn : keys) {
             QObject *object = qAxFactory()->createObject(classNameIn);
             const QMetaObject *mo = qAxFactory()->metaObject(classNameIn);
             const QString classId = qAxFactory()->classID(classNameIn).toString().toUpper();
@@ -368,8 +368,8 @@ HRESULT UpdateRegistry(BOOL bRegister)
             settings->remove(QLatin1String("/AppID/") + appId + QLatin1String("/."));
             settings->remove(QLatin1String("/AppID/") + module + QLatin1String(".EXE"));
         }
-        QStringList keys = qAxFactory()->featureList();
-        foreach (const QString &classNameIn, keys) {
+        const QStringList keys = qAxFactory()->featureList();
+        for (const QString &classNameIn : keys) {
             const QMetaObject *mo = qAxFactory()->metaObject(classNameIn);
             const QString classId = qAxFactory()->classID(classNameIn).toString().toUpper();
             const QString className = qax_clean_type(classNameIn, mo);
@@ -1160,7 +1160,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out << "\timportlib(\"stdole32.tlb\");" << endl;
     out << "\timportlib(\"stdole2.tlb\");" << endl << endl;
 
-    QStringList keys = qAxFactory()->featureList();
+    const QStringList keys = qAxFactory()->featureList();
 
     out << "\t/************************************************************************" << endl;
     out << "\t** If this causes a compile error in MIDL you need to upgrade the" << endl;
@@ -1205,7 +1205,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out << "\t/* Forward declaration of classes that might be used as parameters */" << endl << endl;
 
     int res = S_OK;
-    foreach (const QString &className, keys) {
+    for (const QString &className : keys) {
         const QMetaObject *mo = qAxFactory()->metaObject(className);
         // We have meta object information for this type. Forward declare it.
         if (mo) {
@@ -1222,7 +1222,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     }
     out << endl;
 
-    foreach (const QString &className, keys) {
+    for (const QString &className : keys) {
         const QMetaObject *mo = qAxFactory()->metaObject(className);
         // We have meta object information for this type. Define it.
         if (mo) {
@@ -1238,7 +1238,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     if (res != S_OK)
         goto ErrorInClass;
 
-    foreach (const QString &className, keys) {
+    for (const QString &className : keys) {
         QObject *o = qAxFactory()->createObject(className);
         if (!o)
             continue;

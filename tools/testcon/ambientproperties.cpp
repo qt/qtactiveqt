@@ -69,7 +69,8 @@ void AmbientProperties::on_buttonBackground_clicked()
     p.setColor(container->backgroundRole(), c);
     container->setPalette(p);
 
-    foreach (QWidget *widget, mdiAreaWidgets()) {
+    const QWidgetList widgets = mdiAreaWidgets();
+    for (QWidget *widget : widgets) {
         p = widget->palette();
         p.setColor(widget->backgroundRole(), c);
         widget->setPalette(p);
@@ -88,7 +89,8 @@ void AmbientProperties::on_buttonForeground_clicked()
     p.setColor(container->foregroundRole(), c);
     container->setPalette(p);
 
-    foreach (QWidget *widget, mdiAreaWidgets()) {
+    const QWidgetList widgets = mdiAreaWidgets();
+    for (QWidget *widget : widgets) {
         p = widget->palette();
         p.setColor(widget->foregroundRole(), c);
         widget->setPalette(p);
@@ -104,7 +106,8 @@ void AmbientProperties::on_buttonFont_clicked()
     fontSample->setFont( f );
     container->setFont( f );
 
-    foreach (QWidget *widget, mdiAreaWidgets())
+    const QWidgetList widgets = mdiAreaWidgets();
+    for (QWidget *widget : widgets)
         widget->setFont( f );
 }
 
@@ -117,9 +120,12 @@ void AmbientProperties::on_buttonEnabled_toggled(bool on)
 QWidgetList AmbientProperties::mdiAreaWidgets() const
 {
     QWidgetList result;
-    if (QMdiArea *mdiArea = qobject_cast<QMdiArea*>(container))
-        foreach (QMdiSubWindow *subWindow, mdiArea->subWindowList())
+
+    if (QMdiArea *mdiArea = qobject_cast<QMdiArea*>(container)) {
+        const QList<QMdiSubWindow *> mdiSubWindows = mdiArea->subWindowList();
+        for (const QMdiSubWindow *subWindow : mdiSubWindows)
             result.push_back(subWindow->widget());
+    }
     return result;
 }
 

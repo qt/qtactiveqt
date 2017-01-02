@@ -637,7 +637,7 @@ public:
         connections = old.connections;
         that = old.that;
         iid = old.iid;
-        foreach (const CONNECTDATA &connection, connections)
+        for (const CONNECTDATA &connection : qAsConst(connections))
             connection.pUnk->AddRef();
     }
     virtual ~QAxConnection()
@@ -840,8 +840,8 @@ public:
         InitializeCriticalSection(&refCountSection);
 
         // COM only knows the CLSID, but QAxFactory is class name based...
-        QStringList keys = qAxFactory()->featureList();
-        foreach (const QString &key, keys) {
+        const QStringList keys = qAxFactory()->featureList();
+        for (const QString &key : keys) {
             if (qAxFactory()->classID(key) == clsid) {
                 className = key;
                 break;
@@ -1121,9 +1121,8 @@ QAxServerBase::~QAxServerBase()
 #endif
 
     revokeActiveObject();
-
-    foreach (IConnectionPoint *point, points) {
-        if (point)
+    for (auto it = points.cbegin(), end = points.cend(); it != end; ++it) {
+        if (IConnectionPoint *point = it.value())
             point->Release();
     }
     delete aggregatedObject;
@@ -1339,7 +1338,7 @@ bool QAxServerBase::internalCreate()
     if (isWidget) {
         qt.object->installEventFilter(this);
         const QWidgetList children = qt.object->findChildren<QWidget*>();
-        foreach (QWidget *child, children)
+        for (QWidget *child : children)
             child->installEventFilter(this);
     }
     return true;

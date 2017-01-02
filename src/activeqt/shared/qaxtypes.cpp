@@ -1222,7 +1222,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
             bool allStrings = true;
             QStringList strings;
             const QVariantList list(var.toList());
-            foreach (const QVariant &variant, list) {
+            for (const QVariant &variant : list) {
                 if (variant.canConvert(QVariant::String))
                     strings << variant.toString();
                 else

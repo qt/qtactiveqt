@@ -78,7 +78,7 @@ static QList<Location> defaultBookmarks()
 
 static bool containsAddress(const QList<Location> &locations, const QString &address)
 {
-    foreach (const Location &location, locations) {
+    for (const Location &location : locations) {
         if (location.address == address)
             return true;
     }
@@ -195,7 +195,7 @@ MainWindow::MainWindow()
     QList<Location> bookmarks = readBookMarks(settings);
     if (bookmarks.isEmpty() || restoredVersion.isEmpty())
         bookmarks = defaultBookmarks();
-    foreach (const Location &bookmark, bookmarks)
+    for (const Location &bookmark : qAsConst(bookmarks))
         addBookmark(bookmark);
 }
 
@@ -222,7 +222,7 @@ QAction *MainWindow::addLocation(const Location &location, QMenu *menu)
 QList<Location> MainWindow::bookmarks() const
 {
     QList<Location> result;
-    foreach (const QAction *action, bookmarkActions)
+    for (const QAction *action : qAsConst(bookmarkActions))
         result.append(locationFromAction(action));
     return result;
 }

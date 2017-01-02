@@ -203,7 +203,8 @@ public:
     {
         m_controls = readControls(L"CLSID", unsigned(QSysInfo::WordSize));
         if (QSysInfo::WordSize == 64) { // Append the 32bit controls as disabled items.
-            foreach (const Control &c, readControls(L"Wow6432Node\\CLSID", 32u)) {
+            const QList<Control> controls = readControls(L"Wow6432Node\\CLSID", 32u);
+            for (const Control &c : controls) {
                 if (std::find_if(m_controls.constBegin(), m_controls.constEnd(), FindByClsidPredicate(c.clsid)) == m_controls.constEnd())
                     m_controls.append(c);
             }

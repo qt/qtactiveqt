@@ -95,7 +95,8 @@ HRGN qaxHrgnFromQRegion(QRegion region, const QWindow *window)
         addRectToHrgn(hRegion, region.boundingRect());
         return hRegion;
     }
-    foreach (const QRect &rect, region.rects())
+    const QVector<QRect> &rects = region.rects();
+    for (const QRect &rect : rects)
         addRectToHrgn(hRegion, rect);
     return hRegion;
 }

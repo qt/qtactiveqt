@@ -251,7 +251,7 @@ private:
             factory = new QAxClass<Class>(typeLibID().toString(), appID().toString()); \
             qRegisterMetaType<Class*>(#Class"*"); \
             keys = factory->featureList(); \
-            Q_FOREACH (const QString &key, keys) { \
+            for (const QString &key : qAsConst(keys)) { \
                 factoryKeys += key; \
                 factories.insert(key, factory); \
                 creatable.insert(key, true); \
@@ -261,7 +261,7 @@ private:
             factory = new QAxClass<Class>(typeLibID().toString(), appID().toString()); \
             qRegisterMetaType<Class*>(#Class"*"); \
             keys = factory->featureList(); \
-            Q_FOREACH (const QString &key, keys) { \
+            for (const QString &key : qAsConst(keys)) { \
                 factoryKeys += key; \
                 factories.insert(key, factory); \
                 creatable.insert(key, false); \

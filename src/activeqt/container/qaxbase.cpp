@@ -1000,7 +1000,7 @@ bool QAxBase::setControl(const QString &c)
                 if (search.isEmpty()) {
                     controls.beginGroup(QLatin1String("/CLSID"));
                     const QStringList clsids = controls.childGroups();
-                    foreach (const QString &clsid, clsids) {
+                    for (const QString &clsid : clsids) {
                         const QString name = controls.value(clsid + QLatin1String("/Default")).toString();
                         if (name == c) {
                             search = clsid;
@@ -1100,8 +1100,8 @@ void QAxBase::disableClassInfo()
 */
 void QAxBase::clear()
 {
-    foreach (QAxEventSink *eventSink, d->eventSink) {
-        if (eventSink) {
+    for (auto it = d->eventSink.cbegin(), end = d->eventSink.cend(); it != end; ++it) {
+        if (QAxEventSink *eventSink = it.value()) {
             eventSink->unadvise();
             eventSink->Release();
         }
@@ -2167,8 +2167,8 @@ void MetaObjectGenerator::readClassInfo()
         QString tlfile;
         if (!tlid.isEmpty()) {
             controls.beginGroup(QLatin1String("/Classes/TypeLib/") + tlid);
-            QStringList versions = controls.childGroups();
-            foreach (const QString &version, versions) {
+            const QStringList versions = controls.childGroups();
+            for (const QString &version : versions) {
                 tlfile = controls.value(QLatin1Char('/') + version + QLatin1String("/0/win32/.")).toString();
                 if (!tlfile.isEmpty())
                     break;
@@ -2928,7 +2928,7 @@ QMetaObject *MetaObjectGenerator::tryCache()
             IConnectionPointContainer *cpoints = 0;
             d->ptr->QueryInterface(IID_IConnectionPointContainer, reinterpret_cast<void **>(&cpoints));
             if (cpoints) {
-                foreach (const QUuid &iid, d->metaobj->connectionInterfaces) {
+                for (const QUuid &iid : qAsConst(d->metaobj->connectionInterfaces)) {
                     IConnectionPoint *cpoint = 0;
                     cpoints->FindConnectionPoint(iid, &cpoint);
                     if (cpoint) {
@@ -3151,8 +3151,8 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     if (!cacheKey.isEmpty()) {
         mo_cache.insert(cacheKey, d->metaobj);
         d->cachedMetaObject = true;
-         foreach (QAxEventSink *sink, d->eventSink) {
-            if (sink) {
+        for (auto it = d->eventSink.cbegin(), end = d->eventSink.cend(); it != end; ++it) {
+            if (QAxEventSink *sink = it.value()) {
                 QUuid ciid = sink->connectionInterface();
 
                 d->metaobj->connectionInterfaces.append(ciid);
