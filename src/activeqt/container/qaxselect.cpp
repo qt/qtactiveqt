@@ -42,6 +42,7 @@
 
 #include "ui_qaxselect.h"
 
+#include <QtCore/QFileInfo>
 #include <QtCore/QSortFilterProxyModel>
 #include <QtCore/QItemSelectionModel>
 #include <QtCore/QSysInfo>
@@ -57,16 +58,20 @@
 
 QT_BEGIN_NAMESPACE
 
+enum ControlType { InProcessControl, OutOfProcessControl };
+
 struct Control
 {
-    inline Control() : wordSize(0) {}
+    inline Control() : type(InProcessControl), wordSize(0) {}
     int compare(const Control &rhs) const;
     QString toolTip() const;
 
+    ControlType type;
     QString clsid;
     QString name;
     QString dll;
     QString version;
+    QString rootKey;
     unsigned wordSize;
 };
 
@@ -78,6 +83,8 @@ inline int Control::compare(const Control &rhs) const
         return -1;
     if (wordSize < rhs.wordSize)
         return 1;
+    if (const int k = rootKey.compare(rhs.rootKey))
+        return k;
     if (const int n = name.compare(rhs.name))
         return n;
     if (const int c = clsid.compare(rhs.clsid))
@@ -89,20 +96,66 @@ inline int Control::compare(const Control &rhs) const
     return 0;
 }
 
+static inline QString nonbreakingSpace(QString in)
+{
+    in.replace(QStringLiteral(" "), QStringLiteral("&nbsp;"));
+    return in;
+}
+
+// The entry for an out of process binary typically looks like:
+// "..\foo.exe" -activex
+// Extract the actual binary
+static QString outOfProcessBinary(const QString &entry)
+{
+    if (entry.startsWith(QLatin1Char('"'))) {
+        const int closing = entry.indexOf(QLatin1Char('"'), 1);
+        if (closing > 1)
+            return entry.mid(1, closing - 1);
+    }
+    const int spacePos = entry.indexOf(QLatin1Char(' '));
+    return spacePos > 0 ? entry.left(spacePos) : entry;
+}
+
+// Replace environment variables enclosed in '%' in a string (registry entry)
+static QString replaceEnvironmentVariables(QString in)
+{
+    while (true) {
+        const int openInPercentPos = in.indexOf(QLatin1Char('%'));
+        if (openInPercentPos < 0)
+            break;
+        const int closingPercentPos = in.indexOf(QLatin1Char('%'), openInPercentPos + 1);
+        if (closingPercentPos < 0)
+            break;
+        const QStringRef varName = in.midRef(openInPercentPos + 1, closingPercentPos - openInPercentPos - 1);
+        const QString contents = QString::fromLocal8Bit(qgetenv(varName.toLocal8Bit()));
+        in.replace(openInPercentPos, closingPercentPos - openInPercentPos + 1, contents);
+    }
+    return in;
+}
+
 QString Control::toolTip() const
 {
     QString result;
     QTextStream str(&result);
     str << "<html><head/><body><table>"
-        << "<tr><th>" << QAxSelect::tr("Name:") << "</th><td>" << name << "</td></tr>"
+        << "<tr><th>" << QAxSelect::tr("Name:") << "</th><td>" << nonbreakingSpace(name) << "</td></tr>"
+        << "<tr><th>" << QAxSelect::tr("Type:") << "</th><td>"
+        << (type == InProcessControl ? QAxSelect::tr("In process") : QAxSelect::tr("Out of process"))
+        << "</td></tr>"
         << "<tr><th>" << QAxSelect::tr("CLSID:") << "</th><td>" << clsid << "</td></tr>"
+        << "<tr><th>" << QAxSelect::tr("Key:") << "</th><td>" << rootKey << "</td></tr>"
         << "<tr><th>" << QAxSelect::tr("Word&nbsp;size:") << "</th><td>" << wordSize << "</td></tr>";
-    if (!dll.isEmpty())
-        str << "<tr><th>" << QAxSelect::tr("DLL:") << "</th><td>" << dll << "</td></tr>";
+    if (!dll.isEmpty()) {
+        str << "<tr><th>"
+            << (type == InProcessControl ? QAxSelect::tr("DLL:") : QAxSelect::tr("Binary:"))
+            << "</th><td";
+        if (!QFileInfo(dll).exists())
+            str << " style=\"color:red\"";
+        str << '>' << nonbreakingSpace(dll) << "</td></tr>";
+    }
     if (!version.isEmpty())
         str << "<tr><th>" << QAxSelect::tr("Version:") << "</th><td>" << version << "</td></tr>";
     str << "</table></body></html>";
-    result.replace(QStringLiteral(" "), QStringLiteral("&nbsp;"));
     return result;
 }
 
@@ -151,8 +204,7 @@ static QList<Control> readControls(const wchar_t *rootKey, unsigned wordSize)
         qErrnoWarning("RegOpenKeyEx failed.");
         return controls;
     }
-    const QString systemRoot = QString::fromLocal8Bit(qgetenv("SystemRoot"));
-    const QRegExp systemRootPattern(QStringLiteral("%SystemRoot%"), Qt::CaseInsensitive, QRegExp::FixedString);
+    const QString rootKeyS = QStringLiteral("HKEY_CLASSES_ROOT\\") + QString::fromWCharArray(rootKey);
     DWORD index = 0;
     LONG result = 0;
     wchar_t buffer[256];
@@ -175,11 +227,16 @@ static QList<Control> readControls(const wchar_t *rootKey, unsigned wordSize)
                 control.clsid = clsid;
                 control.wordSize = wordSize;
                 control.name = QString::fromWCharArray(buffer);
+                control.rootKey = rootKeyS;
                 szBuffer = sizeof(buffer) / sizeof(wchar_t);
                 if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\InprocServer32"),
                                      reinterpret_cast<LPBYTE>(buffer), &szBuffer)) {
-                    control.dll = QString::fromWCharArray(buffer);
-                    control.dll.replace(systemRootPattern, systemRoot);
+                    control.type = InProcessControl;
+                    control.dll = replaceEnvironmentVariables(QString::fromWCharArray(buffer));
+                } else if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\LocalServer32"),
+                                            reinterpret_cast<LPBYTE>(buffer), &szBuffer)) {
+                    control.type = OutOfProcessControl;
+                    control.dll = outOfProcessBinary(replaceEnvironmentVariables(QString::fromWCharArray(buffer)));
                 }
                 szBuffer = sizeof(buffer) / sizeof(wchar_t);
                 if (querySubKeyValue(classesKey, clsid + QStringLiteral("\\VERSION"),
