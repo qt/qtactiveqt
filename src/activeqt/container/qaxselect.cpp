@@ -162,15 +162,6 @@ QString Control::toolTip() const
 inline bool operator<(const Control &c1, const Control &c2) { return c1.compare(c2) < 0; }
 inline bool operator==(const Control &c1, const Control &c2) { return !c1.compare(c2); }
 
-class FindByClsidPredicate : public std::unary_function<bool, Control> {
-public:
-    explicit FindByClsidPredicate(const QString &clsid) :  m_clsid(clsid) {}
-    inline bool operator()(const Control &c) const { return m_clsid == c.clsid; }
-
-private:
-    const QString m_clsid;
-};
-
 static LONG RegistryQueryValue(HKEY hKey, LPCWSTR lpSubKey, LPBYTE lpData, LPDWORD lpcbData)
 {
     LONG ret = ERROR_FILE_NOT_FOUND;
@@ -259,13 +250,8 @@ public:
     : QAbstractListModel(parent)
     {
         m_controls = readControls(L"CLSID", unsigned(QSysInfo::WordSize));
-        if (QSysInfo::WordSize == 64) { // Append the 32bit controls as disabled items.
-            const QList<Control> controls = readControls(L"Wow6432Node\\CLSID", 32u);
-            for (const Control &c : controls) {
-                if (std::find_if(m_controls.constBegin(), m_controls.constEnd(), FindByClsidPredicate(c.clsid)) == m_controls.constEnd())
-                    m_controls.append(c);
-            }
-        }
+        if (QSysInfo::WordSize == 64) // Append the 32bit controls
+            m_controls += readControls(L"Wow6432Node\\CLSID", 32u);
         std::sort(m_controls.begin(), m_controls.end());
     }
 
@@ -298,8 +284,11 @@ QVariant ControlList::data(const QModelIndex &index, int role) const
 Qt::ItemFlags ControlList::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags result = QAbstractListModel::flags(index);
-    if (!index.isValid() || m_controls.at(index.row()).wordSize != QSysInfo::WordSize)
-        result &= ~Qt::ItemIsEnabled;
+    if (index.isValid()) {
+        const Control &control = m_controls.at(index.row());
+        if (control.type == InProcessControl && control.wordSize != QSysInfo::WordSize)
+            result &= ~Qt::ItemIsEnabled;
+    }
     return result;
 }
 
