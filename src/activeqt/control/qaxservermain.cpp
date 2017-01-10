@@ -239,6 +239,21 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR,
 
     if (run) {
         if (SUCCEEDED(CoInitialize(0))) {
+#ifdef Q_CC_MINGW
+            // define GlobalOptions class ID locally for MinGW, since it's missing from the distribution
+            static const CLSID CLSID_GlobalOptions =
+                { 0x0000034B, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
+#endif
+            // Disable C++ & SEH exception handling by the COM runtime for out-of-process COM controls.
+            // Done to prevent silent crashes and enable crash dump generation.
+            IGlobalOptions *globalOptions = nullptr;
+            if (SUCCEEDED(CoCreateInstance(CLSID_GlobalOptions, NULL, CLSCTX_INPROC_SERVER,
+                                           IID_IGlobalOptions, reinterpret_cast<void **>(&globalOptions)))) {
+                globalOptions->Set(COMGLB_EXCEPTION_HANDLING, COMGLB_EXCEPTION_DONOT_HANDLE_ANY);
+                globalOptions->Release();
+                globalOptions = nullptr;
+            }
+
             {
                 struct Arg {
                     int c;
