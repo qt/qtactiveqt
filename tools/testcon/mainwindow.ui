@@ -366,11 +366,19 @@
         <addaction name="LoggingMenu" />
         <addaction name="actionFreeUnusedDLLs"/>
       </widget>
+      <widget class="QMenu" name="menuHelp">
+       <property name="title">
+        <string>Help</string>
+       </property>
+       <addaction name="actionAbout_Testcon"/>
+       <addaction name="actionAbout_Qt"/>
+      </widget>
       <addaction name="FileMenu" />
       <addaction name="ContainerMenu" />
       <addaction name="ControlMenu" />
       <addaction name="ScriptMenu" />
       <addaction name="OptionsMenu" />
+      <addaction name="menuHelp" />
     </widget>
     <action name="actionFileExit" >
       <property name="objectName" >
@@ -607,6 +615,16 @@
       <property name="text" >
         <string>Free Unused DLLs</string>
       </property>
+    </action>
+    <action name="actionAbout_Testcon">
+     <property name="text">
+      <string>About Testcon</string>
+     </property>
+    </action>
+    <action name="actionAbout_Qt">
+     <property name="text">
+      <string>About Qt</string>
+     </property>
     </action>
     <actiongroup name="actionGroupLogging" >
       <action name="actionLogSignals" >

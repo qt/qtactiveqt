@@ -35,11 +35,14 @@
 
 #include <QtWidgets/QMdiArea>
 #include <QtWidgets/QMdiSubWindow>
+#include <QtWidgets/QDialogButtonBox>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QInputDialog>
 #include <QtWidgets/QMessageBox>
 #include <QtGui/QCloseEvent>
+#include <QtGui/QPixmap>
 #include <QtCore/QDebug>
+#include <QtCore/QLibraryInfo>
 #include <QtCore/qt_windows.h>
 #include <ActiveQt/QAxScriptManager>
 #include <ActiveQt/QAxSelect>
@@ -413,6 +416,50 @@ bool MainWindow::loadScript(const QString &file)
     noScriptMessage(this);
     return false;
 #endif
+}
+
+void MainWindow::on_actionAbout_Qt_triggered()
+{
+    QApplication::aboutQt();
+}
+
+class VersionDialog : public QDialog
+{
+public:
+    explicit VersionDialog(QWidget *parent = nullptr);
+};
+
+const char aboutTextFormat[] = QT_TRANSLATE_NOOP("MainWindow",
+"<h3>Testcon - An ActiveX Test Container</h3>\nVersion: %1<br/><br/>\n"
+"This application implements a generic test container for ActiveX controls."
+"<br/><br/>Copyright (C) %2 The Qt Company Ltd.");
+
+VersionDialog::VersionDialog(QWidget *parent) : QDialog(parent)
+{
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
+    setWindowTitle(tr("About Testcon"));
+    QGridLayout *layout = new QGridLayout(this);
+    QLabel *logoLabel = new QLabel;
+    logoLabel->setPixmap(QStringLiteral(":/qt-project.org/qmessagebox/images/qtlogo-64.png"));
+    const QString aboutText =
+        tr(aboutTextFormat).arg(QLatin1String(QLibraryInfo::build()),
+                                QStringLiteral("2017"));
+    QLabel *aboutLabel = new QLabel(aboutText);
+    aboutLabel->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    aboutLabel->setWordWrap(true);
+    aboutLabel->setOpenExternalLinks(true);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Close);
+    connect(buttonBox , &QDialogButtonBox::rejected, this, &QDialog::reject);
+    layout->addWidget(logoLabel, 0, 0, 1, 1);
+    layout->addWidget(aboutLabel, 0, 1, 4, 4);
+    layout->addWidget(buttonBox, 4, 2, 1, 1);
+}
+
+void MainWindow::on_actionAbout_Testcon_triggered()
+{
+    VersionDialog versionDialog(this);
+    versionDialog.exec();
 }
 
 void MainWindow::updateGUI()
