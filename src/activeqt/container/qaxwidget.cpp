@@ -759,8 +759,20 @@ void QAxClientSite::releaseAll()
 
 void QAxClientSite::deactivate()
 {
-    if (m_spInPlaceObject) m_spInPlaceObject->InPlaceDeactivate();
-    // if this assertion fails the control didn't call OnInPlaceDeactivate
+    if (!m_spInPlaceObject)
+        return;
+
+    // InPlaceDeactivate should trigger an OnInPlaceDeactivate callback
+    HRESULT hr = m_spInPlaceObject->InPlaceDeactivate();
+
+    // call fails if an out-of-process control crashes
+    if (FAILED(hr)) {
+        // Call OnInPlaceDeactivate directly to clean up
+        OnInPlaceDeactivate();
+        // schedule release of QAxClientSite references that were held by the control
+        CoDisconnectObject(static_cast<IUnknown *>(static_cast<IDispatch *>(this)), 0);
+    }
+
     Q_ASSERT(m_spInPlaceObject == 0);
 }
 

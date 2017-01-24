@@ -45,6 +45,8 @@
 
 #include <qt_windows.h>
 
+#include "qclassfactory_p.h"
+
 QT_BEGIN_NAMESPACE
 
 bool qax_ownQApp = false;
@@ -111,6 +113,7 @@ STDAPI DllCanUnloadNow()
     if (qax_hhook)
         UnhookWindowsHookEx(qax_hhook);
 
+    QClassFactory::cleanupCreatedApplication(*qApp);
     delete qApp;
     qax_ownQApp = false;
 

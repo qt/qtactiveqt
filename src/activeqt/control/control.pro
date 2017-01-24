@@ -10,6 +10,7 @@ mingw: DEFINES += QT_NEEDS_QMAIN
 HEADERS =   qaxaggregated.h \
             qaxbindable.h \
             qaxfactory.h \
+            qclassfactory_p.h \
             ../shared/qaxtypes.h
 
 SOURCES =   qaxaggregated.cpp \
@@ -21,6 +22,8 @@ SOURCES =   qaxaggregated.cpp \
             qaxserverdll.cpp \
             qaxmain.cpp \
             ../shared/qaxtypes.cpp
+
+LIBS += -lshell32
 
 MODULE = axserver
 MODULE_DEFINES = QAXSERVER

@@ -3396,7 +3396,7 @@ static bool checkHRESULT(HRESULT hres, EXCEPINFO *exc, QAxBase *that, const QStr
     case DISP_E_EXCEPTION:
         {
             bool printWarning = true;
-            unsigned short code = ushort(-1);
+            unsigned int code = uint(-1);
             QString source, desc, help;
             const QMetaObject *mo = that->metaObject();
             int exceptionSignal = mo->indexOfSignal("exception(int,QString,QString,QString)");
