@@ -906,7 +906,7 @@ HRESULT QClassFactory::CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, voi
     // Make sure a QApplication instance is present (inprocess case)
     if (!qApp) {
         qax_ownQApp = true;
-        int argc = 0;
+        static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
         new QApplication(argc, 0);
     }
     QGuiApplication::setQuitOnLastWindowClosed(false);
