@@ -33,6 +33,7 @@
 #include <QtCore/qt_windows.h>
 #include <QtCore/QMetaObject>
 #include <QtCore/QMetaProperty>
+#include <QtCore/QRegExp>
 #include <ActiveQt/QAxWidget>
 
 QT_BEGIN_NAMESPACE

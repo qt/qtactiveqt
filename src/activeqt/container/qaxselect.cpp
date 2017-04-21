@@ -47,7 +47,6 @@
 #include <QtCore/QItemSelectionModel>
 #include <QtCore/QSysInfo>
 #include <QtCore/QTextStream>
-#include <QtCore/QRegExp>
 #include <QtWidgets/QDesktopWidget>
 #include <QtWidgets/QPushButton>
 

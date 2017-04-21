@@ -56,6 +56,7 @@
 #include <qmenu.h>
 #include <qmetaobject.h>
 #include <qpixmap.h>
+#include <qregexp.h>
 #include <qstatusbar.h>
 #include <qwhatsthis.h>
 #include <ocidl.h>
