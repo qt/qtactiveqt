@@ -334,10 +334,10 @@ public:
         *ppvObject = 0;
         if (riid == IID_IUnknown)
             *ppvObject = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
-        else if (riid == IID_IDispatch || ciid == riid)
-            *ppvObject = static_cast<IDispatch *>(this);
         else if (riid == IID_IPropertyNotifySink)
             *ppvObject = static_cast<IPropertyNotifySink *>(this);
+        else if (riid == IID_IDispatch || ciid == riid)
+            *ppvObject = static_cast<IDispatch *>(this);
         else
             return E_NOINTERFACE;
 
