@@ -1400,8 +1400,13 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
     case WM_QUERYENDSESSION:
     case WM_DESTROY:
         if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            if (that->qt.widget)
+            if (that->qt.widget) {
                 that->qt.widget->hide();
+                if (QWindow *widgetWindow = that->qt.widget->windowHandle()) {
+                    if (HWND h = reinterpret_cast<HWND>(widgetWindow->winId()))
+                        ::SetParent(h, 0);
+                }
+            }
         }
         break;
 
