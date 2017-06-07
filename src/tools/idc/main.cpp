@@ -178,11 +178,13 @@ static HMODULE loadLibraryQt(const QString &input)
 {
     const wchar_t *inputC = reinterpret_cast<const wchar_t *>(input.utf16());
     // Load DLL with the folder containing the DLL temporarily added to the search path when loading dependencies
+    const UINT oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     HMODULE result =
         LoadLibraryEx(inputC, NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
     // If that fails, call with flags=0 to get LoadLibrary() behavior (search %PATH%).
     if (!result)
         result = LoadLibraryEx(inputC, NULL, 0);
+    SetErrorMode(oldErrorMode);
     return result;
 }
 

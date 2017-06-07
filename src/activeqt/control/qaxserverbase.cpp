@@ -906,7 +906,7 @@ HRESULT QClassFactory::CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, voi
     // Make sure a QApplication instance is present (inprocess case)
     if (!qApp) {
         qax_ownQApp = true;
-        int argc = 0;
+        static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
         new QApplication(argc, 0);
     }
     QGuiApplication::setQuitOnLastWindowClosed(false);
@@ -1400,8 +1400,13 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
     case WM_QUERYENDSESSION:
     case WM_DESTROY:
         if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            if (that->qt.widget)
+            if (that->qt.widget) {
                 that->qt.widget->hide();
+                if (QWindow *widgetWindow = that->qt.widget->windowHandle()) {
+                    if (HWND h = reinterpret_cast<HWND>(widgetWindow->winId()))
+                        ::SetParent(h, 0);
+                }
+            }
         }
         break;
 
