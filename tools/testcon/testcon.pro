@@ -7,6 +7,7 @@ SOURCES  = main.cpp docuwindow.cpp mainwindow.cpp invokemethod.cpp changepropert
 HEADERS  = docuwindow.h mainwindow.h invokemethod.h changeproperties.h ambientproperties.h controlinfo.h
 FORMS    = mainwindow.ui invokemethod.ui changeproperties.ui ambientproperties.ui controlinfo.ui
 RC_FILE  = testcon.rc
+RESOURCES += testcon.qrc
 
 !mingw:QMAKE_POST_LINK = midl $$shell_quote($$shell_path($$PWD/testcon.idl)) && move testcon.tlb $(TARGETDIR)
 
