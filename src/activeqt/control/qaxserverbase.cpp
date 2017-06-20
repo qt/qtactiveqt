@@ -2342,7 +2342,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 break;
             }
         }
-        // FALLTHROUGH if wFlags == DISPATCH_PROPERTYGET|DISPATCH_METHOD AND not a property.
+        Q_FALLTHROUGH(); // Fall through if wFlags == DISPATCH_PROPERTYGET|DISPATCH_METHOD AND not a property.
     case DISPATCH_METHOD:
         {
             int nameLength = 0;

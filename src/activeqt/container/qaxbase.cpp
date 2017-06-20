@@ -2555,7 +2555,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
 
                 prototype = set + prototype;
             }
-            // FALL THROUGH to support multi-variat properties
+            Q_FALLTHROUGH(); // Fall through to support multi-variate properties
         case INVOKE_FUNC: // method
             {
                 bool cloned = false;
