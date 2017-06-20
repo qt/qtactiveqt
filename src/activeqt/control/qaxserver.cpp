@@ -420,7 +420,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
                     QString extension;
                     while (mime.contains(QLatin1Char(':'))) {
                         extension = mime.mid(mime.lastIndexOf(QLatin1Char(':')) + 1);
-                        mime.chop(extension.length() - 1);
+                        mime.chop(extension.length() + 1);
                         // Prepend '.' before extension, if required.
                         extension = extension.trimmed();
                         if (extension[0] != dot)
