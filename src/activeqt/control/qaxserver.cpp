@@ -231,19 +231,35 @@ HRESULT UpdateRegistry(BOOL bRegister)
         qAxTypeLibrary->GetLibAttr(&libAttr);
     if (!libAttr)
         return SELFREG_E_TYPELIB;
-
-    if (bRegister)
-        RegisterTypeLib(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), 0);
-    else
-        UnRegisterTypeLib(libAttr->guid, libAttr->wMajorVerNum, libAttr->wMinorVerNum, libAttr->lcid, libAttr->syskind);
-
+    bool userFallback = false;
+    if (bRegister) {
+        if (RegisterTypeLib(qAxTypeLibrary,
+                            reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), 0) == TYPE_E_REGISTRYACCESS) {
+#ifndef Q_CC_MINGW
+            // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
+            RegisterTypeLibForUser(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), 0);
+            userFallback = true;
+#endif
+        }
+    } else {
+        if (UnRegisterTypeLib(libAttr->guid, libAttr->wMajorVerNum, libAttr->wMinorVerNum, libAttr->lcid,
+                              libAttr->syskind) == TYPE_E_REGISTRYACCESS) {
+#ifndef Q_CC_MINGW
+            // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
+            UnRegisterTypeLibForUser(libAttr->guid, libAttr->wMajorVerNum, libAttr->wMinorVerNum, libAttr->lcid, libAttr->syskind);
+            userFallback = true;
+#endif
+        }
+    }
+    if (userFallback)
+        qWarning("QAxServer: Falling back to registering as user for %s due to insufficient permission.", qPrintable(module));
     qAxTypeLibrary->ReleaseTLibAttr(libAttr);
 
     // check whether the user has permission to write to HKLM\Software\Classes
     // if not, use HKCU\Software\Classes
     QString keyPath(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"));
     QScopedPointer<QSettings> settings(new QSettings(keyPath, QSettings::NativeFormat));
-    if (!settings->isWritable()) {
+    if (userFallback || !settings->isWritable()) {
         keyPath = QLatin1String("HKEY_CURRENT_USER\\Software\\Classes");
         settings.reset(new QSettings(keyPath, QSettings::NativeFormat));
     }
@@ -420,7 +436,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
                     QString extension;
                     while (mime.contains(QLatin1Char(':'))) {
                         extension = mime.mid(mime.lastIndexOf(QLatin1Char(':')) + 1);
-                        mime.chop(extension.length() - 1);
+                        mime.chop(extension.length() + 1);
                         // Prepend '.' before extension, if required.
                         extension = extension.trimmed();
                         if (extension[0] != dot)
