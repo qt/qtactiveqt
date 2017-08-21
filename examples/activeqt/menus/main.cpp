@@ -41,6 +41,7 @@
 #include "menus.h"
 #include <QApplication>
 #include <QAxFactory>
+#include <QScopedPointer>
 
 QAXFACTORY_BEGIN(
     "{ce947ee3-0403-4fdc-895a-4fe779394b46}", // type library ID
@@ -48,13 +49,13 @@ QAXFACTORY_BEGIN(
     QAXCLASS(QMenus)
 QAXFACTORY_END()
 
-int main( int argc, char **argv )
+int main(int argc, char *argv[])
 {
-    QApplication a( argc, argv );
+    QApplication a(argc, argv);
+    QScopedPointer<QWidget> window;
 
-    QWidget *window = 0;
-    if ( !QAxFactory::isServer() ) {
-        window = new QMenus();
+    if (!QAxFactory::isServer()) {
+        window.reset(new QMenus());
         window->show();
     }
 

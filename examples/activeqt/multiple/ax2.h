@@ -55,38 +55,39 @@ class QAxWidget2 : public QWidget
     Q_CLASSINFO("StockEvents", "yes")
     Q_CLASSINFO("Insertable", "yes")
 
-    Q_PROPERTY( int lineWidth READ lineWidth WRITE setLineWidth )
+    Q_PROPERTY(int lineWidth READ lineWidth WRITE setLineWidth)
 public:
-    QAxWidget2(QWidget *parent = 0)
-        : QWidget(parent), line_width( 1 )
+    explicit QAxWidget2(QWidget *parent = nullptr)
+        : QWidget(parent), m_lineWidth(1)
     {
     }
 
     int lineWidth() const
     {
-        return line_width;
+        return m_lineWidth;
     }
-    void setLineWidth( int lw )
+
+    void setLineWidth(int lw)
     {
-        line_width = lw;
+        m_lineWidth = lw;
         repaint();
     }
 
 protected:
-    void paintEvent( QPaintEvent *e )
+    void paintEvent(QPaintEvent *e)
     {
-        QPainter paint( this );
+        QPainter paint(this);
         QPen pen = paint.pen();
-        pen.setWidth( line_width );
-        paint.setPen( pen );
+        pen.setWidth(m_lineWidth);
+        paint.setPen(pen);
 
         QRect r = rect();
-        r.adjust( 10, 10, -10, -10 );
-        paint.drawEllipse( r );
+        r.adjust(10, 10, -10, -10);
+        paint.drawEllipse(r);
     }
 
 private:
-    int line_width;
+    int m_lineWidth;
 };
 //! [0]
 

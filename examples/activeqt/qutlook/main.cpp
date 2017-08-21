@@ -42,12 +42,12 @@
 #include "addressview.h"
 #include <QApplication>
 
-int main(int argc, char ** argv)
+int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
     AddressView view;
-    view.setWindowTitle("Qt Example - Looking at Outlook");
+    view.setWindowTitle(QObject::tr("Qt Example - Looking at Outlook"));
     view.show();
 
     return a.exec();

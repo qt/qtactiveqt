@@ -57,7 +57,7 @@ class AddressView : public QWidget
     Q_OBJECT
 
 public:
-    AddressView(QWidget *parent = 0);
+    explicit AddressView(QWidget *parent = nullptr);
 
 protected slots:
     void addEntry();
@@ -69,9 +69,13 @@ protected slots:
 protected:
     AddressBookModel *model;
 
-    QTreeView *treeView;
-    QPushButton *add, *change;
-    QLineEdit *iFirstName, *iLastName, *iAddress, *iEMail;
+    QTreeView *m_treeView;
+    QPushButton *m_addButton;
+    QPushButton *m_changeButton;
+    QLineEdit *m_firstName;
+    QLineEdit *m_lastName;
+    QLineEdit *m_address;
+    QLineEdit *m_email;
 };
 //! [0]
 

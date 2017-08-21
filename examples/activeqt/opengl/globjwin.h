@@ -55,7 +55,7 @@ class GLObjectWindow : public QWidget
     Q_OBJECT
 
 public:
-    GLObjectWindow(QWidget *parent = 0);
+    explicit GLObjectWindow(QWidget *parent = nullptr);
 };
 
 #endif

@@ -65,19 +65,20 @@ QAXFACTORY_END()
   The main program is here.
 */
 
-int main( int argc, char **argv )
+int main(int argc, char *argv[])
 {
-    QApplication::setColorSpec( QApplication::CustomColor );
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QApplication::setColorSpec(QApplication::CustomColor);
     QApplication a(argc,argv);
 
     if (QOpenGLContext::openGLModuleType() != QOpenGLContext::LibGL) {
-        qWarning( "This system does not support OpenGL. Exiting." );
+        qWarning("This system does not support OpenGL. Exiting.");
         return -1;
     }
 
-    if ( !QAxFactory::isServer() ) {
+    if (!QAxFactory::isServer()) {
         GLObjectWindow w;
-        w.resize( 400, 350 );
+        w.resize(400, 350);
         w.show();
         return a.exec();
 //! [1] //! [2]

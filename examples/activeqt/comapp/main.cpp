@@ -41,6 +41,7 @@
 #include <QApplication>
 #include <QAxFactory>
 #include <QTabWidget>
+#include <QScopedPointer>
 #include <QTimer>
 
 class Application;
@@ -58,8 +59,8 @@ class Document : public QObject
     Q_PROPERTY(QString title READ title WRITE setTitle)
 
 public:
-    Document(DocumentList *list);
-    ~Document();
+    explicit Document(DocumentList *list);
+    virtual ~Document();
 
     Application *application() const;
 
@@ -67,7 +68,7 @@ public:
     void setTitle(const QString &title);
 
 private:
-    QWidget *page;
+    QScopedPointer <QWidget> m_page;
 };
 //! [0]
 
@@ -83,7 +84,7 @@ class DocumentList : public QObject
     Q_PROPERTY(int count READ count)
 
 public:
-    DocumentList(Application *application);
+    explicit DocumentList(Application *application);
 
     int count() const;
     Application *application() const;
@@ -93,7 +94,7 @@ public slots:
     Document *item(int index) const;
 
 private:
-    QList<Document*> list;
+    QList<Document *> m_list;
 };
 //! [1]
 
@@ -111,7 +112,7 @@ class Application : public QObject
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible)
 
 public:
-    Application(QObject *parent = 0);
+    explicit Application(QObject *parent = nullptr);
     DocumentList *documents() const;
 
     QString id() const { return objectName(); }
@@ -119,15 +120,14 @@ public:
     void setVisible(bool on);
     bool isVisible() const;
 
-    QTabWidget *window() const { return ui; }
+    QTabWidget *window() const { return m_ui.data(); }
 
 public slots:
     void quit();
 
 private:
-    DocumentList *docs;
-
-    QTabWidget *ui;
+    QScopedPointer <DocumentList> m_docs;
+    QScopedPointer <QTabWidget> m_ui;
 };
 //! [2]
 
@@ -136,35 +136,34 @@ Document::Document(DocumentList *list)
 : QObject(list)
 {
     QTabWidget *tabs = list->application()->window();
-    page = new QWidget(tabs);
-    page->setWindowTitle("Unnamed");
-    tabs->addTab(page, page->windowTitle());
+    m_page.reset(new QWidget(tabs));
+    m_page->setWindowTitle(tr("Unnamed"));
+    tabs->addTab(m_page.data(), m_page->windowTitle());
 
-    page->show();
+    m_page->show();
 }
 
 Document::~Document()
 {
-    delete page;
 }
 
 Application *Document::application() const
 {
-    return qobject_cast<DocumentList*>(parent())->application();
+    return qobject_cast<DocumentList *>(parent())->application();
 }
 
 QString Document::title() const
 {
-    return page->windowTitle();
+    return m_page->windowTitle();
 }
 
 void Document::setTitle(const QString &t)
 {
-    page->setWindowTitle(t);
+    m_page->setWindowTitle(t);
 
     QTabWidget *tabs = application()->window();
-    int index = tabs->indexOf(page);
-    tabs->setTabText(index, page->windowTitle());
+    int index = tabs->indexOf(m_page.data());
+    tabs->setTabText(index, m_page->windowTitle());
 }
 
 //! [3] //! [4]
@@ -175,64 +174,56 @@ DocumentList::DocumentList(Application *application)
 
 Application *DocumentList::application() const
 {
-    return qobject_cast<Application*>(parent());
+    return qobject_cast<Application *>(parent());
 }
 
 int DocumentList::count() const
 {
-    return list.count();
+    return m_list.count();
 }
 
 Document *DocumentList::item(int index) const
 {
-    if (index >= list.count())
-        return 0;
-
-    return list.at(index);
+    return m_list.value(index, nullptr);
 }
 
 Document *DocumentList::addDocument()
 {
     Document *document = new Document(this);
-    list.append(document);
+    m_list.append(document);
 
     return document;
 }
 
-
 //! [4] //! [5]
 Application::Application(QObject *parent)
-: QObject(parent), ui(0)
+: QObject(parent),
+  m_ui(new QTabWidget),
+  m_docs(new DocumentList(this))
 {
-    ui = new QTabWidget;
-
-    setObjectName("From QAxFactory");
-    docs = new DocumentList(this);
+    setObjectName(QStringLiteral("From QAxFactory"));
 }
 
 DocumentList *Application::documents() const
 {
-    return docs;
+    return m_docs.data();
 }
 
 void Application::setVisible(bool on)
 {
-    ui->setVisible(on);
+    m_ui->setVisible(on);
 }
 
 bool Application::isVisible() const
 {
-    return ui->isVisible();
+    return m_ui->isVisible();
 }
 
 void Application::quit()
 {
-    delete docs;
-    docs = 0;
-
-    delete ui;
-    ui = 0;
-    QTimer::singleShot(0, qApp, SLOT(quit()));
+    m_docs.reset();
+    m_ui.reset();
+    QTimer::singleShot(0 /*ms*/, qApp, &QCoreApplication::quit);
 }
 
 #include "main.moc"
@@ -246,8 +237,9 @@ QAXFACTORY_BEGIN("{edd3e836-f537-4c6f-be7d-6014c155cc7a}", "{b7da3de8-83bb-4bbe-
 QAXFACTORY_END()
 
 //! [6] //! [7]
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
 
@@ -256,12 +248,13 @@ int main(int argc, char **argv)
         return app.exec();
 
     // started by user
-    Application appobject(0);
-    appobject.setObjectName("From Application");
+    Application appobject;
+    appobject.setObjectName(QStringLiteral("From Application"));
 
     QAxFactory::startServer();
     QAxFactory::registerActiveObject(&appobject);
 
+    appobject.window()->setMinimumSize(300, 100);
     appobject.setVisible(true);
 
     QObject::connect(&app, &QGuiApplication::lastWindowClosed, &appobject, &Application::quit);

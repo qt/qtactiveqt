@@ -48,7 +48,7 @@ class WebAxWidget : public QAxWidget
 {
 public:
 
-    WebAxWidget(QWidget* parent = 0, Qt::WindowFlags f = 0)
+    WebAxWidget(QWidget *parent = nullptr, Qt::WindowFlags f = 0)
         : QAxWidget(parent, f)
     {
     }
@@ -57,8 +57,7 @@ protected:
     {
         if (message >= WM_KEYFIRST && message <= WM_KEYLAST)
             return true;
-        else
-            return QAxWidget::translateKeyEvent(message, keycode);
+        return QAxWidget::translateKeyEvent(message, keycode);
     }
 
 };

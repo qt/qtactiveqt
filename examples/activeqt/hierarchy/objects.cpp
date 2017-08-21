@@ -45,16 +45,16 @@
 /* Implementation of QParentWidget */
 //! [0]
 QParentWidget::QParentWidget(QWidget *parent)
-: QWidget(parent)
+: QWidget(parent),
+  m_vbox(new QVBoxLayout(this))
 {
-    vbox = new QVBoxLayout(this);
 }
 
 //! [0] //! [1]
 void QParentWidget::createSubWidget(const QString &name)
 {
     QSubWidget *sw = new QSubWidget(this, name);
-    vbox->addWidget(sw);
+    m_vbox->addWidget(sw);
     sw->setLabel(name);
     sw->show();
 }
@@ -62,7 +62,7 @@ void QParentWidget::createSubWidget(const QString &name)
 //! [1] //! [2]
 QSubWidget *QParentWidget::subWidget(const QString &name)
 {
-    return findChild<QSubWidget*>(name);
+    return findChild<QSubWidget *>(name);
 }
 
 //! [2]
@@ -81,27 +81,27 @@ QSubWidget::QSubWidget(QWidget *parent, const QString &name)
 
 void QSubWidget::setLabel(const QString &text)
 {
-    lbl = text;
+    m_label = text;
     setObjectName(text);
     update();
 }
 
 QString QSubWidget::label() const
 {
-    return lbl;
+    return m_label;
 }
 
 QSize QSubWidget::sizeHint() const
 {
     QFontMetrics fm(font());
-    return QSize(fm.width(lbl), fm.height());
+    return QSize(fm.width(m_label), fm.height());
 }
 
 void QSubWidget::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
     painter.setPen(palette().text().color());
-    painter.drawText(rect(), Qt::AlignCenter, lbl);
+    painter.drawText(rect(), Qt::AlignCenter, m_label);
 //! [3] //! [4]
 }
 //! [4]

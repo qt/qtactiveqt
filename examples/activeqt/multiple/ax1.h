@@ -54,18 +54,19 @@ class QAxWidget1 : public QWidget
 
     Q_PROPERTY(QColor fillColor READ fillColor WRITE setFillColor)
 public:
-    QAxWidget1(QWidget *parent = 0)
-        : QWidget(parent), fill_color(Qt::red)
+    explicit QAxWidget1(QWidget *parent = nullptr)
+        : QWidget(parent), m_fillColor(Qt::red)
     {
     }
 
     QColor fillColor() const
     {
-        return fill_color;
+        return m_fillColor;
     }
+
     void setFillColor(const QColor &fc)
     {
-        fill_color = fc;
+        m_fillColor = fc;
         repaint();
     }
 
@@ -75,11 +76,11 @@ protected:
         QPainter paint(this);
         QRect r = rect();
         r.adjust(10, 10, -10, -10);
-        paint.fillRect(r, fill_color);
+        paint.fillRect(r, m_fillColor);
     }
 
 private:
-    QColor fill_color;
+    QColor m_fillColor;
 };
 //! [0]
 

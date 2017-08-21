@@ -56,17 +56,17 @@ class QParentWidget : public QWidget
     Q_CLASSINFO("InterfaceID", "{4a30719d-d9c2-4659-9d16-67378209f822}");
     Q_CLASSINFO("EventsID", "{4a30719d-d9c2-4659-9d16-67378209f823}");
 public:
-    QParentWidget(QWidget *parent = 0);
+    explicit QParentWidget(QWidget *parent = nullptr);
 
     QSize sizeHint() const;
 
 public slots:
-    void createSubWidget( const QString &name );
+    void createSubWidget(const QString &name);
 
-    QSubWidget *subWidget( const QString &name );
+    QSubWidget *subWidget(const QString &name);
 
 private:
-    QVBoxLayout *vbox;
+    QVBoxLayout *m_vbox;
 };
 //! [0]
 
@@ -74,25 +74,25 @@ private:
 class QSubWidget : public QWidget
 {
     Q_OBJECT
-    Q_PROPERTY( QString label READ label WRITE setLabel )
+    Q_PROPERTY(QString label READ label WRITE setLabel)
 
     Q_CLASSINFO("ClassID", "{850652f4-8f71-4f69-b745-bce241ccdc30}");
     Q_CLASSINFO("InterfaceID", "{2d76cc2f-3488-417a-83d6-debff88b3c3f}");
     Q_CLASSINFO("ToSuperClass", "QSubWidget");
 
 public:
-    QSubWidget(QWidget *parent = 0, const QString &name = QString());
+    QSubWidget(QWidget *parent = nullptr, const QString &name = QString());
 
-    void setLabel( const QString &text );
+    void setLabel(const QString &text);
     QString label() const;
 
     QSize sizeHint() const;
 
 protected:
-    void paintEvent( QPaintEvent *e );
+    void paintEvent(QPaintEvent *e);
 
 private:
-    QString lbl;
+    QString m_label;
 };
 //! [1]
 

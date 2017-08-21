@@ -63,32 +63,28 @@ class GLBox : public QGLWidget,
     //! [0] //! [1]
 
 public:
-
-    GLBox( QWidget* parent, const char* name = 0 );
-    ~GLBox();
-
+    explicit GLBox(QWidget *parent, const char *name = nullptr);
+    virtual ~GLBox();
     QAxAggregated *createAggregate();
 
 public slots:
-
-    void                setXRotation( int degrees );
+    void                setXRotation(int degrees);
 //! [1]
-    void                setYRotation( int degrees );
-    void                setZRotation( int degrees );
+    void                setYRotation(int degrees);
+    void                setZRotation(int degrees);
 
 protected:
-
     void                initializeGL();
     void                paintGL();
-    void                resizeGL( int w, int h );
-
+    void                resizeGL(int w, int h);
     virtual GLuint      makeObject();
 
 private:
-
-    GLuint object;
-    GLfloat xRot, yRot, zRot, scale;
-
+    GLuint  m_object;
+    GLfloat m_xRot;
+    GLfloat m_yRot;
+    GLfloat m_zRot;
+    GLfloat m_scale;
 };
 
 #endif // GLBOX_H

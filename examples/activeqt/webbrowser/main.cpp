@@ -125,8 +125,8 @@ class MainWindow : public QMainWindow, public Ui::MainWindow
 {
     Q_OBJECT
 public:
-    MainWindow();
-    ~MainWindow();
+    explicit MainWindow();
+    virtual ~MainWindow();
 
 public slots:
     void navigate(const QString &address);
@@ -145,17 +145,17 @@ public slots:
 
 private:
     inline const QString address() const
-        { return addressEdit->text().trimmed(); }
+        { return m_addressEdit->text().trimmed(); }
     QList<Location> bookmarks() const;
     QAction *addLocation(const Location &location, QMenu *menu);
     inline void addBookmark(const Location &location)
-        { bookmarkActions << addLocation(location, BookmarksMenu); }
+        { m_bookmarkActions << addLocation(location, BookmarksMenu); }
 
-    QProgressBar *pb;
-    QLineEdit *addressEdit;
-    QList<QAction *> bookmarkActions;
-    QList<QAction *> historyActions;
-    QSignalMapper locationActionMapper;
+    QProgressBar *m_progressBar;
+    QLineEdit *m_addressEdit;
+    QList<QAction *> m_bookmarkActions;
+    QList<QAction *> m_historyActions;
+    QSignalMapper m_locationActionMapper;
 };
 //! [0] //! [1]
 
@@ -163,11 +163,12 @@ MainWindow::MainWindow()
 {
     setupUi(this);
 
-    addressEdit = new QLineEdit;
+    m_addressEdit = new QLineEdit;
     tbAddress->insertWidget(actionGo, new QLabel(tr("Address")));
-    tbAddress->insertWidget(actionGo, addressEdit);
+    tbAddress->insertWidget(actionGo, m_addressEdit);
 
-    connect(addressEdit, SIGNAL(returnPressed()), actionGo, SLOT(trigger()));
+    connect(m_addressEdit, SIGNAL(returnPressed()), actionGo, SLOT(trigger()));
+
     connect(actionBack, SIGNAL(triggered()), WebBrowser, SLOT(GoBack()));
     connect(actionForward, SIGNAL(triggered()), WebBrowser, SLOT(GoForward()));
     connect(actionStop, SIGNAL(triggered()), WebBrowser, SLOT(Stop()));
@@ -175,12 +176,12 @@ MainWindow::MainWindow()
     connect(actionHome, SIGNAL(triggered()), WebBrowser, SLOT(GoHome()));
     connect(actionSearch, SIGNAL(triggered()), WebBrowser, SLOT(GoSearch()));
 
-    pb = new QProgressBar(statusBar());
-    pb->setTextVisible(false);
-    pb->hide();
-    statusBar()->addPermanentWidget(pb);
+    m_progressBar = new QProgressBar(statusBar());
+    m_progressBar->setTextVisible(false);
+    m_progressBar->hide();
+    statusBar()->addPermanentWidget(m_progressBar);
 
-    connect(&locationActionMapper, SIGNAL(mapped(QString)), this, SLOT(navigate(QString)));
+    connect(&m_locationActionMapper, QOverload<const QString &>::of(&QSignalMapper::mapped), this, &MainWindow::navigate);
 
     QSettings settings(QSettings::IniFormat, QSettings::UserScope,
                        QCoreApplication::organizationName(), QCoreApplication::applicationName());
@@ -214,23 +215,23 @@ QAction *MainWindow::addLocation(const Location &location, QMenu *menu)
 {
     QAction *action = menu->addAction(location.title);
     action->setData(QVariant::fromValue(location));
-    locationActionMapper.setMapping(action, location.address);
-    connect(action, SIGNAL(triggered()), &locationActionMapper, SLOT(map()));
+    m_locationActionMapper.setMapping(action, location.address);
+    connect(action, &QAction::triggered, &m_locationActionMapper, QOverload<>::of(&QSignalMapper::map));
     return action;
 }
 
 QList<Location> MainWindow::bookmarks() const
 {
     QList<Location> result;
-    for (const QAction *action : qAsConst(bookmarkActions))
+    for (const QAction *action : qAsConst(m_bookmarkActions))
         result.append(locationFromAction(action));
     return result;
 }
 
 void MainWindow::on_actionAddBookmark_triggered()
 {
-    if (!historyActions.isEmpty()) {
-        const Location location = locationFromAction(historyActions.last());
+    if (!m_historyActions.isEmpty()) {
+        const Location location = locationFromAction(m_historyActions.last());
         if (!containsAddress(bookmarks(), location.address))
             addBookmark(location);
     }
@@ -241,26 +242,26 @@ void MainWindow::on_WebBrowser_TitleChange(const QString &title)
 {
     // This is called multiple times after NavigateComplete().
     // Add new URLs to history here.
-    setWindowTitle("Qt WebBrowser - " + title);
+    setWindowTitle(tr("Qt WebBrowser - ") + title);
     const QString currentAddress = address();
-    const QString historyAddress = historyActions.isEmpty() ?
-        QString() : locationFromAction(historyActions.last()).address;
-    if (currentAddress.isEmpty() || currentAddress == "about:blank" || currentAddress == historyAddress)
+    const QString historyAddress = m_historyActions.isEmpty() ?
+        QString() : locationFromAction(m_historyActions.last()).address;
+    if (currentAddress.isEmpty() || currentAddress == QStringLiteral("about:blank") || currentAddress == historyAddress)
         return;
-    historyActions << addLocation(Location(title, currentAddress), HistoryMenu);
-    if (historyActions.size() > 10)
-        delete historyActions.takeFirst();
+    m_historyActions << addLocation(Location(title, currentAddress), HistoryMenu);
+    if (m_historyActions.size() > 10)
+        delete m_historyActions.takeFirst();
 }
 
 void MainWindow::on_WebBrowser_ProgressChange(int a, int b)
 {
     if (a <= 0 || b <= 0) {
-        pb->hide();
+        m_progressBar->hide();
         return;
     }
-    pb->show();
-    pb->setRange(0, b);
-    pb->setValue(a);
+    m_progressBar->setRange(0, b);
+    m_progressBar->setValue(a);
+    m_progressBar->show();
 }
 
 void MainWindow::on_WebBrowser_CommandStateChange(int cmd, bool on)
@@ -282,10 +283,9 @@ void MainWindow::on_WebBrowser_BeforeNavigate()
 
 void MainWindow::on_WebBrowser_NavigateComplete(const QString &url)
 {
+    QSignalBlocker blocker(m_addressEdit);
     actionStop->setEnabled(false);
-    const bool blocked = addressEdit->blockSignals(true);
-    addressEdit->setText(url);
-    addressEdit->blockSignals(blocked);
+    m_addressEdit->setText(url);
 }
 
 //! [3]
@@ -305,9 +305,9 @@ void MainWindow::on_actionNewWindow_triggered()
 {
     MainWindow *window = new MainWindow;
     window->show();
-    if (addressEdit->text().isEmpty())
+    if (m_addressEdit->text().isEmpty())
         return;
-    window->addressEdit->setText(addressEdit->text());
+    window->m_addressEdit->setText(m_addressEdit->text());
     window->actionStop->setEnabled(true);
     window->on_actionGo_triggered();
 }
@@ -315,9 +315,9 @@ void MainWindow::on_actionNewWindow_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this, tr("About WebBrowser"),
-                tr("This Example has been created using the ActiveQt integration into Qt Designer.\n"
-                   "It demonstrates the use of QAxWidget to embed the Internet Explorer ActiveX\n"
-                   "control into a Qt application."));
+                       tr("This Example has been created using the ActiveQt integration into Qt Designer.\n"
+                       "It demonstrates the use of QAxWidget to embed the Internet Explorer ActiveX\n"
+                       "control into a Qt application."));
 }
 
 void MainWindow::on_actionAboutQt_triggered()
@@ -333,16 +333,15 @@ void MainWindow::on_actionFileClose_triggered()
 #include "main.moc"
 
 //! [3] //! [4]
-int main(int argc, char ** argv)
+int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-    QCoreApplication::setApplicationName("Active Qt Web Browser");
-    QCoreApplication::setOrganizationName("QtProject");
+    QCoreApplication::setApplicationName(QStringLiteral("Active Qt Web Browser"));
+    QCoreApplication::setOrganizationName(QStringLiteral("QtProject"));
     MainWindow w;
-    const QStringList arguments = QCoreApplication::arguments();
-    const QString url = arguments.size() > 1 ?
-        arguments.at(1) : QString::fromLatin1(qtUrl);
+    const auto &arguments = QCoreApplication::arguments();
+    const QString url = arguments.value(1, QString::fromLatin1(qtUrl));
     w.navigate(url);
     w.show();
     return a.exec();

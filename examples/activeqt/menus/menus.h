@@ -55,7 +55,7 @@ class QMenus : public QMainWindow
     Q_CLASSINFO("EventsID",    "{13eca64b-ee2a-4f3c-aa04-5d9d975979a7}")
 
 public:
-    QMenus(QWidget *parent = 0);
+    explicit QMenus(QWidget *parent = nullptr);
 
 public slots:
     void fileOpen();
@@ -72,7 +72,7 @@ public slots:
     void helpAboutQt();
 
 private:
-    QTextEdit *editor;
+    QTextEdit *m_editor;
 };
 
 #endif // MENUS_H
