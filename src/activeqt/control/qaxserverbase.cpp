@@ -1429,8 +1429,14 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
                             && !that->qt.widget->isVisible()) {
                             HWND h = static_cast<HWND>(QGuiApplication::platformNativeInterface()->
                                                        nativeResourceForWindow("handle", widgetWindow));
-                            if (h)
+                            if (h) {
                                 ::SetParent(h, that->m_hWnd);
+                                // Since the window is already created, we need to set the
+                                // property directly to ensure it does not believe it is
+                                // toplevel.
+                                widgetWindow->setProperty("_q_embedded_native_parent_handle",
+                                                          WId(that->m_hWnd));
+                            }
                             Qt::WindowFlags flags = widgetWindow->flags();
                             widgetWindow->setFlags(flags | Qt::FramelessWindowHint);
                         }
