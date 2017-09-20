@@ -50,8 +50,8 @@ class QAxObject : public QObject, public QAxBase
     friend class QAxEventSink;
     Q_OBJECT_FAKE
 public:
-    QObject* qObject() const Q_DECL_OVERRIDE { return static_cast<QObject *>(const_cast<QAxObject *>(this)); }
-    const char *className() const Q_DECL_OVERRIDE;
+    QObject* qObject() const override { return static_cast<QObject *>(const_cast<QAxObject *>(this)); }
+    const char *className() const override;
 
     explicit QAxObject(QObject *parent = Q_NULLPTR);
     explicit QAxObject(const QString &c, QObject *parent = Q_NULLPTR);
@@ -61,11 +61,11 @@ public:
     bool doVerb(const QString &verb);
 
 protected:
-    void connectNotify(const QMetaMethod &signal) Q_DECL_OVERRIDE;
-    const QMetaObject *fallbackMetaObject() const Q_DECL_OVERRIDE;
+    void connectNotify(const QMetaMethod &signal) override;
+    const QMetaObject *fallbackMetaObject() const override;
 
 private:
-    const QMetaObject *parentMetaObject() const Q_DECL_OVERRIDE;
+    const QMetaObject *parentMetaObject() const override;
 };
 
 template <> inline QAxObject *qobject_cast<QAxObject*>(const QObject *o)
