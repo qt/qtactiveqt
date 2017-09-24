@@ -633,7 +633,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             if (out) {
                 qWarning().noquote() << msgOutParameterNotSupported("records");
                 arg.vt = VT_EMPTY;
-                arg.byref = Q_NULLPTR;
+                arg.byref = nullptr;
                 return false;
             }
             arg.vt = VT_RECORD;
@@ -653,7 +653,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 if (out) {
                     qWarning().noquote() << msgOutParameterNotSupported(qvar.typeName());
                     arg.vt = VT_EMPTY;
-                    arg.byref = Q_NULLPTR;
+                    arg.byref = nullptr;
                     return false;
                 }
                 arg.vt = VT_DISPATCH;
@@ -669,7 +669,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 if (out) {
                     qWarning().noquote() << msgOutParameterNotSupported(qvar.typeName());
                     arg.vt = VT_EMPTY;
-                    arg.byref = Q_NULLPTR;
+                    arg.byref = nullptr;
                     return false;
                 }
                 arg.vt = VT_UNKNOWN;
@@ -681,7 +681,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 if (out) {
                     qWarning().noquote() << msgOutParameterNotSupported("subtype");
                     arg.vt = VT_EMPTY;
-                    arg.byref = Q_NULLPTR;
+                    arg.byref = nullptr;
                     return false;
                 }
                 arg.vt = VT_DISPATCH;
@@ -697,7 +697,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 if (out) {
                     qWarning().noquote() << msgOutParameterNotSupported("subtype");
                     arg.vt = VT_EMPTY;
-                    arg.byref = Q_NULLPTR;
+                    arg.byref = nullptr;
                     return false;
                 }
                 QAxObject *object = *(QAxObject**)qvar.constData();

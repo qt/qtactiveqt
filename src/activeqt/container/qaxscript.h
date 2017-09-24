@@ -149,7 +149,7 @@ class QAxScriptManager : public QObject
     Q_OBJECT
 
 public:
-    explicit QAxScriptManager(QObject *parent = Q_NULLPTR);
+    explicit QAxScriptManager(QObject *parent = nullptr);
     ~QAxScriptManager();
 
     void addObject(QAxBase *object);
@@ -212,7 +212,7 @@ inline QAxScriptEngine *QAxScript::scriptEngine() const
 
 inline bool QAxScriptEngine::isValid() const
 {
-    return engine != Q_NULLPTR;
+    return engine != nullptr;
 }
 
 inline QString QAxScriptEngine::scriptLanguage() const

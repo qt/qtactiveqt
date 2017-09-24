@@ -59,9 +59,9 @@ public:
     QObject* qObject() const override { return const_cast<QAxWidget *>(this); }
     const char *className() const override;
 
-    explicit QAxWidget(QWidget* parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
-    explicit QAxWidget(const QString &c, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
-    explicit QAxWidget(IUnknown *iface, QWidget *parent = Q_NULLPTR, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit QAxWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit QAxWidget(const QString &c, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+    explicit QAxWidget(IUnknown *iface, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     ~QAxWidget();
 
     void clear() override;
@@ -94,13 +94,13 @@ private:
 
 template <> inline QAxWidget *qobject_cast<QAxWidget*>(const QObject *o)
 {
-    void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxWidget") : Q_NULLPTR;
+    void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxWidget") : nullptr;
     return static_cast<QAxWidget *>(result);
 }
 
 template <> inline QAxWidget *qobject_cast<QAxWidget*>(QObject *o)
 {
-    void *result = o ? o->qt_metacast("QAxWidget") : Q_NULLPTR;
+    void *result = o ? o->qt_metacast("QAxWidget") : nullptr;
     return static_cast<QAxWidget *>(result);
 }
 

@@ -2487,7 +2487,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                         vt = QVariant::Int;
                     varp[0] = QVariant(vt);
                     if (varp[0].type() == QVariant::Invalid)
-                        argv[0] = Q_NULLPTR;
+                        argv[0] = nullptr;
                     else
                         argv[0] = const_cast<void*>(varp[0].constData());
                 }

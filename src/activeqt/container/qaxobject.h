@@ -53,9 +53,9 @@ public:
     QObject* qObject() const override { return static_cast<QObject *>(const_cast<QAxObject *>(this)); }
     const char *className() const override;
 
-    explicit QAxObject(QObject *parent = Q_NULLPTR);
-    explicit QAxObject(const QString &c, QObject *parent = Q_NULLPTR);
-    explicit QAxObject(IUnknown *iface, QObject *parent = Q_NULLPTR);
+    explicit QAxObject(QObject *parent = nullptr);
+    explicit QAxObject(const QString &c, QObject *parent = nullptr);
+    explicit QAxObject(IUnknown *iface, QObject *parent = nullptr);
     ~QAxObject();
 
     bool doVerb(const QString &verb);
@@ -70,13 +70,13 @@ private:
 
 template <> inline QAxObject *qobject_cast<QAxObject*>(const QObject *o)
 {
-    void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxObject") : Q_NULLPTR;
+    void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxObject") : nullptr;
     return reinterpret_cast<QAxObject*>(result);
 }
 
 template <> inline QAxObject *qobject_cast<QAxObject*>(QObject *o)
 {
-    void *result = o ? o->qt_metacast("QAxObject") : Q_NULLPTR;
+    void *result = o ? o->qt_metacast("QAxObject") : nullptr;
     return reinterpret_cast<QAxObject*>(result);
 }
 

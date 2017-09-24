@@ -149,13 +149,13 @@ inline bool QAxFactory::stopServer()
         { \
             if (key == className) \
             return &Class::staticMetaObject; \
-            return Q_NULLPTR; \
+            return nullptr; \
         } \
         QObject *createObject(const QString &key) override \
         { \
             if (key == className) \
-                return new Class(Q_NULLPTR); \
-            return Q_NULLPTR; \
+                return new Class(nullptr); \
+            return nullptr; \
         } \
         QUuid classID(const QString &key) const override \
         { \
@@ -195,10 +195,10 @@ public:
     {
         const QMetaObject &mo = T::staticMetaObject;
         if (key != QLatin1String(mo.className()))
-            return Q_NULLPTR;
+            return nullptr;
         if (!qstrcmp(mo.classInfo(mo.indexOfClassInfo("Creatable")).value(), "no"))
-            return Q_NULLPTR;
-        return new T(Q_NULLPTR);
+            return nullptr;
+        return new T(nullptr);
     }
 
     void registerClass(const QString &key, QSettings *settings) const override
@@ -243,7 +243,7 @@ private:
         QAxFactoryList() \
         : QAxFactory(IDTypeLib, IDApp) \
         { \
-            QAxFactory *factory = Q_NULLPTR; \
+            QAxFactory *factory = nullptr; \
             QStringList keys; \
             QStringList::Iterator it; \
 
@@ -273,13 +273,13 @@ private:
         QStringList featureList() const override {  return factoryKeys; } \
         const QMetaObject *metaObject(const QString&key) const override { \
             QAxFactory *f = factories[key]; \
-            return f ? f->metaObject(key) : Q_NULLPTR; \
+            return f ? f->metaObject(key) : nullptr; \
         } \
         QObject *createObject(const QString &key) override { \
             if (!creatable.value(key)) \
-                return Q_NULLPTR; \
+                return nullptr; \
             QAxFactory *f = factories[key]; \
-            return f ? f->createObject(key) : Q_NULLPTR; \
+            return f ? f->createObject(key) : nullptr; \
         } \
         QUuid classID(const QString &key) const override { \
             QAxFactory *f = factories.value(key); \

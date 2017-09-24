@@ -1434,13 +1434,13 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
     COAUTHIDENTITY authIdentity;
     authIdentity.UserLength = ULONG(user.length());
     authIdentity.User = authIdentity.UserLength
-        ? const_cast<ushort *>(user.utf16()) : Q_NULLPTR;
+        ? const_cast<ushort *>(user.utf16()) : nullptr;
     authIdentity.DomainLength = ULONG(domain.length());
     authIdentity.Domain = authIdentity.DomainLength
-        ? const_cast<ushort *>(domain.utf16()) : Q_NULLPTR;
+        ? const_cast<ushort *>(domain.utf16()) : nullptr;
     authIdentity.PasswordLength = ULONG(passwd.length());
     authIdentity.Password = authIdentity.PasswordLength
-        ? const_cast<ushort *>(passwd.utf16()) : Q_NULLPTR;
+        ? const_cast<ushort *>(passwd.utf16()) : nullptr;
     authIdentity.Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
 
     COAUTHINFO authInfo;

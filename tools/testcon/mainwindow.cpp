@@ -65,14 +65,14 @@ static const ScriptLanguage scriptLanguages[] = {
     {"Python", ".py"}
 };
 
-MainWindow *MainWindow::m_instance = Q_NULLPTR;
+MainWindow *MainWindow::m_instance = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , m_dlgInvoke(Q_NULLPTR)
-    , m_dlgProperties(Q_NULLPTR)
-    , m_dlgAmbient(Q_NULLPTR)
-    , m_scripts(Q_NULLPTR)
+    , m_dlgInvoke(nullptr)
+    , m_dlgProperties(nullptr)
+    , m_dlgAmbient(nullptr)
+    , m_scripts(nullptr)
 {
     setupUi(this);
     MainWindow::m_instance = this; // Logging handler needs the UI
@@ -99,7 +99,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    MainWindow::m_instance = Q_NULLPTR;
+    MainWindow::m_instance = nullptr;
 }
 
 QAxWidget *MainWindow::activeAxWidget() const

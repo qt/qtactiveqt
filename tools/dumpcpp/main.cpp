@@ -925,7 +925,7 @@ static QByteArrayList vTableOnlyStubsFromTypeLib(ITypeLib *typelib, const QStrin
     for (UINT i = 0, typeCount = typelib->GetTypeInfoCount(); i < typeCount; ++i) {
         TYPEKIND typekind;
         if (SUCCEEDED(typelib->GetTypeInfoType(i, &typekind)) && typekind == TKIND_INTERFACE) {
-            ITypeInfo *typeinfo = Q_NULLPTR;
+            ITypeInfo *typeinfo = nullptr;
             if (SUCCEEDED(typelib->GetTypeInfo(i, &typeinfo) && typeinfo)) {
                 result.append(nameSpacePrefix + classNameFromTypeInfo(typeinfo));
                 typeinfo->Release();
@@ -949,7 +949,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
 
     QString libName = nameSpace;
     if (libName.isEmpty()) {
-        BSTR nameString = Q_NULLPTR;
+        BSTR nameString = nullptr;
         if (SUCCEEDED(typelib->GetDocumentation(-1, &nameString, 0, 0, 0))) {
             libName = QString::fromWCharArray(nameString);
             SysFreeString(nameString);

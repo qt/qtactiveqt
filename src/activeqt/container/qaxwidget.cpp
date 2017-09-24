@@ -742,7 +742,7 @@ void QAxClientSite::releaseAll()
 {
     if (m_spOleControl)
         m_spOleControl->Release();
-    m_spOleControl = Q_NULLPTR;
+    m_spOleControl = nullptr;
     if (m_spOleObject) {
         m_spOleObject->SetClientSite(0);
         m_spOleObject->Unadvise(m_dwOleObject);
