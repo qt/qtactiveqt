@@ -413,7 +413,8 @@ private:
     IAdviseSink *m_spAdviseSink;
     QList<STATDATA> adviseSinks;
     IOleClientSite *m_spClientSite;
-    IOleInPlaceSiteWindowless *m_spInPlaceSite;
+    IOleInPlaceSite *m_spInPlaceSite;
+    IOleInPlaceSiteWindowless *m_spInPlaceSiteWindowless;
     IOleInPlaceFrame *m_spInPlaceFrame;
     ITypeInfo *m_spTypeInfo;
     IStorage *m_spStorage;
@@ -1089,6 +1090,7 @@ void QAxServerBase::init()
 
     m_spAdviseSink = 0;
     m_spClientSite = 0;
+    m_spInPlaceSiteWindowless = 0;
     m_spInPlaceSite = 0;
     m_spInPlaceFrame = 0;
     m_spTypeInfo = 0;
@@ -1145,6 +1147,9 @@ QAxServerBase::~QAxServerBase()
     m_spClientSite = 0;
     if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
     m_spInPlaceFrame = 0;
+    if (m_spInPlaceSiteWindowless)
+        m_spInPlaceSiteWindowless->Release();
+    m_spInPlaceSiteWindowless = 0;
     if (m_spInPlaceSite) m_spInPlaceSite->Release();
     m_spInPlaceSite = 0;
     if (m_spTypeInfo) m_spTypeInfo->Release();
@@ -1798,8 +1803,8 @@ void QAxServerBase::update()
     if (isInPlaceActive) {
         if (m_hWnd)
             ::InvalidateRect(m_hWnd, 0, true);
-        else if (m_spInPlaceSite)
-            m_spInPlaceSite->InvalidateRect(NULL, true);
+        else if (m_spInPlaceSiteWindowless)
+            m_spInPlaceSiteWindowless->InvalidateRect(NULL, true);
     } else if (m_spAdviseSink) {
         m_spAdviseSink->OnViewChange(DVASPECT_CONTENT, -1);
         for (int i = 0; i < adviseSinks.count(); ++i) {
@@ -3735,6 +3740,9 @@ HRESULT WINAPI QAxServerBase::Close(DWORD dwSaveOption)
             m_spClientSite->OnShowWindow(false);
     }
 
+    if (m_spInPlaceSiteWindowless)
+        m_spInPlaceSiteWindowless->Release();
+    m_spInPlaceSiteWindowless = 0;
     if (m_spInPlaceSite) m_spInPlaceSite->Release();
     m_spInPlaceSite = 0;
 
@@ -3995,6 +4003,9 @@ HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
 {
     // release all client site interfaces
     if (m_spClientSite) m_spClientSite->Release();
+    if (m_spInPlaceSiteWindowless)
+        m_spInPlaceSiteWindowless->Release();
+    m_spInPlaceSiteWindowless = 0;
     if (m_spInPlaceSite) m_spInPlaceSite->Release();
     m_spInPlaceSite = 0;
     if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
@@ -4004,6 +4015,8 @@ HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
     if (m_spClientSite) {
         m_spClientSite->AddRef();
         m_spClientSite->QueryInterface(IID_IOleInPlaceSite, reinterpret_cast<void **>(&m_spInPlaceSite));
+        m_spClientSite->QueryInterface(IID_IOleInPlaceSiteWindowless,
+                                       reinterpret_cast<void **>(&m_spInPlaceSiteWindowless));
     }
 
     return S_OK;
