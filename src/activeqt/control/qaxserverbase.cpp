@@ -1621,14 +1621,24 @@ HWND QAxServerBase::create(HWND hWndParent, RECT& rcPos)
         atom = RegisterClass(&wcTemp);
     }
     LeaveCriticalSection(&createWindowSection);
-    if (!atom  && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
-        return 0;
+    if (!atom) {
+        const DWORD errorCode = GetLastError();
+        if (errorCode != ERROR_CLASS_ALREADY_EXISTS) {
+            qErrnoWarning(int(errorCode), "%s: RegisterClass() failed", __FUNCTION__);
+            return nullptr;
+        }
+    }
 
     Q_ASSERT(!m_hWnd);
     HWND hWnd = ::CreateWindow(reinterpret_cast<const wchar_t *>(cn.utf16()), 0,
                                WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                                rcPos.left, rcPos.top, rcPos.right - rcPos.left,
                                rcPos.bottom - rcPos.top, hWndParent, 0, hInst, this);
+    // m_hWnd is assigned in reponse to WM_CREATE
+    if (!hWnd) {
+        qErrnoWarning("%s: CreateWindow() failed", __FUNCTION__);
+        return nullptr;
+    }
 
     Q_ASSERT(m_hWnd == hWnd);
 
@@ -3804,7 +3814,10 @@ HRESULT QAxServerBase::internalActivate()
                 if (!::IsChild(m_hWnd, ::GetFocus()) && qt.widget->focusPolicy() != Qt::NoFocus)
                     ::SetFocus(m_hWnd);
             } else {
-                create(hwndParent, rcPos);
+                if (!create(hwndParent, rcPos)) {
+                    qWarning("%s: Window creation failed.", __FUNCTION__);
+                    return E_FAIL;
+                }
             }
         }
 
