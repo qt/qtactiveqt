@@ -6,7 +6,17 @@
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -57,7 +67,7 @@ class AddressView : public QWidget
     Q_OBJECT
 
 public:
-    AddressView(QWidget *parent = 0);
+    explicit AddressView(QWidget *parent = nullptr);
 
 protected slots:
     void addEntry();
@@ -69,9 +79,13 @@ protected slots:
 protected:
     AddressBookModel *model;
 
-    QTreeView *treeView;
-    QPushButton *add, *change;
-    QLineEdit *iFirstName, *iLastName, *iAddress, *iEMail;
+    QTreeView *m_treeView;
+    QPushButton *m_addButton;
+    QPushButton *m_changeButton;
+    QLineEdit *m_firstName;
+    QLineEdit *m_lastName;
+    QLineEdit *m_address;
+    QLineEdit *m_email;
 };
 //! [0]
 

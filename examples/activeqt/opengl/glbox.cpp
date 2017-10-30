@@ -6,7 +6,17 @@
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -62,12 +72,12 @@
   Create a GLBox widget
 */
 
-GLBox::GLBox( QWidget* parent, const char* name )
-    : QGLWidget( parent )
+GLBox::GLBox(QWidget *parent, const char *name)
+    : QGLWidget(parent)
 {
-    xRot = yRot = zRot = 0.0;           // default object rotation
-    scale = 1.25;                       // default object scale
-    object = 0;
+    m_xRot = m_yRot = m_zRot = 0.0;       // default object rotation
+    m_scale = 1.25;                       // default object scale
+    m_object = 0;
 }
 
 
@@ -79,8 +89,8 @@ GLBox::~GLBox()
 {
     makeCurrent();
 
-    if (object)
-        glDeleteLists( object, 1 );
+    if (m_object)
+        glDeleteLists(m_object, 1);
 }
 
 
@@ -91,17 +101,17 @@ GLBox::~GLBox()
 
 void GLBox::paintGL()
 {
-    glClear( GL_COLOR_BUFFER_BIT );
+    glClear(GL_COLOR_BUFFER_BIT);
 
     glLoadIdentity();
-    glTranslatef( 0.0, 0.0, -10.0 );
-    glScalef( scale, scale, scale );
+    glTranslatef(0.0, 0.0, -10.0);
+    glScalef(m_scale, m_scale, m_scale);
 
-    glRotatef( xRot, 1.0, 0.0, 0.0 );
-    glRotatef( yRot, 0.0, 1.0, 0.0 );
-    glRotatef( zRot, 0.0, 0.0, 1.0 );
+    glRotatef(m_xRot, 1.0, 0.0, 0.0);
+    glRotatef(m_yRot, 0.0, 1.0, 0.0);
+    glRotatef(m_zRot, 0.0, 0.0, 1.0);
 
-    glCallList( object );
+    glCallList(m_object);
 }
 
 
@@ -114,8 +124,8 @@ void GLBox::initializeGL()
     initializeOpenGLFunctions();
 
     qglClearColor(Qt::black);           // Let OpenGL clear to black
-    object = makeObject();              // Generate an OpenGL display list
-    glShadeModel( GL_FLAT );
+    m_object = makeObject();            // Generate an OpenGL display list
+    glShadeModel(GL_FLAT);
 }
 
 
@@ -124,13 +134,13 @@ void GLBox::initializeGL()
   Set up the OpenGL view port, matrix mode, etc.
 */
 
-void GLBox::resizeGL( int w, int h )
+void GLBox::resizeGL(int w, int h)
 {
-    glViewport( 0, 0, (GLint)w, (GLint)h );
-    glMatrixMode( GL_PROJECTION );
+    glViewport(0, 0, (GLint)w, (GLint)h);
+    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glFrustum( -1.0, 1.0, -1.0, 1.0, 5.0, 15.0 );
-    glMatrixMode( GL_MODELVIEW );
+    glFrustum(-1.0, 1.0, -1.0, 1.0, 5.0, 15.0);
+    glMatrixMode(GL_MODELVIEW);
 }
 
 
@@ -142,33 +152,33 @@ GLuint GLBox::makeObject()
 {
     GLuint list;
 
-    list = glGenLists( 1 );
+    list = glGenLists(1);
 
-    glNewList( list, GL_COMPILE );
+    glNewList(list, GL_COMPILE);
 
     qglColor(Qt::white);                      // Shorthand for glColor3f or glIndex
 
-    glLineWidth( 2.0 );
+    glLineWidth(2.0);
 
-    glBegin( GL_LINE_LOOP );
-    glVertex3f(  1.0,  0.5, -0.4 );
-    glVertex3f(  1.0, -0.5, -0.4 );
-    glVertex3f( -1.0, -0.5, -0.4 );
-    glVertex3f( -1.0,  0.5, -0.4 );
+    glBegin(GL_LINE_LOOP);
+    glVertex3f( 1.0,  0.5, -0.4);
+    glVertex3f( 1.0, -0.5, -0.4);
+    glVertex3f(-1.0, -0.5, -0.4);
+    glVertex3f(-1.0,  0.5, -0.4);
     glEnd();
 
-    glBegin( GL_LINE_LOOP );
-    glVertex3f(  1.0,  0.5, 0.4 );
-    glVertex3f(  1.0, -0.5, 0.4 );
-    glVertex3f( -1.0, -0.5, 0.4 );
-    glVertex3f( -1.0,  0.5, 0.4 );
+    glBegin(GL_LINE_LOOP);
+    glVertex3f( 1.0,  0.5, 0.4);
+    glVertex3f( 1.0, -0.5, 0.4);
+    glVertex3f(-1.0, -0.5, 0.4);
+    glVertex3f(-1.0,  0.5, 0.4);
     glEnd();
 
-    glBegin( GL_LINES );
-    glVertex3f(  1.0,  0.5, -0.4 );   glVertex3f(  1.0,  0.5, 0.4 );
-    glVertex3f(  1.0, -0.5, -0.4 );   glVertex3f(  1.0, -0.5, 0.4 );
-    glVertex3f( -1.0, -0.5, -0.4 );   glVertex3f( -1.0, -0.5, 0.4 );
-    glVertex3f( -1.0,  0.5, -0.4 );   glVertex3f( -1.0,  0.5, 0.4 );
+    glBegin(GL_LINES);
+    glVertex3f( 1.0,  0.5, -0.4);   glVertex3f( 1.0,  0.5, 0.4);
+    glVertex3f( 1.0, -0.5, -0.4);   glVertex3f( 1.0, -0.5, 0.4);
+    glVertex3f(-1.0, -0.5, -0.4);   glVertex3f(-1.0, -0.5, 0.4);
+    glVertex3f(-1.0,  0.5, -0.4);   glVertex3f(-1.0,  0.5, 0.4);
     glEnd();
 
     glEndList();
@@ -181,9 +191,9 @@ GLuint GLBox::makeObject()
   Set the rotation angle of the object to \e degrees around the X axis.
 */
 
-void GLBox::setXRotation( int degrees )
+void GLBox::setXRotation(int degrees)
 {
-    xRot = (GLfloat)(degrees % 360);
+    m_xRot = (GLfloat)(degrees % 360);
     updateGL();
 }
 
@@ -192,9 +202,9 @@ void GLBox::setXRotation( int degrees )
   Set the rotation angle of the object to \e degrees around the Y axis.
 */
 
-void GLBox::setYRotation( int degrees )
+void GLBox::setYRotation(int degrees)
 {
-    yRot = (GLfloat)(degrees % 360);
+    m_yRot = (GLfloat)(degrees % 360);
     updateGL();
 }
 
@@ -203,9 +213,9 @@ void GLBox::setYRotation( int degrees )
   Set the rotation angle of the object to \e degrees around the Z axis.
 */
 
-void GLBox::setZRotation( int degrees )
+void GLBox::setZRotation(int degrees)
 {
-    zRot = (GLfloat)(degrees % 360);
+    m_zRot = (GLfloat)(degrees % 360);
     updateGL();
 }
 
@@ -215,12 +225,12 @@ class ObjectSafetyImpl : public QAxAggregated,
 {
 public:
 //! [1] //! [2]
-    ObjectSafetyImpl() {}
+    explicit ObjectSafetyImpl() {}
 
-    long queryInterface( const QUuid &iid, void **iface )
+    long queryInterface(const QUuid &iid, void **iface)
     {
-        *iface = 0;
-        if ( iid == IID_IObjectSafety )
+        *iface = nullptr;
+        if (iid == IID_IObjectSafety)
             *iface = (IObjectSafety*)this;
         else
             return E_NOINTERFACE;
@@ -233,13 +243,14 @@ public:
     QAXAGG_IUNKNOWN;
 
 //! [3] //! [4]
-    HRESULT WINAPI GetInterfaceSafetyOptions( REFIID riid, DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions )
+    HRESULT WINAPI GetInterfaceSafetyOptions(REFIID riid, DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions)
     {
         *pdwSupportedOptions = INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACESAFE_FOR_UNTRUSTED_CALLER;
         *pdwEnabledOptions = INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACESAFE_FOR_UNTRUSTED_CALLER;
         return S_OK;
     }
-    HRESULT WINAPI SetInterfaceSafetyOptions( REFIID riid, DWORD pdwSupportedOptions, DWORD pdwEnabledOptions )
+
+    HRESULT WINAPI SetInterfaceSafetyOptions(REFIID riid, DWORD pdwSupportedOptions, DWORD pdwEnabledOptions)
     {
         return S_OK;
     }

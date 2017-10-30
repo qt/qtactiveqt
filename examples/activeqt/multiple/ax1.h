@@ -6,7 +6,17 @@
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -54,18 +64,19 @@ class QAxWidget1 : public QWidget
 
     Q_PROPERTY(QColor fillColor READ fillColor WRITE setFillColor)
 public:
-    QAxWidget1(QWidget *parent = 0)
-        : QWidget(parent), fill_color(Qt::red)
+    explicit QAxWidget1(QWidget *parent = nullptr)
+        : QWidget(parent), m_fillColor(Qt::red)
     {
     }
 
     QColor fillColor() const
     {
-        return fill_color;
+        return m_fillColor;
     }
+
     void setFillColor(const QColor &fc)
     {
-        fill_color = fc;
+        m_fillColor = fc;
         repaint();
     }
 
@@ -75,11 +86,11 @@ protected:
         QPainter paint(this);
         QRect r = rect();
         r.adjust(10, 10, -10, -10);
-        paint.fillRect(r, fill_color);
+        paint.fillRect(r, m_fillColor);
     }
 
 private:
-    QColor fill_color;
+    QColor m_fillColor;
 };
 //! [0]
 

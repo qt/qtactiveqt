@@ -6,7 +6,17 @@
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -50,19 +60,15 @@ class Controller : public QObject
     Q_PROPERTY(qreal value READ value WRITE setValue NOTIFY valueChanged)
     Q_PROPERTY(QColor color READ color NOTIFY valueChanged)
 public:
-    explicit Controller(QWidget *parent = 0) :
-        QObject(parent),
-        m_value(0)
+    explicit Controller(QWidget *parent = nullptr) :
+        QObject(parent)
     { }
 
     qreal value() const { return m_value; }
 
     void setValue(qreal value)
     {
-        if (value < 0) value = 0;
-        if (value > 1) value = 1;
-
-        m_value = value;
+        m_value = qBound(qreal(0.0), value, qreal(1.0));
         valueChanged();
     }
 
@@ -84,7 +90,7 @@ signals:
     void valueChanged();
 
 private:
-    qreal m_value;
+    qreal m_value = 0;
 };
 
 class QSimpleQmlAx : public QMainWindow
@@ -94,7 +100,7 @@ class QSimpleQmlAx : public QMainWindow
     Q_CLASSINFO("InterfaceID", "{A5EC7D99-CEC9-4BD1-8336-ED15A579B185}")
     Q_CLASSINFO("EventsID", "{5BBFBCFD-20FD-48A3-96C7-1F6649CD1F52}")
 public:
-    explicit QSimpleQmlAx(QWidget *parent = 0) :
+    explicit QSimpleQmlAx(QWidget *parent = nullptr) :
         QMainWindow(parent)
     {
         auto ui = new QQuickWidget(this);
@@ -103,10 +109,10 @@ public:
         qmlRegisterType<Controller>("app", 1, 0, "Controller");
 
         // Initialize view
-        ui->rootContext()->setContextProperty("context", QVariant::fromValue(new Controller(this)));
+        ui->rootContext()->setContextProperty(QStringLiteral("context"), QVariant::fromValue(new Controller(this)));
         ui->setMinimumSize(200, 200);
         ui->setResizeMode(QQuickWidget::SizeRootObjectToView);
-        ui->setSource(QUrl("qrc:/main.qml"));
+        ui->setSource(QUrl(QStringLiteral("qrc:/main.qml")));
         setCentralWidget(ui);
     }
 };
