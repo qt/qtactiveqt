@@ -6,7 +6,17 @@
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -54,33 +64,34 @@ class QSimpleAX : public QWidget, public QAxBindable
     Q_CLASSINFO("ClassID",     "{DF16845C-92CD-4AAB-A982-EB9840E74669}")
     Q_CLASSINFO("InterfaceID", "{616F620B-91C5-4410-A74E-6B81C76FFFE0}")
     Q_CLASSINFO("EventsID",    "{E1816BBA-BF5D-4A31-9855-D6BA432055FF}")
-    Q_PROPERTY( QString text READ text WRITE setText )
-    Q_PROPERTY( int value READ value WRITE setValue )
+    Q_PROPERTY(QString text READ text WRITE setText)
+    Q_PROPERTY(int value READ value WRITE setValue)
 public:
-    QSimpleAX(QWidget *parent = 0)
+    explicit QSimpleAX(QWidget *parent = nullptr)
     : QWidget(parent)
     {
-        QVBoxLayout *vbox = new QVBoxLayout( this );
+        QVBoxLayout *vbox = new QVBoxLayout(this);
 
-        slider = new QSlider( Qt::Horizontal, this );
-        LCD = new QLCDNumber( 3, this );
-        edit = new QLineEdit( this );
+        m_slider = new QSlider(Qt::Horizontal, this);
+        m_LCD = new QLCDNumber(3, this);
+        m_edit = new QLineEdit(this);
 
-        connect( slider, &QAbstractSlider::valueChanged, this, &QSimpleAX::setValue );
-        connect( edit, &QLineEdit::textChanged, this, &QSimpleAX::setText );
+        connect(m_slider, &QAbstractSlider::valueChanged, this, &QSimpleAX::setValue);
+        connect(m_edit, &QLineEdit::textChanged, this, &QSimpleAX::setText);
 
-        vbox->addWidget( slider );
-        vbox->addWidget( LCD );
-        vbox->addWidget( edit );
+        vbox->addWidget(m_slider);
+        vbox->addWidget(m_LCD);
+        vbox->addWidget(m_edit);
     }
 
     QString text() const
     {
-        return edit->text();
+        return m_edit->text();
     }
+
     int value() const
     {
-        return slider->value();
+        return m_slider->value();
     }
 
 signals:
@@ -89,41 +100,42 @@ signals:
     void textChanged(const QString&);
 
 public slots:
-    void setText( const QString &string )
+    void setText(const QString &string)
     {
-        if ( !requestPropertyChange( "text" ) )
+        if (!requestPropertyChange("text"))
             return;
 
-        edit->blockSignals( true );
-        edit->setText( string );
-        edit->blockSignals( false );
+        QSignalBlocker blocker(m_edit);
+        m_edit->setText(string);
         emit someSignal();
-        emit textChanged( string );
+        emit textChanged(string);
 
-        propertyChanged( "text" );
+        propertyChanged("text");
     }
+
     void about()
     {
         QMessageBox::information( this, "About QSimpleAX", "This is a Qt widget, and this slot has been\n"
                                                           "called through ActiveX/OLE automation!" );
     }
-    void setValue( int i )
-    {
-        if ( !requestPropertyChange( "value" ) )
-            return;
-        slider->blockSignals( true );
-        slider->setValue( i );
-        slider->blockSignals( false );
-        LCD->display( i );
-        emit valueChanged( i );
 
-        propertyChanged( "value" );
+    void setValue(int i)
+    {
+        if (!requestPropertyChange("value"))
+            return;
+
+        QSignalBlocker blocker(m_slider);
+        m_slider->setValue(i);
+        m_LCD->display(i);
+        emit valueChanged(i);
+
+        propertyChanged("value");
     }
 
 private:
-    QSlider *slider;
-    QLCDNumber *LCD;
-    QLineEdit *edit;
+    QSlider *m_slider;
+    QLCDNumber *m_LCD;
+    QLineEdit *m_edit;
 };
 
 //! [0]

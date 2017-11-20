@@ -6,7 +6,17 @@
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -46,8 +56,8 @@
 class AddressBookModel : public QAbstractListModel
 {
 public:
-    AddressBookModel(AddressView *parent);
-    ~AddressBookModel();
+    explicit AddressBookModel(AddressView *parent);
+    virtual ~AddressBookModel();
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent) const;
@@ -97,13 +107,13 @@ int AddressBookModel::rowCount(const QModelIndex &) const
     return contactItems ? contactItems->Count() : 0;
 }
 
-int AddressBookModel::columnCount(const QModelIndex &parent) const
+int AddressBookModel::columnCount(const QModelIndex & /*parent*/) const
 {
     return 4;
 }
 
 //! [3] //! [4]
-QVariant AddressBookModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant AddressBookModel::headerData(int section, Qt::Orientation /*orientation*/, int role) const
 {
     if (role != Qt::DisplayRole)
         return QVariant();
@@ -182,69 +192,68 @@ void AddressBookModel::update()
     endResetModel();
 }
 
-
 //! [8] //! [9]
 AddressView::AddressView(QWidget *parent)
 : QWidget(parent)
 {
     QGridLayout *mainGrid = new QGridLayout(this);
 
-    QLabel *liFirstName = new QLabel("First &Name", this);
-    liFirstName->resize(liFirstName->sizeHint());
-    mainGrid->addWidget(liFirstName, 0, 0);
+    QLabel *firstNameLabel = new QLabel(tr("First &Name"), this);
+    firstNameLabel->resize(firstNameLabel->sizeHint());
+    mainGrid->addWidget(firstNameLabel, 0, 0);
 
-    QLabel *liLastName = new QLabel("&Last Name", this);
-    liLastName->resize(liLastName->sizeHint());
-    mainGrid->addWidget(liLastName, 0, 1);
+    QLabel *lastNameLabel = new QLabel(tr("&Last Name"), this);
+    lastNameLabel->resize(lastNameLabel->sizeHint());
+    mainGrid->addWidget(lastNameLabel, 0, 1);
 
-    QLabel *liAddress = new QLabel("Add&ress", this);
-    liAddress->resize(liAddress->sizeHint());
-    mainGrid->addWidget(liAddress, 0, 2);
+    QLabel *addressLabel = new QLabel(tr("Add&ress"), this);
+    addressLabel->resize(addressLabel->sizeHint());
+    mainGrid->addWidget(addressLabel, 0, 2);
 
-    QLabel *liEMail = new QLabel("&E-Mail", this);
-    liEMail->resize(liEMail->sizeHint());
-    mainGrid->addWidget(liEMail, 0, 3);
+    QLabel *emailLabel = new QLabel(tr("&E-Mail"), this);
+    emailLabel->resize(emailLabel->sizeHint());
+    mainGrid->addWidget(emailLabel, 0, 3);
 
-    add = new QPushButton("A&dd", this);
-    add->resize(add->sizeHint());
-    mainGrid->addWidget(add, 0, 4);
-    connect(add, SIGNAL(clicked()), this, SLOT(addEntry()));
+    m_addButton = new QPushButton(tr("A&dd"), this);
+    m_addButton->resize(m_addButton->sizeHint());
+    mainGrid->addWidget(m_addButton, 0, 4);
+    connect(m_addButton, &QPushButton::clicked, this, &AddressView::addEntry);
 
-    iFirstName = new QLineEdit(this);
-    iFirstName->resize(iFirstName->sizeHint());
-    mainGrid->addWidget(iFirstName, 1, 0);
-    liFirstName->setBuddy(iFirstName);
+    m_firstName = new QLineEdit(this);
+    m_firstName->resize(m_firstName->sizeHint());
+    mainGrid->addWidget(m_firstName, 1, 0);
+    firstNameLabel->setBuddy(m_firstName);
 
-    iLastName = new QLineEdit(this);
-    iLastName->resize(iLastName->sizeHint());
-    mainGrid->addWidget(iLastName, 1, 1);
-    liLastName->setBuddy(iLastName);
+    m_lastName = new QLineEdit(this);
+    m_lastName->resize(m_lastName->sizeHint());
+    mainGrid->addWidget(m_lastName, 1, 1);
+    lastNameLabel->setBuddy(m_lastName);
 
-    iAddress = new QLineEdit(this);
-    iAddress->resize(iAddress->sizeHint());
-    mainGrid->addWidget(iAddress, 1, 2);
-    liAddress->setBuddy(iAddress);
+    m_address = new QLineEdit(this);
+    m_address->resize(m_address->sizeHint());
+    mainGrid->addWidget(m_address, 1, 2);
+    addressLabel->setBuddy(m_address);
 
-    iEMail = new QLineEdit(this);
-    iEMail->resize(iEMail->sizeHint());
-    mainGrid->addWidget(iEMail, 1, 3);
-    liEMail->setBuddy(iEMail);
+    m_email = new QLineEdit(this);
+    m_email->resize(m_email->sizeHint());
+    mainGrid->addWidget(m_email, 1, 3);
+    emailLabel->setBuddy(m_email);
 
-    change = new QPushButton("&Change", this);
-    change->resize(change->sizeHint());
-    mainGrid->addWidget(change, 1, 4);
-    connect(change, SIGNAL(clicked()), this, SLOT(changeEntry()));
+    m_changeButton = new QPushButton(tr("&Change"), this);
+    m_changeButton->resize(m_changeButton->sizeHint());
+    mainGrid->addWidget(m_changeButton, 1, 4);
+    connect(m_changeButton, &QPushButton::clicked, this, &AddressView::changeEntry);
 
-    treeView = new QTreeView(this);
-    treeView->setSelectionMode(QTreeView::SingleSelection);
-    treeView->setRootIsDecorated(false);
+    m_treeView = new QTreeView(this);
+    m_treeView->setSelectionMode(QTreeView::SingleSelection);
+    m_treeView->setRootIsDecorated(false);
 
     model = new AddressBookModel(this);
-    treeView->setModel(model);
+    m_treeView->setModel(model);
 
-    connect(treeView->selectionModel(), SIGNAL(currentChanged(QModelIndex,QModelIndex)), this, SLOT(itemSelected(QModelIndex)));
+    connect(m_treeView->selectionModel(), &QItemSelectionModel::currentChanged, this, &AddressView::itemSelected);
 
-    mainGrid->addWidget(treeView, 2, 0, 1, 5);
+    mainGrid->addWidget(m_treeView, 2, 0, 1, 5);
 }
 
 void AddressView::updateOutlook()
@@ -254,23 +263,23 @@ void AddressView::updateOutlook()
 
 void AddressView::addEntry()
 {
-    if (!iFirstName->text().isEmpty() || !iLastName->text().isEmpty() ||
-         !iAddress->text().isEmpty() || !iEMail->text().isEmpty()) {
-        model->addItem(iFirstName->text(), iFirstName->text(), iAddress->text(), iEMail->text());
+    if (!m_firstName->text().isEmpty() || !m_lastName->text().isEmpty() ||
+         !m_address->text().isEmpty() || !m_email->text().isEmpty()) {
+        model->addItem(m_firstName->text(), m_lastName->text(), m_address->text(), m_email->text());
     }
 
-    iFirstName->setText("");
-    iLastName->setText("");
-    iAddress->setText("");
-    iEMail->setText("");
+    m_firstName->clear();
+    m_lastName->clear();
+    m_address->clear();
+    m_email->clear();
 }
 
 void AddressView::changeEntry()
 {
-    QModelIndex current = treeView->currentIndex();
+    QModelIndex current = m_treeView->currentIndex();
 
     if (current.isValid())
-        model->changeItem(current, iFirstName->text(), iLastName->text(), iAddress->text(), iEMail->text());
+        model->changeItem(current, m_firstName->text(), m_lastName->text(), m_address->text(), m_email->text());
 }
 
 //! [9] //! [10]
@@ -279,10 +288,10 @@ void AddressView::itemSelected(const QModelIndex &index)
     if (!index.isValid())
         return;
 
-    QAbstractItemModel *model = treeView->model();
-    iFirstName->setText(model->data(model->index(index.row(), 0)).toString());
-    iLastName->setText(model->data(model->index(index.row(), 1)).toString());
-    iAddress->setText(model->data(model->index(index.row(), 2)).toString());
-    iEMail->setText(model->data(model->index(index.row(), 3)).toString());
+    QAbstractItemModel *model = m_treeView->model();
+    m_firstName->setText(model->data(model->index(index.row(), 0)).toString());
+    m_lastName->setText(model->data(model->index(index.row(), 1)).toString());
+    m_address->setText(model->data(model->index(index.row(), 2)).toString());
+    m_email->setText(model->data(model->index(index.row(), 3)).toString());
 }
 //! [10]

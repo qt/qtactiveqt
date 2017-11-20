@@ -6,7 +6,17 @@
 ** This file is part of the ActiveQt framework of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -56,6 +66,7 @@
 #include <qmenu.h>
 #include <qmetaobject.h>
 #include <qpixmap.h>
+#include <qregexp.h>
 #include <qstatusbar.h>
 #include <qwhatsthis.h>
 #include <ocidl.h>
@@ -418,7 +429,8 @@ private:
     IAdviseSink *m_spAdviseSink;
     QList<STATDATA> adviseSinks;
     IOleClientSite *m_spClientSite;
-    IOleInPlaceSiteWindowless *m_spInPlaceSite;
+    IOleInPlaceSite *m_spInPlaceSite;
+    IOleInPlaceSiteWindowless *m_spInPlaceSiteWindowless;
     IOleInPlaceFrame *m_spInPlaceFrame;
     ITypeInfo *m_spTypeInfo;
     IStorage *m_spStorage;
@@ -1092,6 +1104,7 @@ void QAxServerBase::init()
 
     m_spAdviseSink = 0;
     m_spClientSite = 0;
+    m_spInPlaceSiteWindowless = 0;
     m_spInPlaceSite = 0;
     m_spInPlaceFrame = 0;
     m_spTypeInfo = 0;
@@ -1147,6 +1160,9 @@ QAxServerBase::~QAxServerBase()
     m_spClientSite = 0;
     if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
     m_spInPlaceFrame = 0;
+    if (m_spInPlaceSiteWindowless)
+        m_spInPlaceSiteWindowless->Release();
+    m_spInPlaceSiteWindowless = 0;
     if (m_spInPlaceSite) m_spInPlaceSite->Release();
     m_spInPlaceSite = 0;
     if (m_spTypeInfo) m_spTypeInfo->Release();
@@ -1428,8 +1444,14 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
                             && !that->qt.widget->isVisible()) {
                             HWND h = static_cast<HWND>(QGuiApplication::platformNativeInterface()->
                                                        nativeResourceForWindow("handle", widgetWindow));
-                            if (h)
+                            if (h) {
                                 ::SetParent(h, that->m_hWnd);
+                                // Since the window is already created, we need to set the
+                                // property directly to ensure it does not believe it is
+                                // toplevel.
+                                widgetWindow->setProperty("_q_embedded_native_parent_handle",
+                                                          WId(that->m_hWnd));
+                            }
                             Qt::WindowFlags flags = widgetWindow->flags();
                             widgetWindow->setFlags(flags | Qt::FramelessWindowHint);
                         }
@@ -1604,14 +1626,24 @@ HWND QAxServerBase::create(HWND hWndParent, RECT& rcPos)
         atom = RegisterClass(&wcTemp);
     }
     LeaveCriticalSection(&createWindowSection);
-    if (!atom  && GetLastError() != ERROR_CLASS_ALREADY_EXISTS)
-        return 0;
+    if (!atom) {
+        const DWORD errorCode = GetLastError();
+        if (errorCode != ERROR_CLASS_ALREADY_EXISTS) {
+            qErrnoWarning(int(errorCode), "%s: RegisterClass() failed", __FUNCTION__);
+            return nullptr;
+        }
+    }
 
     Q_ASSERT(!m_hWnd);
     HWND hWnd = ::CreateWindow(reinterpret_cast<const wchar_t *>(cn.utf16()), 0,
                                WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
                                rcPos.left, rcPos.top, rcPos.right - rcPos.left,
                                rcPos.bottom - rcPos.top, hWndParent, 0, hInst, this);
+    // m_hWnd is assigned in reponse to WM_CREATE
+    if (!hWnd) {
+        qErrnoWarning("%s: CreateWindow() failed", __FUNCTION__);
+        return nullptr;
+    }
 
     Q_ASSERT(m_hWnd == hWnd);
 
@@ -1795,8 +1827,8 @@ void QAxServerBase::update()
     if (isInPlaceActive) {
         if (m_hWnd)
             ::InvalidateRect(m_hWnd, 0, true);
-        else if (m_spInPlaceSite)
-            m_spInPlaceSite->InvalidateRect(NULL, true);
+        else if (m_spInPlaceSiteWindowless)
+            m_spInPlaceSiteWindowless->InvalidateRect(NULL, true);
     } else if (m_spAdviseSink) {
         m_spAdviseSink->OnViewChange(DVASPECT_CONTENT, -1);
         for (int i = 0; i < adviseSinks.count(); ++i) {
@@ -3732,6 +3764,9 @@ HRESULT WINAPI QAxServerBase::Close(DWORD dwSaveOption)
             m_spClientSite->OnShowWindow(false);
     }
 
+    if (m_spInPlaceSiteWindowless)
+        m_spInPlaceSiteWindowless->Release();
+    m_spInPlaceSiteWindowless = 0;
     if (m_spInPlaceSite) m_spInPlaceSite->Release();
     m_spInPlaceSite = 0;
 
@@ -3787,7 +3822,10 @@ HRESULT QAxServerBase::internalActivate()
                 if (!::IsChild(m_hWnd, ::GetFocus()) && qt.widget->focusPolicy() != Qt::NoFocus)
                     ::SetFocus(m_hWnd);
             } else {
-                create(hwndParent, rcPos);
+                if (!create(hwndParent, rcPos)) {
+                    qWarning("%s: Window creation failed.", __FUNCTION__);
+                    return E_FAIL;
+                }
             }
         }
 
@@ -3989,6 +4027,9 @@ HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
 {
     // release all client site interfaces
     if (m_spClientSite) m_spClientSite->Release();
+    if (m_spInPlaceSiteWindowless)
+        m_spInPlaceSiteWindowless->Release();
+    m_spInPlaceSiteWindowless = 0;
     if (m_spInPlaceSite) m_spInPlaceSite->Release();
     m_spInPlaceSite = 0;
     if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
@@ -3998,6 +4039,8 @@ HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
     if (m_spClientSite) {
         m_spClientSite->AddRef();
         m_spClientSite->QueryInterface(IID_IOleInPlaceSite, reinterpret_cast<void **>(&m_spInPlaceSite));
+        m_spClientSite->QueryInterface(IID_IOleInPlaceSiteWindowless,
+                                       reinterpret_cast<void **>(&m_spInPlaceSiteWindowless));
     }
 
     return S_OK;

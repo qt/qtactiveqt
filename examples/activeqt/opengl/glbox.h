@@ -6,7 +6,17 @@
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -63,32 +73,28 @@ class GLBox : public QGLWidget,
     //! [0] //! [1]
 
 public:
-
-    GLBox( QWidget* parent, const char* name = 0 );
-    ~GLBox();
-
+    explicit GLBox(QWidget *parent, const char *name = nullptr);
+    virtual ~GLBox();
     QAxAggregated *createAggregate();
 
 public slots:
-
-    void                setXRotation( int degrees );
+    void                setXRotation(int degrees);
 //! [1]
-    void                setYRotation( int degrees );
-    void                setZRotation( int degrees );
+    void                setYRotation(int degrees);
+    void                setZRotation(int degrees);
 
 protected:
-
     void                initializeGL();
     void                paintGL();
-    void                resizeGL( int w, int h );
-
+    void                resizeGL(int w, int h);
     virtual GLuint      makeObject();
 
 private:
-
-    GLuint object;
-    GLfloat xRot, yRot, zRot, scale;
-
+    GLuint  m_object;
+    GLfloat m_xRot;
+    GLfloat m_yRot;
+    GLfloat m_zRot;
+    GLfloat m_scale;
 };
 
 #endif // GLBOX_H

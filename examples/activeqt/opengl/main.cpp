@@ -6,7 +6,17 @@
 ** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
-** You may use this file under the terms of the BSD license as follows:
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** BSD License Usage
+** Alternatively, you may use this file under the terms of the BSD license
+** as follows:
 **
 ** "Redistribution and use in source and binary forms, with or without
 ** modification, are permitted provided that the following conditions are
@@ -65,19 +75,20 @@ QAXFACTORY_END()
   The main program is here.
 */
 
-int main( int argc, char **argv )
+int main(int argc, char *argv[])
 {
-    QApplication::setColorSpec( QApplication::CustomColor );
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QApplication::setColorSpec(QApplication::CustomColor);
     QApplication a(argc,argv);
 
     if (QOpenGLContext::openGLModuleType() != QOpenGLContext::LibGL) {
-        qWarning( "This system does not support OpenGL. Exiting." );
+        qWarning("This system does not support OpenGL. Exiting.");
         return -1;
     }
 
-    if ( !QAxFactory::isServer() ) {
+    if (!QAxFactory::isServer()) {
         GLObjectWindow w;
-        w.resize( 400, 350 );
+        w.resize(400, 350);
         w.show();
         return a.exec();
 //! [1] //! [2]
