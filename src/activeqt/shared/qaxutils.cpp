@@ -99,14 +99,8 @@ static void addRectToHrgn(HRGN &winRegion, const QRect &r)
 
 HRGN qaxHrgnFromQRegion(QRegion region, const QWindow *window)
 {
-    region = QHighDpi::toNativeLocalRegion(region, window);
     HRGN hRegion = CreateRectRgn(0, 0, 0, 0);
-    if (region.rectCount() == 1) {
-        addRectToHrgn(hRegion, region.boundingRect());
-        return hRegion;
-    }
-    const QVector<QRect> &rects = region.rects();
-    for (const QRect &rect : rects)
+    for (const QRect &rect : QHighDpi::toNativeLocalRegion(region, window))
         addRectToHrgn(hRegion, rect);
     return hRegion;
 }
