@@ -51,6 +51,11 @@
 #ifndef QAXFACTORY_H
 #define QAXFACTORY_H
 
+#include <QtCore/qcompilerdetection.h>
+
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Woverloaded-virtual") // gcc complains about QObject::metaObject() being hidden.
+
 #include <QtCore/qhash.h>
 #include <QtCore/quuid.h>
 #include <QtCore/qfactoryinterface.h>
@@ -62,8 +67,6 @@ struct IUnknown;
 struct IDispatch;
 
 QT_BEGIN_NAMESPACE
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Woverloaded-virtual") // gcc complains about QObject::metaObject() being hidden.
 
 class QWidget;
 class QSettings;
@@ -331,8 +334,8 @@ private:
     } \
     QT_END_NAMESPACE
 
-QT_WARNING_POP
 QT_END_NAMESPACE
+QT_WARNING_POP
 
 #ifndef Q_COM_METATYPE_DECLARED
 #define Q_COM_METATYPE_DECLARED
