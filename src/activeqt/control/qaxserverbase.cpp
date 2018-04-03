@@ -1040,7 +1040,7 @@ HRESULT GetClassObject(REFIID clsid, REFIID iid, void **ppUnk)
 }
 
 
-/*!
+/*! \internal
     Constructs a QAxServerBase object wrapping the QWidget \a
     classname into an ActiveX control.
 
@@ -1058,7 +1058,7 @@ QAxServerBase::QAxServerBase(const QString &classname, IUnknown *outerUnknown)
     internalCreate();
 }
 
-/*!
+/*! \internal
     Constructs a QAxServerBase object wrapping \a o.
 */
 QAxServerBase::QAxServerBase(QObject *o)
@@ -1082,7 +1082,7 @@ QAxServerBase::QAxServerBase(QObject *o)
     internalConnect();
 }
 
-/*!
+/*! \internal
     Initializes data members.
 */
 void QAxServerBase::init()
@@ -1124,7 +1124,7 @@ void QAxServerBase::init()
     points[IID_IPropertyNotifySink] = new QAxConnection(this, IID_IPropertyNotifySink);
 }
 
-/*!
+/*! \internal
     Destroys the QAxServerBase object, releasing all allocated
     resources and interfaces.
 */
@@ -1176,7 +1176,7 @@ QAxServerBase::~QAxServerBase()
     qAxUnlock();
 }
 
-/*
+/*  \internal
     Registering with OLE
 */
 void QAxServerBase::registerActiveObject(IUnknown *object)
@@ -1198,7 +1198,7 @@ void QAxServerBase::revokeActiveObject()
     ole_ref = 0;
 }
 
-/*
+/* \internal
     QueryInterface implementation.
 */
 HRESULT WINAPI QAxServerBase::QueryInterface(REFIID iid, void **iface)
@@ -1275,7 +1275,7 @@ HRESULT QAxServerBase::InternalQueryInterface(REFIID iid, void **iface)
     return S_OK;
 }
 
-/*!
+/*! \internal
     Detects and initilaizes implementation of QAxBindable in objects.
 */
 void QAxServerBase::internalBind()
@@ -1293,7 +1293,7 @@ void QAxServerBase::internalBind()
     }
 }
 
-/*!
+/*! \internal
     Connects object signals to event dispatcher.
 */
 void QAxServerBase::internalConnect()
@@ -1312,7 +1312,7 @@ void QAxServerBase::internalConnect()
     }
 }
 
-/*!
+/*! \internal
     Creates the QWidget for the classname passed to the c'tor.
 
     All signals of the widget class are connected to the internal event mapper.
@@ -1598,7 +1598,7 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
     return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-/*!
+/*! \internal
     Creates the window hosting the QWidget.
 */
 HWND QAxServerBase::create(HWND hWndParent, RECT& rcPos)
@@ -1653,7 +1653,7 @@ HWND QAxServerBase::create(HWND hWndParent, RECT& rcPos)
     return hWnd;
 }
 
-/*
+/* \internal
     Recoursively creates Win32 submenus.
 */
 HMENU QAxServerBase::createPopup(QMenu *popup, HMENU oldMenu)
@@ -1696,7 +1696,7 @@ HMENU QAxServerBase::createPopup(QMenu *popup, HMENU oldMenu)
     return popupMenu;
 }
 
-/*!
+/*! \internal
     Creates a Win32 menubar.
 */
 void QAxServerBase::createMenu(QMenuBar *menuBar)
@@ -1757,7 +1757,7 @@ void QAxServerBase::createMenu(QMenuBar *menuBar)
     }
 }
 
-/*!
+/*! \internal
     Remove the Win32 menubar.
 */
 void QAxServerBase::removeMenu()
@@ -1777,7 +1777,7 @@ void QAxServerBase::removeMenu()
 extern bool ignoreSlots(const char *test);
 extern bool ignoreProps(const char *test);
 
-/*!
+/*! \internal
     Makes sure the type info is loaded
 */
 void QAxServerBase::ensureMetaData()
@@ -1837,7 +1837,7 @@ void QAxServerBase::update()
     }
 }
 
-/*!
+/*! \internal
     Resizes the control, faking a QResizeEvent if required
 */
 void QAxServerBase::resize(const QSize &size)
@@ -1927,7 +1927,7 @@ static inline QByteArray paramType(const QByteArray &ptype, bool *out)
     return ptype;
 }
 
-/*!
+/*! \internal
     Catches all signals emitted by the Qt widget and fires the respective COM event.
 
     \a isignal is the Qt Meta Object index of the received signal, and \a _o the
@@ -2121,7 +2121,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
     return true;
 }
 
-/*!
+/*! \internal
     Call IPropertyNotifySink of connected clients.
     \a dispId specifies the ID of the property that changed.
 */
@@ -2169,7 +2169,7 @@ bool QAxServerBase::emitRequestPropertyChange(const char *property)
     return true;
 }
 
-/*!
+/*! \internal
     Call IPropertyNotifySink of connected clients.
     \a dispId specifies the ID of the property that changed.
 */

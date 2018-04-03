@@ -121,7 +121,7 @@ public:
 
     QVariant asVariant() const;
 
-#ifdef qdoc
+#ifdef Q_QDOC
 Q_SIGNALS:
     void signal(const QString&,int,void*);
     void propertyChanged(const QString&);
