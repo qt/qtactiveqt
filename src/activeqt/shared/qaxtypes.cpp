@@ -743,7 +743,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
 
 #undef QVARIANT_TO_VARIANT_POD
 
-/*!
+/*
     Returns \a arg as a QVariant of type \a type.
 
     Used by
