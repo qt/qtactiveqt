@@ -198,7 +198,7 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
             out << "        if (licenseKey.isEmpty())" << endl;
             out << "            setControl(QStringLiteral(\"" << controlID << "\"));" << endl;
             out << "        else" << endl;
-            out << "            setControl(QStringLiteral(\"" << controlID << ":\" + licenseKey));" << endl;
+            out << "            setControl(QStringLiteral(\"" << controlID << ":\") + licenseKey);" << endl;
         } else {
             out << "        setControl(QStringLiteral(\"" << controlID << "\"));" << endl;
         }
