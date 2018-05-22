@@ -50,7 +50,7 @@
 
 #ifndef QAXSELECT_H
 #define QAXSELECT_H
-#include <QtWidgets/QDialog>
+#include <QtWidgets/qdialog.h>
 
 QT_BEGIN_NAMESPACE
 

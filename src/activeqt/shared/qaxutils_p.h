@@ -63,9 +63,9 @@
 //
 
 #include <QtCore/qt_windows.h>
-#include <QtCore/QMetaType>
-#include <QtCore/QPair>
-#include <QtCore/QRect>
+#include <QtCore/qmetatype.h>
+#include <QtCore/qpair.h>
+#include <QtCore/qrect.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -52,13 +52,13 @@
 
 #include "ui_qaxselect.h"
 
-#include <QtCore/QFileInfo>
-#include <QtCore/QSortFilterProxyModel>
-#include <QtCore/QItemSelectionModel>
-#include <QtCore/QSysInfo>
-#include <QtCore/QTextStream>
-#include <QtWidgets/QDesktopWidget>
-#include <QtWidgets/QPushButton>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qsortfilterproxymodel.h>
+#include <QtCore/qitemselectionmodel.h>
+#include <QtCore/qsysinfo.h>
+#include <QtCore/qtextstream.h>
+#include <QtWidgets/qdesktopwidget.h>
+#include <QtWidgets/qpushbutton.h>
 
 #include <qt_windows.h>
 

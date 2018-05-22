@@ -52,7 +52,7 @@
 #define QAXWIDGET_H
 
 #include <ActiveQt/qaxbase.h>
-#include <QtWidgets/QWidget>
+#include <QtWidgets/qwidget.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -51,7 +51,7 @@
 #ifndef QAXBINDABLE_H
 #define QAXBINDABLE_H
 
-#include <QtWidgets/QWidget>
+#include <QtWidgets/qwidget.h>
 
 struct IUnknown;
 
