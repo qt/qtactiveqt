@@ -55,6 +55,7 @@
 
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_GCC("-Woverloaded-virtual") // gcc complains about QObject::metaObject() being hidden.
+QT_WARNING_DISABLE_CLANG("-Woverloaded-virtual") // clang-cl complains about QObject::metaObject() being hidden.
 
 #include <QtCore/qhash.h>
 #include <QtCore/quuid.h>
