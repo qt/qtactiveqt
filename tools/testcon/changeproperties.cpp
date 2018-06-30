@@ -33,7 +33,7 @@
 #include <QtCore/qt_windows.h>
 #include <QtCore/QMetaObject>
 #include <QtCore/QMetaProperty>
-#include <QtCore/QRegExp>
+#include <QtCore/QRegularExpression>
 #include <ActiveQt/QAxWidget>
 
 QT_BEGIN_NAMESPACE
@@ -143,7 +143,7 @@ void ChangeProperties::on_buttonSet_clicked()
         break;
     case QVariant::List:
         {
-            QStringList txtList = editValue->text().split(QRegExp(QLatin1String("[,;]")));
+            QStringList txtList = editValue->text().split(QRegularExpression(QLatin1String("[,;]")));
             QList<QVariant> varList;
             for (int i = 0; i < txtList.count(); ++i) {
                 QVariant svar(txtList.at(i));
