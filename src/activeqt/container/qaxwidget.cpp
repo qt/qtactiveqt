@@ -65,7 +65,7 @@
 #include <qmetaobject.h>
 #include <qpainter.h>
 #include <qpointer.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <quuid.h>
 #include <qwhatsthis.h>
 #include <qabstractnativeeventfilter.h>
@@ -1259,7 +1259,7 @@ QMenu *QAxClientSite::generatePopup(HMENU subMenu, QWidget *parent)
             popupMenu = item.hSubMenu ? generatePopup(item.hSubMenu, popup) : 0;
             int res = menuItemEntry(subMenu, i, item, text, icon);
 
-            int lastSep = text.lastIndexOf(QRegExp(QLatin1String("[\\s]")));
+            int lastSep = text.lastIndexOf(QRegularExpression(QLatin1String("[\\s]")));
             if (lastSep != -1) {
                 QString keyString = text.right(text.length() - lastSep);
                 accel = keyString;
