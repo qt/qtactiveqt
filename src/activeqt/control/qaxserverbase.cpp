@@ -66,7 +66,7 @@
 #include <qmenu.h>
 #include <qmetaobject.h>
 #include <qpixmap.h>
-#include <qregexp.h>
+#include <qregularexpression.h>
 #include <qstatusbar.h>
 #include <qwhatsthis.h>
 #include <ocidl.h>
@@ -2395,11 +2395,13 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                     }
                     // resolve overloads
                     if (index == -1) {
-                        QRegExp regexp(QLatin1String("_([0-9])\\("));
-                        if (regexp.lastIndexIn(QString::fromLatin1(name.constData())) != -1) {
-                            name.chop(regexp.cap(0).length());
+                        QRegularExpression regexp(QLatin1String("_([0-9])\\("));
+                        QRegularExpressionMatch rmatch;
+                        QString::fromLatin1(name.constData()).lastIndexOf(regexp, -1, &rmatch);
+                        if (rmatch.hasMatch()) {
+                            name.chop(rmatch.capturedLength(0));
                             name += '(';
-                            int overload = regexp.cap(1).toInt() + 1;
+                            int overload = rmatch.capturedRef(1).toInt() + 1;
 
                             for (int s = 0; s < qt.object->metaObject()->methodCount(); ++s) {
                                 QMetaMethod slot = qt.object->metaObject()->method(s);
