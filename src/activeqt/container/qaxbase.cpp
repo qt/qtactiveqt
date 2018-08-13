@@ -3023,7 +3023,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     int_data_size += classinfo_list.count() * 2;
     int_data_size += (signal_list.count() + slot_list.count()) * 5 + paramsDataSize;
     int_data_size += property_list.count() * 3;
-    int_data_size += enum_list.count() * 4;
+    int_data_size += enum_list.count() * ((QMetaObjectPrivate::OutputRevision == 8) ? 5 : 4);
     const EnumListMapConstIterator ecend = enum_list.end();
     for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it)
         int_data_size += it.value().count() * 2;
@@ -3031,7 +3031,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
 
     uint *int_data = new uint[int_data_size];
     QMetaObjectPrivate *header = reinterpret_cast<QMetaObjectPrivate *>(int_data);
-    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 7, "QtDBus meta-object generator should generate the same version as moc");
+    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 7 || QMetaObjectPrivate::OutputRevision == 8, "QtDBus meta-object generator should generate the same version as moc");
     header->revision = QMetaObjectPrivate::OutputRevision;
     header->className = 0;
     header->classInfoCount = classinfo_list.count();
@@ -3118,19 +3118,22 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     }
     Q_ASSERT(offset == header->enumeratorData);
 
-    int value_offset = offset + enum_list.count() * 4;
+    int value_offset = offset + enum_list.count() * ((QMetaObjectPrivate::OutputRevision == 8) ? 5 : 4);
     // each enum in form name\0
     for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it) {
         QByteArray name(it.key());
         int count = it.value().count();
 
-        int_data[offset++] = uint(strings.enter(name));
+        uint nameId = uint(strings.enter(name));
+        int_data[offset++] = nameId;
+        if (QMetaObjectPrivate::OutputRevision == 8)
+            int_data[offset++] = nameId;
         int_data[offset++] = 0x0; // 0x1 for flag?
         int_data[offset++] = uint(count);
         int_data[offset++] = uint(value_offset);
         value_offset += count * 2;
     }
-    Q_ASSERT(offset == header->enumeratorData + enum_list.count() * 4);
+    Q_ASSERT(offset == header->enumeratorData + enum_list.count() * ((QMetaObjectPrivate::OutputRevision == 8) ? 5 : 4));
 
     // each enum value in form key\0
     for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it) {

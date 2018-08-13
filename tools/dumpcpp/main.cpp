@@ -692,7 +692,7 @@ void generateMethodParameters(QTextStream &out, const QMetaObject *mo, const QMe
 void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray &className,
                        const QByteArray &nameSpace, ObjectCategories category)
 {
-    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 7, "dumpcpp should generate the same version as moc");
+    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 7 || QMetaObjectPrivate::OutputRevision == 8, "dumpcpp should generate the same version as moc");
 
     QByteArray qualifiedClassName;
     if (!nameSpace.isEmpty())
