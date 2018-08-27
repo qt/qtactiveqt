@@ -63,6 +63,7 @@ struct IAxServerBase;
 
 class QAxBindable
 {
+    Q_DISABLE_COPY(QAxBindable)
     friend class QAxServerBase;
 public:
     QAxBindable();

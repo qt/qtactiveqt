@@ -74,9 +74,10 @@ class QSettings;
 
 class QAxFactory : public QObject
 {
+    Q_DISABLE_COPY(QAxFactory)
 public:
     QAxFactory(const QUuid &libId, const QUuid &appId);
-    virtual ~QAxFactory();
+    ~QAxFactory() override;
 
     virtual QStringList featureList() const = 0;
 

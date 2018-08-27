@@ -62,7 +62,7 @@ class QAxSelect : public QDialog
     Q_OBJECT
 public:
     explicit QAxSelect(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags());
-    ~QAxSelect();
+    ~QAxSelect() override;
     QString clsid() const;
 
 private Q_SLOTS:

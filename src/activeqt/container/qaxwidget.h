@@ -72,7 +72,7 @@ public:
     explicit QAxWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     explicit QAxWidget(const QString &c, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     explicit QAxWidget(IUnknown *iface, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
-    ~QAxWidget();
+    ~QAxWidget() override;
 
     void clear() override;
     bool doVerb(const QString &verb);

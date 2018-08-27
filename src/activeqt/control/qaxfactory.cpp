@@ -113,9 +113,7 @@ QAxFactory::QAxFactory(const QUuid &libid, const QUuid &appid)
 /*!
     Destroys the QAxFactory object.
 */
-QAxFactory::~QAxFactory()
-{
-}
+QAxFactory::~QAxFactory() = default;
 
 /*!
     \fn QUuid QAxFactory::typeLibID() const
@@ -462,7 +460,7 @@ class ActiveObject : public QObject
 {
 public:
     ActiveObject(QObject *parent, QAxFactory *factory);
-    ~ActiveObject();
+    ~ActiveObject() override;
 
     IDispatch *wrapper;
     DWORD cookie;

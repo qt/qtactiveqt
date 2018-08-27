@@ -77,7 +77,7 @@ public:
     };
 
     QAxScriptEngine(const QString &language, QAxScript *script);
-    ~QAxScriptEngine();
+    ~QAxScriptEngine() override;
 
     bool isValid() const;
     bool hasIntrospection() const;
@@ -112,7 +112,7 @@ public:
     };
 
     QAxScript(const QString &name, QAxScriptManager *manager);
-    ~QAxScript();
+    ~QAxScript() override;
 
     bool load(const QString &code, const QString &language = QString());
 
@@ -160,7 +160,7 @@ class QAxScriptManager : public QObject
 
 public:
     explicit QAxScriptManager(QObject *parent = nullptr);
-    ~QAxScriptManager();
+    ~QAxScriptManager() override;
 
     void addObject(QAxBase *object);
     void addObject(QObject *object);

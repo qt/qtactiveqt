@@ -256,6 +256,7 @@ static const char *const type_conversion[][2] =
 
 class QAxEventSink : public IDispatch, public IPropertyNotifySink
 {
+    Q_DISABLE_COPY(QAxEventSink)
 public:
     QAxEventSink(QAxBase *com)
         : cpoint(0), ciid(IID_NULL), combase(com), ref(1)
@@ -327,11 +328,11 @@ public:
     }
 
     // IUnknown
-    unsigned long __stdcall AddRef()
+    unsigned long __stdcall AddRef() override
     {
         return InterlockedIncrement(&ref);
     }
-    unsigned long __stdcall Release()
+    unsigned long __stdcall Release() override
     {
         LONG refCount = InterlockedDecrement(&ref);
         if (!refCount)
@@ -339,7 +340,7 @@ public:
 
         return refCount;
     }
-    HRESULT __stdcall QueryInterface(REFIID riid, void **ppvObject)
+    HRESULT __stdcall QueryInterface(REFIID riid, void **ppvObject) override
     {
         *ppvObject = 0;
         if (riid == IID_IUnknown)
@@ -356,18 +357,17 @@ public:
     }
 
     // IDispatch
-    HRESULT __stdcall GetTypeInfoCount(unsigned int *) { return E_NOTIMPL; }
-    HRESULT __stdcall GetTypeInfo(UINT, LCID, ITypeInfo **) { return E_NOTIMPL; }
-    HRESULT __stdcall GetIDsOfNames(const _GUID &, wchar_t **, unsigned int, unsigned long, long *) { return E_NOTIMPL; }
+    HRESULT __stdcall GetTypeInfoCount(unsigned int *) override
+    { return E_NOTIMPL; }
+    HRESULT __stdcall GetTypeInfo(UINT, LCID, ITypeInfo **) override
+    { return E_NOTIMPL; }
+    HRESULT __stdcall GetIDsOfNames(const _GUID &, wchar_t **, unsigned int,
+                                    unsigned long, long *) override
+    { return E_NOTIMPL; }
 
-    HRESULT __stdcall Invoke(DISPID dispIdMember,
-                            REFIID riid,
-                            LCID,
-                            WORD wFlags,
-                            DISPPARAMS *pDispParams,
-                            VARIANT*,
-                            EXCEPINFO*,
-                            UINT*)
+    HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID,
+                             WORD wFlags, DISPPARAMS *pDispParams,
+                             VARIANT *, EXCEPINFO *, UINT *) override
     {
         // verify input
         if (riid != IID_NULL)
@@ -496,7 +496,7 @@ public:
     QByteArray findProperty(DISPID dispID);
 
     // IPropertyNotifySink
-    HRESULT __stdcall OnChanged(DISPID dispID)
+    HRESULT __stdcall OnChanged(DISPID dispID) override
     {
         // verify input
         if (dispID == DISPID_UNKNOWN || !combase)
@@ -551,7 +551,7 @@ public:
         }
         return S_OK;
     }
-    HRESULT __stdcall OnRequestEdit(DISPID dispID)
+    HRESULT __stdcall OnRequestEdit(DISPID dispID) override
     {
         if (dispID == DISPID_UNKNOWN || !combase)
             return S_OK;
@@ -588,6 +588,7 @@ public:
 
 class QAxBasePrivate
 {
+    Q_DISABLE_COPY(QAxBasePrivate)
 public:
     typedef QHash<QUuid, QAxEventSink*> UuidEventSinkHash;
 
@@ -1616,11 +1617,9 @@ private:
     }
 
     struct Method {
-        Method() : flags(0)
-        {}
         QByteArray type;
         QByteArray parameters;
-        int flags;
+        int flags = 0;
         QByteArray realPrototype;
     };
     QMap<QByteArray, Method> signal_list;
@@ -4268,11 +4267,12 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
 
 class QtPropertyBag : public IPropertyBag
 {
+    Q_DISABLE_COPY(QtPropertyBag)
 public:
     QtPropertyBag() :ref(0) {}
-    virtual ~QtPropertyBag() {}
+    virtual ~QtPropertyBag() = default;
 
-    HRESULT __stdcall QueryInterface(REFIID iid, LPVOID *iface)
+    HRESULT __stdcall QueryInterface(REFIID iid, LPVOID *iface) override
     {
         *iface = 0;
         if (iid == IID_IUnknown)
@@ -4285,11 +4285,11 @@ public:
         AddRef();
         return S_OK;
     }
-    unsigned long __stdcall AddRef()
+    unsigned long __stdcall AddRef() override
     {
         return InterlockedIncrement(&ref);
     }
-    unsigned long __stdcall Release()
+    unsigned long __stdcall Release() override
     {
         LONG refCount = InterlockedDecrement(&ref);
         if (!refCount)
@@ -4298,7 +4298,7 @@ public:
         return refCount;
     }
 
-    HRESULT __stdcall Read(LPCOLESTR name, VARIANT *var, IErrorLog *)
+    HRESULT __stdcall Read(LPCOLESTR name, VARIANT *var, IErrorLog *) override
     {
         if (!var)
             return E_POINTER;
@@ -4308,7 +4308,7 @@ public:
         QVariantToVARIANT(qvar, *var);
         return S_OK;
     }
-    HRESULT __stdcall Write(LPCOLESTR name, VARIANT *var)
+    HRESULT __stdcall Write(LPCOLESTR name, VARIANT *var) override
     {
         if (!var)
             return E_POINTER;
