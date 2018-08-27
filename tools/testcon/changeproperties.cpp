@@ -234,12 +234,10 @@ void ChangeProperties::updateProperties()
                 break;
             case QVariant::List:
                 {
-                    QList<QVariant> varList = var.toList();
+                    const QList<QVariant> varList = var.toList();
                     QStringList strList;
-                    for (int i = 0; i < varList.count(); ++i) {
-                        QVariant var = varList.at(i);
+                    for (const auto &var : varList)
                         strList << var.toString();
-                    }
                     item->setText(2, strList.join(QLatin1String(", ")));
                 }
                 break;

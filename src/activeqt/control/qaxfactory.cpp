@@ -288,9 +288,7 @@ bool QAxFactory::validateLicenseKey(const QString &key, const QString &licenseKe
         int lastDot = licFile.lastIndexOf(QLatin1Char('.'));
         licFile.truncate(lastDot);
         licFile += QLatin1String(".lic");
-        if (QFile::exists(licFile))
-            return true;
-        return false;
+        return QFile::exists(licFile);
     }
     return licenseKey == classKey;
 }
@@ -368,8 +366,6 @@ bool QAxFactory::isServer()
 {
     return qAxIsServer;
 }
-
-extern wchar_t qAxModuleFilename[MAX_PATH];
 
 /*!
     Returns the directory that contains the server binary.

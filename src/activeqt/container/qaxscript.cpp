@@ -1291,13 +1291,9 @@ QAxScript *QAxScriptManager::scriptForFunction(const QString &function) const
 */
 void QAxScriptManager::updateScript(QAxScript *script)
 {
-    QHash<QString, QAxBase*>::ConstIterator objectIt;
-    for (objectIt = d->objectDict.constBegin(); objectIt != d->objectDict.constEnd(); ++objectIt) {
-        QString name = objectIt.key();
-
-        QAxScriptEngine *engine = script->scriptEngine();
-        if (engine)
-            engine->addItem(name);
+    if (QAxScriptEngine *engine = script->scriptEngine()) {
+        for (auto it = d->objectDict.constBegin(), end = d->objectDict.constEnd(); it != end; ++it)
+            engine->addItem(it.key());
     }
 }
 

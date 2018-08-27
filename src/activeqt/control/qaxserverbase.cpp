@@ -229,8 +229,7 @@ public:
     void reportError(int code, const QString &src, const QString &desc,
                      const QString &context) override
     {
-        if (exception)
-            delete exception;
+        delete exception;
         exception = new QAxExceptInfo(code, src, desc, context);
     }
 
@@ -2380,9 +2379,9 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 else
                     res = S_OK;
                 break;
-            } else if (wFlags == DISPATCH_PROPERTYGET) {
-                break;
             }
+            if (wFlags == DISPATCH_PROPERTYGET)
+                break;
         }
         Q_FALLTHROUGH(); // Fall through if wFlags == DISPATCH_PROPERTYGET|DISPATCH_METHOD AND not a property.
     case DISPATCH_METHOD:
@@ -3078,7 +3077,7 @@ HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD /* mode */)
     QString mimeType = QLatin1String(mo->classInfo(mimeIndex).value());
     QStringList mimeTypes = mimeType.split(QLatin1Char(';'));
     for (int m = 0; m < mimeTypes.count(); ++m) {
-        QString mime = mimeTypes.at(m);
+        const QString &mime = mimeTypes.at(m);
         if (mime.count(QLatin1Char(':')) != 2) {
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
             continue;
@@ -3123,7 +3122,7 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
     QString mimeType = QLatin1String(mo->classInfo(mimeIndex).value());
     QStringList mimeTypes = mimeType.split(QLatin1Char(';'));
     for (int m = 0; m < mimeTypes.count(); ++m) {
-        QString mime = mimeTypes.at(m);
+        const QString &mime = mimeTypes.at(m);
         if (mime.count(QLatin1Char(':')) != 2) {
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
             continue;
@@ -3576,7 +3575,7 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
                     }
                 } else {
                     QWidget *nextFocus = curFocus;
-                    while (1) {
+                    while (true) {
                         nextFocus = nextFocus->nextInFocusChain();
                         if (nextFocus->isWindow())
                             break;

@@ -220,9 +220,9 @@ public:
     {
         const QStringList categories = getImplementedCategories();
 
-        for (QStringList::const_iterator it = categories.begin(), end = categories.end(); it != end; ++it) {
+        for (const auto &cat : categories) {
             settings->setValue(QLatin1String("/CLSID/") + classID(key).toString()
-                             + QLatin1String("/Implemented Categories/") + *it + QLatin1String("/."),
+                               + QLatin1String("/Implemented Categories/") + cat + QLatin1String("/."),
                                QString());
         }
     }
@@ -231,9 +231,9 @@ public:
     {
         const QStringList categories = getImplementedCategories();
 
-        for (QStringList::const_iterator it = categories.begin(), end = categories.end(); it != end; ++it) {
+        for (const auto &cat : categories) {
             settings->remove(QLatin1String("/CLSID/") + classID(key).toString()
-                           + QLatin1String("/Implemented Categories/") + *it + QLatin1String("/."));
+                             + QLatin1String("/Implemented Categories/") + cat + QLatin1String("/."));
         }
     }
 

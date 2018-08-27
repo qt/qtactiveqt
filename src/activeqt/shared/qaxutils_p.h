@@ -76,7 +76,7 @@ class QRegion;
 class QWindow;
 
 HWND hwndForWidget(QWidget *widget);
-HRGN qaxHrgnFromQRegion(QRegion region, const QWindow *window);
+HRGN qaxHrgnFromQRegion(const QRegion &region, const QWindow *window);
 
 typedef QPair<qreal, qreal> QDpi;
 

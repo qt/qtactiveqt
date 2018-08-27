@@ -415,7 +415,7 @@ public:
             const int argcount = int(pDispParams->cArgs);
             if (pcount > argcount)
                 return DISP_E_PARAMNOTOPTIONAL;
-            else if (pcount < argcount)
+            if (pcount < argcount)
                 return DISP_E_BADPARAMCOUNT;
 
             // setup parameters (no return values in signals)
@@ -1555,9 +1555,8 @@ private:
         Bindable                = 0x02000000
     };
 
-    static inline QList<QByteArray> paramList(const QByteArray &proto)
+    static inline QList<QByteArray> paramList(const QByteArray &prototype)
     {
-        QByteArray prototype(proto);
         QByteArray parameters = prototype.mid(prototype.indexOf('(') + 1);
         parameters.truncate(parameters.length() - 1);
         if (parameters.isEmpty() || parameters == "void")
@@ -1567,20 +1566,18 @@ private:
 
     inline QByteArray replaceType(const QByteArray &type)
     {
-        int i = 0;
-        if (type.isEmpty()) {
+        if (type.isEmpty())
             return QByteArray("void");
-        } else {
-            while (type_conversion[i][0]) {
-                int len = int(strlen(type_conversion[i][0]));
-                int ti;
-                if ((ti = type.indexOf(type_conversion[i][0])) != -1) {
-                    QByteArray rtype(type);
-                    rtype.replace(ti, len, type_conversion[i][1]);
-                    return rtype;
-                }
-                ++i;
+        int i = 0;
+        while (type_conversion[i][0]) {
+            int len = int(strlen(type_conversion[i][0]));
+            int ti;
+            if ((ti = type.indexOf(type_conversion[i][0])) != -1) {
+                QByteArray rtype(type);
+                rtype.replace(ti, len, type_conversion[i][1]);
+                return rtype;
             }
+            ++i;
         }
         return type;
     }
@@ -1591,7 +1588,7 @@ private:
 
         QList<QByteArray> plist = paramList(prototype);
         for (int p = 0; p < plist.count(); ++p) {
-            QByteArray param(plist.at(p));
+            const QByteArray &param = plist.at(p);
             if (param != replaceType(param)) {
                 int type = 0;
                 while (type_conversion[type][0]) {
@@ -4358,13 +4355,12 @@ QAxBase::PropertyBag QAxBase::propertyBag() const
         pbag->Release();
         persist->Release();
         return result;
-    } else {
-        const QMetaObject *mo = metaObject();
-        for (int p = mo->propertyOffset(); p < mo->propertyCount(); ++p) {
-            const QMetaProperty property = mo->property(p);
-            QVariant var = qObject()->property(property.name());
-            result.insert(QLatin1String(property.name()), var);
-        }
+    }
+    const QMetaObject *mo = metaObject();
+    for (int p = mo->propertyOffset(); p < mo->propertyCount(); ++p) {
+        const QMetaProperty property = mo->property(p);
+        QVariant var = qObject()->property(property.name());
+        result.insert(QLatin1String(property.name()), var);
     }
     return result;
 }
