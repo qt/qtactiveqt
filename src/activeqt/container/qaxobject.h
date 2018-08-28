@@ -66,7 +66,7 @@ public:
     explicit QAxObject(QObject *parent = nullptr);
     explicit QAxObject(const QString &c, QObject *parent = nullptr);
     explicit QAxObject(IUnknown *iface, QObject *parent = nullptr);
-    ~QAxObject();
+    ~QAxObject() override;
 
     bool doVerb(const QString &verb);
 

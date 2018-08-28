@@ -115,11 +115,12 @@ QT_BEGIN_NAMESPACE
 */
 class QAxHostWidget : public QWidget
 {
+    Q_DISABLE_COPY(QAxHostWidget)
     friend class QAxClientSite;
 public:
     Q_OBJECT_CHECK
     QAxHostWidget(QWidget *parent, QAxClientSite *ax);
-    ~QAxHostWidget();
+    ~QAxHostWidget() override;
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
@@ -173,6 +174,7 @@ class QAxClientSite : public IDispatch,
                     public IOleDocumentSite,
                     public IAdviseSink
 {
+    Q_DISABLE_COPY(QAxClientSite)
     friend class QAxHostWidget;
 public:
     QAxClientSite(QAxWidget *c);
@@ -209,22 +211,22 @@ public:
     }
 
     // IUnknown
-    unsigned long WINAPI AddRef();
-    unsigned long WINAPI Release();
+    unsigned long WINAPI AddRef() override;
+    unsigned long WINAPI Release() override;
     STDMETHOD(QueryInterface)(REFIID iid, void **iface);
 
     // IDispatch
-    HRESULT __stdcall GetTypeInfoCount(unsigned int *) { return E_NOTIMPL; }
-    HRESULT __stdcall GetTypeInfo(UINT, LCID, ITypeInfo **) { return E_NOTIMPL; }
-    HRESULT __stdcall GetIDsOfNames(const _GUID &, wchar_t **, unsigned int, unsigned long, long *) { return E_NOTIMPL; }
-    HRESULT __stdcall Invoke(DISPID dispIdMember,
-        REFIID riid,
-        LCID lcid,
-        WORD wFlags,
-        DISPPARAMS *pDispParams,
-        VARIANT *pVarResult,
-        EXCEPINFO *pExcepInfo,
-        UINT *puArgErr);
+    HRESULT __stdcall GetTypeInfoCount(unsigned int *) override
+    { return E_NOTIMPL; }
+    HRESULT __stdcall GetTypeInfo(UINT, LCID, ITypeInfo **) override
+    { return E_NOTIMPL; }
+    HRESULT __stdcall GetIDsOfNames(const _GUID &, wchar_t **, unsigned int,
+                                    unsigned long, long *) override
+    { return E_NOTIMPL; }
+    HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID lcid,
+                             WORD wFlags, DISPPARAMS *pDispParams,
+                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
+                             UINT *puArgErr) override;
     void emitAmbientPropertyChange(DISPID dispid);
 
     // IOleClientSite

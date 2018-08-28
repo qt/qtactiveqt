@@ -175,7 +175,7 @@ public:
 
     void init();
 
-    ~QAxServerBase();
+    ~QAxServerBase() override;
 
 // Window creation
     HWND create(HWND hWndParent, RECT& rcPos);
@@ -190,14 +190,14 @@ public:
     void revokeActiveObject();
 
 // IUnknown
-    unsigned long WINAPI AddRef()
+    unsigned long WINAPI AddRef() override
     {
         if (m_outerUnknown)
             return m_outerUnknown->AddRef();
 
         return InterlockedIncrement(&ref);
     }
-    unsigned long WINAPI Release()
+    unsigned long WINAPI Release() override
     {
         if (m_outerUnknown)
             return m_outerUnknown->Release();
@@ -208,28 +208,28 @@ public:
 
         return refCount;
     }
-    HRESULT WINAPI QueryInterface(REFIID iid, void **iface);
+    HRESULT WINAPI QueryInterface(REFIID iid, void **iface) override;
     HRESULT InternalQueryInterface(REFIID iid, void **iface);
 
 // IAxServerBase
-    IUnknown *clientSite() const
+    IUnknown *clientSite() const override
     {
         return m_spClientSite;
     }
 
-    void emitPropertyChanged(const char*);
-    bool emitRequestPropertyChange(const char*);
-    QObject *qObject() const
+    void emitPropertyChanged(const char *) override;
+    bool emitRequestPropertyChange(const char *) override;
+    QObject *qObject() const override
     {
         return theObject;
     }
     void ensureMetaData();
     bool isPropertyExposed(int index);
 
-    void reportError(int code, const QString &src, const QString &desc, const QString &context)
+    void reportError(int code, const QString &src, const QString &desc,
+                     const QString &context) override
     {
-        if (exception)
-            delete exception;
+        delete exception;
         exception = new QAxExceptInfo(code, src, desc, context);
     }
 
@@ -355,9 +355,9 @@ public:
     STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise);
 
 // QObject
-    int qt_metacall(QMetaObject::Call, int index, void **argv);
+    int qt_metacall(QMetaObject::Call, int index, void **argv) override;
 
-    bool eventFilter(QObject *o, QEvent *e);
+    bool eventFilter(QObject *o, QEvent *e) override;
 
     RECT rcPosRect() const
     {
@@ -448,6 +448,7 @@ static inline QAxServerBase *axServerBaseFromWindow(HWND hWnd)
 
 class QAxServerAggregate : public IUnknown
 {
+    Q_DISABLE_COPY(QAxServerAggregate)
 public:
     QAxServerAggregate(const QString &className, IUnknown *outerUnknown)
         : ref(0)
@@ -467,11 +468,11 @@ public:
     }
 
 // IUnknown
-    unsigned long WINAPI AddRef()
+    unsigned long WINAPI AddRef() override
     {
         return InterlockedIncrement(&ref);
     }
-    unsigned long WINAPI Release()
+    unsigned long WINAPI Release() override
     {
         LONG refCount = InterlockedDecrement(&ref);
         if (!refCount)
@@ -479,7 +480,7 @@ public:
 
         return refCount;
     }
-    HRESULT WINAPI QueryInterface(REFIID iid, void **iface)
+    HRESULT WINAPI QueryInterface(REFIID iid, void **iface) override
     {
         *iface = 0;
 
@@ -518,6 +519,10 @@ bool QAxFactory::createObjectWrapper(QObject *object, IDispatch **wrapper)
 class QAxSignalVec : public IEnumConnectionPoints
 {
 public:
+    QAxSignalVec &operator=(const QAxSignalVec &) = delete;
+    QAxSignalVec &operator=(QAxSignalVec &&) = delete;
+    QAxSignalVec(QAxSignalVec &&) = delete;
+
     QAxSignalVec(const QAxServerBase::ConnectionPoints &points)
         : cpoints(points.values())
         , current(0)
@@ -638,6 +643,10 @@ class QAxConnection : public IConnectionPoint,
                       public IEnumConnections
 {
 public:
+    QAxConnection &operator=(const QAxConnection &) = delete;
+    QAxConnection(QAxConnection &&) = delete;
+    QAxConnection &operator=(QAxConnection &&) = delete;
+
     typedef QList<CONNECTDATA> Connections;
     typedef QList<CONNECTDATA>::Iterator Iterator;
 
@@ -662,11 +671,11 @@ public:
         DeleteCriticalSection(&refCountSection);
     }
 
-    unsigned long __stdcall AddRef()
+    unsigned long __stdcall AddRef() override
     {
         return InterlockedIncrement(&ref);
     }
-    unsigned long __stdcall Release()
+    unsigned long __stdcall Release() override
     {
         LONG refCount = InterlockedDecrement(&ref);
         if (!refCount)
@@ -2370,9 +2379,9 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 else
                     res = S_OK;
                 break;
-            } else if (wFlags == DISPATCH_PROPERTYGET) {
-                break;
             }
+            if (wFlags == DISPATCH_PROPERTYGET)
+                break;
         }
         Q_FALLTHROUGH(); // Fall through if wFlags == DISPATCH_PROPERTYGET|DISPATCH_METHOD AND not a property.
     case DISPATCH_METHOD:
@@ -3068,7 +3077,7 @@ HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD /* mode */)
     QString mimeType = QLatin1String(mo->classInfo(mimeIndex).value());
     QStringList mimeTypes = mimeType.split(QLatin1Char(';'));
     for (int m = 0; m < mimeTypes.count(); ++m) {
-        QString mime = mimeTypes.at(m);
+        const QString &mime = mimeTypes.at(m);
         if (mime.count(QLatin1Char(':')) != 2) {
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
             continue;
@@ -3113,7 +3122,7 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
     QString mimeType = QLatin1String(mo->classInfo(mimeIndex).value());
     QStringList mimeTypes = mimeType.split(QLatin1Char(';'));
     for (int m = 0; m < mimeTypes.count(); ++m) {
-        QString mime = mimeTypes.at(m);
+        const QString &mime = mimeTypes.at(m);
         if (mime.count(QLatin1Char(':')) != 2) {
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
             continue;
@@ -3566,7 +3575,7 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
                     }
                 } else {
                     QWidget *nextFocus = curFocus;
-                    while (1) {
+                    while (true) {
                         nextFocus = nextFocus->nextInFocusChain();
                         if (nextFocus->isWindow())
                             break;

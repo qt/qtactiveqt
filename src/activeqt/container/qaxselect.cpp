@@ -71,17 +71,16 @@ enum ControlType { InProcessControl, OutOfProcessControl };
 
 struct Control
 {
-    inline Control() : type(InProcessControl), wordSize(0) {}
     int compare(const Control &rhs) const;
     QString toolTip() const;
 
-    ControlType type;
+    ControlType type = InProcessControl;
     QString clsid;
     QString name;
     QString dll;
     QString version;
     QString rootKey;
-    unsigned wordSize;
+    unsigned wordSize = 0;
 };
 
 inline int Control::compare(const Control &rhs) const
@@ -379,9 +378,7 @@ QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags flags)
 /*!
     Destroys the QAxSelect object.
 */
-QAxSelect::~QAxSelect()
-{
-}
+QAxSelect::~QAxSelect() = default;
 
 /*!
     \fn QString QAxSelect::clsid() const

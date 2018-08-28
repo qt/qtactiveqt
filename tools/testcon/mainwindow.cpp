@@ -79,10 +79,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     setObjectName(QLatin1String("MainWindow"));
 
-    const int scriptCount = int(sizeof(scriptLanguages) / sizeof(scriptLanguages[0]));
-    for (int s = 0; s < scriptCount; ++s) {
-        const QString name = QLatin1String(scriptLanguages[s].name);
-        const QString suffix = QLatin1String(scriptLanguages[s].suffix);
+    for (auto scriptLanguage : scriptLanguages) {
+        const QString name = QLatin1String(scriptLanguage.name);
+        const QString suffix = QLatin1String(scriptLanguage.suffix);
         if (!QAxScriptManager::registerEngine(name, suffix))
             qWarning().noquote().nospace() << "Failed to register \"" << name
                 << "\" (*" << suffix << ") with QAxScriptManager.";

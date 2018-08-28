@@ -97,26 +97,28 @@ public:
 
 class QAxScriptSite : public IActiveScriptSite, public IActiveScriptSiteWindow
 {
+    Q_DISABLE_COPY(QAxScriptSite)
 public:
     QAxScriptSite(QAxScript *script);
-    virtual ~QAxScriptSite() {}
+    virtual ~QAxScriptSite() = default;
 
-    ULONG WINAPI AddRef();
-    ULONG WINAPI Release();
-    HRESULT WINAPI QueryInterface(REFIID iid, void **ppvObject);
+    ULONG WINAPI AddRef() override;
+    ULONG WINAPI Release() override;
+    HRESULT WINAPI QueryInterface(REFIID iid, void **ppvObject) override;
 
-    HRESULT WINAPI GetLCID(LCID *plcid);
-    HRESULT WINAPI GetItemInfo(LPCOLESTR pstrName, DWORD dwReturnMask, IUnknown **ppiunkItem, ITypeInfo **ppti);
-    HRESULT WINAPI GetDocVersionString(BSTR *pbstrVersion);
+    HRESULT WINAPI GetLCID(LCID *plcid) override;
+    HRESULT WINAPI GetItemInfo(LPCOLESTR pstrName, DWORD dwReturnMask,
+                               IUnknown **ppiunkItem, ITypeInfo **ppti) override;
+    HRESULT WINAPI GetDocVersionString(BSTR *pbstrVersion) override;
 
-    HRESULT WINAPI OnScriptTerminate(const VARIANT *pvarResult, const EXCEPINFO *pexcepinfo);
-    HRESULT WINAPI OnStateChange(SCRIPTSTATE ssScriptState);
-    HRESULT WINAPI OnScriptError(IActiveScriptError *pscripterror);
-    HRESULT WINAPI OnEnterScript();
-    HRESULT WINAPI OnLeaveScript();
+    HRESULT WINAPI OnScriptTerminate(const VARIANT *pvarResult, const EXCEPINFO *pexcepinfo) override;
+    HRESULT WINAPI OnStateChange(SCRIPTSTATE ssScriptState) override;
+    HRESULT WINAPI OnScriptError(IActiveScriptError *pscripterror) override;
+    HRESULT WINAPI OnEnterScript() override;
+    HRESULT WINAPI OnLeaveScript() override;
 
-    HRESULT WINAPI GetWindow(HWND *phwnd);
-    HRESULT WINAPI EnableModeless(BOOL fEnable);
+    HRESULT WINAPI GetWindow(HWND *phwnd) override;
+    HRESULT WINAPI EnableModeless(BOOL fEnable) override;
 
 protected:
     QWidget *window() const;
@@ -1289,13 +1291,9 @@ QAxScript *QAxScriptManager::scriptForFunction(const QString &function) const
 */
 void QAxScriptManager::updateScript(QAxScript *script)
 {
-    QHash<QString, QAxBase*>::ConstIterator objectIt;
-    for (objectIt = d->objectDict.constBegin(); objectIt != d->objectDict.constEnd(); ++objectIt) {
-        QString name = objectIt.key();
-
-        QAxScriptEngine *engine = script->scriptEngine();
-        if (engine)
-            engine->addItem(name);
+    if (QAxScriptEngine *engine = script->scriptEngine()) {
+        for (auto it = d->objectDict.constBegin(), end = d->objectDict.constEnd(); it != end; ++it)
+            engine->addItem(it.key());
     }
 }
 
