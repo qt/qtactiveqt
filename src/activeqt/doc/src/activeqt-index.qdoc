@@ -76,7 +76,7 @@
     To build the static libraries, change into the \c activeqt directory
     (usually \c QTDIR/src/activeqt), and run \c qmake and your make
     tool in both the \c container and the \c control subdirectory.
-    The libraries \c qaxcontainer.lib and \c qaxserver.lib will be linked
+    The \c qaxcontainer and \c qaxserver libraries will be linked
     into \c QTDIR/lib.
 
     If you are using a shared configuration of Qt enter the \c plugin
