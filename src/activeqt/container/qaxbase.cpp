@@ -3682,7 +3682,10 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     // get return value
     if (hres == S_OK && ret.vt != VT_EMPTY) {
         QVariantToVoidStar(VARIANTToQVariant(ret, slot.typeName()), v[0], slot.typeName());
-        clearVARIANT(&ret);
+        if (ret.vt != VT_DISPATCH)
+            clearVARIANT(&ret);
+        else
+            VariantInit(&ret);
     }
 
     // update out parameters
