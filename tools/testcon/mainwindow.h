@@ -29,6 +29,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <ActiveQt/QAxSelect>
+
 #include "ui_mainwindow.h"
 
 QT_BEGIN_NAMESPACE
@@ -54,7 +56,7 @@ public:
 
     static MainWindow *instance() { return m_instance; }
 
-    bool addControlFromClsid(const QString &clsid);
+    bool addControlFromClsid(const QString &clsid, QAxSelect::SandboxingLevel sandboxing);
     bool addControlFromFile(const QString &fileName);
     bool loadScript(const QString &file);
 

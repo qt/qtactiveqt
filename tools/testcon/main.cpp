@@ -98,7 +98,7 @@ int main( int argc, char **argv )
     const QStringList positionalArguments = parser.positionalArguments();
     for (const QString &a : positionalArguments) {
         if (a.startsWith(QLatin1Char('{')) && a.endsWith(QLatin1Char('}')))
-            mw.addControlFromClsid(a);
+            mw.addControlFromClsid(a, QAxSelect::SandboxingNone);
         else
             mw.addControlFromFile(a);
     }
