@@ -1090,7 +1090,8 @@ unsigned long QAxBase::classContext() const
     supporting both alternatives. Also, it can be used to modify/reduce control
     permissions when used with CLSCTX_ENABLE_CLOAKING and an impersonation token.
 
-    Note that this function should be called before setControl().
+    Note that this function must be called before setControl() to have any
+    effect.
 */
 void QAxBase::setClassContext(unsigned long classContext)
 {
