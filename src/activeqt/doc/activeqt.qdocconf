@@ -11,8 +11,7 @@ moduleheader            = ActiveQtDoc
 includepaths            = -I . \
                           -I ../container \
                           -I ../control \
-                          -I ../shared \
-                          -I $QT_INSTALL_HEADERS
+                          -I ../shared
 
 qhp.ActiveQt.file         = activeqt.qhp
 qhp.ActiveQt.namespace           = org.qt-project.activeqt.$QT_VERSION_TAG
