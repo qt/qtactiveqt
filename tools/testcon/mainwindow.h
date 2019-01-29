@@ -50,6 +50,11 @@ QT_USE_NAMESPACE
 class MainWindow : public QMainWindow, public Ui::MainWindow
 {
     Q_OBJECT
+
+    Q_CLASSINFO("ClassID", "{5f5ce700-48a8-47b1-9b06-3b7f79e41d7c}")
+    Q_CLASSINFO("InterfaceID", "{3fc86f5f-8b15-4428-8f6b-482bae91f1ae}")
+    Q_CLASSINFO("EventsID", "{02a268cd-24b4-4fd9-88ff-b01b683ef39d}")
+
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
