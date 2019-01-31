@@ -506,6 +506,7 @@ bool QAxFactory::registerActiveObject(QObject *object)
 /*!
     \macro QAXFACTORY_DEFAULT(Class, ClassID, InterfaceID, EventID, LibID, AppID)
     \relates QAxFactory
+    \deprecated
 
     This macro can be used to export a single QObject subclass \a Class a this
     COM server through an implicitly declared QAxFactory implementation.
@@ -519,7 +520,8 @@ bool QAxFactory::registerActiveObject(QObject *object)
 
     \snippet src_activeqt_control_qaxfactory.cpp 7
 
-    \sa QAXFACTORY_EXPORT(), QAXFACTORY_BEGIN()
+    \note This class has been deprecated in favor of QAXFACTORY_BEGIN().
+    \sa QAXFACTORY_EXPORT()
 */
 
 /*!
