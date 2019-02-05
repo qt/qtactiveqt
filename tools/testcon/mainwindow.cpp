@@ -394,7 +394,7 @@ void MainWindow::on_actionControlPixmap_triggered()
         return;
 
     QLabel *label = new QLabel;
-    label->setPixmap(QPixmap::grabWidget(container));
+    label->setPixmap(container->grab());
     QMdiSubWindow *subWindow = m_mdiArea->addSubWindow(label);
     subWindow->setWindowTitle(tr("%1 - Pixmap").arg(container->windowTitle()));
     label->show();

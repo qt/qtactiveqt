@@ -287,7 +287,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
         if (qAxOutProcServer)
             settings->setValue(QLatin1String("/AppID/") + module + QLatin1String(".EXE/AppID"), appId);
         else
-            settings->setValue(QLatin1String("/AppID/") + appId + QLatin1String("/DllSurrogate"), "");
+            settings->setValue(QLatin1String("/AppID/") + appId + QLatin1String("/DllSurrogate"), QString());
 
         const QStringList keys = qAxFactory()->featureList();
         for (const QString &classNameIn : keys) {
