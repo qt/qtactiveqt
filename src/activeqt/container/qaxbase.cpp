@@ -60,6 +60,7 @@
 #include <qhash.h>
 #include <qset.h>
 #include <qpair.h>
+#include <qbitarray.h>
 #include <qmetaobject.h>
 #include <qsettings.h>
 #include <qdebug.h>
@@ -3979,9 +3980,11 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
             disptype = DISPATCH_PROPERTYGET;
         }
     }
+    QBitArray outArgs;
     if (varc) {
         varc = qMin(varc, d->metaobj->numParameter(normFunction));
         arg = varc <= QAX_NUM_PARAMS ? staticarg : new VARIANT[varc];
+        outArgs = QBitArray(varc);
         for (int i = 0; i < varc; ++i) {
             QVariant var(vars.at(i));
             VariantInit(arg + (varc - i - 1));
@@ -4004,6 +4007,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
 
             if (arg[varc - i - 1].vt == VT_EMPTY)
                 QVariantToVARIANT(var, arg[varc - i - 1], paramType, out);
+            outArgs[i] = out;
         }
     }
 
@@ -4036,7 +4040,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
 
     if (disptype == (DISPATCH_METHOD|DISPATCH_PROPERTYGET) && hres == S_OK && varc) {
         for (int i = 0; i < varc; ++i)
-            if (arg[varc-i-1].vt & VT_BYREF) // update out-parameters
+            if ((arg[varc-i-1].vt & VT_BYREF) || outArgs[i]) // update out-parameters
                 vars[i] = VARIANTToQVariant(arg[varc-i-1], vars.at(i).typeName());
     }
 
