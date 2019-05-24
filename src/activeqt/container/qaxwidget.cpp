@@ -1648,7 +1648,7 @@ void QAxClientSite::windowActivationChange()
 QAxHostWidget::QAxHostWidget(QWidget *parent, QAxClientSite *ax)
 : QWidget(parent), setFocusTimer(0), hasFocus(false), axhost(ax)
 {
-    setAttribute(Qt::WA_NoBackground);
+    setAttribute(Qt::WA_OpaquePaintEvent);
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_OpaquePaintEvent);
     setAttribute(Qt::WA_PaintOnScreen);
