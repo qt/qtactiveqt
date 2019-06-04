@@ -125,14 +125,13 @@ protected:
 
 private:
     QAxScript *script;
-    LONG ref;
+    LONG ref = 1;
 };
 
 /*
     Constructs the site for the \a s.
 */
-QAxScriptSite::QAxScriptSite(QAxScript *s)
-: script(s), ref(1)
+QAxScriptSite::QAxScriptSite(QAxScript *s) : script(s)
 {
 }
 

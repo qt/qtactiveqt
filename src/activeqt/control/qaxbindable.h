@@ -82,7 +82,7 @@ protected:
     IUnknown *clientSite() const;
 
 private:
-    IAxServerBase *activex;
+    IAxServerBase *activex = nullptr;
 };
 
 QT_END_NAMESPACE

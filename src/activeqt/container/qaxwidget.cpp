@@ -409,26 +409,26 @@ private:
 
     QMenu *generatePopup(HMENU subMenu, QWidget *parent);
 
-    IOleObject *m_spOleObject;
-    IOleControl *m_spOleControl;
-    IOleInPlaceObjectWindowless *m_spInPlaceObject;
-    IOleInPlaceActiveObject *m_spInPlaceActiveObject;
-    IOleDocumentView *m_spActiveView;
+    IOleObject *m_spOleObject = nullptr;
+    IOleControl *m_spOleControl = nullptr;
+    IOleInPlaceObjectWindowless *m_spInPlaceObject = nullptr;
+    IOleInPlaceActiveObject *m_spInPlaceActiveObject = nullptr;
+    IOleDocumentView *m_spActiveView = nullptr;
 
-    QAxAggregated *aggregatedObject;
+    QAxAggregated *aggregatedObject = nullptr;
 
     bool inPlaceObjectWindowless :1;
     bool inPlaceModelessEnabled :1;
     bool canHostDocument : 1;
 
-    DWORD m_dwOleObject;
-    HWND m_menuOwner;
+    DWORD m_dwOleObject = 0;
+    HWND m_menuOwner = nullptr;
     CONTROLINFO control_info;
 
     QSize sizehint;
-    LONG ref;
+    LONG ref = 1;
     QAxWidget *widget;
-    QAxHostWidget *host;
+    QAxHostWidget *host = nullptr;
     QPointer<QMenuBar> menuBar;
     MenuItemMap menuItemMap;
 };
@@ -552,7 +552,7 @@ bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *
 }
 
 QAxClientSite::QAxClientSite(QAxWidget *c)
-: eventTranslated(true), ref(1), widget(c), host(0)
+: eventTranslated(true), widget(c)
 {
     aggregatedObject = widget->createAggregate();
     if (aggregatedObject) {
@@ -560,19 +560,10 @@ QAxClientSite::QAxClientSite(QAxWidget *c)
         aggregatedObject->the_object = c;
     }
 
-    m_spOleObject = 0;
-    m_spOleControl = 0;
-    m_spInPlaceObject = 0;
-    m_spInPlaceActiveObject = 0;
-    m_spActiveView = 0;
-
     inPlaceObjectWindowless = false;
     inPlaceModelessEnabled = true;
     canHostDocument = false;
 
-    m_dwOleObject = 0;
-    m_menuOwner = 0;
-    menuBar = 0;
     memset(&control_info, 0, sizeof(control_info));
 }
 
@@ -1937,7 +1928,7 @@ const QMetaObject QAxWidget::staticMetaObject = {
     call setControl().
 */
 QAxWidget::QAxWidget(QWidget *parent, Qt::WindowFlags f)
-: QWidget(parent, f), container(0)
+: QWidget(parent, f)
 {
 }
 
@@ -1948,7 +1939,7 @@ QAxWidget::QAxWidget(QWidget *parent, Qt::WindowFlags f)
     \sa setControl()
 */
 QAxWidget::QAxWidget(const QString &c, QWidget *parent, Qt::WindowFlags f)
-: QWidget(parent, f), container(0)
+: QWidget(parent, f)
 {
     setControl(c);
 }
@@ -1958,7 +1949,7 @@ QAxWidget::QAxWidget(const QString &c, QWidget *parent, Qt::WindowFlags f)
     \a parent and \a f are propagated to the QWidget contructor.
 */
 QAxWidget::QAxWidget(IUnknown *iface, QWidget *parent, Qt::WindowFlags f)
-: QWidget(parent, f), QAxBase(iface), container(0)
+: QWidget(parent, f), QAxBase(iface)
 {
 }
 

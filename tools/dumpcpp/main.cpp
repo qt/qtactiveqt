@@ -1433,11 +1433,11 @@ QT_USE_NAMESPACE
 
 struct Options
 {
-    Options() : mode(GenerateMode), category(DefaultObject), dispatchEqualsIDispatch(false) {}
+    Options() = default;
 
-    ProgramMode mode;
-    ObjectCategories category;
-    bool dispatchEqualsIDispatch;
+    ProgramMode mode = GenerateMode;
+    ObjectCategories category = DefaultObject;
+    bool dispatchEqualsIDispatch = false;
 
     QString outname;
     QString typeLib;

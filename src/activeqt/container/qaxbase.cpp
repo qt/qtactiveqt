@@ -259,9 +259,7 @@ class QAxEventSink : public IDispatch, public IPropertyNotifySink
 {
     Q_DISABLE_COPY(QAxEventSink)
 public:
-    QAxEventSink(QAxBase *com)
-        : cpoint(0), ciid(IID_NULL), combase(com), ref(1)
-    {}
+    explicit QAxEventSink(QAxBase *com) : combase(com) {}
     virtual ~QAxEventSink()
     {
         Q_ASSERT(!cpoint);
@@ -570,16 +568,16 @@ public:
         return static_cast<QAxObject *>(qobject)->receivers(QByteArray::number(QSIGNAL_CODE) + signalName);
     }
 
-    IConnectionPoint *cpoint;
-    IID ciid;
-    ULONG cookie;
+    IConnectionPoint *cpoint = nullptr;
+    IID ciid = IID_NULL;
+    ULONG cookie = 0;
 
     QMap<DISPID, QByteArray> sigs;
     QMap<DISPID, QByteArray> propsigs;
     QMap<DISPID, QByteArray> props;
 
-    QAxBase *combase;
-    LONG ref;
+    QAxBase *combase = nullptr;
+    LONG ref = 1;
 };
 
 /*
@@ -595,9 +593,7 @@ public:
 
     QAxBasePrivate()
         : useEventSink(true), useMetaObject(true), useClassInfo(true),
-        cachedMetaObject(false), initialized(false), tryCache(false),
-        classContext(CLSCTX_SERVER),
-        ptr(0), disp(0), metaobj(0)
+        cachedMetaObject(false), initialized(false), tryCache(false)
     {
         // protect initialization
         QMutexLocker locker(&cache_mutex);
@@ -640,10 +636,10 @@ public:
     uint cachedMetaObject   :1;
     uint initialized        :1;
     uint tryCache           :1;
-    unsigned long classContext;
+    unsigned long classContext = CLSCTX_SERVER;
 
-    IUnknown *ptr;
-    mutable IDispatch *disp;
+    IUnknown *ptr = nullptr;
+    mutable IDispatch *disp = nullptr;
 
     QMap<QByteArray, bool> propWritable;
 
@@ -656,7 +652,7 @@ public:
 
     mutable QMap<QString, LONG> verbs;
 
-    QAxMetaObject *metaobj;
+    QAxMetaObject *metaobj = nullptr;
 };
 
 
@@ -1696,10 +1692,10 @@ private:
     static int aggregateParameterCount(const QMap<QByteArray, Method> &map);
 
     struct Property {
-        Property() : flags(0)
-        {}
+        Property() = default;
+
         QByteArray type;
-        uint flags;
+        uint flags = 0;
         QByteArray realType;
     };
     QMap<QByteArray, Property> property_list;
@@ -1742,13 +1738,13 @@ private:
         return enum_list.contains(enumname);
     }
 
-    QAxBase *that;
-    QAxBasePrivate *d;
+    QAxBase *that = nullptr;
+    QAxBasePrivate *d = nullptr;
 
-    IDispatch *disp;
-    ITypeInfo *dispInfo;
-    ITypeInfo *classInfo;
-    ITypeLib *typelib;
+    IDispatch *disp = nullptr;
+    ITypeInfo *dispInfo = nullptr;
+    ITypeInfo *classInfo = nullptr;
+    ITypeLib *typelib = nullptr;
     QByteArray current_typelib;
 
     QSettings iidnames;
@@ -1860,15 +1856,15 @@ void qax_deleteMetaObject(QMetaObject *metaObject)
 }
 
 MetaObjectGenerator::MetaObjectGenerator(QAxBase *ax, QAxBasePrivate *dptr)
-: that(ax), d(dptr), disp(0), dispInfo(0), classInfo(0), typelib(0),
-  iidnames(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"), QSettings::NativeFormat)
+    : that(ax), d(dptr),
+      iidnames(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"), QSettings::NativeFormat)
 {
     init();
 }
 
 MetaObjectGenerator::MetaObjectGenerator(ITypeLib *tlib, ITypeInfo *tinfo)
-: that(0), d(0), disp(0), dispInfo(tinfo), classInfo(0), typelib(tlib),
-  iidnames(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"), QSettings::NativeFormat)
+    : dispInfo(tinfo), typelib(tlib),
+      iidnames(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"), QSettings::NativeFormat)
 {
     init();
 
@@ -4305,7 +4301,7 @@ class QtPropertyBag : public IPropertyBag
 {
     Q_DISABLE_COPY(QtPropertyBag)
 public:
-    QtPropertyBag() :ref(0) {}
+    QtPropertyBag() = default;
     virtual ~QtPropertyBag() = default;
 
     HRESULT __stdcall QueryInterface(REFIID iid, LPVOID *iface) override
@@ -4358,7 +4354,7 @@ public:
     QAxBase::PropertyBag map;
 
 private:
-    LONG ref;
+    LONG ref = 0;
 };
 
 /*!

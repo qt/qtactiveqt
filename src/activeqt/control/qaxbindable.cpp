@@ -94,10 +94,7 @@ QT_BEGIN_NAMESPACE
 /*!
     Constructs an empty QAxBindable object.
 */
-QAxBindable::QAxBindable()
-:activex(0)
-{
-}
+QAxBindable::QAxBindable() = default;
 
 /*!
     Destroys the QAxBindable object.

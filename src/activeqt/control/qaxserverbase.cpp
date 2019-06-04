@@ -379,8 +379,7 @@ private:
 
     friend class QAxBindable;
     friend class QAxPropertyPage;
-
-    QAxAggregated *aggregatedObject;
+    QAxAggregated *aggregatedObject = nullptr;
     ConnectionPoints points;
 
     union {
@@ -399,13 +398,13 @@ private:
     unsigned wasUIActive        :1;
     unsigned inDesignMode       :1;
     unsigned canTakeFocus       :1;
-    short freezeEvents;
+    short freezeEvents = 0;
 
-    HWND m_hWnd;
+    HWND m_hWnd = nullptr;
 
-    HMENU hmenuShared;
-    HOLEMENU holemenu;
-    HWND hwndMenuOwner;
+    HMENU hmenuShared = nullptr;
+    HOLEMENU holemenu = nullptr;
+    HWND hwndMenuOwner = nullptr;
     QMap<HMENU, QMenu*> menuMap;
     QMap<UINT, QAction*> actionMap;
     QPointer<QMenuBar> menuBar;
@@ -416,8 +415,8 @@ private:
     CRITICAL_SECTION refCountSection;
     CRITICAL_SECTION createWindowSection;
 
-    LONG ref;
-    unsigned long ole_ref;
+    LONG ref = 0;
+    unsigned long ole_ref = 0;
 
     QString class_name;
     QString currentFileName;
@@ -425,15 +424,15 @@ private:
     QHash<long, int> indexCache;
     QHash<int,DISPID> signalCache;
 
-    IUnknown *m_outerUnknown;
-    IAdviseSink *m_spAdviseSink;
+    IUnknown *m_outerUnknown = nullptr;
+    IAdviseSink *m_spAdviseSink = nullptr;
     QList<STATDATA> adviseSinks;
-    IOleClientSite *m_spClientSite;
-    IOleInPlaceSite *m_spInPlaceSite;
-    IOleInPlaceSiteWindowless *m_spInPlaceSiteWindowless;
-    IOleInPlaceFrame *m_spInPlaceFrame;
-    ITypeInfo *m_spTypeInfo;
-    IStorage *m_spStorage;
+    IOleClientSite *m_spClientSite = nullptr;
+    IOleInPlaceSite *m_spInPlaceSite = nullptr;
+    IOleInPlaceSiteWindowless *m_spInPlaceSiteWindowless = nullptr;
+    IOleInPlaceFrame *m_spInPlaceFrame = nullptr;
+    ITypeInfo *m_spTypeInfo = nullptr;
+    IStorage *m_spStorage = nullptr;
     QSize m_currentExtent; // device independent pixels.
 };
 
@@ -451,7 +450,6 @@ class QAxServerAggregate : public IUnknown
     Q_DISABLE_COPY(QAxServerAggregate)
 public:
     QAxServerAggregate(const QString &className, IUnknown *outerUnknown)
-        : ref(0)
     {
         object = new QAxServerBase(className, outerUnknown);
         object->registerActiveObject(this);
@@ -494,7 +492,7 @@ public:
 
 private:
     QAxServerBase *object;
-    LONG ref;
+    LONG ref = 0;
 
     CRITICAL_SECTION refCountSection;
     CRITICAL_SECTION createWindowSection;
@@ -525,8 +523,6 @@ public:
 
     QAxSignalVec(const QAxServerBase::ConnectionPoints &points)
         : cpoints(points.values())
-        , current(0)
-    , ref(0)
     {
         InitializeCriticalSection(&refCountSection);
         const int count = cpoints.count();
@@ -628,12 +624,12 @@ public:
     }
 
     QList<IConnectionPoint*> cpoints;
-    int current;
+    int current = 0;
 
 private:
     CRITICAL_SECTION refCountSection;
 
-    LONG ref;
+    LONG ref = 0;
 };
 
 /*
@@ -651,7 +647,7 @@ public:
     typedef QList<CONNECTDATA>::Iterator Iterator;
 
     QAxConnection(QAxServerBase *parent, const QUuid &uuid)
-        : that(parent), iid(uuid), current(0), ref(1)
+        : that(parent), iid(uuid)
     {
         InitializeCriticalSection(&refCountSection);
     }
@@ -807,10 +803,10 @@ private:
     QAxServerBase *that;
     QUuid iid;
     Connections connections;
-    int current;
+    int current = 0;
 
     CRITICAL_SECTION refCountSection;
-    LONG ref;
+    LONG ref = 1;
 };
 
 // callback for DLL server to hook into non-Qt eventloop
@@ -868,7 +864,6 @@ Q_GLOBAL_STATIC(QAxWinEventFilter, qax_winEventFilter);
 // COM Factory class, mapping COM requests to ActiveQt requests.
 // One instance of this class for each ActiveX the server can provide.
 QClassFactory::QClassFactory(CLSID clsid)
-    : ref(0), licensed(false)
 {
     InitializeCriticalSection(&refCountSection);
 
@@ -1067,10 +1062,7 @@ HRESULT GetClassObject(REFIID clsid, REFIID iid, void **ppUnk)
     the COM server for the respective CLSID.
 */
 QAxServerBase::QAxServerBase(const QString &classname, IUnknown *outerUnknown)
-: aggregatedObject(0),
-  m_hWnd(0), hmenuShared(0), hwndMenuOwner(0),
-  ref(0), ole_ref(0), class_name(classname),
-  m_outerUnknown(outerUnknown)
+    : class_name(classname), m_outerUnknown(outerUnknown)
 {
     init();
 
@@ -1081,13 +1073,6 @@ QAxServerBase::QAxServerBase(const QString &classname, IUnknown *outerUnknown)
     Constructs a QAxServerBase object wrapping \a o.
 */
 QAxServerBase::QAxServerBase(QObject *o)
-    : aggregatedObject(0)
-    , m_hWnd(0)
-    , hmenuShared(0)
-    , hwndMenuOwner(0)
-    , ref(0)
-    , ole_ref(0)
-    , m_outerUnknown(0)
 {
     init();
 
@@ -1118,16 +1103,6 @@ void QAxServerBase::init()
     wasUIActive         = false;
     inDesignMode        = false;
     canTakeFocus        = false;
-    freezeEvents = 0;
-    exception = 0;
-
-    m_spAdviseSink = 0;
-    m_spClientSite = 0;
-    m_spInPlaceSiteWindowless = 0;
-    m_spInPlaceSite = 0;
-    m_spInPlaceFrame = 0;
-    m_spTypeInfo = 0;
-    m_spStorage = 0;
 
     InitializeCriticalSection(&refCountSection);
     InitializeCriticalSection(&createWindowSection);

@@ -102,8 +102,8 @@ public:
 
 protected:
     CRITICAL_SECTION refCountSection;
-    LONG ref;
-    bool licensed;
+    LONG ref = 0;
+    bool licensed = false;
     QString classKey;
 };
 

@@ -70,10 +70,6 @@ MainWindow *MainWindow::m_instance = nullptr;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , m_dlgInvoke(nullptr)
-    , m_dlgProperties(nullptr)
-    , m_dlgAmbient(nullptr)
-    , m_scripts(nullptr)
 {
     setupUi(this);
     MainWindow::m_instance = this; // Logging handler needs the UI
