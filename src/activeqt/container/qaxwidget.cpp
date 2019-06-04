@@ -405,7 +405,7 @@ private:
         QMenu *subMenu;
         int id;
     };
-    typedef QMap<QAction*, OleMenuItem> MenuItemMap;
+    using MenuItemMap = QMap<QAction*, OleMenuItem>;
 
     QMenu *generatePopup(HMENU subMenu, QWidget *parent);
 

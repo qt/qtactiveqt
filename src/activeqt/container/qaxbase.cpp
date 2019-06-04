@@ -589,7 +589,7 @@ class QAxBasePrivate
 {
     Q_DISABLE_COPY(QAxBasePrivate)
 public:
-    typedef QHash<QUuid, QAxEventSink*> UuidEventSinkHash;
+    using UuidEventSinkHash = QHash<QUuid, QAxEventSink*>;
 
     QAxBasePrivate()
         : useEventSink(true), useMetaObject(true), useClassInfo(true),
@@ -1562,9 +1562,8 @@ public:
     }
 
 private:
-    typedef QPair<QByteArray, int> ByteArrayIntPair;
-    typedef QList<ByteArrayIntPair> ByteArrayIntPairList;
-    typedef QMap<QByteArray, ByteArrayIntPairList>::ConstIterator EnumListMapConstIterator;
+    using ByteArrayIntPair = QPair<QByteArray, int>;
+    using ByteArrayIntPairList = QList<ByteArrayIntPair>;
 
     void init();
 
@@ -3049,8 +3048,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     int_data_size += (signal_list.count() + slot_list.count()) * 5 + paramsDataSize;
     int_data_size += property_list.count() * 3;
     int_data_size += enum_list.count() * 5;
-    const EnumListMapConstIterator ecend = enum_list.end();
-    for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it)
+    for (auto it = enum_list.cbegin(), end = enum_list.cend(); it != end; ++it)
         int_data_size += it.value().count() * 2;
     ++int_data_size; // eod
 
@@ -3128,9 +3126,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     Q_ASSERT(offset == header->propertyData);
 
     // each property in form name\0type\0
-    typedef QMap<QByteArray, Property>::ConstIterator PropertyMapConstIterator;
-    const PropertyMapConstIterator pcend = property_list.end();
-    for (PropertyMapConstIterator it = property_list.begin(); it != pcend; ++it) {
+    for (auto it = property_list.cbegin(), end = property_list.cend(); it != end; ++it) {
         QByteArray name(it.key());
         QByteArray type(it.value().type);
         Q_ASSERT(!type.isEmpty());
@@ -3145,7 +3141,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
 
     int value_offset = offset + enum_list.count() * 5;
     // each enum in form name\0
-    for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it) {
+    for (auto it = enum_list.cbegin(), end = enum_list.cend(); it != end; ++it) {
         QByteArray name(it.key());
         int count = it.value().count();
 
@@ -3160,12 +3156,10 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     Q_ASSERT(offset == header->enumeratorData + enum_list.count() * 5);
 
     // each enum value in form key\0
-    for (EnumListMapConstIterator it = enum_list.begin(); it != ecend; ++it) {
-        const ByteArrayIntPairList::ConstIterator vcend = it.value().end();
-        for (ByteArrayIntPairList::ConstIterator it2 = it.value().begin(); it2 != vcend; ++it2) {
-            QByteArray key((*it2).first);
-            int_data[offset++] = uint(strings.enter(key));
-            int_data[offset++] = uint((*it2).second);
+    for (auto it = enum_list.cbegin(), end = enum_list.cend(); it != end; ++it) {
+        for (const auto &e : it.value()) {
+            int_data[offset++] = uint(strings.enter(e.first));
+            int_data[offset++] = uint(e.second);
         }
     }
     Q_ASSERT(offset == int_data_size-1);

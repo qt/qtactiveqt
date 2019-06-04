@@ -167,8 +167,7 @@ class QAxServerBase :
     public IDataObject
 {
 public:
-    typedef QMap<QUuid,IConnectionPoint*> ConnectionPoints;
-    typedef QMap<QUuid,IConnectionPoint*>::Iterator ConnectionPointsIterator;
+    using ConnectionPoints = QMap<QUuid,IConnectionPoint*>;
 
     QAxServerBase(const QString &classname, IUnknown *outerUnknown);
     QAxServerBase(QObject *o);
@@ -643,8 +642,7 @@ public:
     QAxConnection(QAxConnection &&) = delete;
     QAxConnection &operator=(QAxConnection &&) = delete;
 
-    typedef QList<CONNECTDATA> Connections;
-    typedef QList<CONNECTDATA>::Iterator Iterator;
+    using Connections = QList<CONNECTDATA>;
 
     QAxConnection(QAxServerBase *parent, const QUuid &uuid)
         : that(parent), iid(uuid)
