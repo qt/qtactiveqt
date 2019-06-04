@@ -102,7 +102,7 @@ QAxWidget *MainWindow::activeAxWidget() const
 {
     if (const QMdiSubWindow *activeSubWindow = m_mdiArea->currentSubWindow())
         return qobject_cast<QAxWidget*>(activeSubWindow->widget());
-    return 0;
+    return nullptr;
 }
 
 QList<QAxWidget *> MainWindow::axWidgets() const
@@ -126,7 +126,7 @@ struct LowIntegrity {
         if (!OpenProcessToken(GetCurrentProcess(), TOKEN_DUPLICATE | TOKEN_ADJUST_DEFAULT | TOKEN_QUERY | TOKEN_ASSIGN_PRIMARY, &cur_token))
             abort();
 
-        if (!DuplicateTokenEx(cur_token, 0, NULL, SecurityImpersonation, TokenPrimary, &m_token))
+        if (!DuplicateTokenEx(cur_token, 0, nullptr, SecurityImpersonation, TokenPrimary, &m_token))
             abort();
 
         CloseHandle(cur_token);
@@ -534,7 +534,7 @@ void MainWindow::updateGUI()
     actionFileNew->setEnabled(true);
     actionFileLoad->setEnabled(true);
     actionFileSave->setEnabled(hasControl);
-    actionContainerSet->setEnabled(container != 0);
+    actionContainerSet->setEnabled(container != nullptr);
     actionContainerClear->setEnabled(hasControl);
     actionControlProperties->setEnabled(hasControl);
     actionControlMethods->setEnabled(hasControl);
@@ -543,9 +543,9 @@ void MainWindow::updateGUI()
     actionControlPixmap->setEnabled(hasControl);
     VerbMenu->setEnabled(hasControl);
     if (m_dlgInvoke)
-        m_dlgInvoke->setControl(hasControl ? container : 0);
+        m_dlgInvoke->setControl(hasControl ? container : nullptr);
     if (m_dlgProperties)
-        m_dlgProperties->setControl(hasControl ? container : 0);
+        m_dlgProperties->setControl(hasControl ? container : nullptr);
 
     const QList<QAxWidget *> axw = axWidgets();
     for (QAxWidget *container : axw) {
@@ -584,7 +584,7 @@ void MainWindow::logSignal(const QString &signal, int argc, void *argv)
     VARIANT *params = (VARIANT*)argv;
     for (int a = argc-1; a >= 0; --a) {
         paramlist += QLatin1Char(' ');
-        paramlist += VARIANTToQVariant(params[a], 0).toString();
+        paramlist += VARIANTToQVariant(params[a], nullptr).toString();
         paramlist += a > 0 ? QLatin1Char(',') : QLatin1Char(' ');
     }
     if (argc)

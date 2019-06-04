@@ -187,10 +187,10 @@ inline bool operator==(const Control &c1, const Control &c2) { return !c1.compar
 static LONG RegistryQueryValue(HKEY hKey, LPCWSTR lpSubKey, LPBYTE lpData, LPDWORD lpcbData)
 {
     LONG ret = ERROR_FILE_NOT_FOUND;
-    HKEY hSubKey = NULL;
+    HKEY hSubKey = nullptr;
     RegOpenKeyEx(hKey, lpSubKey, 0, KEY_READ, &hSubKey);
     if (hSubKey) {
-        ret = RegQueryValueEx(hSubKey, 0, 0, 0, lpData, lpcbData);
+        ret = RegQueryValueEx(hSubKey, nullptr, nullptr, nullptr, lpData, lpcbData);
         RegCloseKey(hSubKey);
     }
     return ret;
@@ -198,12 +198,12 @@ static LONG RegistryQueryValue(HKEY hKey, LPCWSTR lpSubKey, LPBYTE lpData, LPDWO
 
 static bool querySubKeyValue(HKEY hKey, const QString &subKeyName,  LPBYTE lpData, LPDWORD lpcbData)
 {
-    HKEY hSubKey = NULL;
+    HKEY hSubKey = nullptr;
     const LONG openResult = RegOpenKeyEx(hKey,  reinterpret_cast<const wchar_t *>(subKeyName.utf16()),
                                          0, KEY_READ, &hSubKey);
     if (openResult != ERROR_SUCCESS)
         return false;
-    const bool result = RegQueryValueEx(hSubKey, 0, 0, 0, lpData, lpcbData) == ERROR_SUCCESS;
+    const bool result = RegQueryValueEx(hSubKey, nullptr, nullptr, nullptr, lpData, lpcbData) == ERROR_SUCCESS;
     RegCloseKey(hSubKey);
     return result;
 }
@@ -225,7 +225,7 @@ static QList<Control> readControls(const wchar_t *rootKey, unsigned wordSize)
     FILETIME ft;
     do {
         szBuffer = sizeof(buffer) / sizeof(wchar_t);
-        result = RegEnumKeyEx(classesKey, index, buffer, &szBuffer, 0, 0, 0, &ft);
+        result = RegEnumKeyEx(classesKey, index, buffer, &szBuffer, nullptr, nullptr, nullptr, &ft);
         szBuffer = sizeof(buffer) / sizeof(wchar_t);
         if (result == ERROR_SUCCESS) {
             HKEY subKey;
@@ -268,7 +268,7 @@ static QList<Control> readControls(const wchar_t *rootKey, unsigned wordSize)
 class ControlList : public QAbstractListModel
 {
 public:
-    ControlList(QObject *parent=0)
+    ControlList(QObject *parent=nullptr)
     : QAbstractListModel(parent)
     {
         m_controls = readControls(L"CLSID", unsigned(QSysInfo::WordSize));

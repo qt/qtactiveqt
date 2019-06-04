@@ -149,7 +149,7 @@ void QAxBindable::propertyChanged(const char *property)
 IUnknown *QAxBindable::clientSite() const
 {
     if (!activex)
-        return 0;
+        return nullptr;
 
     return activex->clientSite();
 }
@@ -164,7 +164,7 @@ IUnknown *QAxBindable::clientSite() const
 */
 QAxAggregated *QAxBindable::createAggregate()
 {
-    return 0;
+    return nullptr;
 }
 
 /*!

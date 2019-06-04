@@ -60,7 +60,7 @@
 QT_BEGIN_NAMESPACE
 
 bool qax_ownQApp = false;
-HHOOK qax_hhook = 0;
+HHOOK qax_hhook = nullptr;
 
 // in qaxserver.cpp
 extern wchar_t qAxModuleFilename[MAX_PATH];

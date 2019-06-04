@@ -56,7 +56,7 @@ class MainWindow : public QMainWindow, public Ui::MainWindow
     Q_CLASSINFO("EventsID", "{02a268cd-24b4-4fd9-88ff-b01b683ef39d}")
 
 public:
-    MainWindow(QWidget *parent = 0);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
     static MainWindow *instance() { return m_instance; }

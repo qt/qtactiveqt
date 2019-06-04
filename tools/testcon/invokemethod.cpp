@@ -34,7 +34,7 @@
 QT_BEGIN_NAMESPACE
 
 InvokeMethod::InvokeMethod(QWidget *parent)
-: QDialog(parent), activex(0)
+: QDialog(parent), activex(nullptr)
 {
     setupUi(this);
 
@@ -136,8 +136,8 @@ void InvokeMethod::on_listParameters_currentItemChanged(QTreeWidgetItem *item)
 {
     if (!activex)
         return;
-    editValue->setEnabled(item != 0);
-    buttonSet->setEnabled(item != 0);
+    editValue->setEnabled(item != nullptr);
+    buttonSet->setEnabled(item != nullptr);
     if (!item)
         return;
     editValue->setText(item->text(2));

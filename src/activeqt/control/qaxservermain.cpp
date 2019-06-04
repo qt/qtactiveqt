@@ -59,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static DWORD *classRegistration = 0;
+static DWORD *classRegistration = nullptr;
 static DWORD dwThreadID;
 static bool qAxActivity = false;
 static HANDLE hEventShutdown;
@@ -112,12 +112,12 @@ static DWORD WINAPI MonitorProc(void* /* pv */)
 static bool StartMonitor()
 {
     dwThreadID = GetCurrentThreadId();
-    hEventShutdown = CreateEvent(0, false, false, 0);
-    if (hEventShutdown == 0)
+    hEventShutdown = CreateEvent(nullptr, false, false, nullptr);
+    if (hEventShutdown == nullptr)
         return false;
     DWORD dwThreadID;
-    HANDLE h = CreateThread(0, 0, MonitorProc, 0, 0, &dwThreadID);
-    return (h != NULL);
+    HANDLE h = CreateThread(nullptr, 0, MonitorProc, nullptr, 0, &dwThreadID);
+    return (h != nullptr);
 }
 
 void qax_shutDown()
@@ -146,7 +146,7 @@ bool qax_startServer(QAxFactory::ServerType type)
     classRegistration = new DWORD[keyCount];
     int object = 0;
     for (object = 0; object < keyCount; ++object) {
-        IUnknown* p = 0;
+        IUnknown* p = nullptr;
         CLSID clsid = qAxFactory()->classID(keys.at(object));
 
         // Create a QClassFactory (implemented in qaxserverbase.cpp)
@@ -178,7 +178,7 @@ bool qax_stopServer()
         CoRevokeClassObject(classRegistration[object]);
 
     delete []classRegistration;
-    classRegistration = 0;
+    classRegistration = nullptr;
 
     Sleep(dwPause); //wait for any threads to finish
 
@@ -239,7 +239,7 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, 
     QT_USE_NAMESPACE
 
     qAxOutProcServer = true;
-    GetModuleFileName(0, qAxModuleFilename, MAX_PATH);
+    GetModuleFileName(nullptr, qAxModuleFilename, MAX_PATH);
     qAxInstance = hInstance;
 
     const QStringList cmds = commandLineArguments();
@@ -287,7 +287,7 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, 
     }
 
     if (run) {
-        if (SUCCEEDED(CoInitializeEx(0, COINIT_APARTMENTTHREADED))) {
+        if (SUCCEEDED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
 #ifdef Q_CC_MINGW
             // define GlobalOptions class ID locally for MinGW, since it's missing from the distribution
             static const CLSID CLSID_GlobalOptions =
@@ -296,7 +296,7 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, 
             // Disable C++ & SEH exception handling by the COM runtime for out-of-process COM controls.
             // Done to prevent silent crashes and enable crash dump generation.
             IGlobalOptions *globalOptions = nullptr;
-            if (SUCCEEDED(CoCreateInstance(CLSID_GlobalOptions, NULL, CLSCTX_INPROC_SERVER,
+            if (SUCCEEDED(CoCreateInstance(CLSID_GlobalOptions, nullptr, CLSCTX_INPROC_SERVER,
                                            IID_IGlobalOptions, reinterpret_cast<void **>(&globalOptions)))) {
                 globalOptions->Set(COMGLB_EXCEPTION_HANDLING, COMGLB_EXCEPTION_DONOT_HANDLE_ANY);
                 globalOptions->Release();

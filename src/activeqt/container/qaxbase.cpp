@@ -125,8 +125,8 @@ struct QAxMetaObject : public QMetaObject
 {
     QAxMetaObject()
     {
-        d.data = 0;
-        d.stringdata = 0;
+        d.data = nullptr;
+        d.stringdata = nullptr;
     }
     ~QAxMetaObject()
     {
@@ -135,7 +135,7 @@ struct QAxMetaObject : public QMetaObject
     }
 
     int numParameter(const QByteArray &prototype);
-    QByteArray paramType(const QByteArray &signature, int index, bool *out = 0);
+    QByteArray paramType(const QByteArray &signature, int index, bool *out = nullptr);
     QByteArray propertyType(const QByteArray &propertyName);
     void parsePrototype(const QByteArray &prototype);
     DISPID dispIDofName(const QByteArray &name, IDispatch *disp);
@@ -244,7 +244,7 @@ static const char *const type_conversion[][2] =
     { "QList<bool>", "QVariantList" },
     { "QList<QDateTime>", "QVariantList" },
     { "QList<qlonglong>", "QVariantList" },
-    { 0, 0 }
+    { nullptr, nullptr }
 };
 
 /*
@@ -294,11 +294,11 @@ public:
     // disconnect from all connection points
     void unadvise()
     {
-        combase = 0;
+        combase = nullptr;
         if (cpoint) {
             cpoint->Unadvise(cookie);
             cpoint->Release();
-            cpoint = 0;
+            cpoint = nullptr;
         }
     }
 
@@ -341,7 +341,7 @@ public:
     }
     HRESULT __stdcall QueryInterface(REFIID riid, void **ppvObject) override
     {
-        *ppvObject = 0;
+        *ppvObject = nullptr;
         if (riid == IID_IUnknown)
             *ppvObject = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
         else if (riid == IID_IPropertyNotifySink)
@@ -394,7 +394,7 @@ public:
             Q_ASSERT(index != -1);
 
             QString nameString = QLatin1String(signame);
-            void *argv[] = {0, &nameString, &pDispParams->cArgs, &pDispParams->rgvarg};
+            void *argv[] = {nullptr, &nameString, &pDispParams->cArgs, &pDispParams->rgvarg};
             QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
                                         index - meta->methodOffset(), argv);
         }
@@ -423,9 +423,9 @@ public:
             void *static_argv_pointer[QAX_NUM_PARAMS + 1];
             QVariant static_varp[QAX_NUM_PARAMS + 1];
 
-            void **argv = 0;
-            void **argv_pointer = 0; // in case we need an additional level of indirection
-            QVariant *varp = 0;
+            void **argv = nullptr;
+            void **argv_pointer = nullptr; // in case we need an additional level of indirection
+            QVariant *varp = nullptr;
 
             if (pcount) {
                 if (pcount <= QAX_NUM_PARAMS) {
@@ -438,8 +438,8 @@ public:
                     varp = new QVariant[pcount + 1];
                 }
 
-                argv[0] = 0;
-                argv_pointer[0] = 0;
+                argv[0] = nullptr;
+                argv_pointer[0] = nullptr;
             }
 
             int p;
@@ -447,7 +447,7 @@ public:
                 // map the VARIANT to the void*
                 QByteArray ptype = axmeta->paramType(signame, p);
                 varp[p + 1] = VARIANTToQVariant(pDispParams->rgvarg[pcount - p - 1], ptype);
-                argv_pointer[p + 1] = 0;
+                argv_pointer[p + 1] = nullptr;
                 if (varp[p + 1].isValid()) {
                     if (varp[p + 1].type() == QVariant::UserType) {
                         argv[p + 1] = varp[p + 1].data();
@@ -517,7 +517,7 @@ public:
         int index = meta->indexOfSignal("propertyChanged(QString)");
         if (index != -1) {
             QString propnameString = QString::fromLatin1(propname);
-            void *argv[] = {0, &propnameString};
+            void *argv[] = {nullptr, &propnameString};
             QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
                                         index - meta->methodOffset(), argv);
         }
@@ -540,7 +540,7 @@ public:
                 return S_OK;
 
             const QMetaProperty metaProp = meta->property(meta->indexOfProperty(propname));
-            void *argv[] = {0, var.data()};
+            void *argv[] = {nullptr, var.data()};
             if (metaProp.type() == QVariant::Type(QMetaType::QVariant) || metaProp.type() == QVariant::LastType)
                 argv[1] = &var;
 
@@ -666,7 +666,7 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
         return propname;
 
     IDispatch *dispatch = combase->d->dispatch();
-    ITypeInfo *typeinfo = 0;
+    ITypeInfo *typeinfo = nullptr;
     if (dispatch)
         dispatch->GetTypeInfo(0, LOCALE_USER_DEFAULT, &typeinfo);
     if (!typeinfo)
@@ -900,7 +900,7 @@ QAxBase::~QAxBase()
     clear();
 
     delete d;
-    d = 0;
+    d = nullptr;
 }
 
 /*!
@@ -1149,11 +1149,11 @@ void QAxBase::clear()
     d->eventSink.clear();
     if (d->disp) {
         d->disp->Release();
-        d->disp = 0;
+        d->disp = nullptr;
     }
     if (d->ptr) {
         d->ptr->Release();
-        d->ptr = 0;
+        d->ptr = nullptr;
         d->initialized = false;
     }
 
@@ -1161,7 +1161,7 @@ void QAxBase::clear()
 
     if (!d->cachedMetaObject)
         delete d->metaobj;
-    d->metaobj = 0;
+    d->metaobj = nullptr;
 }
 
 /*!
@@ -1180,10 +1180,10 @@ QStringList QAxBase::verbs() const
         return QStringList();
 
     if (d->verbs.isEmpty()) {
-        IOleObject *ole = 0;
+        IOleObject *ole = nullptr;
         d->ptr->QueryInterface(IID_IOleObject, reinterpret_cast<void **>(&ole));
         if (ole) {
-            IEnumOLEVERB *enumVerbs = 0;
+            IEnumOLEVERB *enumVerbs = nullptr;
             ole->EnumVerbs(&enumVerbs);
             if (enumVerbs) {
                 enumVerbs->Reset();
@@ -1251,7 +1251,7 @@ bool QAxBase::initialize(IUnknown **ptr)
         asyncExposeSet = true;
     }
 
-    *ptr = 0;
+    *ptr = nullptr;
 
     bool res = false;
 
@@ -1266,7 +1266,7 @@ bool QAxBase::initialize(IUnknown **ptr)
         res = initializeFromFile(ptr);
 
     if (!res) { // standard
-        HRESULT hres = CoCreateInstance(QUuid(ctrl), 0, d->classContext, IID_IUnknown,
+        HRESULT hres = CoCreateInstance(QUuid(ctrl), nullptr, d->classContext, IID_IUnknown,
                                         reinterpret_cast<void **>(ptr));
         res = S_OK == hres;
 #ifndef QT_NO_DEBUG
@@ -1275,7 +1275,7 @@ bool QAxBase::initialize(IUnknown **ptr)
 #endif
     }
 
-    return *ptr != 0;
+    return *ptr != nullptr;
 }
 
 /*!
@@ -1295,15 +1295,15 @@ bool QAxBase::initializeLicensed(IUnknown** ptr)
     QString clsid(control().left(at));
     QString key(control().mid(at+2));
 
-    IClassFactory *factory = 0;
-    CoGetClassObject(QUuid(clsid), CLSCTX_SERVER, 0, IID_IClassFactory,
+    IClassFactory *factory = nullptr;
+    CoGetClassObject(QUuid(clsid), CLSCTX_SERVER, nullptr, IID_IClassFactory,
                      reinterpret_cast<void **>(&factory));
     if (!factory)
         return false;
     initializeLicensedHelper(factory, key, ptr);
     factory->Release();
 
-    return *ptr != 0;
+    return *ptr != nullptr;
 }
 
 /* \internal
@@ -1313,11 +1313,11 @@ bool QAxBase::initializeLicensed(IUnknown** ptr)
 bool QAxBase::initializeLicensedHelper(void *f, const QString &key, IUnknown **ptr)
 {
     IClassFactory *factory = reinterpret_cast<IClassFactory *>(f);
-    IClassFactory2 *factory2 = 0;
+    IClassFactory2 *factory2 = nullptr;
     factory->QueryInterface(IID_IClassFactory2, reinterpret_cast<void **>(&factory2));
     if (factory2) {
         BSTR bkey = QStringToBSTR(key);
-        HRESULT hres = factory2->CreateInstanceLic(0, 0, IID_IUnknown, bkey,
+        HRESULT hres = factory2->CreateInstanceLic(nullptr, nullptr, IID_IUnknown, bkey,
                                                    reinterpret_cast<void **>(ptr));
         SysFreeString(bkey);
 #ifdef QT_DEBUG
@@ -1355,9 +1355,9 @@ bool QAxBase::initializeLicensedHelper(void *f, const QString &key, IUnknown **p
 #endif
         factory2->Release();
     } else {  // give it a shot without license
-        factory->CreateInstance(0, IID_IUnknown, reinterpret_cast<void **>(ptr));
+        factory->CreateInstance(nullptr, IID_IUnknown, reinterpret_cast<void **>(ptr));
     }
-    return *ptr != 0;
+    return *ptr != nullptr;
 }
 
 
@@ -1376,9 +1376,9 @@ bool QAxBase::initializeActive(IUnknown** ptr)
     int at = control().lastIndexOf(QLatin1String("}&"));
     QString clsid(control().left(at));
 
-    GetActiveObject(QUuid(clsid), 0, ptr);
+    GetActiveObject(QUuid(clsid), nullptr, ptr);
 
-    return *ptr != 0;
+    return *ptr != nullptr;
 }
 
 #ifdef Q_CC_GNU
@@ -1399,13 +1399,13 @@ bool QAxBase::initializeActive(IUnknown** ptr)
 */
 bool QAxBase::initializeFromFile(IUnknown** ptr)
 {
-    IStorage *storage = 0;
-    ILockBytes * bytes = 0;
-    HRESULT hres = ::CreateILockBytesOnHGlobal(0, TRUE, &bytes);
+    IStorage *storage = nullptr;
+    ILockBytes * bytes = nullptr;
+    HRESULT hres = ::CreateILockBytesOnHGlobal(nullptr, TRUE, &bytes);
     hres = ::StgCreateDocfileOnILockBytes(bytes, STGM_SHARE_EXCLUSIVE|STGM_CREATE|STGM_READWRITE, 0, &storage);
 
     hres = OleCreateFromFile(CLSID_NULL, reinterpret_cast<const wchar_t*>(control().utf16()),
-                             IID_IUnknown, OLERENDER_NONE, 0, 0, storage,
+                             IID_IUnknown, OLERENDER_NONE, nullptr, nullptr, storage,
                              reinterpret_cast<void **>(ptr));
 
     storage->Release();
@@ -1486,7 +1486,7 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
     COAUTHINFO authInfo;
     authInfo.dwAuthnSvc = RPC_C_AUTHN_WINNT;
     authInfo.dwAuthzSvc = RPC_C_AUTHZ_NONE;
-    authInfo.pwszServerPrincName = 0;
+    authInfo.pwszServerPrincName = nullptr;
     authInfo.dwAuthnLevel = RPC_C_AUTHN_LEVEL_DEFAULT;
     authInfo.dwImpersonationLevel = RPC_C_IMP_LEVEL_IMPERSONATE;
     authInfo.pAuthIdentityData = &authIdentity;
@@ -1498,14 +1498,14 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
     serverInfo.pAuthInfo = &authInfo;
     serverInfo.pwszName = reinterpret_cast<wchar_t *>(const_cast<ushort *>(server.utf16()));
 
-    IClassFactory *factory = 0;
+    IClassFactory *factory = nullptr;
     HRESULT res = CoGetClassObject(QUuid(clsid), CLSCTX_REMOTE_SERVER, &serverInfo,
                                    IID_IClassFactory, reinterpret_cast<void **>(&factory));
     if (factory) {
         if (!key.isEmpty())
             initializeLicensedHelper(factory, key, ptr);
         else
-            res = factory->CreateInstance(0, IID_IUnknown, reinterpret_cast<void **>(ptr));
+            res = factory->CreateInstance(nullptr, IID_IUnknown, reinterpret_cast<void **>(ptr));
         factory->Release();
     }
 #ifndef QT_NO_DEBUG
@@ -1527,7 +1527,7 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
 */
 long QAxBase::queryInterface(const QUuid &uuid, void **iface) const
 {
-    *iface = 0;
+    *iface = nullptr;
     if (!d->ptr) {
         const_cast<QAxBase *>(this)->initialize(&d->ptr);
         d->initialized = true;
@@ -1758,7 +1758,7 @@ private:
 
 QMetaObject *qax_readEnumInfo(ITypeLib *typeLib, const QMetaObject *parentObject)
 {
-    MetaObjectGenerator generator(typeLib, 0);
+    MetaObjectGenerator generator(typeLib, nullptr);
 
     generator.readEnumInfo();
     return generator.metaObject(parentObject, "EnumInfo");
@@ -1770,8 +1770,8 @@ QMetaObject *qax_readInterfaceInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const
 
     QString className;
     BSTR bstr;
-    if (S_OK != typeInfo->GetDocumentation(-1, &bstr, 0, 0, 0))
-        return 0;
+    if (S_OK != typeInfo->GetDocumentation(-1, &bstr, nullptr, nullptr, nullptr))
+        return nullptr;
 
     className = QString::fromWCharArray(bstr);
     SysFreeString(bstr);
@@ -1785,14 +1785,14 @@ QMetaObject *qax_readInterfaceInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const
 
 QMetaObject *qax_readClassInfo(ITypeLib *typeLib, ITypeInfo *classInfo, const QMetaObject *parentObject)
 {
-    MetaObjectGenerator generator(typeLib, 0);
+    MetaObjectGenerator generator(typeLib, nullptr);
     generator.addSignal("exception(int,QString,QString,QString)", "code,source,disc,help");
     generator.addSignal("propertyChanged(QString)", "name");
 
     QString className;
     BSTR bstr;
-    if (S_OK != classInfo->GetDocumentation(-1, &bstr, 0, 0, 0))
-        return 0;
+    if (S_OK != classInfo->GetDocumentation(-1, &bstr, nullptr, nullptr, nullptr))
+        return nullptr;
 
     className = QString::fromWCharArray(bstr);
     SysFreeString(bstr);
@@ -1815,23 +1815,23 @@ QMetaObject *qax_readClassInfo(ITypeLib *typeLib, ITypeInfo *classInfo, const QM
             if (flags & IMPLTYPEFLAG_FRESTRICTED)
                 continue;
 
-            ITypeInfo *interfaceInfo = 0;
+            ITypeInfo *interfaceInfo = nullptr;
             classInfo->GetRefTypeInfo(refType, &interfaceInfo);
             if (!interfaceInfo)
                 continue;
 
-            interfaceInfo->GetDocumentation(-1, &bstr, 0, 0, 0);
+            interfaceInfo->GetDocumentation(-1, &bstr, nullptr, nullptr, nullptr);
             QString interfaceName = QString::fromWCharArray(bstr);
             SysFreeString(bstr);
             QByteArray key;
 
-            TYPEATTR *typeattr = 0;
+            TYPEATTR *typeattr = nullptr;
             interfaceInfo->GetTypeAttr(&typeattr);
 
             if (flags & IMPLTYPEFLAG_FSOURCE) {
                 if (typeattr && !(typeattr->wTypeFlags & TYPEFLAG_FHIDDEN))
                     key = "Event Interface " + QByteArray::number(index);
-                generator.readEventInterface(interfaceInfo, 0);
+                generator.readEventInterface(interfaceInfo, nullptr);
             } else {
                 if (typeattr && !(typeattr->wTypeFlags & TYPEFLAG_FHIDDEN))
                     key = "Interface " + QByteArray::number(index);
@@ -1873,7 +1873,7 @@ MetaObjectGenerator::MetaObjectGenerator(ITypeLib *tlib, ITypeInfo *tinfo)
     if (typelib) {
         typelib->AddRef();
         BSTR bstr;
-        typelib->GetDocumentation(-1, &bstr, 0, 0, 0);
+        typelib->GetDocumentation(-1, &bstr, nullptr, nullptr, nullptr);
         current_typelib = QString::fromWCharArray(bstr).toLatin1();
         SysFreeString(bstr);
     }
@@ -1909,25 +1909,25 @@ QByteArray MetaObjectGenerator::usertypeToString(const TYPEDESC &tdesc, ITypeInf
 {
     HREFTYPE usertype = tdesc.hreftype;
     if (tdesc.vt != VT_USERDEFINED)
-        return 0;
+        return nullptr;
 
     QByteArray typeName;
-    ITypeInfo *usertypeinfo = 0;
+    ITypeInfo *usertypeinfo = nullptr;
     info->GetRefTypeInfo(usertype, &usertypeinfo);
     if (usertypeinfo) {
-        ITypeLib *usertypelib = 0;
+        ITypeLib *usertypelib = nullptr;
         UINT index;
         usertypeinfo->GetContainingTypeLib(&usertypelib, &index);
         if (usertypelib) {
             // get type library name
-            BSTR typelibname = 0;
-            usertypelib->GetDocumentation(-1, &typelibname, 0, 0, 0);
+            BSTR typelibname = nullptr;
+            usertypelib->GetDocumentation(-1, &typelibname, nullptr, nullptr, nullptr);
             QByteArray typeLibName = QString::fromWCharArray(typelibname).toLatin1();
             SysFreeString(typelibname);
 
             // get type name
-            BSTR usertypename = 0;
-            usertypelib->GetDocumentation(INT(index), &usertypename, 0, 0, 0);
+            BSTR usertypename = nullptr;
+            usertypelib->GetDocumentation(INT(index), &usertypename, nullptr, nullptr, nullptr);
             QByteArray userTypeName = QString::fromWCharArray(usertypename).toLatin1();
             SysFreeString(usertypename);
 
@@ -1941,7 +1941,7 @@ QByteArray MetaObjectGenerator::usertypeToString(const TYPEDESC &tdesc, ITypeInf
                 typeName = "QPixmap";
 
             if (typeName.isEmpty()) {
-                TYPEATTR *typeattr = 0;
+                TYPEATTR *typeattr = nullptr;
                 usertypeinfo->GetTypeAttr(&typeattr);
                 if (typeattr) {
                     switch(typeattr->typekind) {
@@ -2156,12 +2156,12 @@ QByteArray MetaObjectGenerator::guessTypes(const TYPEDESC &tdesc, ITypeInfo *inf
 void MetaObjectGenerator::readClassInfo()
 {
     // Read class information
-    IProvideClassInfo *provideClassInfo = 0;
+    IProvideClassInfo *provideClassInfo = nullptr;
     if (d)
         d->ptr->QueryInterface(IID_IProvideClassInfo, reinterpret_cast<void **>(&provideClassInfo));
     if (provideClassInfo) {
         provideClassInfo->GetClassInfo(&classInfo);
-        TYPEATTR *typeattr = 0;
+        TYPEATTR *typeattr = nullptr;
         if (classInfo)
             classInfo->GetTypeAttr(&typeattr);
 
@@ -2182,7 +2182,7 @@ void MetaObjectGenerator::readClassInfo()
             classInfo->ReleaseTypeAttr(typeattr);
         }
         provideClassInfo->Release();
-        provideClassInfo = 0;
+        provideClassInfo = nullptr;
 
         if (d->tryCache && !coClassID.isEmpty())
             cacheKey = QString::fromLatin1("%1$%2$%3$%4").arg(coClassID)
@@ -2255,7 +2255,7 @@ void MetaObjectGenerator::readClassInfo()
                         break;
                     } else {
                         dispInfo->Release();
-                        dispInfo = 0;
+                        dispInfo = nullptr;
                     }
                 }
             }
@@ -2266,7 +2266,7 @@ void MetaObjectGenerator::readClassInfo()
     if (!d || !dispInfo || !cacheKey.isEmpty() || !d->tryCache)
         return;
 
-    TYPEATTR *typeattr = 0;
+    TYPEATTR *typeattr = nullptr;
     dispInfo->GetTypeAttr(&typeattr);
 
     QString interfaceID;
@@ -2290,7 +2290,7 @@ void MetaObjectGenerator::readEnumInfo()
     QUuid libUuid;
 
     if (d && d->tryCache) {
-        TLIBATTR *libAttr = 0;
+        TLIBATTR *libAttr = nullptr;
         typelib->GetLibAttr(&libAttr);
         if (libAttr) {
             libUuid = QUuid(libAttr->guid);
@@ -2312,7 +2312,7 @@ void MetaObjectGenerator::readEnumInfo()
         typelib->GetTypeInfoType(i, &typekind);
         if (typekind == TKIND_ENUM) {
             // Get the type information for the enum
-            ITypeInfo *enuminfo = 0;
+            ITypeInfo *enuminfo = nullptr;
             typelib->GetTypeInfo(i, &enuminfo);
             if (!enuminfo)
                 continue;
@@ -2320,7 +2320,7 @@ void MetaObjectGenerator::readEnumInfo()
             // Get the name of the enumeration
             BSTR enumname;
             QByteArray enumName;
-            if (typelib->GetDocumentation(INT(i), &enumname, 0, 0, 0) == S_OK) {
+            if (typelib->GetDocumentation(INT(i), &enumname, nullptr, nullptr, nullptr) == S_OK) {
                 enumName = QString::fromWCharArray(enumname).toLatin1();
                 SysFreeString(enumname);
             } else {
@@ -2328,12 +2328,12 @@ void MetaObjectGenerator::readEnumInfo()
             }
 
             // Get the attributes of the enum type
-            TYPEATTR *typeattr = 0;
+            TYPEATTR *typeattr = nullptr;
             enuminfo->GetTypeAttr(&typeattr);
             if (typeattr) {
                 // Get all values of the enumeration
                 for (UINT vd = 0; vd < typeattr->cVars; ++vd) {
-                    VARDESC *vardesc = 0;
+                    VARDESC *vardesc = nullptr;
                     enuminfo->GetVarDesc(vd, &vardesc);
                     if (vardesc && vardesc->varkind == VAR_CONST) {
                         int value = vardesc->lpvarValue->lVal;
@@ -2362,7 +2362,7 @@ void MetaObjectGenerator::readEnumInfo()
 
 void MetaObjectGenerator::addChangedSignal(const QByteArray &function, const QByteArray &type, int memid)
 {
-    QAxEventSink *eventSink = 0;
+    QAxEventSink *eventSink = nullptr;
     if (d) {
         eventSink = d->eventSink.value(iid_propNotifySink);
         if (!eventSink && d->useEventSink) {
@@ -2418,7 +2418,7 @@ QByteArray MetaObjectGenerator::createPrototype(FUNCDESC *funcdesc, ITypeInfo *t
 
     prototype = function + '(';
     if (funcdesc->invkind == INVOKE_FUNC && type == hresult)
-        type = 0;
+        type = nullptr;
 
     int p;
     for (p = 1; p < names.count(); ++p) {
@@ -2475,7 +2475,7 @@ QByteArray MetaObjectGenerator::createPrototype(FUNCDESC *funcdesc, ITypeInfo *t
 void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
 {
     if (!nFuncs) {
-        TYPEATTR *typeattr = 0;
+        TYPEATTR *typeattr = nullptr;
         typeinfo->GetTypeAttr(&typeattr);
         if (typeattr) {
             nFuncs = typeattr->cFuncs;
@@ -2485,7 +2485,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
 
     // get information about all functions
     for (ushort fd = 0; fd < nFuncs ; ++fd) {
-        FUNCDESC *funcdesc = 0;
+        FUNCDESC *funcdesc = nullptr;
         typeinfo->GetFuncDesc(fd, &funcdesc);
         if (!funcdesc)
             break;
@@ -2641,7 +2641,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
 void MetaObjectGenerator::readVarsInfo(ITypeInfo *typeinfo, ushort nVars)
 {
     if (!nVars) {
-        TYPEATTR *typeattr = 0;
+        TYPEATTR *typeattr = nullptr;
         typeinfo->GetTypeAttr(&typeattr);
         if (typeattr) {
             nVars = typeattr->cVars;
@@ -2760,19 +2760,19 @@ void MetaObjectGenerator::readInterfaceInfo()
 
         if (!nImpl) {
             typeinfo->Release();
-            typeinfo = 0;
+            typeinfo = nullptr;
             break;
         }
 
         // go up one base class
         HREFTYPE pRefType;
         typeinfo->GetRefTypeOfImplType(0, &pRefType);
-        ITypeInfo *baseInfo = 0;
+        ITypeInfo *baseInfo = nullptr;
         typeinfo->GetRefTypeInfo(pRefType, &baseInfo);
         typeinfo->Release();
         if (typeinfo == baseInfo) { // IUnknown inherits IUnknown ???
             baseInfo->Release();
-            typeinfo = 0;
+            typeinfo = nullptr;
             break;
         }
         typeinfo = baseInfo;
@@ -2790,7 +2790,7 @@ void MetaObjectGenerator::readEventInterface(ITypeInfo *eventinfo, IConnectionPo
         return;
     }
 
-    QAxEventSink *eventSink = 0;
+    QAxEventSink *eventSink = nullptr;
     if (d) {
         IID conniid;
         cpoint->GetConnectionInterface(&conniid);
@@ -2852,21 +2852,21 @@ void MetaObjectGenerator::readEventInterface(ITypeInfo *eventinfo, IConnectionPo
 void MetaObjectGenerator::readEventInfo()
 {
     int event_serial = 0;
-    IConnectionPointContainer *cpoints = 0;
+    IConnectionPointContainer *cpoints = nullptr;
     if (d && d->useEventSink)
         d->ptr->QueryInterface(IID_IConnectionPointContainer, reinterpret_cast<void **>(&cpoints));
     if (cpoints) {
         // Get connection point enumerator
-        IEnumConnectionPoints *epoints = 0;
+        IEnumConnectionPoints *epoints = nullptr;
         cpoints->EnumConnectionPoints(&epoints);
         if (epoints) {
             ULONG c = 1;
-            IConnectionPoint *cpoint = 0;
+            IConnectionPoint *cpoint = nullptr;
             epoints->Reset();
             QList<QUuid> cpointlist;
             do {
                 if (cpoint) cpoint->Release();
-                cpoint = 0;
+                cpoint = nullptr;
                 HRESULT hr = epoints->Next(c, &cpoint, &c);
                 if (!c || hr != S_OK)
                     break;
@@ -2895,7 +2895,7 @@ void MetaObjectGenerator::readEventInfo()
                     continue;
                 }
 
-                ITypeInfo *eventinfo = 0;
+                ITypeInfo *eventinfo = nullptr;
                 if (typelib)
                     typelib->GetTypeInfoOfGuid(conniid, &eventinfo);
 
@@ -2910,7 +2910,7 @@ void MetaObjectGenerator::readEventInfo()
             if (cpoint) cpoint->Release();
             epoints->Release();
         } else if (classInfo) { // no enumeration - search source interfaces and ask for those
-            TYPEATTR *typeattr = 0;
+            TYPEATTR *typeattr = nullptr;
             classInfo->GetTypeAttr(&typeattr);
             if (typeattr) {
                 for (UINT i = 0; i < typeattr->cImplTypes; ++i) {
@@ -2921,14 +2921,14 @@ void MetaObjectGenerator::readEventInfo()
                     HREFTYPE reference;
                     if (S_OK != classInfo->GetRefTypeOfImplType(i, &reference))
                         continue;
-                    ITypeInfo *eventInfo = 0;
+                    ITypeInfo *eventInfo = nullptr;
                     classInfo->GetRefTypeInfo(reference, &eventInfo);
                     if (!eventInfo)
                         continue;
-                    TYPEATTR *eventattr = 0;
+                    TYPEATTR *eventattr = nullptr;
                     eventInfo->GetTypeAttr(&eventattr);
                     if (eventattr) {
-                        IConnectionPoint *cpoint = 0;
+                        IConnectionPoint *cpoint = nullptr;
                         cpoints->FindConnectionPoint(eventattr->guid, &cpoint);
                         if (cpoint) {
                             if (eventattr->guid == IID_IPropertyNotifySink) {
@@ -2960,11 +2960,11 @@ QMetaObject *MetaObjectGenerator::tryCache()
         if (d->metaobj) {
             d->cachedMetaObject = true;
 
-            IConnectionPointContainer *cpoints = 0;
+            IConnectionPointContainer *cpoints = nullptr;
             d->ptr->QueryInterface(IID_IConnectionPointContainer, reinterpret_cast<void **>(&cpoints));
             if (cpoints) {
                 for (const QUuid &iid : qAsConst(d->metaobj->connectionInterfaces)) {
-                    IConnectionPoint *cpoint = 0;
+                    IConnectionPoint *cpoint = nullptr;
                     cpoints->FindConnectionPoint(iid, &cpoint);
                     if (cpoint) {
                         QAxEventSink *sink = new QAxEventSink(that);
@@ -2982,7 +2982,7 @@ QMetaObject *MetaObjectGenerator::tryCache()
             return d->metaobj;
         }
     }
-    return 0;
+    return nullptr;
 }
 
 static int nameToBuiltinType(const QByteArray &typeName)
@@ -3018,7 +3018,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         readClassInfo();
         if (typelib) {
             BSTR bstr;
-            typelib->GetDocumentation(-1, &bstr, 0, 0, 0);
+            typelib->GetDocumentation(-1, &bstr, nullptr, nullptr, nullptr);
             current_typelib = QString::fromWCharArray(bstr).toLatin1();
             SysFreeString(bstr);
         }
@@ -3176,10 +3176,10 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
 
     // put the metaobject together
     metaobj->d.data = int_data;
-    metaobj->d.extradata = 0;
+    metaobj->d.extradata = nullptr;
     metaobj->d.stringdata = reinterpret_cast<const QByteArrayData *>(string_data);
-    metaobj->d.static_metacall = 0;
-    metaobj->d.relatedMetaObjects = 0;
+    metaobj->d.static_metacall = nullptr;
+    metaobj->d.relatedMetaObjects = nullptr;
     metaobj->d.superdata = parentObject;
 
     if (d)
@@ -3313,9 +3313,9 @@ void QAxBase::connectNotify()
     if (d->eventSink.count()) // already listening
         return;
 
-    IEnumConnectionPoints *epoints = 0;
+    IEnumConnectionPoints *epoints = nullptr;
     if (d->ptr && d->useEventSink) {
-        IConnectionPointContainer *cpoints = 0;
+        IConnectionPointContainer *cpoints = nullptr;
         d->ptr->QueryInterface(IID_IConnectionPointContainer, reinterpret_cast<void **>(&cpoints));
         if (!cpoints)
             return;
@@ -3329,8 +3329,8 @@ void QAxBase::connectNotify()
 
     UINT index;
     IDispatch *disp = d->dispatch();
-    ITypeInfo *typeinfo = 0;
-    ITypeLib  *typelib = 0;
+    ITypeInfo *typeinfo = nullptr;
+    ITypeLib  *typelib = nullptr;
     if (disp)
         disp->GetTypeInfo(0, LOCALE_USER_DEFAULT, &typeinfo);
     if (typeinfo)
@@ -3345,11 +3345,11 @@ void QAxBase::connectNotify()
     bool haveEnumInfo = false;
 
     ULONG c = 1;
-    IConnectionPoint *cpoint = 0;
+    IConnectionPoint *cpoint = nullptr;
     epoints->Reset();
     do {
         if (cpoint) cpoint->Release();
-        cpoint = 0;
+        cpoint = nullptr;
         epoints->Next(c, &cpoint, &c);
         if (!c || !cpoint)
             break;
@@ -3362,7 +3362,7 @@ void QAxBase::connectNotify()
             break;
 
         // Get ITypeInfo for source-interface, and skip if not supporting IDispatch
-        ITypeInfo *eventinfo = 0;
+        ITypeInfo *eventinfo = nullptr;
         typelib->GetTypeInfoOfGuid(conniid, &eventinfo);
         if (eventinfo) {
             TYPEATTR *eventAttr;
@@ -3381,7 +3381,7 @@ void QAxBase::connectNotify()
         }
 
         // always into the cache to avoid recoursion
-        QAxEventSink *eventSink = eventinfo ? new QAxEventSink(this) : 0;
+        QAxEventSink *eventSink = eventinfo ? new QAxEventSink(this) : nullptr;
         d->eventSink.insert(connuuid, eventSink);
 
         if (!eventinfo)
@@ -3451,7 +3451,7 @@ static bool checkHRESULT(HRESULT hres, EXCEPINFO *exc, QAxBase *that, const QStr
                     help += QString::fromLatin1(" [%1]").arg(helpContext);
 
                 if (QAxEventSink::signalHasReceivers(that->qObject(), "exception(int,QString,QString,QString)")) {
-                    void *argv[] = {0, &code, &source, &desc, &help};
+                    void *argv[] = {nullptr, &code, &source, &desc, &help};
                     QAxBase::qt_static_metacall(that, QMetaObject::InvokeMetaMethod,
                                                 exceptionSignal - mo->methodOffset(), argv);
                     printWarning = false;
@@ -3553,10 +3553,10 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
         {
             params.cArgs = 0;
             params.cNamedArgs = 0;
-            params.rgdispidNamedArgs = 0;
-            params.rgvarg = 0;
+            params.rgdispidNamedArgs = nullptr;
+            params.rgvarg = nullptr;
 
-            hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &arg, &excepinfo, 0);
+            hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &arg, &excepinfo, nullptr);
 
             // map result VARIANTARG to void*
             uint type = QVariant::Int;
@@ -3583,12 +3583,12 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
             QVariant qvar;
             if (prop.isEnumType()) {
                 qvar = *reinterpret_cast<const int *>(v[0]);
-                proptype = 0;
+                proptype = nullptr;
             } else {
                 int typeId = prop.userType();
                 if (typeId == int(QMetaType::QVariant)) {
                     qvar = *reinterpret_cast<const QVariant *>(v[0]);
-                    proptype = 0;
+                    proptype = nullptr;
                 } else {
                     qvar = QVariant(typeId, v[0]);
                     if (typeId < QMetaType::User)
@@ -3602,7 +3602,7 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
                 break;
             }
         }
-        hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &params, 0, &excepinfo, &argerr);
+        hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUT, &params, nullptr, &excepinfo, &argerr);
         clearVARIANT(&arg);
         break;
 
@@ -3656,8 +3656,8 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     DISPID dispidNamed = DISPID_PROPERTYPUT;
     params.cArgs = UINT(d->metaobj->numParameter(signature));
     params.cNamedArgs = isProperty ? 1 : 0;
-    params.rgdispidNamedArgs = isProperty ? &dispidNamed : 0;
-    params.rgvarg = 0;
+    params.rgdispidNamedArgs = isProperty ? &dispidNamed : nullptr;
+    params.rgvarg = nullptr;
     VARIANTARG static_rgvarg[QAX_NUM_PARAMS];
     if (params.cArgs) {
         if (params.cArgs <= QAX_NUM_PARAMS)
@@ -3743,7 +3743,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
 */
 int QAxBase::qt_static_metacall(QAxBase *_t, QMetaObject::Call _c, int _id, void **_a)
 {
-    Q_ASSERT(_t != 0);
+    Q_ASSERT(_t != nullptr);
     if (_c == QMetaObject::InvokeMetaMethod) {
         const QMetaObject *mo = _t->metaObject();
         switch (mo->method(_id + mo->methodOffset()).methodType()) {
@@ -3854,7 +3854,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     QByteArray normFunction = QMetaObject::normalizedSignature(name);
     QByteArray function(normFunction);
     VARIANT staticarg[QAX_NUM_PARAMS];
-    VARIANT *arg = 0;
+    VARIANT *arg = nullptr;
     VARIANTARG *res = reinterpret_cast<VARIANTARG *>(inout);
 
     unsigned short disptype;
@@ -3970,7 +3970,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
             type = prop.typeName();
         }
         if (varc == 1) {
-            res = 0;
+            res = nullptr;
             disptype = DISPATCH_PROPERTYPUT;
         } else {
             disptype = DISPATCH_PROPERTYGET;
@@ -3989,7 +3989,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
             if (disptype == DISPATCH_PROPERTYPUT)
                 paramType = type;
             else if (parse || disptype == DISPATCH_PROPERTYGET)
-                paramType = 0;
+                paramType = nullptr;
             else
                 paramType = d->metaobj->paramType(normFunction, i, &out);
 
@@ -4026,7 +4026,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
 
     params.cArgs = UINT(varc);
     params.cNamedArgs = (disptype == DISPATCH_PROPERTYPUT) ? 1 : 0;
-    params.rgdispidNamedArgs = (disptype == DISPATCH_PROPERTYPUT) ? &dispidNamed : 0;
+    params.rgdispidNamedArgs = (disptype == DISPATCH_PROPERTYPUT) ? &dispidNamed : nullptr;
     params.rgvarg = arg;
     EXCEPINFO excepinfo;
     memset(&excepinfo, 0, sizeof(excepinfo));
@@ -4236,13 +4236,13 @@ QAxObject *QAxBase::querySubObject(const char *name,
 */
 QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
 {
-    QAxObject *object = 0;
+    QAxObject *object = nullptr;
     VARIANTARG res;
     VariantInit(&res);
 
     QByteArray rettype;
     if (!dynamicCallHelper(name, &res, vars, rettype))
-        return 0;
+        return nullptr;
 
     switch (res.vt) {
     case VT_DISPATCH:
@@ -4306,7 +4306,7 @@ public:
 
     HRESULT __stdcall QueryInterface(REFIID iid, LPVOID *iface) override
     {
-        *iface = 0;
+        *iface = nullptr;
         if (iid == IID_IUnknown)
             *iface = this;
         else if (iid == IID_IPropertyBag)
@@ -4345,7 +4345,7 @@ public:
         if (!var)
             return E_POINTER;
         QString property = QString::fromWCharArray(name);
-        QVariant qvar = VARIANTToQVariant(*var, 0);
+        QVariant qvar = VARIANTToQVariant(*var, nullptr);
         map[property] = qvar;
 
         return S_OK;
@@ -4380,7 +4380,7 @@ QAxBase::PropertyBag QAxBase::propertyBag() const
 
     if (isNull())
         return result;
-    IPersistPropertyBag *persist = 0;
+    IPersistPropertyBag *persist = nullptr;
     d->ptr->QueryInterface(IID_IPersistPropertyBag, reinterpret_cast<void **>(&persist));
     if (persist) {
         QtPropertyBag *pbag = new QtPropertyBag();
@@ -4421,13 +4421,13 @@ void QAxBase::setPropertyBag(const PropertyBag &bag)
 
     if (isNull())
         return;
-    IPersistPropertyBag *persist = 0;
+    IPersistPropertyBag *persist = nullptr;
     d->ptr->QueryInterface(IID_IPersistPropertyBag, reinterpret_cast<void **>(&persist));
     if (persist) {
         QtPropertyBag *pbag = new QtPropertyBag();
         pbag->map = bag;
         pbag->AddRef();
-        persist->Load(pbag, 0);
+        persist->Load(pbag, nullptr);
         pbag->Release();
         persist->Release();
     } else {
@@ -4518,9 +4518,9 @@ QVariant QAxBase::asVariant() const
 void *qax_createObjectWrapper(int metaType, IUnknown *iface)
 {
     if (!iface)
-        return 0;
+        return nullptr;
 
-    void *object = QMetaType::create(metaType, 0);
+    void *object = QMetaType::create(metaType, nullptr);
     QAxBasePrivate *d = reinterpret_cast<const QAxObject *>(object)->d;
 
     d->ptr = iface;

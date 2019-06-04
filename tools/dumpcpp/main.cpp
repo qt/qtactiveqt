@@ -45,7 +45,7 @@
 #include <private/qmetaobject_p.h>
 QT_BEGIN_NAMESPACE
 
-static ITypeInfo *currentTypeInfo = 0;
+static ITypeInfo *currentTypeInfo = nullptr;
 
 enum ProgramMode {
     GenerateMode,
@@ -564,7 +564,7 @@ const char *metaTypeEnumValueString(int type)
 QT_FOR_EACH_STATIC_TYPE(RETURN_METATYPENAME_STRING)
     }
 #undef RETURN_METATYPENAME_STRING
-    return 0;
+    return nullptr;
 }
 
 int nameToBuiltinType(const QByteArray &name)
@@ -910,7 +910,7 @@ static QByteArray classNameFromTypeInfo(ITypeInfo *typeinfo)
 {
     BSTR bstr;
     QByteArray result;
-    if (SUCCEEDED(typeinfo->GetDocumentation(-1, &bstr, 0, 0, 0))) {
+    if (SUCCEEDED(typeinfo->GetDocumentation(-1, &bstr, nullptr, nullptr, nullptr))) {
         result = QString::fromWCharArray(bstr).toLatin1();
         SysFreeString(bstr);
     }
@@ -963,7 +963,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
     QString libName = nameSpace;
     if (libName.isEmpty()) {
         BSTR nameString = nullptr;
-        if (SUCCEEDED(typelib->GetDocumentation(-1, &nameString, 0, 0, 0))) {
+        if (SUCCEEDED(typelib->GetDocumentation(-1, &nameString, nullptr, nullptr, nullptr))) {
             libName = QString::fromWCharArray(nameString);
             SysFreeString(nameString);
         }
@@ -972,7 +972,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
 
     QString libVersion(QLatin1String("1.0"));
 
-    TLIBATTR *tlibattr = 0;
+    TLIBATTR *tlibattr = nullptr;
     typelib->GetLibAttr(&tlibattr);
     if (tlibattr) {
         libVersion = QString::fromLatin1("%1.%2").arg(tlibattr->wMajorVerNum).arg(tlibattr->wMinorVerNum);
@@ -987,7 +987,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         return false;
     }
 
-    QMetaObject *namespaceObject = qax_readEnumInfo(typelib, 0);
+    QMetaObject *namespaceObject = qax_readEnumInfo(typelib, nullptr);
 
     QTemporaryFile classImplFile;
     if (!classImplFile.open()) {
@@ -1043,7 +1043,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
             declOut << endl;
             declOut << "// Referenced namespace" << endl;
             for (UINT index = 0; index < typeCount; ++index) {
-                ITypeInfo *typeinfo = 0;
+                ITypeInfo *typeinfo = nullptr;
                 typelib->GetTypeInfo(index, &typeinfo);
                 if (!typeinfo)
                     continue;
@@ -1058,7 +1058,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 TYPEKIND typekind;
                 typelib->GetTypeInfoType(index, &typekind);
 
-                QMetaObject *metaObject = 0;
+                QMetaObject *metaObject = nullptr;
 
                 // trigger meta object to collect references to other type libraries
                 switch (typekind) {
@@ -1171,7 +1171,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
 
     UINT typeCount = typelib->GetTypeInfoCount();
     for (UINT index = 0; index < typeCount; ++index) {
-        ITypeInfo *typeinfo = 0;
+        ITypeInfo *typeinfo = nullptr;
         typelib->GetTypeInfo(index, &typeinfo);
         if (!typeinfo)
             continue;
@@ -1192,7 +1192,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         else if (typeattr->wTypeFlags & TYPEFLAG_FCONTROL)
             object_category |= ActiveX;
 
-        QMetaObject *metaObject = 0;
+        QMetaObject *metaObject = nullptr;
         QUuid guid(typeattr->guid);
 
         if (!(object_category & ActiveX)) {
@@ -1257,7 +1257,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                     generateClassImpl(classImplOut, metaObject, className, libName.toLatin1(),
                                       object_category);
             }
-            currentTypeInfo = 0;
+            currentTypeInfo = nullptr;
         }
 
         qax_deleteMetaObject(metaObject);
@@ -1532,7 +1532,7 @@ static void parseOptions(Options *options)
 
 int main(int argc, char **argv)
 {
-    if (FAILED(CoInitializeEx(0, COINIT_APARTMENTTHREADED))) {
+    if (FAILED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
         qErrnoWarning("CoInitializeEx() failed.");
         return -1;
     }

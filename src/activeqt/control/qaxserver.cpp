@@ -74,13 +74,13 @@ QT_BEGIN_NAMESPACE
 
 // Some global variables to store module information
 bool qAxIsServer = false;
-HANDLE qAxInstance = 0;
-ITypeLib *qAxTypeLibrary = 0;
+HANDLE qAxInstance = nullptr;
+ITypeLib *qAxTypeLibrary = nullptr;
 wchar_t qAxModuleFilename[MAX_PATH];
 bool qAxOutProcServer = false;
 
 // The QAxFactory instance
-static QAxFactory* qax_factory = 0;
+static QAxFactory* qax_factory = nullptr;
 extern CLSID CLSID_QRect;
 extern CLSID CLSID_QSize;
 extern CLSID CLSID_QPoint;
@@ -93,7 +93,7 @@ extern QAxFactory *qax_instantiate();
 QAxFactory *qAxFactory()
 {
     if (!qax_factory) {
-        bool hadQApp = qApp != 0;
+        bool hadQApp = qApp != nullptr;
         qax_factory = qax_instantiate();
         // QAxFactory created a QApplication
         if (!hadQApp && qApp)
@@ -163,11 +163,11 @@ void qAxCleanup()
         return;
 
     delete qax_factory;
-    qax_factory = 0;
+    qax_factory = nullptr;
 
     if (qAxTypeLibrary) {
         qAxTypeLibrary->Release();
-        qAxTypeLibrary = 0;
+        qAxTypeLibrary = nullptr;
     }
 
     DeleteCriticalSection(&qAxModuleSection);
@@ -236,7 +236,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
 
     const QString libFile = qAxInit();
 
-    TLIBATTR *libAttr = 0;
+    TLIBATTR *libAttr = nullptr;
     if (qAxTypeLibrary)
         qAxTypeLibrary->GetLibAttr(&libAttr);
     if (!libAttr)
@@ -244,10 +244,10 @@ HRESULT UpdateRegistry(BOOL bRegister)
     bool userFallback = false;
     if (bRegister) {
         if (RegisterTypeLib(qAxTypeLibrary,
-                            reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), 0) == TYPE_E_REGISTRYACCESS) {
+                            reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), nullptr) == TYPE_E_REGISTRYACCESS) {
 #ifndef Q_CC_MINGW
             // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
-            RegisterTypeLibForUser(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), 0);
+            RegisterTypeLibForUser(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), nullptr);
             userFallback = true;
 #endif
         }
@@ -278,7 +278,7 @@ HRESULT UpdateRegistry(BOOL bRegister)
     bool delete_qApp = false;
     if (!qApp) {
         static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
-        (void)new QApplication(argc, 0);
+        (void)new QApplication(argc, nullptr);
         delete_qApp = true;
     }
 
@@ -542,7 +542,7 @@ static const char* const type_map[][2] =
     { "IUnknown",       "IUnknown*" },
     { "IDispatch*",     "IDispatch*" },
     { "IUnknown*",      "IUnknown*" },
-    { 0,                0 }
+    { nullptr,                nullptr }
 };
 
 static QByteArray convertTypes(const QByteArray &qtype, bool *ok)
@@ -614,7 +614,7 @@ static const char* const keyword_map[][2] =
     { "source",         "source_"           },
     { "string",         "string_"           },
     { "uuid",           "uuid_"             },
-    { 0,                0                   }
+    { nullptr,                nullptr                   }
 };
 
 static QByteArray replaceKeyword(const QByteArray &name)
@@ -684,7 +684,7 @@ static const char* const ignore_props[] =
     "customWhatsThis",
     "shown",
     "windowOpacity",
-    0
+    nullptr
 };
 
 // filter out some slots
@@ -707,7 +707,7 @@ static const char* const ignore_slots[] =
     "move_1",
     "resize_1",
     "setGeometry_1",
-    0
+    nullptr
 };
 
 static bool ignore(const char *test, const char *const *table)
@@ -1174,7 +1174,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     bool delete_qApp = false;
     if (!qApp) {
         static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
-        (void)new QApplication(argc, 0);
+        (void)new QApplication(argc, nullptr);
         delete_qApp = true;
     }
 
@@ -1257,7 +1257,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
             QObject *o = qAxFactory()->createObject(className);
             // It's not a control class, so it is actually a subtype. Define it.
             if (!o)
-                res = classIDL(0, mo, className, false, out);
+                res = classIDL(nullptr, mo, className, false, out);
             delete o;
         }
     }
@@ -1272,7 +1272,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
             continue;
         const QMetaObject *mo = o->metaObject();
         QAxBindable *bind = static_cast<QAxBindable *>(o->qt_metacast("QAxBindable"));
-        bool isBindable =  bind != 0;
+        bool isBindable =  bind != nullptr;
 
         const QByteArray cleanType = qax_clean_type(className, mo).toLatin1();
         subtypes.append(cleanType);

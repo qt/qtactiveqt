@@ -62,7 +62,7 @@ static bool prependPath()
 {
     enum { maxEnvironmentSize = 32767 };
     wchar_t buffer[maxEnvironmentSize];
-    if (!GetModuleFileName(NULL, buffer, maxEnvironmentSize))
+    if (!GetModuleFileName(nullptr, buffer, maxEnvironmentSize))
         return false;
     wchar_t *ptr = wcsrchr(buffer, L'\\');
     if (!ptr)
@@ -75,10 +75,10 @@ static bool prependPath()
 
 static QString errorString(DWORD errorCode)
 {
-    wchar_t *resultW = 0;
+    wchar_t *resultW = nullptr;
     FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
-                  NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                  reinterpret_cast<LPWSTR>(&resultW), 0, NULL);
+                  nullptr, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                  reinterpret_cast<LPWSTR>(&resultW), 0, nullptr);
     const QString result = QString::fromWCharArray(resultW);
     LocalFree(resultW);
     return result;
@@ -107,7 +107,7 @@ static bool runWithQtInEnvironment(const QString &cmd)
     QScopedArrayPointer<wchar_t> commandLineW(new wchar_t[cmd.size() + 1]);
     cmd.toWCharArray(commandLineW.data());
     commandLineW[cmd.size()] = 0;
-    if (!CreateProcessW(0, commandLineW.data(), 0, 0, /* InheritHandles */ TRUE, 0, 0, 0, &si, &pi)) {
+    if (!CreateProcessW(nullptr, commandLineW.data(), nullptr, nullptr, /* InheritHandles */ TRUE, 0, nullptr, nullptr, &si, &pi)) {
         fprintf(stderr, "Unable to execute \"%s\": %s\n", qPrintable(cmd),
                 qPrintable(errorString(GetLastError())));
         return false;
@@ -139,7 +139,7 @@ static bool runWithQtInEnvironment(const QString &cmd)
 static bool attachTypeLibrary(const QString &applicationName, int resource, const QByteArray &data, QString *errorMessage)
 {
     HANDLE hExe = BeginUpdateResource(reinterpret_cast<const wchar_t *>(applicationName.utf16()), false);
-    if (hExe == 0) {
+    if (hExe == nullptr) {
         if (errorMessage)
             *errorMessage = QString::fromLatin1("Failed to attach type library to binary %1 - could not open file.").arg(applicationName);
         return false;
@@ -177,10 +177,10 @@ static HMODULE loadLibraryQt(const QString &input)
     // Load DLL with the folder containing the DLL temporarily added to the search path when loading dependencies
     const UINT oldErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
     HMODULE result =
-        LoadLibraryEx(inputC, NULL, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+        LoadLibraryEx(inputC, nullptr, LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
     // If that fails, call with flags=0 to get LoadLibrary() behavior (search %PATH%).
     if (!result)
-        result = LoadLibraryEx(inputC, NULL, 0);
+        result = LoadLibraryEx(inputC, nullptr, 0);
     SetErrorMode(oldErrorMode);
     return result;
 }

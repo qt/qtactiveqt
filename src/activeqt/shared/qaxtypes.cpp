@@ -103,7 +103,7 @@ static IFontDisp *QFontToIFont(const QFont &font)
     HRESULT res = OleCreateFontIndirect(&fdesc, IID_IFontDisp, (void**)&f);
     if (res != S_OK) {
         if (f) f->Release();
-        f = 0;
+        f = nullptr;
 #if defined(QT_CHECK_STATE)
         qWarning("QFontToIFont: Failed to create IFont");
 #endif
@@ -143,14 +143,14 @@ Q_GUI_EXPORT QPixmap qt_pixmapFromWinHBITMAP(HBITMAP bitmap, int hbitmapFormat =
 
 static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
 {
-    IPictureDisp *pic = 0;
+    IPictureDisp *pic = nullptr;
 
     PICTDESC desc;
     desc.cbSizeofstruct = sizeof(PICTDESC);
     desc.picType = PICTYPE_BITMAP;
 
-    desc.bmp.hbitmap = 0;
-    desc.bmp.hpal = 0;
+    desc.bmp.hbitmap = nullptr;
+    desc.bmp.hpal = nullptr;
 
     if (!pixmap.isNull()) {
         desc.bmp.hbitmap = qt_pixmapToWinHBITMAP(pixmap);
@@ -160,7 +160,7 @@ static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
     HRESULT res = OleCreatePictureIndirect(&desc, IID_IPictureDisp, true, (void**)&pic);
     if (res != S_OK) {
         if (pic) pic->Release();
-        pic = 0;
+        pic = nullptr;
 #if defined(QT_CHECK_STATE)
         qWarning("QPixmapToIPicture: Failed to create IPicture");
 #endif
@@ -175,7 +175,7 @@ static QPixmap IPictureToQPixmap(IPicture *ipic)
     if (type != PICTYPE_BITMAP)
         return QPixmap();
 
-    HBITMAP hbm = 0;
+    HBITMAP hbm = nullptr;
     ipic->get_Handle((OLE_HANDLE*)&hbm);
     if (!hbm)
         return QPixmap();
@@ -475,7 +475,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             default:
                 break;
             }
-            SAFEARRAY *array = 0;
+            SAFEARRAY *array = nullptr;
             bool is2D = false;
             // If the first element in the array is a list the whole list is
             // treated as a 2D array. The column count is taken from the 1st element.
@@ -917,13 +917,13 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     case VT_DISPATCH|VT_BYREF:
         {
             // pdispVal and ppdispVal are a union
-            IDispatch *disp = 0;
+            IDispatch *disp = nullptr;
             if (arg.vt & VT_BYREF)
                 disp = *arg.ppdispVal;
             else
                 disp = arg.pdispVal;
             if (type == QVariant::Font || (!type && (typeName == "QFont" || typeName == "QFont*"))) {
-                IFont *ifont = 0;
+                IFont *ifont = nullptr;
                 if (disp)
                     disp->QueryInterface(IID_IFont, (void**)&ifont);
                 if (ifont) {
@@ -933,7 +933,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                     var = QVariant::fromValue(QFont());
                 }
             } else if (type == QVariant::Pixmap || (!type && (typeName == "QPixmap" || typeName == "QPixmap*"))) {
-                IPicture *ipic = 0;
+                IPicture *ipic = nullptr;
                 if (disp)
                     disp->QueryInterface(IID_IPicture, (void**)&ipic);
                 if (ipic) {
@@ -987,7 +987,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     case VT_UNKNOWN:
     case VT_UNKNOWN|VT_BYREF:
         {
-            IUnknown *unkn = 0;
+            IUnknown *unkn = nullptr;
             if (arg.vt & VT_BYREF)
                 unkn = *arg.ppunkVal;
             else
@@ -998,7 +998,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     case VT_ARRAY|VT_VARIANT:
     case VT_ARRAY|VT_VARIANT|VT_BYREF:
         {
-            SAFEARRAY *array = 0;
+            SAFEARRAY *array = nullptr;
             if ( arg.vt & VT_BYREF )
                 array = *arg.pparray;
             else
@@ -1019,7 +1019,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                         VariantInit( &var );
                         SafeArrayGetElement( array, &i, &var );
 
-                        QVariant qvar = VARIANTToQVariant( var, 0 );
+                        QVariant qvar = VARIANTToQVariant( var, nullptr );
                         clearVARIANT( &var );
                         list << qvar;
                     }
@@ -1049,7 +1049,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                             dimIndices[1] = y;
                             SafeArrayGetElement(array, dimIndices, &var);
 
-                            QVariant qvar = VARIANTToQVariant(var, 0);
+                            QVariant qvar = VARIANTToQVariant(var, nullptr);
                             clearVARIANT(&var);
                             list << qvar;
                         }
@@ -1069,7 +1069,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     case VT_ARRAY|VT_BSTR:
     case VT_ARRAY|VT_BSTR|VT_BYREF:
         {
-            SAFEARRAY *array = 0;
+            SAFEARRAY *array = nullptr;
             if (arg.vt & VT_BYREF)
                 array = *arg.pparray;
             else
@@ -1099,7 +1099,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     case VT_ARRAY|VT_UI1:
     case VT_ARRAY|VT_UI1|VT_BYREF:
         {
-            SAFEARRAY *array = 0;
+            SAFEARRAY *array = nullptr;
             if (arg.vt & VT_BYREF)
                 array = *arg.pparray;
             else
@@ -1157,7 +1157,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
         // support for any SAFEARRAY(Type) where Type can be converted to a QVariant
         // -> QVariantList
         if (arg.vt & VT_ARRAY) {
-            SAFEARRAY *array = 0;
+            SAFEARRAY *array = nullptr;
             if (arg.vt & VT_BYREF)
                 array = *arg.pparray;
             else
@@ -1174,7 +1174,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
             VARIANT variant;
             SafeArrayGetVartype(array, &vt);
 
-            void *pElement = 0;
+            void *pElement = nullptr;
             switch(vt) {
             case VT_BSTR: Q_ASSERT(false); break; // already covered
             case VT_BOOL: pElement = &variant.boolVal; break;
@@ -1208,7 +1208,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
             for ( long i = lBound; i <= uBound; ++i ) {
                 variant.vt = vt;
                 SafeArrayGetElement(array, &i, pElement);
-                QVariant qvar = VARIANTToQVariant(variant, 0);
+                QVariant qvar = VARIANTToQVariant(variant, nullptr);
                 clearVARIANT(&variant);
                 list << qvar;
             }

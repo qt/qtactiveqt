@@ -458,7 +458,7 @@ public:
 };
 
 ActiveObject::ActiveObject(QObject *parent, QAxFactory *factory)
-: QObject(parent), wrapper(0), cookie(0)
+: QObject(parent), wrapper(nullptr), cookie(0)
 {
     QLatin1String key(parent->metaObject()->className());
 
@@ -470,7 +470,7 @@ ActiveObject::ActiveObject(QObject *parent, QAxFactory *factory)
 ActiveObject::~ActiveObject()
 {
     if (cookie)
-        RevokeActiveObject(cookie, 0);
+        RevokeActiveObject(cookie, nullptr);
     if (wrapper)
         wrapper->Release();
 }
