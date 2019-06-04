@@ -115,7 +115,7 @@ QT_BEGIN_NAMESPACE
 */
 class QAxHostWidget : public QWidget
 {
-    Q_DISABLE_COPY(QAxHostWidget)
+    Q_DISABLE_COPY_MOVE(QAxHostWidget)
     friend class QAxClientSite;
 public:
     Q_OBJECT_CHECK
@@ -178,7 +178,7 @@ class QAxClientSite : public IDispatch,
                     public IOleDocumentSite,
                     public IAdviseSink
 {
-    Q_DISABLE_COPY(QAxClientSite)
+    Q_DISABLE_COPY_MOVE(QAxClientSite)
     friend class QAxHostWidget;
 public:
     QAxClientSite(QAxWidget *c);

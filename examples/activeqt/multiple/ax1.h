@@ -81,7 +81,7 @@ public:
     }
 
 protected:
-    void paintEvent(QPaintEvent *e)
+    void paintEvent(QPaintEvent *e) override
     {
         QPainter paint(this);
         QRect r = rect();

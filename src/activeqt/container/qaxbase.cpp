@@ -257,7 +257,7 @@ static const char *const type_conversion[][2] =
 
 class QAxEventSink : public IDispatch, public IPropertyNotifySink
 {
-    Q_DISABLE_COPY(QAxEventSink)
+    Q_DISABLE_COPY_MOVE(QAxEventSink)
 public:
     explicit QAxEventSink(QAxBase *com) : combase(com) {}
     virtual ~QAxEventSink()
@@ -587,7 +587,7 @@ public:
 
 class QAxBasePrivate
 {
-    Q_DISABLE_COPY(QAxBasePrivate)
+    Q_DISABLE_COPY_MOVE(QAxBasePrivate)
 public:
     using UuidEventSinkHash = QHash<QUuid, QAxEventSink*>;
 
@@ -4293,7 +4293,7 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
 
 class QtPropertyBag : public IPropertyBag
 {
-    Q_DISABLE_COPY(QtPropertyBag)
+    Q_DISABLE_COPY_MOVE(QtPropertyBag)
 public:
     QtPropertyBag() = default;
     virtual ~QtPropertyBag() = default;

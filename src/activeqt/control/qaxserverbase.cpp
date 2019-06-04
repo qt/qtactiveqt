@@ -446,7 +446,7 @@ static inline QAxServerBase *axServerBaseFromWindow(HWND hWnd)
 
 class QAxServerAggregate : public IUnknown
 {
-    Q_DISABLE_COPY(QAxServerAggregate)
+    Q_DISABLE_COPY_MOVE(QAxServerAggregate)
 public:
     QAxServerAggregate(const QString &className, IUnknown *outerUnknown)
     {
@@ -547,11 +547,11 @@ public:
         DeleteCriticalSection(&refCountSection);
     }
 
-    unsigned long __stdcall AddRef()
+    unsigned long __stdcall AddRef() override
     {
         return InterlockedIncrement(&ref);
     }
-    unsigned long __stdcall Release()
+    unsigned long __stdcall Release() override
     {
         LONG refCount = InterlockedDecrement(&ref);
         if (!refCount)

@@ -1220,7 +1220,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                                 // class to make related error messages clearer
                 const QByteArray className = classNameFromTypeInfo(typeinfo);
                 declOut << "// stub for vtable-only interface\n"
-                    << "class " << className << " : public QAxObject { Q_DISABLE_COPY("
+                    << "class " << className << " : public QAxObject { Q_DISABLE_COPY_MOVE("
                     << className << ") };\n\n";
             }
             break;

@@ -97,7 +97,7 @@ public:
 
 class QAxScriptSite : public IActiveScriptSite, public IActiveScriptSiteWindow
 {
-    Q_DISABLE_COPY(QAxScriptSite)
+    Q_DISABLE_COPY_MOVE(QAxScriptSite)
 public:
     QAxScriptSite(QAxScript *script);
     virtual ~QAxScriptSite() = default;
