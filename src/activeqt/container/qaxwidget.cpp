@@ -574,16 +574,16 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
 
     bool showHost = false;
     if (!m_spOleObject)
-        widget->queryInterface(IID_IOleObject, (void**)&m_spOleObject);
+        widget->queryInterface(IID_IOleObject, reinterpret_cast<void**>(&m_spOleObject));
     if (m_spOleObject) {
         DWORD dwMiscStatus = 0;
         m_spOleObject->GetMiscStatus(DVASPECT_CONTENT, &dwMiscStatus);
 
         IOleDocument *document = nullptr;
-        m_spOleObject->QueryInterface(IID_IOleDocument, (void**)&document);
+        m_spOleObject->QueryInterface(IID_IOleDocument, reinterpret_cast<void**>(&document));
         if (document) {
             IPersistStorage *persistStorage = nullptr;
-            document->QueryInterface(IID_IPersistStorage, (void**)&persistStorage);
+            document->QueryInterface(IID_IPersistStorage, reinterpret_cast<void**>(&persistStorage));
             if (persistStorage) {
             // try to activate as document server
                 IStorage *storage = nullptr;
@@ -610,14 +610,13 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
 
             if (!initialized) {
                 IPersistStreamInit *spPSI = nullptr;
-                m_spOleObject->QueryInterface(IID_IPersistStreamInit, (void**)&spPSI);
+                m_spOleObject->QueryInterface(IID_IPersistStreamInit, reinterpret_cast<void**>(&spPSI));
                 if (spPSI) {
                     if (data.length()) {
                         IStream *pStream = nullptr;
                         HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, data.length());
                         if (hGlobal) {
-                            BYTE *pStByte = (BYTE *)GlobalLock(hGlobal);
-                            if (pStByte)
+                            if (auto pStByte = GlobalLock(hGlobal))
                                 memcpy(pStByte, data.data(), data.length());
                             GlobalUnlock(hGlobal);
                             if (SUCCEEDED(CreateStreamOnHGlobal(hGlobal, TRUE, &pStream))) {
@@ -1598,7 +1597,7 @@ HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
     m_spActiveView->UIActivate(TRUE);
 
     RECT rect;
-    GetClientRect((HWND)widget->winId(), &rect);
+    GetClientRect(HWND(widget->winId()), &rect);
     m_spActiveView->SetRect(&rect);
     m_spActiveView->Show(TRUE);
 

@@ -100,7 +100,7 @@ static IFontDisp *QFontToIFont(const QFont &font)
     fdesc.sWeight = font.weight() * 10;
 
     IFontDisp *f;
-    HRESULT res = OleCreateFontIndirect(&fdesc, IID_IFontDisp, (void**)&f);
+    HRESULT res = OleCreateFontIndirect(&fdesc, IID_IFontDisp, reinterpret_cast<void**>(&f));
     if (res != S_OK) {
         if (f) f->Release();
         f = nullptr;
@@ -157,7 +157,7 @@ static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
         Q_ASSERT(desc.bmp.hbitmap);
     }
 
-    HRESULT res = OleCreatePictureIndirect(&desc, IID_IPictureDisp, true, (void**)&pic);
+    HRESULT res = OleCreatePictureIndirect(&desc, IID_IPictureDisp, true, reinterpret_cast<void**>(&pic));
     if (res != S_OK) {
         if (pic) pic->Release();
         pic = nullptr;
@@ -176,7 +176,7 @@ static QPixmap IPictureToQPixmap(IPicture *ipic)
         return QPixmap();
 
     HBITMAP hbm = nullptr;
-    ipic->get_Handle((OLE_HANDLE*)&hbm);
+    ipic->get_Handle(reinterpret_cast<OLE_HANDLE*>(&hbm));
     if (!hbm)
         return QPixmap();
 
@@ -567,7 +567,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             if (count) {
                 const char *data = bytes.constData();
                 char *dest;
-                SafeArrayAccessData(array, (void **)&dest);
+                SafeArrayAccessData(array, reinterpret_cast<void**>(&dest));
                 memcpy(dest, data, count);
                 SafeArrayUnaccessData(array);
             }
@@ -667,12 +667,12 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                     return false;
                 }
                 arg.vt = VT_DISPATCH;
-                arg.pdispVal = *(IDispatch**)qvar.data();
+                arg.pdispVal = *static_cast<IDispatch**>(qvar.data());
                 if (arg.pdispVal)
                     arg.pdispVal->AddRef();
             } else if (!qstrcmp(qvar.typeName(), "IDispatch**")) {
                 arg.vt = VT_DISPATCH;
-                arg.ppdispVal = *(IDispatch***)qvar.data();
+                arg.ppdispVal = *static_cast<IDispatch***>(qvar.data());
                 if (out)
                     arg.vt |= VT_BYREF;
             } else if (!qstrcmp(qvar.typeName(), "IUnknown*")) {
@@ -683,7 +683,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                     return false;
                 }
                 arg.vt = VT_UNKNOWN;
-                arg.punkVal = *(IUnknown**)qvar.data();
+                arg.punkVal = *static_cast<IUnknown**>(qvar.data());
                 if (arg.punkVal)
                     arg.punkVal->AddRef();
 #ifdef QAX_SERVER
@@ -710,10 +710,10 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                     arg.byref = nullptr;
                     return false;
                 }
-                QAxObject *object = *(QAxObject**)qvar.constData();
+                QAxObject *object = *static_cast<QAxObject**>(qvar.data());
 //                qVariantGet(qvar, object, subType);
                 arg.vt = VT_DISPATCH;
-                object->queryInterface(IID_IDispatch, (void**)&arg.pdispVal);
+                object->queryInterface(IID_IDispatch, reinterpret_cast<void**>(&arg.pdispVal));
 #endif
             } else {
                 return false;
@@ -925,7 +925,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
             if (type == QVariant::Font || (!type && (typeName == "QFont" || typeName == "QFont*"))) {
                 IFont *ifont = nullptr;
                 if (disp)
-                    disp->QueryInterface(IID_IFont, (void**)&ifont);
+                    disp->QueryInterface(IID_IFont, reinterpret_cast<void**>(&ifont));
                 if (ifont) {
                     var = QVariant::fromValue(IFontToQFont(ifont));
                     ifont->Release();
@@ -935,7 +935,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
             } else if (type == QVariant::Pixmap || (!type && (typeName == "QPixmap" || typeName == "QPixmap*"))) {
                 IPicture *ipic = nullptr;
                 if (disp)
-                    disp->QueryInterface(IID_IPicture, (void**)&ipic);
+                    disp->QueryInterface(IID_IPicture, reinterpret_cast<void**>(&ipic));
                 if (ipic) {
                     var = QVariant::fromValue(IPictureToQPixmap(ipic));
                     ipic->Release();
@@ -946,7 +946,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
 #ifdef QAX_SERVER
                 IAxServerBase *iface = 0;
                 if (disp && typeName != "IDispatch*")
-                    disp->QueryInterface(IID_IAxServerBase, (void**)&iface);
+                    disp->QueryInterface(IID_IAxServerBase, reinterpret_cast<void**>(&iface));
                 if (iface) {
                     QObject *qObj = iface->qObject();
                     iface->Release();
@@ -973,7 +973,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                                     typeNameStr = typeName.left(pIndex);
                                 int metaType = QMetaType::type(typeNameStr);
                                 Q_ASSERT(metaType != 0);
-                                QAxObject *object = (QAxObject*)qax_createObjectWrapper(metaType, disp);
+                                auto object = static_cast<QAxObject*>(qax_createObjectWrapper(metaType, disp));
                                 var = QVariant(QMetaType::type(typeName), &object);
                             } else
 #endif
@@ -1119,7 +1119,7 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                 bytes.resize(uBound - lBound + 1);
                 char *data = bytes.data();
                 char *src;
-                SafeArrayAccessData(array, (void**)&src);
+                SafeArrayAccessData(array, reinterpret_cast<void**>(&src));
                 memcpy(data, src, bytes.size());
                 SafeArrayUnaccessData(array);
             }

@@ -1598,7 +1598,7 @@ HWND QAxServerBase::create(HWND hWndParent, RECT& rcPos)
     Q_ASSERT(isWidget && qt.widget);
 
     static ATOM atom = 0;
-    HINSTANCE hInst = (HINSTANCE)qAxInstance;
+    HINSTANCE hInst = reinterpret_cast<HINSTANCE>(qAxInstance);
     EnterCriticalSection(&createWindowSection);
     QString cn(QLatin1String("QAxControl"));
     cn += QString::number(quintptr(ActiveXProc));
@@ -3178,7 +3178,7 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* 
     RECTL rc = *lprcBounds;
     bool bMetaFile = GetDeviceCaps(hdcDraw, TECHNOLOGY) == DT_METAFILE;
     if (!bMetaFile)
-        ::LPtoDP(hicTargetDev, (LPPOINT)&rc, 2);
+        ::LPtoDP(hicTargetDev, reinterpret_cast<LPPOINT>(&rc), 2);
 
     const QPixmap pm = qt.widget->grab();
     HBITMAP hbm = qt_pixmapToWinHBITMAP(pm);

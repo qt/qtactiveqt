@@ -3277,7 +3277,7 @@ const QMetaObject *QAxBase::metaObject() const
     const QMetaObject* parentObject = parentMetaObject();
 
     if (!d->ptr && !d->initialized) {
-        ((QAxBase*)this)->initialize(&d->ptr);
+        const_cast<QAxBase*>(this)->initialize(&d->ptr);
         d->initialized = true;
     }
 
@@ -3504,10 +3504,10 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
     if (propname == "control") {
         switch(call) {
         case QMetaObject::ReadProperty:
-            *(QString*)*v = control();
+            *static_cast<QString*>(*v) = control();
             break;
         case QMetaObject::WriteProperty:
-            setControl(*(QString*)*v);
+            setControl(*static_cast<const QString*>(*v));
             break;
         case QMetaObject::ResetProperty:
             clear();
@@ -4245,12 +4245,12 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
                 object = new QAxObject(res.pdispVal, qObject());
             } else if (QMetaType::type(rettype)) {
                 QVariant qvar = VARIANTToQVariant(res, rettype, 0);
-                object = *(QAxObject**)qvar.constData();
+                object = *static_cast<QAxObject**>(qvar.data());
 //                qVariantGet(qvar, object, rettype);
                 res.pdispVal->AddRef();
             }
             if (object)
-                ((QAxBase*)object)->d->tryCache = true;
+                static_cast<QAxBase*>(object)->d->tryCache = true;
         }
         break;
     case VT_UNKNOWN:
@@ -4259,12 +4259,12 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
                 object = new QAxObject(res.punkVal, qObject());
             } else if (QMetaType::type(rettype)) {
                 QVariant qvar = VARIANTToQVariant(res, rettype, 0);
-                object = *(QAxObject**)qvar.constData();
+                object = *static_cast<QAxObject**>(qvar.data());
 //                qVariantGet(qvar, object, rettype);
                 res.punkVal->AddRef();
             }
             if (object)
-                ((QAxBase*)object)->d->tryCache = true;
+                static_cast<QAxBase*>(object)->d->tryCache = true;
         }
         break;
     case VT_EMPTY:

@@ -581,7 +581,7 @@ void MainWindow::logSignal(const QString &signal, int argc, void *argv)
         return;
 
     QString paramlist = QLatin1String(" - {");
-    VARIANT *params = (VARIANT*)argv;
+    auto params = static_cast<const VARIANT *>(argv);
     for (int a = argc-1; a >= 0; --a) {
         paramlist += QLatin1Char(' ');
         paramlist += VARIANTToQVariant(params[a], nullptr).toString();
