@@ -152,7 +152,65 @@ QByteArray constRefify(const QByteArray &type)
     return ctype;
 }
 
-void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaObject *mo,
+static void formatConstructorSignature(QTextStream &out, ObjectCategories category,
+                                       bool declaration)
+{
+    out << '(';
+    if (category & Licensed) {
+        out << "const QString &licenseKey, ";
+        if (declaration)
+            out << " = QString()";
+        out << ", ";
+    }
+    if (category & ActiveX) {
+        out << "QWidget *parent";
+        if (declaration)
+            out << " = nullptr";
+        out << ", Qt::WindowFlags f";
+        if (declaration)
+            out << " = {}";
+    } else if (category & SubObject) {
+        out << "IDispatch *subobject";
+        if (declaration)
+            out << " = nullptr";
+        out << ", QAxObject *parent";
+        if (declaration)
+            out << " = nullptr";
+    } else {
+        out << "QObject *parent";
+        if (declaration)
+            out << " = nullptr";
+    }
+    out << ')';
+}
+
+static void formatConstructorBody(QTextStream &out, const QByteArray &className,
+                                  const QString &controlID, ObjectCategories category)
+{
+    out << className << "::" << className;
+    formatConstructorSignature(out, category, false);
+    out << " :" << endl << "    ";
+    if (category & ActiveX)
+        out << "QAxWidget(parent, f";
+    else if (category & SubObject)
+        out << "QAxObject(subobject, parent";
+    else
+        out << "QAxObject(parent";
+    out << ')' << endl << '{' << endl;
+    if (category & SubObject) {
+        out << "    internalRelease();" << endl;
+    } else if (category & Licensed) {
+        out << "    if (licenseKey.isEmpty())" << endl;
+        out << "        setControl(QStringLiteral(\"" << controlID << "\"));" << endl;
+        out << "    else" << endl;
+        out << "        setControl(QStringLiteral(\"" << controlID << ":\") + licenseKey);" << endl;
+    } else {
+        out << "    setControl(QStringLiteral(\"" << controlID << "\"));" << endl;
+    }
+    out << '}' << endl << endl;
+}
+
+void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                        const QByteArray &className, const QByteArray &nameSpace,
                        ObjectCategories category)
 {
@@ -172,39 +230,9 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         out << endl;
 
         out << '{' << endl;
-        out << "public:" << endl;
-        out << "    " << className << '(';
-        if (category & Licensed)
-            out << "const QString &licenseKey = QString(), ";
-        if (category & ActiveX)
-            out << "QWidget *parent = 0, Qt::WindowFlags f";
-        else if (category & SubObject)
-            out << "IDispatch *subobject = 0, QAxObject *parent";
-        else
-            out << "QObject *parent";
-        out << " = 0)" << endl;
-        out << "    : ";
-        if (category & ActiveX)
-            out << "QAxWidget(parent, f";
-        else if (category & SubObject)
-            out << "QAxObject((IUnknown*)subobject, parent";
-        else
-            out << "QAxObject(parent";
-        out << ')' << endl;
-        out << "    {" << endl;
-        if (category & SubObject)
-            out << "        internalRelease();" << endl;
-        else if (category & Licensed) {
-            out << "        if (licenseKey.isEmpty())" << endl;
-            out << "            setControl(QStringLiteral(\"" << controlID << "\"));" << endl;
-            out << "        else" << endl;
-            out << "            setControl(QStringLiteral(\"" << controlID << ":\") + licenseKey);" << endl;
-        } else {
-            out << "        setControl(QStringLiteral(\"" << controlID << "\"));" << endl;
-        }
-        out << "    }" << endl;
-        out << endl;
-
+        out << "public:" << endl << "    explicit " << className;
+        formatConstructorSignature(out, category, true);
+        out << ';' << endl;
         for (int ci = mo->classInfoOffset(); ci < mo->classInfoCount(); ++ci) {
             QMetaClassInfo info = mo->classInfo(ci);
             QByteArray iface_name = info.name();
@@ -522,8 +550,8 @@ void generateClassDecl(QTextStream &out, const QString &controlID, const QMetaOb
         if (!(category & NoMetaObject)) {
             out << "// meta object functions" << endl;
             out << "    static const QMetaObject staticMetaObject;" << endl;
-            out << "    virtual const QMetaObject *metaObject() const { return &staticMetaObject; }" << endl;
-            out << "    virtual void *qt_metacast(const char *);" << endl;
+            out << "    const QMetaObject *metaObject() const override { return &staticMetaObject; }" << endl;
+            out << "    void *qt_metacast(const char *) override;" << endl;
         }
 
         out << "};" << endl;
@@ -690,6 +718,7 @@ void generateMethodParameters(QTextStream &out, const QMetaObject *mo, const QMe
 }
 
 void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray &className,
+                       const QString &controlID,
                        const QByteArray &nameSpace, ObjectCategories category)
 {
     Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 8, "dumpcpp should generate the same version as moc");
@@ -873,6 +902,7 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
     out << "};" << endl;
     out << endl;
 
+    formatConstructorBody(out, className, controlID, category);
 
     out << "const QMetaObject " << className << "::staticMetaObject = {" << endl;
     if (category & ActiveX)
@@ -880,13 +910,13 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
     else
         out << "{ &QObject::staticMetaObject," << endl;
     out << "qt_meta_stringdata_all.data," << endl;
-    out << "qt_meta_data_" << qualifiedClassNameIdentifier << ", 0, 0, 0 }" << endl;
+    out << "qt_meta_data_" << qualifiedClassNameIdentifier << ", nullptr, nullptr, nullptr }" << endl;
     out << "};" << endl;
     out << endl;
 
     out << "void *" << className << "::qt_metacast(const char *_clname)" << endl;
     out << '{' << endl;
-    out << "    if (!_clname) return 0;" << endl;
+    out << "    if (!_clname) return nullptr;" << endl;
     out << "    if (!strcmp(_clname, \"" << qualifiedClassName << "\"))" << endl;
     out << "        return static_cast<void*>(const_cast<" << className << "*>(this));" << endl;
     if (category & ActiveX)
@@ -1011,6 +1041,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         implOut << "#define QAX_DUMPCPP_" << libName.toUpper() << "_NOINLINES" << endl;
 
         implOut << "#include \"" << outname << ".h\"" << endl;
+        implOut << "#include <OAIdl.h>" << endl; // For IDispatch
         implOut << endl;
         implOut << "using namespace " << libName << ';' << endl;
         implOut << endl;
@@ -1238,21 +1269,21 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                     if (typeattr->wTypeFlags & TYPEFLAG_FLICENSED)
                         object_category |= Licensed;
                     if (typekind == TKIND_COCLASS) { // write those later...
-                        generateClassDecl(classesOut, guid.toString(), metaObject, className, libNameBa,
+                        generateClassDecl(classesOut, metaObject, className, libNameBa,
                                           object_category | NoInlines);
                         classesOut << endl;
                     } else {
-                        generateClassDecl(declOut, guid.toString(), metaObject, className, libNameBa,
+                        generateClassDecl(declOut, metaObject, className, libNameBa,
                                           object_category | NoInlines);
                         declOut << endl;
                     }
                     subtypes << className;
-                    generateClassDecl(inlinesOut, guid.toString(), metaObject, className, libNameBa,
+                    generateClassDecl(inlinesOut, metaObject, className, libNameBa,
                                       object_category | OnlyInlines);
                     inlinesOut << endl;
                 }
                 if (implFile.isOpen())
-                    generateClassImpl(classImplOut, metaObject, className, libNameBa,
+                    generateClassImpl(classImplOut, metaObject, className, guid.toString(), libNameBa,
                                       object_category);
             }
             currentTypeInfo = nullptr;
