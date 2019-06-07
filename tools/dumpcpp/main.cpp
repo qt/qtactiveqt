@@ -816,9 +816,9 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
             out << ", ";
 
             uint flags = 0;
-            uint vartype = property.type();
+            const auto vartype = property.type();
             if (vartype != QVariant::Invalid && vartype != QVariant::UserType)
-                flags = vartype << 24;
+                flags = uint(vartype) << 24;
 
             if (property.isReadable())
                 flags |= Readable;
@@ -968,6 +968,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
             SysFreeString(nameString);
         }
     }
+    const QByteArray libNameBa = libName.toLatin1();
     vTableOnlyStubs = vTableOnlyStubsFromTypeLib(typelib, libName);
 
     QString libVersion(QLatin1String("1.0"));
@@ -1089,7 +1090,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                         default:
                             break;
                         }
-                        namespaces[libName.toLatin1()].append(className);
+                        namespaces[libNameBa].append(className);
                         if (!qax_qualified_usertypes.contains(className))
                             qax_qualified_usertypes << className;
                     }
@@ -1116,18 +1117,15 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                     refTypeLib.remove(0, refTypeLib.lastIndexOf(' ') + 1);
                     namespaces[refTypeLib].append(refType);
                 } else {
-                    namespaces[libName.toLatin1()].append(refType);
+                    namespaces[libNameBa].append(refType);
                 }
             }
 
-            QList<QByteArray> keys = namespaces.keys();
-            for (int n = 0; n < keys.count(); ++n) {
-                QByteArray nspace = keys.at(n);
-                if (QString::fromLatin1(nspace.constData()) != libName) {
+            for (auto it = namespaces.cbegin(), end  = namespaces.cend(); it != end; ++it) {
+                const QByteArray &nspace = it.key();
+                if (libName != QLatin1String(nspace)) {
                     declOut << "namespace " << nspace << " {" << endl;
-                    QList<QByteArray> classList = namespaces.value(nspace);
-                    for (int c = 0; c < classList.count(); ++c) {
-                        QByteArray className = classList.at(c);
+                    for (const auto &className : it.value()) {
                         if (className.contains(' ')) {
                             writeForwardDeclaration(declOut, className);
                             namespaceForType.insert(className.mid(className.indexOf(' ') + 1), nspace);
@@ -1146,21 +1144,21 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 declOut << "Q_DECLARE_OPAQUE_POINTER(" << opaquePointerType << "*)" << endl;
             declOut << endl;
         }
-        generateNameSpace(declOut, namespaceObject, libName.toLatin1());
+        generateNameSpace(declOut, namespaceObject, libNameBa);
 
-        QList<QByteArray> classList = namespaces.value(libName.toLatin1());
-        if (classList.count())
+        auto nspIt = namespaces.constFind(libNameBa);
+        if (nspIt != namespaces.constEnd() && !nspIt.value().isEmpty()) {
             declOut << "// forward declarations" << endl;
-        for (int c = 0; c < classList.count(); ++c) {
-            QByteArray className = classList.at(c);
-            if (className.contains(' ')) {
-                declOut << "    " << className << ';' << endl;
-                namespaceForType.insert(className.mid(className.indexOf(' ') + 1), libName.toLatin1());
-            } else {
-                declOut << "    class " << className << ';' << endl;
-                namespaceForType.insert(className, libName.toLatin1());
-                namespaceForType.insert(className + '*', libName.toLatin1());
-                namespaceForType.insert(className + "**", libName.toLatin1());
+            for (const auto &className : nspIt.value()) {
+                if (className.contains(' ')) {
+                    declOut << "    " << className << ';' << endl;
+                    namespaceForType.insert(className.mid(className.indexOf(' ') + 1), libNameBa);
+                } else {
+                    declOut << "    class " << className << ';' << endl;
+                    namespaceForType.insert(className, libNameBa);
+                    namespaceForType.insert(className + '*', libNameBa);
+                    namespaceForType.insert(className + "**", libNameBa);
+                }
             }
         }
 
@@ -1240,21 +1238,21 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                     if (typeattr->wTypeFlags & TYPEFLAG_FLICENSED)
                         object_category |= Licensed;
                     if (typekind == TKIND_COCLASS) { // write those later...
-                        generateClassDecl(classesOut, guid.toString(), metaObject, className, libName.toLatin1(),
+                        generateClassDecl(classesOut, guid.toString(), metaObject, className, libNameBa,
                                           object_category | NoInlines);
                         classesOut << endl;
                     } else {
-                        generateClassDecl(declOut, guid.toString(), metaObject, className, libName.toLatin1(),
+                        generateClassDecl(declOut, guid.toString(), metaObject, className, libNameBa,
                                           object_category | NoInlines);
                         declOut << endl;
                     }
                     subtypes << className;
-                    generateClassDecl(inlinesOut, guid.toString(), metaObject, className, libName.toLatin1(),
+                    generateClassDecl(inlinesOut, guid.toString(), metaObject, className, libNameBa,
                                       object_category | OnlyInlines);
                     inlinesOut << endl;
                 }
                 if (implFile.isOpen())
-                    generateClassImpl(classImplOut, metaObject, className, libName.toLatin1(),
+                    generateClassImpl(classImplOut, metaObject, className, libNameBa,
                                       object_category);
             }
             currentTypeInfo = nullptr;
@@ -1279,9 +1277,9 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         QList<QByteArray> currentList;
 
         int currentTableLen = 0;
-        for (int i = 0; i < strings.size(); ++i) {
-            currentTableLen += strings.at(i).length() + 1;
-            currentList.append(strings.at(i));
+        for (const auto &s : strings) {
+            currentTableLen += s.length() + 1;
+            currentList.append(s);
             // Split strings into chunks less than 64k to work around compiler limits.
             if (currentTableLen > 60000) {
                 implOut << "    char stringdata" << listVector.size() << '[' << currentTableLen + 1 << "];" << endl;
@@ -1324,13 +1322,12 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         //
         // Build stringdata arrays
         //
-        for (int i = 0; i < listVector.size(); ++i) {
+        for (const auto &l : listVector) {
             int col = 0;
             int len = 0;
             implOut << ',' << endl;
             implOut << "    \"";
-            for (int j = 0; j < listVector[i].size(); ++j) {
-                QByteArray s = listVector[i].at(j);
+            for (const auto &s : l) {
                 len = s.length();
                 if (col && col + len >= 150) {
                     implOut << '"' << endl << "    \"";
