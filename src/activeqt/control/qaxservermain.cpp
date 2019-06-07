@@ -72,8 +72,6 @@ static const DWORD dwTimeOut = 5000; // time for EXE to be idle before shutting 
 static const DWORD dwPause = 1000; // time to wait for threads to finish up
 #endif
 
-extern HANDLE hEventShutdown;
-extern bool qAxActivity;
 extern HANDLE qAxInstance;
 extern bool qAxIsServer;
 extern bool qAxOutProcServer;
@@ -90,7 +88,7 @@ STDAPI DumpIDL(const QString &outfile, const QString &ver);
 // Monitors the shutdown event
 static DWORD WINAPI MonitorProc(void* /* pv */)
 {
-    while (1) {
+    while (true) {
         WaitForSingleObject(hEventShutdown, INFINITE);
         DWORD dwWait=0;
         do {

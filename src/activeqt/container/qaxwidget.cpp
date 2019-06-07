@@ -523,7 +523,7 @@ bool QAxNativeEventFilter::nativeEventFilter(const QByteArray &, void *m, long *
                     return true;
             } else {
                 int i;
-                for (i = 0; (UINT)mouseTbl[i] != message && mouseTbl[i]; i += 3)
+                for (i = 0; UINT(mouseTbl[i]) != message && mouseTbl[i]; i += 3)
                     ;
 
                 if (mouseTbl[i]) {

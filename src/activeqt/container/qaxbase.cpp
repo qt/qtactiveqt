@@ -2404,8 +2404,7 @@ void MetaObjectGenerator::addSetterSlot(const QByteArray &property)
 QByteArray MetaObjectGenerator::createPrototype(FUNCDESC *funcdesc, ITypeInfo *typeinfo, const QList<QByteArray> &names,
                                              QByteArray &type, QList<QByteArray> &parameters)
 {
-    QByteArray prototype;
-    QByteArray function(names.at(0));
+    const QByteArray &function = names.at(0);
     const QByteArray hresult("HRESULT");
     // get function prototype
     type = guessTypes(funcdesc->elemdescFunc.tdesc, typeinfo, function);
@@ -2415,7 +2414,7 @@ QByteArray MetaObjectGenerator::createPrototype(FUNCDESC *funcdesc, ITypeInfo *t
         type = guessTypes(funcdesc->lprgelemdescParam->tdesc, typeinfo, function);
     }
 
-    prototype = function + '(';
+    QByteArray prototype = function + '(';
     if (funcdesc->invkind == INVOKE_FUNC && type == hresult)
         type = nullptr;
 
@@ -2993,10 +2992,9 @@ static int nameToBuiltinType(const QByteArray &typeName)
 static uint nameToTypeInfo(const QByteArray &typeName, QMetaStringTable &strings)
 {
     int id = nameToBuiltinType(typeName);
-    if (id != QMetaType::UnknownType)
-        return uint(id);
-    else
-        return IsUnresolvedType | uint(strings.enter(typeName));
+    const int result = id != QMetaType::UnknownType
+        ? id : (IsUnresolvedType) | strings.enter(typeName);
+    return uint(result);
 }
 
 // Returns the sum of all parameters (including return type) for the given
@@ -3078,13 +3076,9 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     int offset = header->classInfoData;
 
     // each class info in form key\0value\0
-    typedef QMap<QByteArray, QByteArray>::ConstIterator ClassInfoConstIterator;
-    const ClassInfoConstIterator cend = classinfo_list.end();
-    for (ClassInfoConstIterator it = classinfo_list.begin(); it != cend; ++it) {
-        QByteArray key(it.key());
-        QByteArray value(it.value());
-        int_data[offset++] = uint(strings.enter(key));
-        int_data[offset++] = uint(strings.enter(value));
+    for (auto it = classinfo_list.cbegin(), cend = classinfo_list.cend(); it != cend; ++it) {
+        int_data[offset++] = uint(strings.enter(it.key()));
+        int_data[offset++] = uint(strings.enter(it.value()));
     }
     Q_ASSERT(offset == header->methodData);
 
@@ -3127,8 +3121,8 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
 
     // each property in form name\0type\0
     for (auto it = property_list.cbegin(), end = property_list.cend(); it != end; ++it) {
-        QByteArray name(it.key());
-        QByteArray type(it.value().type);
+        const QByteArray &name = it.key();
+        const QByteArray &type = it.value().type;
         Q_ASSERT(!type.isEmpty());
         QByteArray realType(it.value().realType);
         if (!realType.isEmpty() && realType != type)
@@ -3976,7 +3970,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
         arg = varc <= QAX_NUM_PARAMS ? staticarg : new VARIANT[varc];
         outArgs = QBitArray(varc);
         for (int i = 0; i < varc; ++i) {
-            QVariant var(vars.at(i));
+            const QVariant &var = vars.at(i);
             VariantInit(arg + (varc - i - 1));
             bool out = false;
             QByteArray paramType;

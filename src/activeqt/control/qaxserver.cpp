@@ -750,7 +750,7 @@ static QByteArray prototype(const QList<QByteArray> &parameterTypes, const QList
     for (int p = 0; p < parameterTypes.count() && *ok; ++p) {
         bool out = false;
         QByteArray type(parameterTypes.at(p));
-        QByteArray name(parameterNames.at(p));
+        const QByteArray &name = parameterNames.at(p);
 
         if (type.endsWith('&')) {
             out = true;

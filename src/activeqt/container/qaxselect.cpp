@@ -415,13 +415,15 @@ QString QAxSelect::clsid() const
 */
 QAxSelect::SandboxingLevel QAxSelect::sandboxingLevel() const
 {
-    int idx = d->selectUi.SandboxingCombo->currentIndex();
-    if (idx == 1)
+    switch (d->selectUi.SandboxingCombo->currentIndex()) {
+    case 1:
         return SandboxingProcess;
-    else if (idx == 2)
+    case 2:
         return SandboxingLowIntegrity;
-    else
-        return SandboxingNone;
+    default:
+        break;
+    }
+    return SandboxingNone;
 }
 
 void QAxSelect::onActiveXListCurrentChanged(const QModelIndex &index)

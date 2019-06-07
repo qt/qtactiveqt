@@ -106,7 +106,6 @@ extern HHOOK qax_hhook;
 
 // in qaxserver.cpp
 extern ITypeLib *qAxTypeLibrary;
-extern QAxFactory *qAxFactory();
 extern unsigned long qAxLock();
 extern unsigned long qAxUnlock();
 extern HANDLE qAxInstance;
@@ -1160,7 +1159,7 @@ QAxServerBase::~QAxServerBase()
     if (m_spTypeInfo) m_spTypeInfo->Release();
     m_spTypeInfo = nullptr;
     if (m_spStorage) m_spStorage->Release();
-    m_spStorage = 0;
+    m_spStorage = nullptr;
 
     DeleteCriticalSection(&refCountSection);
     DeleteCriticalSection(&createWindowSection);
@@ -2227,7 +2226,7 @@ HRESULT WINAPI QAxServerBase::GetClassInfo(ITypeInfo** pptinfo)
     if (!pptinfo)
         return E_POINTER;
 
-    *pptinfo = 0;
+    *pptinfo = nullptr;
     if (!qAxTypeLibrary)
         return DISP_E_BADINDEX;
 
@@ -2672,7 +2671,8 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
         delete exception;
         exception = nullptr;
         return DISP_E_EXCEPTION;
-    } else if (isWidget) {
+    }
+    if (isWidget) {
         if (oldSizeHint != qt.widget->sizeHint()) {
             updateGeometry();
             if (m_spInPlaceSite) {
@@ -3303,7 +3303,7 @@ HRESULT WINAPI QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
 
     VARIANT var;
     VariantInit(&var);
-    DISPPARAMS params = { nullptr, 0, 0, 0 };
+    DISPPARAMS params = { nullptr, nullptr, 0, 0 };
     disp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &var, nullptr, nullptr);
     disp->Release();
     disp = nullptr;
@@ -3474,7 +3474,7 @@ HRESULT WINAPI QAxServerBase::UIDeactivate()
         QMetaObject::disconnect(statusBar, index, this, STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX);
                 statusBar = nullptr;
             }
-            m_spInPlaceFrame->SetActiveObject(0, nullptr);
+            m_spInPlaceFrame->SetActiveObject(nullptr, nullptr);
             m_spInPlaceFrame->Release();
             m_spInPlaceFrame = nullptr;
         }
@@ -3491,7 +3491,7 @@ HRESULT WINAPI QAxServerBase::UIDeactivate()
 */
 HRESULT WINAPI QAxServerBase::SetObjectRects(LPCRECT prcPos, LPCRECT prcClip)
 {
-    if (prcPos == 0 || prcClip == nullptr)
+    if (prcPos == nullptr || prcClip == nullptr)
         return E_POINTER;
 
     if (m_hWnd) {

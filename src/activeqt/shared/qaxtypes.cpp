@@ -186,7 +186,7 @@ static QPixmap IPictureToQPixmap(IPicture *ipic)
 static QDateTime DATEToQDateTime(DATE ole)
 {
     SYSTEMTIME stime;
-    if (ole >= 949998 || VariantTimeToSystemTime(ole, &stime) == false)
+    if (ole >= 949998 || !VariantTimeToSystemTime(ole, &stime))
         return QDateTime();
 
     QDate date(stime.wYear, stime.wMonth, stime.wDay);
@@ -494,7 +494,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                         QVariantList columns = list.at(i).toList();
                         int columnCount = qMin(maxColumns, columns.count());
                         for (LONG j = 0;  j < columnCount; ++j) {
-                            QVariant elem = columns.at(j);
+                            const QVariant &elem = columns.at(j);
                             VariantInit(&variant);
                             QVariantToVARIANT(elem, variant, elem.typeName());
                             rgIndices[1] = j;

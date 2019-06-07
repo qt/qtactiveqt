@@ -421,7 +421,7 @@ void MainWindow::on_actionScriptingRun_triggered()
 
     QVariant result = m_scripts->call(macro);
     if (result.isValid())
-        logMacros->append(tr("Return value of %1: %2").arg(macro).arg(result.toString()));
+        logMacros->append(tr("Return value of %1: %2").arg(macro, result.toString()));
 #endif
 }
 
