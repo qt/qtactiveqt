@@ -78,7 +78,7 @@ extern bool qAxOutProcServer;
 extern wchar_t qAxModuleFilename[MAX_PATH];
 extern QString qAxInit();
 extern void qAxCleanup();
-extern HRESULT UpdateRegistry(bool bRegister);
+extern HRESULT UpdateRegistry(bool bRegister, bool perUser);
 extern HRESULT GetClassObject(const GUID &clsid, const GUID &iid, void **ppUnk);
 extern ulong qAxLockCount();
 extern bool qax_winEventFilter(void *message);
@@ -252,11 +252,11 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, 
         if (matchesOption(cmd, "activex") || matchesOption(cmd, "embedding")) {
             runServer = true;
         } else if (matchesOption(cmd, "unregserver")) {
-            nRet = UpdateRegistry(false);
+            nRet = UpdateRegistry(false, false);
             run = false;
             break;
         } else if (matchesOption(cmd, "regserver")) {
-            nRet = UpdateRegistry(true);
+            nRet = UpdateRegistry(true, false);
             run = false;
             break;
         } else if (matchesOption(cmd, "dumpidl")) {

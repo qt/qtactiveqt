@@ -72,17 +72,17 @@ extern void qAxCleanup();
 extern HANDLE qAxInstance;
 static uint qAxThreadId = 0;
 
-extern HRESULT UpdateRegistry(bool bRegister);
+extern HRESULT UpdateRegistry(bool bRegister, bool perUser);
 extern HRESULT GetClassObject(const GUID &clsid, const GUID &iid, void **ppUnk);
 
 STDAPI DllRegisterServer()
 {
-    return UpdateRegistry(true);
+    return UpdateRegistry(true, false);
 }
 
 STDAPI DllUnregisterServer()
 {
-    return UpdateRegistry(false);
+    return UpdateRegistry(false, false);
 }
 
 STDAPI DllGetClassObject(const GUID &clsid, const GUID &iid, void** ppv)
