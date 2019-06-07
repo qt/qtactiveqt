@@ -221,11 +221,8 @@ QString qax_clean_type(const QString &type, const QMetaObject *mo)
     return alias;
 }
 
-// (Un)Register the ActiveX server in the registry.
-// The QAxFactory implementation provides the information.
-HRESULT UpdateRegistry(bool bRegister)
+static void UpdateRegistryKeys(bool bRegister, const QString keyPath, QScopedPointer<QSettings> & settings)
 {
-    qAxIsServer = false;
     const QChar dot(QLatin1Char('.'));
     const QChar slash(QLatin1Char('/'));
     QString file = QString::fromWCharArray(qAxModuleFilename);
@@ -233,54 +230,6 @@ HRESULT UpdateRegistry(bool bRegister)
 
     const QString appId = qAxFactory()->appID().toString().toUpper();
     const QString libId = qAxFactory()->typeLibID().toString().toUpper();
-
-    const QString libFile = qAxInit();
-
-    TLIBATTR *libAttr = nullptr;
-    if (qAxTypeLibrary)
-        qAxTypeLibrary->GetLibAttr(&libAttr);
-    if (!libAttr)
-        return SELFREG_E_TYPELIB;
-    bool userFallback = false;
-    if (bRegister) {
-        if (RegisterTypeLib(qAxTypeLibrary,
-                            reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), nullptr) == TYPE_E_REGISTRYACCESS) {
-#ifndef Q_CC_MINGW
-            // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
-            RegisterTypeLibForUser(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), nullptr);
-            userFallback = true;
-#endif
-        }
-    } else {
-        if (UnRegisterTypeLib(libAttr->guid, libAttr->wMajorVerNum, libAttr->wMinorVerNum, libAttr->lcid,
-                              libAttr->syskind) == TYPE_E_REGISTRYACCESS) {
-#ifndef Q_CC_MINGW
-            // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
-            UnRegisterTypeLibForUser(libAttr->guid, libAttr->wMajorVerNum, libAttr->wMinorVerNum, libAttr->lcid, libAttr->syskind);
-            userFallback = true;
-#endif
-        }
-    }
-    if (userFallback)
-        qWarning("QAxServer: Falling back to registering as user for %s due to insufficient permission.", qPrintable(module));
-    qAxTypeLibrary->ReleaseTLibAttr(libAttr);
-
-    // check whether the user has permission to write to HKLM\Software\Classes
-    // if not, use HKCU\Software\Classes
-    QString keyPath(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"));
-    QScopedPointer<QSettings> settings(new QSettings(keyPath, QSettings::NativeFormat));
-    if (userFallback || !settings->isWritable()) {
-        keyPath = QLatin1String("HKEY_CURRENT_USER\\Software\\Classes");
-        settings.reset(new QSettings(keyPath, QSettings::NativeFormat));
-    }
-
-    // we try to create the ActiveX widgets later on...
-    bool delete_qApp = false;
-    if (!qApp) {
-        static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
-        (void)new QApplication(argc, nullptr);
-        delete_qApp = true;
-    }
 
     if (bRegister) {
         settings->setValue(QLatin1String("/AppID/") + appId + QLatin1String("/."), module);
@@ -473,6 +422,65 @@ HRESULT UpdateRegistry(bool bRegister)
                 << keyPath << '"';
         }
     }
+}
+
+// (Un)Register the ActiveX server in the registry.
+// The QAxFactory implementation provides the information.
+HRESULT UpdateRegistry(bool bRegister)
+{
+    qAxIsServer = false;
+    QString file = QString::fromWCharArray(qAxModuleFilename);
+    const QString module = QFileInfo(file).baseName();
+
+    const QString libFile = qAxInit();
+
+    TLIBATTR *libAttr = nullptr;
+    if (qAxTypeLibrary)
+        qAxTypeLibrary->GetLibAttr(&libAttr);
+    if (!libAttr)
+        return SELFREG_E_TYPELIB;
+    bool userFallback = false;
+    if (bRegister) {
+        if (RegisterTypeLib(qAxTypeLibrary,
+                            reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), nullptr) == TYPE_E_REGISTRYACCESS) {
+#ifndef Q_CC_MINGW
+            // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
+            RegisterTypeLibForUser(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), nullptr);
+            userFallback = true;
+#endif
+        }
+    } else {
+        if (UnRegisterTypeLib(libAttr->guid, libAttr->wMajorVerNum, libAttr->wMinorVerNum, libAttr->lcid,
+                              libAttr->syskind) == TYPE_E_REGISTRYACCESS) {
+#ifndef Q_CC_MINGW
+            // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
+            UnRegisterTypeLibForUser(libAttr->guid, libAttr->wMajorVerNum, libAttr->wMinorVerNum, libAttr->lcid, libAttr->syskind);
+            userFallback = true;
+#endif
+        }
+    }
+    if (userFallback)
+        qWarning("QAxServer: Falling back to registering as user for %s due to insufficient permission.", qPrintable(module));
+    qAxTypeLibrary->ReleaseTLibAttr(libAttr);
+
+    // check whether the user has permission to write to HKLM\Software\Classes
+    // if not, use HKCU\Software\Classes
+    QString keyPath(QLatin1String("HKEY_LOCAL_MACHINE\\Software\\Classes"));
+    QScopedPointer<QSettings> settings(new QSettings(keyPath, QSettings::NativeFormat));
+    if (userFallback || !settings->isWritable()) {
+        keyPath = QLatin1String("HKEY_CURRENT_USER\\Software\\Classes");
+        settings.reset(new QSettings(keyPath, QSettings::NativeFormat));
+    }
+
+    // we try to create the ActiveX widgets later on...
+    bool delete_qApp = false;
+    if (!qApp) {
+        static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
+        (void)new QApplication(argc, nullptr);
+        delete_qApp = true;
+    }
+
+    UpdateRegistryKeys(bRegister, keyPath, settings);
 
     if (delete_qApp)
         delete qApp;
