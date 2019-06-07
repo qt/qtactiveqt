@@ -85,6 +85,23 @@ STDAPI DllUnregisterServer()
     return UpdateRegistry(false, false);
 }
 
+STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine) {
+    bool perUser = false; // per-user (un)registration
+    if (pszCmdLine) {
+        if (QStringView(pszCmdLine).compare(QStringViewLiteral("user"), Qt::CaseInsensitive) == 0)
+            perUser = true;
+    }
+
+    if (bInstall) {
+        HRESULT hr = UpdateRegistry(true, perUser);
+        if (FAILED(hr))
+            UpdateRegistry(false, perUser);
+        return hr;
+    } else {
+        return UpdateRegistry(false, perUser);
+    }
+}
+
 STDAPI DllGetClassObject(const GUID &clsid, const GUID &iid, void** ppv)
 {
     if (!qAxThreadId)

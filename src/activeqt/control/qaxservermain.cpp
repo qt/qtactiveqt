@@ -259,6 +259,14 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, 
             nRet = UpdateRegistry(true, false);
             run = false;
             break;
+        } else if (matchesOption(cmd, "unregserverperuser")) {
+            nRet = UpdateRegistry(false, true);
+            run = false;
+            break;
+        } else if (matchesOption(cmd, "regserverperuser")) {
+            nRet = UpdateRegistry(true, true);
+            run = false;
+            break;
         } else if (matchesOption(cmd, "dumpidl")) {
             ++i;
             if (i < cmds.count()) {
