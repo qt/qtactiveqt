@@ -223,7 +223,7 @@ QString qax_clean_type(const QString &type, const QMetaObject *mo)
 
 // (Un)Register the ActiveX server in the registry.
 // The QAxFactory implementation provides the information.
-HRESULT UpdateRegistry(BOOL bRegister)
+HRESULT UpdateRegistry(bool bRegister)
 {
     qAxIsServer = false;
     const QChar dot(QLatin1Char('.'));

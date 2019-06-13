@@ -78,7 +78,7 @@ extern bool qAxOutProcServer;
 extern wchar_t qAxModuleFilename[MAX_PATH];
 extern QString qAxInit();
 extern void qAxCleanup();
-extern HRESULT UpdateRegistry(BOOL bRegister);
+extern HRESULT UpdateRegistry(bool bRegister);
 extern HRESULT GetClassObject(const GUID &clsid, const GUID &iid, void **ppUnk);
 extern ulong qAxLockCount();
 extern bool qax_winEventFilter(void *message);
