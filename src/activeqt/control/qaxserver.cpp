@@ -64,6 +64,7 @@
 #include <qtextstream.h>
 #include <qloggingcategory.h>
 #include <qdebug.h>
+#include <QScopeGuard>
 
 #include <qt_windows.h>
 #include <olectl.h>
@@ -433,12 +434,15 @@ HRESULT UpdateRegistry(bool bRegister)
     const QString module = QFileInfo(file).baseName();
 
     const QString libFile = qAxInit();
+    auto libFile_cleanup = qScopeGuard([] { qAxCleanup(); });
 
     TLIBATTR *libAttr = nullptr;
     if (qAxTypeLibrary)
         qAxTypeLibrary->GetLibAttr(&libAttr);
     if (!libAttr)
         return SELFREG_E_TYPELIB;
+    auto libAttr_cleanup = qScopeGuard([libAttr] { qAxTypeLibrary->ReleaseTLibAttr(libAttr); });
+
     bool userFallback = false;
     if (bRegister) {
         if (RegisterTypeLib(qAxTypeLibrary,
@@ -461,7 +465,6 @@ HRESULT UpdateRegistry(bool bRegister)
     }
     if (userFallback)
         qWarning("QAxServer: Falling back to registering as user for %s due to insufficient permission.", qPrintable(module));
-    qAxTypeLibrary->ReleaseTLibAttr(libAttr);
 
     // check whether the user has permission to write to HKLM\Software\Classes
     // if not, use HKCU\Software\Classes
@@ -485,7 +488,6 @@ HRESULT UpdateRegistry(bool bRegister)
     if (delete_qApp)
         delete qApp;
 
-    qAxCleanup();
     if (settings->status() == QSettings::NoError)
         return S_OK;
     qWarning() << module << ": Error writing to " << keyPath;
