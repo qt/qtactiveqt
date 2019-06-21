@@ -497,7 +497,11 @@
     \table
     \header \li Option \li Result
     \row \li \c -regserver \li Registers the server in the system registry
+    \row \li \c -regserverperuser \li Registers the server in the system
+        registry for the current user (since 5.14)
     \row \li \c -unregserver \li Unregisters the server from the system registry
+    \row \li \c -unregserverperuser \li Unregisters the server from the
+        system registry for the current user (since 5.14)
     \row \li \c -activex \li Starts the application as an ActiveX server
     \row \li \c{-dumpidl <file> -version x.y} \li Writes the server's IDL to the
     specified file. The type library will have version x.y
