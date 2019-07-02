@@ -30,6 +30,7 @@
 
 #include <qt_windows.h>
 #include <ActiveQt/ActiveQt>
+#include <QtWidgets/QCompleter>
 
 QT_BEGIN_NAMESPACE
 
@@ -37,6 +38,10 @@ InvokeMethod::InvokeMethod(QWidget *parent)
 : QDialog(parent), activex(nullptr)
 {
     setupUi(this);
+    auto completer = new QCompleter(comboMethods->model(), comboMethods);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setCompletionMode(QCompleter::InlineCompletion);
+    comboMethods->setCompleter(completer);
 
     listParameters->setColumnCount(3);
     listParameters->headerItem()->setText(0, tr("Parameter"));
