@@ -88,7 +88,7 @@ STDAPI DllUnregisterServer()
 STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine) {
     bool perUser = false; // per-user (un)registration
     if (pszCmdLine) {
-        if (QStringView(pszCmdLine).compare(QStringViewLiteral("user"), Qt::CaseInsensitive) == 0)
+        if (QStringView(pszCmdLine).compare(u"user", Qt::CaseInsensitive) == 0)
             perUser = true;
     }
 
