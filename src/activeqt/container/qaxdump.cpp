@@ -154,36 +154,36 @@ QString qax_generateDocumentation(QAxBase *that)
     const QMetaObject *mo = that->metaObject();
     QString coClass  = QLatin1String(mo->classInfo(mo->indexOfClassInfo("CoClass")).value());
 
-    stream << "<h1 align=center>" << coClass << " Reference</h1>" << endl;
+    stream << "<h1 align=center>" << coClass << " Reference</h1>" << Qt::endl;
     stream << "<p>The " << coClass << " COM object is a " << that->qObject()->metaObject()->className();
-    stream << " with the CLSID " <<  that->control() << ".</p>" << endl;
+    stream << " with the CLSID " <<  that->control() << ".</p>" << Qt::endl;
 
-    stream << "<h3>Interfaces</h3>" << endl;
-    stream << "<ul>" << endl;
+    stream << "<h3>Interfaces</h3>" << Qt::endl;
+    stream << "<ul>" << Qt::endl;
     const char *inter = nullptr;
     UINT interCount = 1;
     while ((inter = mo->classInfo(mo->indexOfClassInfo("Interface " + QByteArray::number(interCount))).value())) {
-        stream << "<li>" << inter << endl;
+        stream << "<li>" << inter << Qt::endl;
         interCount++;
     }
-    stream << "</ul>" << endl;
+    stream << "</ul>" << Qt::endl;
 
-    stream << "<h3>Event Interfaces</h3>" << endl;
-    stream << "<ul>" << endl;
+    stream << "<h3>Event Interfaces</h3>" << Qt::endl;
+    stream << "<ul>" << Qt::endl;
     interCount = 1;
     while ((inter = mo->classInfo(mo->indexOfClassInfo("Event Interface " + QByteArray::number(interCount))).value())) {
-        stream << "<li>" << inter << endl;
+        stream << "<li>" << inter << Qt::endl;
         interCount++;
     }
-    stream << "</ul>" << endl;
+    stream << "</ul>" << Qt::endl;
 
     QStringList methodDetails;
     QStringList propDetails;
 
     const int slotCount = mo->methodCount();
     if (slotCount) {
-        stream << "<h2>Public Slots:</h2>" << endl;
-        stream << "<ul>" << endl;
+        stream << "<h2>Public Slots:</h2>" << Qt::endl;
+        stream << "<ul>" << Qt::endl;
 
         int defArgCount = 0;
         for (int islot = mo->methodOffset(); islot < slotCount; ++islot) {
@@ -202,7 +202,7 @@ QString qax_generateDocumentation(QAxBase *that)
             QByteArray prototype = namedPrototype(slot.parameterTypes(), slot.parameterNames(), defArgCount);
             QByteArray signature = slot.methodSignature();
             QByteArray name = signature.left(signature.indexOf('('));
-            stream << "<li>" << returntype << " <a href=\"#" << name << "\"><b>" << name << "</b></a>" << prototype << ";</li>" << endl;
+            stream << "<li>" << returntype << " <a href=\"#" << name << "\"><b>" << name << "</b></a>" << prototype << ";</li>" << Qt::endl;
 
             prototype = namedPrototype(slot.parameterTypes(), slot.parameterNames());
             QString detail = QString::fromLatin1("<h3><a name=") + QString::fromLatin1(name.constData()) + QLatin1String("></a>") +
@@ -243,7 +243,7 @@ QString qax_generateDocumentation(QAxBase *that)
             defArgCount = 0;
         }
 
-        stream << "</ul>" << endl;
+        stream << "</ul>" << Qt::endl;
     }
     int signalCount = mo->methodCount();
     if (signalCount) {
@@ -255,8 +255,8 @@ QString qax_generateDocumentation(QAxBase *that)
         }
         typeInfo = nullptr;
 
-        stream << "<h2>Signals:</h2>" << endl;
-        stream << "<ul>" << endl;
+        stream << "<h2>Signals:</h2>" << Qt::endl;
+        stream << "<ul>" << Qt::endl;
 
         for (int isignal = mo->methodOffset(); isignal < signalCount; ++isignal) {
             const QMetaMethod signal(mo->method(isignal));
@@ -266,7 +266,7 @@ QString qax_generateDocumentation(QAxBase *that)
             QByteArray prototype = namedPrototype(signal.parameterTypes(), signal.parameterNames());
             QByteArray signature = signal.methodSignature();
             QByteArray name = signature.left(signature.indexOf('('));
-            stream << "<li>void <a href=\"#" << name << "\"><b>" << name << "</b></a>" << prototype << ";</li>" << endl;
+            stream << "<li>void <a href=\"#" << name << "\"><b>" << name << "</b></a>" << prototype << ";</li>" << Qt::endl;
 
             QString detail = QLatin1String("<h3><a name=") + QLatin1String(name.constData()) + QLatin1String("></a>void ") +
                              QLatin1String(name.constData()) + QLatin1Char(' ') +
@@ -297,7 +297,7 @@ QString qax_generateDocumentation(QAxBase *that)
                 typeInfo->Release();
             typeInfo = nullptr;
         }
-        stream << "</ul>" << endl;
+        stream << "</ul>" << Qt::endl;
 
         if (typeLib)
             typeLib->Release();
@@ -307,15 +307,15 @@ QString qax_generateDocumentation(QAxBase *that)
     if (propCount) {
         if (dispatch)
             dispatch->GetTypeInfo(0, LOCALE_SYSTEM_DEFAULT, &typeInfo);
-        stream << "<h2>Properties:</h2>" << endl;
-        stream << "<ul>" << endl;
+        stream << "<h2>Properties:</h2>" << Qt::endl;
+        stream << "<ul>" << Qt::endl;
 
         for (int iprop = 0; iprop < propCount; ++iprop) {
             const QMetaProperty prop = mo->property(iprop);
             QByteArray name(prop.name());
             QByteArray type(prop.typeName());
 
-            stream << "<li>" << type << " <a href=\"#" << name << "\"><b>" << name << "</b></a>;</li>" << endl;
+            stream << "<li>" << type << " <a href=\"#" << name << "\"><b>" << name << "</b></a>;</li>" << Qt::endl;
             QString detail = QLatin1String("<h3><a name=") + QString::fromLatin1(name.constData()) + QLatin1String("></a>") +
                              QLatin1String(type.constData()) +
                              QLatin1Char(' ') + QLatin1String(name.constData()) + QLatin1String("</h3>\n");
@@ -372,31 +372,31 @@ QString qax_generateDocumentation(QAxBase *that)
 
             propDetails << detail;
         }
-        stream << "</ul>" << endl;
+        stream << "</ul>" << Qt::endl;
     }
 
     const int enumCount = mo->enumeratorCount();
     if (enumCount) {
-        stream << "<hr><h2>Member Type Documentation</h2>" << endl;
+        stream << "<hr><h2>Member Type Documentation</h2>" << Qt::endl;
         for (int i = 0; i < enumCount; ++i) {
             const QMetaEnum enumdata = mo->enumerator(i);
-            stream << "<h3><a name=" << enumdata.name() << "></a>" << enumdata.name() << "</h3>" << endl;
-            stream << "<ul>" << endl;
+            stream << "<h3><a name=" << enumdata.name() << "></a>" << enumdata.name() << "</h3>" << Qt::endl;
+            stream << "<ul>" << Qt::endl;
             for (int e = 0; e < enumdata.keyCount(); ++e) {
-                stream << "<li>" << enumdata.key(e) << "\t=" << enumdata.value(e) << "</li>" << endl;
+                stream << "<li>" << enumdata.key(e) << "\t=" << enumdata.value(e) << "</li>" << Qt::endl;
             }
-            stream << "</ul>" << endl;
+            stream << "</ul>" << Qt::endl;
         }
     }
     if (methodDetails.count()) {
-        stream << "<hr><h2>Member Function Documentation</h2>" << endl;
+        stream << "<hr><h2>Member Function Documentation</h2>" << Qt::endl;
         for (int i = 0; i < methodDetails.count(); ++i)
-            stream << methodDetails.at(i) << endl;
+            stream << methodDetails.at(i) << Qt::endl;
     }
     if (propDetails.count()) {
-        stream << "<hr><h2>Property Documentation</h2>" << endl;
+        stream << "<hr><h2>Property Documentation</h2>" << Qt::endl;
         for (int i = 0; i < propDetails.count(); ++i)
-            stream << propDetails.at(i) << endl;
+            stream << propDetails.at(i) << Qt::endl;
     }
 
     if (typeInfo)
