@@ -171,7 +171,7 @@ QString Control::toolTip() const
         str << "<tr><th>"
             << (type == InProcessControl ? QAxSelect::tr("DLL:") : QAxSelect::tr("Binary:"))
             << "</th><td";
-        if (!QFileInfo(dll).exists())
+        if (!QFileInfo::exists(dll))
             str << " style=\"color:red\"";
         str << '>' << nonbreakingSpace(dll) << "</td></tr>";
     }

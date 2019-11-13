@@ -963,7 +963,7 @@ HRESULT QClassFactory::CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, voi
         if (FAILED(res))
             delete activeqt;
         else
-            activeqt->registerActiveObject((IUnknown*)(IDispatch*)activeqt);
+            activeqt->registerActiveObject(static_cast<IUnknown*>(static_cast<IDispatch*>(activeqt)));
     }
     return res;
 }
@@ -1582,6 +1582,7 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
 
     case WM_DISPLAYCHANGE:
         qaxClearCachedSystemLogicalDpi();
+        break;
 
     default:
         break;
@@ -3861,13 +3862,13 @@ HRESULT QAxServerBase::internalActivate()
             if (m_spInPlaceFrame) {
                 hr = m_spInPlaceFrame->SetActiveObject(this, reinterpret_cast<const wchar_t *>(class_name.utf16()));
                 if (!FAILED(hr)) {
-                    menuBar = (qt.widget && !qax_disable_inplaceframe) ? qt.widget->findChild<QMenuBar*>() : 0;
+                    menuBar = (qt.widget && !qax_disable_inplaceframe) ? qt.widget->findChild<QMenuBar*>() : nullptr;
                     if (menuBar && !menuBar->isVisible()) {
                         createMenu(menuBar);
                         menuBar->hide();
                         menuBar->installEventFilter(this);
                     }
-                    statusBar = qt.widget ? qt.widget->findChild<QStatusBar*>() : 0;
+                    statusBar = qt.widget ? qt.widget->findChild<QStatusBar*>() : nullptr;
                     if (statusBar && !statusBar->isVisible()) {
                         const int index = statusBar->metaObject()->indexOfSignal("messageChanged(QString)");
                         QMetaObject::connect(statusBar, index, this, STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX);
@@ -4422,7 +4423,7 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
     case QEvent::EnabledChange:
         if (m_hWnd && o == qt.widget)
             EnableWindow(m_hWnd, qt.widget->isEnabled());
-        // Fall Through
+        Q_FALLTHROUGH();
     case QEvent::FontChange:
     case QEvent::ActivationChange:
     case QEvent::StyleChange:

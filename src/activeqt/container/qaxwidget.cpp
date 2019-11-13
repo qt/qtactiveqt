@@ -1394,8 +1394,7 @@ HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND
         }
     } else if (menuBar) {
         m_menuOwner = nullptr;
-        const MenuItemMap::Iterator mend = menuItemMap.end();
-        for (MenuItemMap::Iterator it = menuItemMap.begin(); it != mend; ++it)
+        for (auto it = menuItemMap.begin(), mend = menuItemMap.end(); it != mend; ++it)
             delete it.key();
         menuItemMap.clear();
     }
@@ -1425,8 +1424,7 @@ int QAxClientSite::qt_metacall(QMetaObject::Call call, int isignal, void **argv)
 HRESULT WINAPI QAxClientSite::RemoveMenus(HMENU /*hmenuShared*/)
 {
     AX_DEBUG(QAxClientSite::RemoveMenus);
-    const MenuItemMap::Iterator mend = menuItemMap.end();
-    for (MenuItemMap::Iterator it = menuItemMap.begin(); it != mend; ++it) {
+    for (auto it = menuItemMap.begin(), mend = menuItemMap.end(); it != mend; ++it) {
         it.key()->setVisible(false);
         delete it.key();
     }
