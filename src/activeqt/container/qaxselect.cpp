@@ -208,9 +208,9 @@ static bool querySubKeyValue(HKEY hKey, const QString &subKeyName,  LPBYTE lpDat
     return result;
 }
 
-static QList<Control> readControls(const wchar_t *rootKey, unsigned wordSize)
+static QVector<Control> readControls(const wchar_t *rootKey, unsigned wordSize)
 {
-    QList<Control> controls;
+    QVector<Control> controls;
     HKEY classesKey;
     RegOpenKeyEx(HKEY_CLASSES_ROOT, rootKey, 0, KEY_READ, &classesKey);
     if (!classesKey) {
@@ -282,7 +282,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override ;
 
 private:
-    QList<Control> m_controls;
+    QVector<Control> m_controls;
 };
 
 QVariant ControlList::data(const QModelIndex &index, int role) const

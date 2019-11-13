@@ -1205,9 +1205,8 @@ HRESULT WINAPI QAxClientSite::InsertMenus(HMENU /*hmenuShared*/, LPOLEMENUGROUPW
     QMenu *fileMenu = nullptr;
     QMenu *viewMenu = nullptr;
     QMenu *windowMenu = nullptr;
-    QList<QAction*> actions = menuBar->actions();
-    for (int i = 0; i < actions.count(); ++i) {
-        QAction *action = actions.at(i);
+    const auto actions = menuBar->actions();
+    for (QAction *action : actions) {
         QString text = action->text().remove(QLatin1Char('&'));
         if (text == QLatin1String("File")) {
             fileMenu = action->menu();

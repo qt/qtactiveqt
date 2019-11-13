@@ -71,7 +71,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(ObjectCategories)
 extern QMetaObject *qax_readEnumInfo(ITypeLib *typeLib, const QMetaObject *parentObject);
 extern QMetaObject *qax_readClassInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const QMetaObject *parentObject);
 extern QMetaObject *qax_readInterfaceInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const QMetaObject *parentObject);
-extern QList<QByteArray> qax_qualified_usertypes;
+extern QByteArrayList qax_qualified_usertypes;
 extern QString qax_docuFromName(ITypeInfo *typeInfo, const QString &name);
 extern bool qax_dispatchEqualsIDispatch;
 extern void qax_deleteMetaObject(QMetaObject *mo);
@@ -127,7 +127,7 @@ void generateNameSpace(QTextStream &out, const QMetaObject *mo, const QByteArray
     // don't close on purpose
 }
 
-static QByteArray joinParameterNames(const QList<QByteArray> &parameterNames)
+static QByteArray joinParameterNames(const QByteArrayList &parameterNames)
 {
     QByteArray slotParameters;
     for (int p = 0; p < parameterNames.count(); ++p) {
@@ -214,7 +214,7 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                        const QByteArray &className, const QByteArray &nameSpace,
                        ObjectCategories category)
 {
-    QList<QByteArray> functions;
+    QByteArrayList functions;
 
     QByteArray indent;
     if (!(category & OnlyInlines))
@@ -274,7 +274,7 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
         }
     }
     // QAxBase public virtual functions.
-    QList<QByteArray> axBase_vfuncs;
+    QByteArrayList axBase_vfuncs;
     axBase_vfuncs.append("metaObject");
     axBase_vfuncs.append("qObject");
     axBase_vfuncs.append("className");
@@ -446,8 +446,8 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
             QByteArray slotSignatureTruncated(slotSignature.mid(slotNamedSignature.length()));
             slotSignatureTruncated.truncate(slotSignatureTruncated.length() - 1);
 
-            QList<QByteArray> signatureSplit = slotSignatureTruncated.split(',');
-            QList<QByteArray> parameterSplit;
+            const auto signatureSplit = slotSignatureTruncated.split(',');
+            QByteArrayList parameterSplit;
             if (slotParameters.isEmpty()) { // generate parameter names
                 for (int i = 0; i < signatureSplit.count(); ++i)
                     parameterSplit << QByteArray("p") + QByteArray::number(i);
@@ -700,7 +700,7 @@ void generateMethodParameters(QTextStream &out, const QMetaObject *mo, const QMe
         out << ',';
 
         // Parameter types
-        const QList<QByteArray> parameterTypes = method.parameterTypes();
+        const auto parameterTypes = method.parameterTypes();
         for (int j = 0; j < argsCount; ++j) {
             out << ' ';
             generateTypeInfo(out, parameterTypes.at(j));
@@ -708,7 +708,7 @@ void generateMethodParameters(QTextStream &out, const QMetaObject *mo, const QMe
         }
 
         // Parameter names
-        const QList<QByteArray> parameterNames = method.parameterNames();
+        const auto parameterNames = method.parameterNames();
         for (int j = 0; j < argsCount; ++j)
             out << ' ' << stridx(parameterNames.at(j)) << ',';
 
@@ -767,8 +767,8 @@ void generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
             strreg(typeName);
         strreg(method.tag());
 
-        const QList<QByteArray> parameterNames = method.parameterNames();
-        const QList<QByteArray> parameterTypes = method.parameterTypes();
+        const auto parameterNames = method.parameterNames();
+        const auto parameterTypes = method.parameterTypes();
         for (int j = 0; j < argsCount; ++j) {
             if (!QtPrivate::isBuiltinType(parameterTypes.at(j)))
                 strDetachAndRegister(parameterTypes.at(j));
@@ -1054,7 +1054,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
     QByteArray inlines;
     QTextStream inlinesOut(&inlines, QIODevice::WriteOnly);
 
-    QMap<QByteArray, QList<QByteArray> > namespaces;
+    QMap<QByteArray, QByteArrayList> namespaces;
 
     if(!(category & NoDeclaration)) {
         if (!declFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -1196,7 +1196,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         declOut << endl;
     }
 
-    QList<QByteArray> subtypes;
+    QByteArrayList subtypes;
 
     UINT typeCount = typelib->GetTypeInfoCount();
     for (UINT index = 0; index < typeCount; ++index) {
@@ -1304,8 +1304,8 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         implOut << "struct qt_meta_stringdata_all_t {" << endl;
         implOut << "    QByteArrayData data[" << strings.size() << "];" << endl;
 
-        QVector<QList<QByteArray> > listVector;
-        QList<QByteArray> currentList;
+        QVector<QByteArrayList> listVector;
+        QByteArrayList currentList;
 
         int currentTableLen = 0;
         for (const auto &s : strings) {
