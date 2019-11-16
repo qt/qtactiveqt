@@ -1971,6 +1971,8 @@ QAxWidget::~QAxWidget()
     To initialize the control before it is activated, reimplement this
     function and add your initialization code before you call
     createHostWindow(true).
+
+    Returns \c true on success, \c false otherwise.
 */
 bool QAxWidget::initialize(IUnknown **ptr)
 {
