@@ -96,7 +96,7 @@ static inline QString docuFromName(ITypeInfo *typeInfo, const QString &name)
     return QLatin1String("<p>") + qax_docuFromName(typeInfo, name) + QLatin1String("\n");
 }
 
-static QByteArray namedPrototype(const QList<QByteArray> &parameterTypes, const QList<QByteArray> &parameterNames, int numDefArgs = 0)
+static QByteArray namedPrototype(const QByteArrayList &parameterTypes, const QByteArrayList &parameterNames, int numDefArgs = 0)
 {
     QByteArray prototype("(");
     for (int p = 0; p < parameterTypes.count(); ++p) {
@@ -177,7 +177,8 @@ QString qax_generateDocumentation(QAxBase *that)
     }
     stream << "</ul>" << Qt::endl;
 
-    QList<QString> methodDetails, propDetails;
+    QStringList methodDetails;
+    QStringList propDetails;
 
     const int slotCount = mo->methodCount();
     if (slotCount) {
@@ -208,7 +209,7 @@ QString qax_generateDocumentation(QAxBase *that)
                              QLatin1String(returntype.constData()) + QLatin1Char(' ') +
                              QLatin1String(name.constData()) + QLatin1Char(' ') +
                              QString::fromLatin1(prototype.constData()) + QLatin1String("<tt> [slot]</tt></h3>\n");
-            prototype = namedPrototype(slot.parameterTypes(), QList<QByteArray>());
+            prototype = namedPrototype(slot.parameterTypes(), {});
             detail += docuFromName(typeInfo, QString::fromLatin1(name.constData()));
             detail += QLatin1String("<p>Connect a signal to this slot:<pre>\n");
             detail += QString::fromLatin1("\tQObject::connect(sender, SIGNAL(someSignal") + QString::fromLatin1(prototype.constData()) +
@@ -284,7 +285,7 @@ QString qax_generateDocumentation(QAxBase *that)
                     }
                 } while (typeInfo);
             }
-            prototype = namedPrototype(signal.parameterTypes(), QList<QByteArray>());
+            prototype = namedPrototype(signal.parameterTypes(), {});
             detail += QLatin1String("<p>Connect a slot to this signal:<pre>\n");
             detail += QLatin1String("\tQObject::connect(object, SIGNAL(") + QString::fromLatin1(name.constData()) +
                       QString::fromLatin1(prototype.constData()) +

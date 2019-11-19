@@ -499,9 +499,9 @@ HRESULT UpdateRegistry(bool bRegister, bool perUser)
 // IDL generator
 /////////////////////////////////////////////////////////////////////////////
 
-static QList<QByteArray> enums;
-static QList<QByteArray> enumValues;
-static QList<QByteArray> subtypes;
+static QByteArrayList enums;
+static QByteArrayList enumValues;
+static QByteArrayList subtypes;
 
 static const char* const type_map[][2] =
 {
@@ -754,7 +754,7 @@ static QString stripCurlyBraces(const QUuid &uuid)
     return result;
 }
 
-static QByteArray prototype(const QList<QByteArray> &parameterTypes, const QList<QByteArray> &parameterNames, bool *ok)
+static QByteArray prototype(const QByteArrayList &parameterTypes, const QByteArrayList &parameterNames, bool *ok)
 {
     QByteArray prototype;
 
@@ -1001,8 +1001,8 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
         if (ignoreSlots(name))
             continue;
 
-        QList<QByteArray> parameterTypes(slot.parameterTypes());
-        QList<QByteArray> parameterNames(slot.parameterNames());
+        const auto parameterTypes = slot.parameterTypes();
+        const auto parameterNames = slot.parameterNames();
 
         bool ok = true;
         QByteArray type = slot.typeName();
@@ -1065,8 +1065,8 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
             signature.remove(0, name.length() + 1);
             signature.truncate(signature.length() - 1);
 
-            QList<QByteArray> parameterTypes(signal.parameterTypes());
-            QList<QByteArray> parameterNames(signal.parameterNames());
+            const auto parameterTypes = signal.parameterTypes();
+            const auto parameterNames = signal.parameterNames();
 
             bool isDefault = defSignal == QLatin1String(name);
             name = renameOverloads(replaceKeyword(name));
