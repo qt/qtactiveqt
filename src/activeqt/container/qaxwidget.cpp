@@ -449,7 +449,7 @@ static const ushort mouseTbl[] = {
 
 static Qt::MouseButtons translateMouseButtonState(int s)
 {
-    Qt::MouseButtons bst = nullptr;
+    Qt::MouseButtons bst;
     if (s & MK_LBUTTON)
         bst |= Qt::LeftButton;
     if (s & MK_MBUTTON)
@@ -462,7 +462,7 @@ static Qt::MouseButtons translateMouseButtonState(int s)
 
 static Qt::KeyboardModifiers translateModifierState(int s)
 {
-    Qt::KeyboardModifiers bst = nullptr;
+    Qt::KeyboardModifiers bst;
     if (s & MK_SHIFT)
         bst |= Qt::ShiftModifier;
     if (s & MK_CONTROL)
