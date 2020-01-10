@@ -1914,7 +1914,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
 */
 
 const QMetaObject QAxWidget::staticMetaObject = {
-    { &QWidget::staticMetaObject, qt_meta_stringdata_QAxBase.data,
+    { &QWidget::staticMetaObject, qt_meta_stringdata_QAxBase.offsetsAndSize,
       qt_meta_data_QAxBase, qt_static_metacall, nullptr, nullptr }
 };
 

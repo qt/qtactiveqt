@@ -91,7 +91,7 @@ QT_BEGIN_NAMESPACE
 */
 
 const QMetaObject QAxObject::staticMetaObject = {
-    { &QObject::staticMetaObject, qt_meta_stringdata_QAxBase.data,
+    { &QObject::staticMetaObject, qt_meta_stringdata_QAxBase.offsetsAndSize,
       qt_meta_data_QAxBase, qt_static_metacall, nullptr, nullptr }
 };
 

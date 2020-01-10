@@ -131,7 +131,7 @@ struct QAxMetaObject : public QMetaObject
     ~QAxMetaObject()
     {
         delete [] d.data;
-        delete [] reinterpret_cast<char *>(const_cast<QByteArrayData *>(d.stringdata));
+        delete [] reinterpret_cast<char *>(const_cast<uint *>(d.stringdata));
     }
 
     int numParameter(const QByteArray &prototype);
@@ -3162,7 +3162,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     // put the metaobject together
     metaobj->d.data = int_data;
     metaobj->d.extradata = nullptr;
-    metaobj->d.stringdata = reinterpret_cast<const QByteArrayData *>(string_data);
+    metaobj->d.stringdata = reinterpret_cast<const uint *>(string_data);
     metaobj->d.static_metacall = nullptr;
     metaobj->d.relatedMetaObjects = nullptr;
     metaobj->d.superdata = parentObject;
@@ -3188,26 +3188,24 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     return metaobj;
 }
 
-#define QT_MOC_LITERAL(idx, ofs, len) { \
-    Q_REFCOUNT_INITIALIZE_STATIC, len, 0, 0, \
-    offsetof(qt_meta_stringdata_QAxBase_t, stringdata) + ofs \
-        - idx * sizeof(QByteArrayData) \
-    }
+#define QT_MOC_LITERAL(ofs, len) \
+    uint(offsetof(qt_meta_stringdata_QAxBase_t, stringdata) + ofs), len
+
 const QAxBase::qt_meta_stringdata_QAxBase_t QAxBase::qt_meta_stringdata_QAxBase = {
     {
-QT_MOC_LITERAL(0, 0, 7),
-QT_MOC_LITERAL(1, 8, 6),
-QT_MOC_LITERAL(2, 15, 0),
-QT_MOC_LITERAL(3, 16, 4),
-QT_MOC_LITERAL(4, 21, 4),
-QT_MOC_LITERAL(5, 26, 4),
-QT_MOC_LITERAL(6, 31, 15),
-QT_MOC_LITERAL(7, 47, 9),
-QT_MOC_LITERAL(8, 57, 4),
-QT_MOC_LITERAL(9, 62, 6),
-QT_MOC_LITERAL(10, 69, 4),
-QT_MOC_LITERAL(11, 74, 4),
-QT_MOC_LITERAL(12, 79, 7)
+QT_MOC_LITERAL(0, 7),
+QT_MOC_LITERAL(8, 6),
+QT_MOC_LITERAL(15, 0),
+QT_MOC_LITERAL(16, 4),
+QT_MOC_LITERAL(21, 4),
+QT_MOC_LITERAL(26, 4),
+QT_MOC_LITERAL(31, 15),
+QT_MOC_LITERAL(47, 9),
+QT_MOC_LITERAL(57, 4),
+QT_MOC_LITERAL(62, 6),
+QT_MOC_LITERAL(69, 4),
+QT_MOC_LITERAL(74, 4),
+QT_MOC_LITERAL(79, 7)
     },
     "QAxBase\0signal\0\0name\0argc\0argv\0"
     "propertyChanged\0exception\0code\0source\0"

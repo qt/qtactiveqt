@@ -159,7 +159,7 @@ protected:
     virtual const QMetaObject *fallbackMetaObject() const = 0;
 
     struct qt_meta_stringdata_QAxBase_t {
-        QByteArrayData data[13];
+        const uint offsetsAndSize[26];
         char stringdata[88];
     };
     static const qt_meta_stringdata_QAxBase_t qt_meta_stringdata_QAxBase;

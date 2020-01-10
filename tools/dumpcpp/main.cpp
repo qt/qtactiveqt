@@ -1302,7 +1302,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         // Build stringdata struct
         //
         implOut << "struct qt_meta_stringdata_all_t {" << Qt::endl;
-        implOut << "    QByteArrayData data[" << strings.size() << "];" << Qt::endl;
+        implOut << "    uint data[" << strings.size() * 2 << "];" << Qt::endl;
 
         QVector<QByteArrayList> listVector;
         QByteArrayList currentList;
@@ -1323,16 +1323,8 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         implOut << "};" << Qt::endl;
         listVector.append(currentList);
 
-        // Macro that expands into a QByteArrayData. The offset member is
-        // calculated from 1) the offset of the actual characters in the
-        // stringdata.stringdata member, and 2) the stringdata.data index of the
-        // QByteArrayData being defined. This calculation relies on the
-        // QByteArrayData::data() implementation returning simply "this + offset".
-        implOut << "#define QT_MOC_LITERAL(idx, ofs, len, table) \\" << Qt::endl
-            << "    Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \\" << Qt::endl
-            << "    offsetof(qt_meta_stringdata_all_t, stringdata##table) + ofs \\" << Qt::endl
-            << "        - idx * sizeof(QByteArrayData) \\" << Qt::endl
-            << "    )" << Qt::endl;
+        implOut << "#define QT_MOC_LITERAL(ofs, len, table) \\" << Qt::endl
+            << "    uint(offsetof(qt_meta_stringdata_all_t, stringdata##table) + ofs), len," << Qt::endl;
 
         implOut << "static const qt_meta_stringdata_all_t qt_meta_stringdata_all = {" << Qt::endl;
         implOut << "    {" << Qt::endl;
@@ -1344,7 +1336,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 if (totalStringCount)
                     implOut << ',' << Qt::endl;
                 const QByteArray &str = listVector[i].at(j);
-                implOut << "QT_MOC_LITERAL(" << totalStringCount++ << ", " << idx << ", " << str.length() << ", " << i << ')';
+                implOut << "QT_MOC_LITERAL(" << idx << ", " << str.length() << ", " << i << ')';
                 idx += str.length() + 1;
             }
         }
