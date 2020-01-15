@@ -408,7 +408,7 @@ private:
     QPointer<QMenuBar> menuBar;
     QPointer<QStatusBar> statusBar;
     QPointer<QMenu> currentPopup;
-    QAxExceptInfo *exception;
+    QAxExceptInfo *exception = nullptr;
 
     CRITICAL_SECTION refCountSection;
     CRITICAL_SECTION createWindowSection;
