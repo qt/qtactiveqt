@@ -4021,6 +4021,12 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     UINT argerr = 0;
 
     HRESULT hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, disptype, &params, res, &excepinfo, &argerr);
+    if (hres == DISP_E_MEMBERNOTFOUND && (disptype & DISPATCH_METHOD) != 0) {
+        // Retry with pVarResult = 0, workaround for "Word.Application.WordBasic.DisableAutoMacros(bool)"
+        memset(&excepinfo, 0, sizeof(excepinfo));
+        argerr = 0;
+        hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, disptype, &params, nullptr, &excepinfo, &argerr);
+    }
 
     if (disptype == (DISPATCH_METHOD|DISPATCH_PROPERTYGET) && hres == S_OK && varc) {
         for (int i = 0; i < varc; ++i)
