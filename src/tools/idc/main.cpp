@@ -185,46 +185,74 @@ static HMODULE loadLibraryQt(const QString &input)
     return result;
 }
 
-static bool registerServer(const QString &input)
+static bool dllInstall(const QString &input, bool doRegister)
+{
+    HMODULE hdll = loadLibraryQt(input);
+    if (!hdll) {
+        fprintf(stderr, "Couldn't load library file %s\n", qPrintable(input));
+        return false;
+    }
+
+    typedef HRESULT(__stdcall* DllInstallProc)(BOOL bInstall, PCWSTR pszCmdLine);
+    DllInstallProc DllInstall = reinterpret_cast<DllInstallProc>(GetProcAddress(hdll, "DllInstall"));
+    if (!DllInstall) {
+        fprintf(stderr, "Library file %s doesn't appear to be a COM library supporting DllInstall\n", qPrintable(input));
+        return false;
+    }
+
+    return DllInstall(doRegister, L"user") == S_OK;
+}
+
+static bool registerServer(const QString &input, bool perUser)
 {
     bool ok = false;
     if (hasExeExtension(input)) {
-        ok = runWithQtInEnvironment(quotePath(input) + QLatin1String(" -regserver"));
+        ok = runWithQtInEnvironment(quotePath(input) + QLatin1String(perUser ? " -regserverperuser" : " -regserver"));
     } else {
-        HMODULE hdll = loadLibraryQt(input);
-        if (!hdll) {
-            fprintf(stderr, "Couldn't load library file %s\n", qPrintable(input));
-            return false;
+        if (perUser) {
+            return dllInstall(input, true);
+        } else {
+            HMODULE hdll = loadLibraryQt(input);
+            if (!hdll) {
+                fprintf(stderr, "Couldn't load library file %s\n", qPrintable(input));
+                return false;
+            }
+
+            typedef HRESULT(__stdcall* RegServerProc)();
+            RegServerProc DllRegisterServer = reinterpret_cast<RegServerProc>(GetProcAddress(hdll, "DllRegisterServer"));
+            if (!DllRegisterServer) {
+                fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
+                return false;
+            }
+            ok = DllRegisterServer() == S_OK;
         }
-        typedef HRESULT(__stdcall* RegServerProc)();
-        RegServerProc DllRegisterServer = reinterpret_cast<RegServerProc>(GetProcAddress(hdll, "DllRegisterServer"));
-        if (!DllRegisterServer) {
-            fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
-            return false;
-        }
-        ok = DllRegisterServer() == S_OK;
     }
     return ok;
 }
 
-static bool unregisterServer(const QString &input)
+static bool unregisterServer(const QString &input, bool perUser)
 {
     bool ok = false;
     if (hasExeExtension(input)) {
-        ok = runWithQtInEnvironment(quotePath(input) + QLatin1String(" -unregserver"));
+        ok = runWithQtInEnvironment(quotePath(input) + QLatin1String(perUser ? " -unregserverperuser" : " -unregserver"));
     } else {
-        HMODULE hdll = loadLibraryQt(input);
-        if (!hdll) {
-            fprintf(stderr, "Couldn't load library file %s\n", qPrintable(input));
-            return false;
+        if (perUser) {
+            return dllInstall(input, false);
+        } else {
+            HMODULE hdll = loadLibraryQt(input);
+            if (!hdll) {
+                fprintf(stderr, "Couldn't load library file %s\n", qPrintable(input));
+                return false;
+            }
+
+            typedef HRESULT(__stdcall* RegServerProc)();
+            RegServerProc DllUnregisterServer = reinterpret_cast<RegServerProc>(GetProcAddress(hdll, "DllUnregisterServer"));
+            if (!DllUnregisterServer) {
+                fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
+                return false;
+            }
+            ok = DllUnregisterServer() == S_OK;
         }
-        typedef HRESULT(__stdcall* RegServerProc)();
-        RegServerProc DllUnregisterServer = reinterpret_cast<RegServerProc>(GetProcAddress(hdll, "DllUnregisterServer"));
-        if (!DllUnregisterServer) {
-            fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
-            return false;
-        }
-        ok = DllUnregisterServer() == S_OK;
     }
     return ok;
 }
@@ -268,6 +296,8 @@ const char usage[] =
 "  /tlb, -tlb <file>                 Specify the type library file.\n"
 "  /regserver, -regserver            Register server.\n"
 "  /unregserver, -unregserver        Unregister server.\n\n"
+"  /regserverperuser, -regserverperuser     Per-user register server.\n"
+"  /unregserverperuser, -unregserverperuser Per-user unregister server.\n\n"
 "Examples:\n"
 "idc -regserver l.dll                Register the COM server l.dll\n"
 "idc -unregserver l.dll              Unregister the COM server l.dll\n"
@@ -275,7 +305,7 @@ const char usage[] =
 "                                    The type library will have version 2.3\n"
 "idc l.dll -tlb l.tlb                Replaces the type library in l.dll with l.tlb\n";
 
-enum Mode { RegisterServer, UnregisterServer, Other };
+enum Mode { RegisterServer, UnregisterServer, RegServerPerUser, UnregServerPerUser, Other };
 
 int runIdc(int argc, char **argv)
 {
@@ -320,6 +350,10 @@ int runIdc(int argc, char **argv)
             mode = RegisterServer;
         } else if (p == QLatin1String("/unregserver") || p == QLatin1String("-unregserver")) {
             mode = UnregisterServer;
+        } else if (p == QLatin1String("/regserverperuser") || p == QLatin1String("-regserverperuser")) {
+            mode = RegServerPerUser;
+        } else if (p == QLatin1String("/unregserverperuser") || p == QLatin1String("-unregserverperuser")) {
+            mode = UnregServerPerUser;
         } else if (p[0] == QLatin1Char('/') || p[0] == QLatin1Char('-')) {
             error = QLatin1String("Unknown option \"") + p + QLatin1Char('"');
             break;
@@ -342,18 +376,32 @@ int runIdc(int argc, char **argv)
 
     switch (mode) {
     case RegisterServer:
-        if (!registerServer(input)) {
+        if (!registerServer(input, false)) {
             fprintf(stderr, "Failed to register server!\n");
             return 1;
         }
         fprintf(stderr, "Server registered successfully!\n");
         return 0;
     case UnregisterServer:
-        if (!unregisterServer(input)) {
+        if (!unregisterServer(input, false)) {
             fprintf(stderr, "Failed to unregister server!\n");
             return 1;
         }
         fprintf(stderr, "Server unregistered successfully!\n");
+        return 0;
+    case RegServerPerUser:
+        if (!registerServer(input, true)) {
+            fprintf(stderr, "Failed to register server per user!\n");
+            return 1;
+        }
+        fprintf(stderr, "Server registered successfully per user!\n");
+        return 0;
+    case UnregServerPerUser:
+        if (!unregisterServer(input, true)) {
+            fprintf(stderr, "Failed to unregister server per user!\n");
+            return 1;
+        }
+        fprintf(stderr, "Server unregistered successfully per user!\n");
         return 0;
     case Other:
         break;
