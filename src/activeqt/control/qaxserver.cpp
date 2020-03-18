@@ -1157,9 +1157,10 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     out.setDevice(&file);
 
     QString version(ver.unicode(), ver.length());
+    // truncate "major.minor.patch.build" version string to "major.minor"
     while (version.count(QLatin1Char('.')) > 1) {
         int lastdot = version.lastIndexOf(QLatin1Char('.'));
-        version.remove(lastdot, 1);
+        version.truncate(lastdot);
     }
     if (version.isEmpty())
         version = QLatin1String("1.0");
