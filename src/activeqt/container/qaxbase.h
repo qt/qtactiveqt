@@ -65,7 +65,6 @@ class QUuid;
 class QAxEventSink;
 class QAxObject;
 class QAxBasePrivate;
-struct QAxMetaObject;
 
 class QAxBase
 {
@@ -175,7 +174,6 @@ private:
     friend void *qax_createObjectWrapper(int, IUnknown*);
     bool initializeLicensedHelper(void *factory, const QString &key, IUnknown **ptr);
     QAxBasePrivate *d;
-    QAxMetaObject *internalMetaObject() const;
 
     virtual const QMetaObject *parentMetaObject() const = 0;
     int internalProperty(QMetaObject::Call, int index, void **v);
