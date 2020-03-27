@@ -75,7 +75,7 @@ void InvokeMethod::setControl(QAxBase *ax)
         }
         comboMethods->model()->sort(0);
 
-        on_comboMethods_activated(comboMethods->currentText());
+        on_comboMethods_textActivated(comboMethods->currentText());
     }
 }
 
@@ -105,7 +105,7 @@ void InvokeMethod::on_buttonInvoke_clicked()
                         + QLatin1Char(' ') + result.toString());
 }
 
-void InvokeMethod::on_comboMethods_activated(const QString &method)
+void InvokeMethod::on_comboMethods_textActivated(const QString &method)
 {
     if (!activex)
         return;
