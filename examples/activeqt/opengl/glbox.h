@@ -90,11 +90,11 @@ protected:
     virtual GLuint      makeObject();
 
 private:
-    GLuint  m_object;
-    GLfloat m_xRot;
-    GLfloat m_yRot;
-    GLfloat m_zRot;
-    GLfloat m_scale;
+    GLuint  m_object = 0;
+    GLdouble m_xRot = 0;
+    GLdouble m_yRot = 0;
+    GLdouble m_zRot = 0;
+    GLdouble m_scale = 1.25;
 };
 
 #endif // GLBOX_H
