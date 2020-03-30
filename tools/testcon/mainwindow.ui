@@ -626,48 +626,40 @@
       <string>About Qt</string>
      </property>
     </action>
-    <actiongroup name="actionGroupLogging" >
-      <action name="actionLogSignals" >
-        <property name="objectName" >
-          <string>actionLogSignals</string>
-        </property>
-        <property name="checkable" >
-          <bool>true</bool>
-        </property>
-        <property name="checked" >
-          <bool>true</bool>
-        </property>
-        <property name="iconText" >
-          <string>Signals</string>
-        </property>
-        <property name="text" >
-          <string>&amp;Signals</string>
-        </property>
-      </action>
-      <action name="actionLogProperties" >
-        <property name="objectName" >
-          <string>actionLogProperties</string>
-        </property>
-        <property name="checkable" >
-          <bool>true</bool>
-        </property>
-        <property name="checked" >
-          <bool>true</bool>
-        </property>
-        <property name="iconText" >
-          <string>Properties</string>
-        </property>
-        <property name="text" >
-          <string>&amp;Properties</string>
-        </property>
-      </action>
+    <action name="actionLogSignals" >
       <property name="objectName" >
-        <string>actionGroupLogging</string>
+        <string>actionLogSignals</string>
       </property>
-      <property name="exclusive" >
-        <bool>false</bool>
+      <property name="checkable" >
+        <bool>true</bool>
       </property>
-    </actiongroup>
+      <property name="checked" >
+        <bool>true</bool>
+      </property>
+      <property name="iconText" >
+        <string>Signals</string>
+      </property>
+      <property name="text" >
+        <string>&amp;Signals</string>
+      </property>
+    </action>
+    <action name="actionLogProperties" >
+      <property name="objectName" >
+        <string>actionLogProperties</string>
+      </property>
+      <property name="checkable" >
+        <bool>true</bool>
+      </property>
+      <property name="checked" >
+        <bool>true</bool>
+      </property>
+      <property name="iconText" >
+        <string>Properties</string>
+      </property>
+      <property name="text" >
+        <string>&amp;Properties</string>
+      </property>
+    </action>
   </widget>
   <layoutdefault spacing="6" margin="11" />
 </ui>
