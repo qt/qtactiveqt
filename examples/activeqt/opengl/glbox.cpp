@@ -228,11 +228,10 @@ public:
     long queryInterface(const QUuid &iid, void **iface) override
     {
         *iface = nullptr;
-        if (iid == IID_IObjectSafety)
-            *iface = (IObjectSafety*)this;
-        else
+        if (iid != IID_IObjectSafety)
             return E_NOINTERFACE;
 
+        *iface = static_cast<IObjectSafety*>(this);
         AddRef();
         return S_OK;
     }
@@ -243,6 +242,7 @@ public:
 //! [3] //! [4]
     HRESULT WINAPI GetInterfaceSafetyOptions(REFIID riid, DWORD *pdwSupportedOptions, DWORD *pdwEnabledOptions) override
     {
+        Q_UNUSED(riid);
         *pdwSupportedOptions = INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACESAFE_FOR_UNTRUSTED_CALLER;
         *pdwEnabledOptions = INTERFACESAFE_FOR_UNTRUSTED_DATA | INTERFACESAFE_FOR_UNTRUSTED_CALLER;
         return S_OK;
@@ -250,6 +250,9 @@ public:
 
     HRESULT WINAPI SetInterfaceSafetyOptions(REFIID riid, DWORD pdwSupportedOptions, DWORD pdwEnabledOptions) override
     {
+        Q_UNUSED(riid);
+        Q_UNUSED(pdwSupportedOptions);
+        Q_UNUSED(pdwEnabledOptions);
         return S_OK;
     }
 };
