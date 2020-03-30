@@ -73,11 +73,18 @@
 */
 
 GLBox::GLBox(QWidget *parent, const char *name)
-    : QGLWidget(parent)
+    : QOpenGLWidget(parent)
 {
     m_xRot = m_yRot = m_zRot = 0.0;       // default object rotation
     m_scale = 1.25;                       // default object scale
     m_object = 0;
+
+    setObjectName(name);
+
+    QSurfaceFormat format;
+    format.setVersion(1, 1);
+    format.setProfile(QSurfaceFormat::CompatibilityProfile);
+    setFormat(format);
 }
 
 
@@ -122,8 +129,7 @@ void GLBox::paintGL()
 void GLBox::initializeGL()
 {
     initializeOpenGLFunctions();
-
-    qglClearColor(Qt::black);           // Let OpenGL clear to black
+    glClearColor(0, 0, 0, 1);           // Let OpenGL clear to black
     m_object = makeObject();            // Generate an OpenGL display list
     glShadeModel(GL_FLAT);
 }
@@ -156,7 +162,7 @@ GLuint GLBox::makeObject()
 
     glNewList(list, GL_COMPILE);
 
-    qglColor(Qt::white);                      // Shorthand for glColor3f or glIndex
+    glColor3d(1, 1, 1);                      // Shorthand for glColor3f or glIndex
 
     glLineWidth(2.0);
 
@@ -194,7 +200,7 @@ GLuint GLBox::makeObject()
 void GLBox::setXRotation(int degrees)
 {
     m_xRot = (GLfloat)(degrees % 360);
-    updateGL();
+    update();
 }
 
 
@@ -205,7 +211,7 @@ void GLBox::setXRotation(int degrees)
 void GLBox::setYRotation(int degrees)
 {
     m_yRot = (GLfloat)(degrees % 360);
-    updateGL();
+    update();
 }
 
 
@@ -216,7 +222,7 @@ void GLBox::setYRotation(int degrees)
 void GLBox::setZRotation(int degrees)
 {
     m_zRot = (GLfloat)(degrees % 360);
-    updateGL();
+    update();
 }
 
 //! [1]

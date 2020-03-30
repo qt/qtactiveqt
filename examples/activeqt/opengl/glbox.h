@@ -57,12 +57,12 @@
 #ifndef GLBOX_H
 #define GLBOX_H
 
-#include <QtOpenGL>
+#include <QOpenGLWidget>
 #include <QOpenGLFunctions_1_1>
 //! [0]
 #include <QAxBindable>
 
-class GLBox : public QGLWidget,
+class GLBox : public QOpenGLWidget,
               public QOpenGLFunctions_1_1,
               public QAxBindable
 {
