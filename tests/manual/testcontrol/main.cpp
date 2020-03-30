@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 #include <ActiveQt/QAxFactory>
-#include <QtWidgets/QAction>
+#include <QtGui/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenu>

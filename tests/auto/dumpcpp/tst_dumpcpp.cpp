@@ -41,6 +41,7 @@ private slots:
 // A simple test to verify that an object can be instantiated and interacted with
 void tst_dumpcpp::toggleAddressBar()
 {
+    QSKIP("Crashes in Qt 6 pending rewrite of dumpcpp for new QMetaObject", Abort); // Qt 6 Fixme
     SHDocVw::WebBrowser* webBrowser = new SHDocVw::WebBrowser;
     QVERIFY(webBrowser);
     bool addressBar = webBrowser->AddressBar();

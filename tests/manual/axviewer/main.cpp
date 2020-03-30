@@ -29,7 +29,7 @@
 #include <ActiveQt/QAxSelect>
 #include <ActiveQt/QAxWidget>
 
-#include <QtWidgets/QAction>
+#include <QtGui/QAction>
 #include <QtWidgets/QApplication>
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QDialogButtonBox>
