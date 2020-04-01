@@ -3452,7 +3452,6 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
     if (dispid == DISPID_UNKNOWN)
         return index;
 
-    Q_ASSERT(d->metaobj);
     // property found, so everthing that goes wrong now should not bother the caller
     index -= mo->propertyCount();
 
@@ -3554,8 +3553,6 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     bool isProperty = false;
     const QMetaObjectExtra &moExtra = moextra_cache.value(d->metaObject());
     DISPID dispid = moExtra.dispIDofName(slotname, disp);
-
-    Q_ASSERT(d->metaobj);
 
     if (dispid == DISPID_UNKNOWN && slotname.toLower().startsWith("set")) {
         // see if we are calling a property set function as a slot

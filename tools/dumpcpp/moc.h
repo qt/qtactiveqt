@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the tools applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -26,29 +26,23 @@
 **
 ****************************************************************************/
 
-#include <QtTest/QtTest>
-#include "ieframe.h" // generated header
-#include <QApplication>
+#ifndef __MOC__
+#define __MOC__
 
-class tst_dumpcpp : public QObject
-{
-    Q_OBJECT
+#include <QString>
 
-private slots:
-    void toggleAddressBar();
-};
+QT_FORWARD_DECLARE_CLASS(QMetaEnum);
+QT_FORWARD_DECLARE_CLASS(QTextStream);
 
-// A simple test to verify that an object can be instantiated and interacted with
-void tst_dumpcpp::toggleAddressBar()
-{
-    SHDocVw::WebBrowser* webBrowser = new SHDocVw::WebBrowser;
-    QVERIFY(webBrowser);
-    bool addressBar = webBrowser->AddressBar();
-    addressBar = !addressBar;
-    webBrowser->SetAddressBar(addressBar);
-    QVERIFY(webBrowser->AddressBar() == addressBar);
-    delete webBrowser;
-}
+QT_BEGIN_NAMESPACE
 
-QTEST_MAIN(tst_dumpcpp)
-#include "tst_dumpcpp.moc"
+QByteArray setterName(const QByteArray &propertyName);
+
+void formatCppEnum(QTextStream &str, const QMetaEnum &metaEnum);
+
+QString mocCode(const QMetaObject *, const QString &qualifiedClassName,
+                QString baseClass, QString *errorString);
+
+QT_END_NAMESPACE
+
+#endif //  __MOC__
