@@ -1730,6 +1730,12 @@ private:
 
     using BuilderMethodCreationFunc = QMetaMethodBuilder (QMetaObjectBuilder::*)(const QByteArray &);
 
+    static void addMetaMethod(QMetaObjectBuilder &builder,
+                              BuilderMethodCreationFunc creationFunc,
+                              const QByteArray &name,
+                              const QByteArray &parameters,
+                              const QByteArray &returnType = QByteArray(),
+                              int attributes = 0);
     static void buildMethods(const QMap<QByteArray, Method> &list,
                              QMetaObjectExtra &moExtra,
                              QMetaObjectBuilder &builder,
@@ -1783,9 +1789,6 @@ QMetaObject *qax_readInterfaceInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const
 QMetaObject *qax_readClassInfo(ITypeLib *typeLib, ITypeInfo *classInfo, const QMetaObject *parentObject)
 {
     MetaObjectGenerator generator(typeLib, nullptr);
-    generator.addSignal("exception(int,QString,QString,QString)", "code,source,disc,help");
-    generator.addSignal("propertyChanged(QString)", "name");
-
     QString className;
     BSTR bstr;
     if (S_OK != classInfo->GetDocumentation(-1, &bstr, nullptr, nullptr, nullptr))
@@ -1883,13 +1886,6 @@ void MetaObjectGenerator::init()
         disp = d->dispatch();
 
     iid_propNotifySink = IID_IPropertyNotifySink;
-
-    addSignal("signal(QString,int,void*)", "name,argc,argv");
-    addSignal("exception(int,QString,QString,QString)", "code,source,disc,help");
-    addSignal("propertyChanged(QString)", "name");
-    if (d || dispInfo) {
-        addProperty("QString", "control", Readable|Writable|Designable|Scriptable|Stored|Editable|StdCppSet);
-    }
 }
 
 MetaObjectGenerator::~MetaObjectGenerator()
@@ -2996,6 +2992,24 @@ static uint nameToTypeInfo(const QByteArray &typeName, QMetaStringTable &strings
     return uint(result);
 }
 
+static void addMetaProperty(QMetaObjectBuilder &builder, const QByteArray &name,
+                            const QByteArray &type, uint flags)
+{
+    QMetaPropertyBuilder propertyBuilder = builder.addProperty(name, type);
+    propertyBuilder.setReadable(flags & Readable);
+    propertyBuilder.setWritable(flags & Writable);
+    propertyBuilder.setResettable(flags & Resettable);
+    propertyBuilder.setEnumOrFlag(flags & EnumOrFlag);
+    propertyBuilder.setStdCppSet(flags & StdCppSet);
+    propertyBuilder.setConstant(flags & Constant);
+    propertyBuilder.setFinal(flags & Final);
+    propertyBuilder.setDesignable(flags & Designable);
+    propertyBuilder.setScriptable(flags & Scriptable);
+    propertyBuilder.setStored(flags & Stored);
+    propertyBuilder.setEditable(flags & Editable);
+    propertyBuilder.setUser(flags & User);
+}
+
 // Returns the sum of all parameters (including return type) for the given
 // \a map of methods. This is needed for calculating the size of the methods'
 // parameter type/name meta-data.
@@ -3008,6 +3022,21 @@ int MetaObjectGenerator::aggregateParameterCount(const QMap<QByteArray, Method> 
     return sum;
 }
 
+void MetaObjectGenerator::addMetaMethod(QMetaObjectBuilder &builder,
+                                        BuilderMethodCreationFunc creationFunc,
+                                        const QByteArray &name,
+                                        const QByteArray &parameters,
+                                        const QByteArray &returnType,
+                                        int attributes)
+{
+    QMetaMethodBuilder methodBuilder = (builder.*creationFunc)(name);
+    if (!parameters.isEmpty())
+        methodBuilder.setParameterNames(parameters.split(','));
+    if (!returnType.isEmpty() && returnType != QByteArrayLiteral("void"))
+        methodBuilder.setReturnType(returnType);
+    methodBuilder.setAttributes(attributes);
+}
+
 void MetaObjectGenerator::buildMethods(const QMap<QByteArray, Method> &map,
                                        QMetaObjectExtra &moExtra,
                                        QMetaObjectBuilder &builder,
@@ -3018,12 +3047,8 @@ void MetaObjectGenerator::buildMethods(const QMap<QByteArray, Method> &map,
         const Method &method(it.value());
         if (!method.realPrototype.isEmpty())
             moExtra.realPrototype.insert(prototype, method.realPrototype);
-        QMetaMethodBuilder methodBuilder = (builder.*creationFunc)(prototype);
-        if (!method.parameters.isEmpty())
-            methodBuilder.setParameterNames(method.parameters.split(','));
-        if (method.type != QByteArrayLiteral("void"))
-            methodBuilder.setReturnType(method.type);
-        methodBuilder.setAttributes(method.attributes);
+        addMetaMethod(builder, creationFunc, prototype, method.parameters,
+                      method.type, method.attributes);
     }
 }
 
@@ -3064,10 +3089,18 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         builder.addClassInfo(it.key(), it.value());
 
     // add each method. Signals must be added before other methods, to match moc.
+    addMetaMethod(builder, &QMetaObjectBuilder::addSignal,
+                  "exception(int,QString,QString,QString)", "code,source,desc,help");
+    addMetaMethod(builder, &QMetaObjectBuilder::addSignal,
+                  "propertyChanged(QString)", "name");
+    addMetaMethod(builder, &QMetaObjectBuilder::addSignal,
+                  "signal(QString,int,void*)", "name,argc,argv");
     buildMethods(signal_list, moExtra, builder, &QMetaObjectBuilder::addSignal);
     buildMethods(slot_list, moExtra, builder, &QMetaObjectBuilder::addSlot);
 
     // each property
+    addMetaProperty(builder, "control", "QString",
+                    Readable | Writable | Designable | Scriptable | Stored | Editable | StdCppSet);
     for (auto it = property_list.cbegin(), end = property_list.cend(); it != end; ++it) {
         const QByteArray &name = it.key();
         const QByteArray &type = it.value().type;
@@ -3075,20 +3108,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         QByteArray realType(it.value().realType);
         if (!realType.isEmpty() && realType != type)
             moExtra.realPrototype.insert(name, realType);
-        QMetaPropertyBuilder propertyBuilder = builder.addProperty(name, type);
-        const uint flags = it.value().flags;
-        propertyBuilder.setReadable(flags & Readable);
-        propertyBuilder.setWritable(flags & Writable);
-        propertyBuilder.setResettable(flags & Resettable);
-        propertyBuilder.setEnumOrFlag(flags & EnumOrFlag);
-        propertyBuilder.setStdCppSet(flags & StdCppSet);
-        propertyBuilder.setConstant(flags & Constant);
-        propertyBuilder.setFinal(flags & Final);
-        propertyBuilder.setDesignable(flags & Designable);
-        propertyBuilder.setScriptable(flags & Scriptable);
-        propertyBuilder.setStored(flags & Stored);
-        propertyBuilder.setEditable(flags & Editable);
-        propertyBuilder.setUser(flags & User);
+        addMetaProperty(builder, name, type, it.value().flags);
     }
 
     // each enum in form name\0
