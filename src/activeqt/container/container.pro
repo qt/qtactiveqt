@@ -5,6 +5,7 @@ CONFIG  += static
 
 HEADERS =   ../control/qaxaggregated.h \
             qaxbase.h \
+            qaxbase_p.h \
             qaxwidget.h \
             qaxobject.h \
             qaxscript.h \

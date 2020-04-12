@@ -53,6 +53,7 @@
 #define QT_CHECK_STATE
 
 #include "qaxobject.h"
+#include "qaxbase_p.h"
 
 #include <qfile.h>
 #include <qwidget.h>
@@ -532,8 +533,6 @@ public:
 
         // get the signal information from the metaobject
         if (signalHasReceivers(qobject, signame)) {
-            index = meta->indexOfSignal(signame);
-            Q_ASSERT(index != -1);
             // setup parameters
             QVariant var = qobject->property(propname);
             if (!var.isValid())
@@ -585,74 +584,32 @@ public:
     \class QAxBasePrivate
 */
 
-class QAxBasePrivate
+QAxBasePrivate::QAxBasePrivate(QAxBase *b)
+    : q(b), useEventSink(true), useMetaObject(true), useClassInfo(true),
+     cachedMetaObject(false), initialized(false), tryCache(false)
 {
-    Q_DISABLE_COPY_MOVE(QAxBasePrivate)
-public:
-    using UuidEventSinkHash = QHash<QUuid, QAxEventSink*>;
+    // protect initialization
+    QMutexLocker locker(&cache_mutex);
+    mo_cache_ref++;
 
-    QAxBasePrivate()
-        : useEventSink(true), useMetaObject(true), useClassInfo(true),
-        cachedMetaObject(false), initialized(false), tryCache(false)
-    {
-        // protect initialization
-        QMutexLocker locker(&cache_mutex);
-        mo_cache_ref++;
+    qRegisterMetaType<IUnknown*>("IUnknown*", &ptr);
+    qRegisterMetaType<IDispatch*>("IDispatch*", &disp);
+}
 
-        qRegisterMetaType<IUnknown*>("IUnknown*", &ptr);
-        qRegisterMetaType<IDispatch*>("IDispatch*", &disp);
+QAxBasePrivate::~QAxBasePrivate()
+{
+    Q_ASSERT(!ptr);
+    Q_ASSERT(!disp);
+
+    // protect cleanup
+    QMutexLocker locker(&cache_mutex);
+    if (!--mo_cache_ref) {
+        qDeleteAll(mo_cache);
+        mo_cache.clear();
     }
 
-    ~QAxBasePrivate()
-    {
-        Q_ASSERT(!ptr);
-        Q_ASSERT(!disp);
-
-        // protect cleanup
-        QMutexLocker locker(&cache_mutex);
-        if (!--mo_cache_ref) {
-            qDeleteAll(mo_cache);
-            mo_cache.clear();
-        }
-
-        CoFreeUnusedLibraries();
-    }
-
-    inline IDispatch *dispatch() const
-    {
-        if (disp)
-            return disp;
-
-        if (ptr)
-            ptr->QueryInterface(IID_IDispatch, reinterpret_cast<void **>(&disp));
-        return disp;
-    }
-
-    QString ctrl;
-    UuidEventSinkHash eventSink;
-    uint useEventSink       :1;
-    uint useMetaObject      :1;
-    uint useClassInfo       :1;
-    uint cachedMetaObject   :1;
-    uint initialized        :1;
-    uint tryCache           :1;
-    unsigned long classContext = CLSCTX_SERVER;
-
-    IUnknown *ptr = nullptr;
-    mutable IDispatch *disp = nullptr;
-
-    QMap<QByteArray, bool> propWritable;
-
-    inline QMetaObject *metaObject()
-    {
-        return metaobj;
-    }
-
-    mutable QMap<QString, LONG> verbs;
-
-    QMetaObject *metaobj = nullptr;
-};
-
+    CoFreeUnusedLibraries();
+}
 
 QByteArray QAxEventSink::findProperty(DISPID dispID)
 {
@@ -879,7 +836,7 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
 */
 QAxBase::QAxBase(IUnknown *iface)
 {
-    d = new QAxBasePrivate();
+    d = new QAxBasePrivate(this);
     d->ptr = iface;
     if (d->ptr) {
         d->ptr->AddRef();
@@ -3355,80 +3312,87 @@ void QAxBase::connectNotify()
     or use it in e.g. a QTextBrowser widget.
 */
 
-static bool checkHRESULT(HRESULT hres, EXCEPINFO *exc, QAxBase *that, const QString &name, uint argerr)
+void QAxBasePrivate::handleException(tagEXCEPINFO *exc, const QString &name)
+{
+    const QMetaObject *mo = metaObject();
+    const int exceptionSignal = mo->indexOfSignal("exception(int,QString,QString,QString)");
+    if (exc->pfnDeferredFillIn)
+        exc->pfnDeferredFillIn(exc);
+    int code = exc->wCode ? exc->wCode : exc->scode;
+    QString source = QString::fromWCharArray(exc->bstrSource);
+    QString desc = QString::fromWCharArray(exc->bstrDescription);
+    QString help = QString::fromWCharArray(exc->bstrHelpFile);
+    const uint helpContext = exc->dwHelpContext;
+    if (helpContext && !help.isEmpty())
+        help += QString::fromLatin1(" [%1]").arg(helpContext);
+
+    if (QAxEventSink::signalHasReceivers(q->qObject(), "exception(int,QString,QString,QString)")) {
+        void *argv[] = {nullptr, &code, &source, &desc, &help};
+        QAxBase::qt_static_metacall(q, QMetaObject::InvokeMetaMethod,
+                                    exceptionSignal - mo->methodOffset(), argv);
+    } else {
+        qWarning(R"(QAxBase: Error calling IDispatch member %s: Exception thrown by server
+             Code       : %d
+             Source     : %s
+             Description: %s
+             Help       : %s
+         Connect to the exception(int,QString,QString,QString) signal to catch this exception)",
+                 qPrintable(name), code, qPrintable(source), qPrintable(desc),
+                 qPrintable(help));
+    }
+}
+
+bool QAxBasePrivate::checkHRESULT(HRESULT hres, EXCEPINFO *exc, const QString &name, uint argerr)
 {
     switch(hres) {
     case S_OK:
         return true;
     case DISP_E_BADPARAMCOUNT:
-        qWarning("QAxBase: Error calling IDispatch member %s: Bad parameter count", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: Bad parameter count",
+                 qPrintable(name));
         return false;
     case DISP_E_BADVARTYPE:
-        qWarning("QAxBase: Error calling IDispatch member %s: Bad variant type", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: Bad variant type",
+                 qPrintable(name));
         return false;
     case DISP_E_EXCEPTION:
-        {
-            bool printWarning = true;
-            unsigned int code = uint(-1);
-            QString source, desc, help;
-            const QMetaObject *mo = that->metaObject();
-            int exceptionSignal = mo->indexOfSignal("exception(int,QString,QString,QString)");
-            if (exceptionSignal >= 0) {
-                if (exc->pfnDeferredFillIn)
-                    exc->pfnDeferredFillIn(exc);
-
-                code = exc->wCode ? exc->wCode : exc->scode;
-                source = QString::fromWCharArray(exc->bstrSource);
-                desc = QString::fromWCharArray(exc->bstrDescription);
-                help = QString::fromWCharArray(exc->bstrHelpFile);
-                uint helpContext = exc->dwHelpContext;
-
-                if (helpContext && !help.isEmpty())
-                    help += QString::fromLatin1(" [%1]").arg(helpContext);
-
-                if (QAxEventSink::signalHasReceivers(that->qObject(), "exception(int,QString,QString,QString)")) {
-                    void *argv[] = {nullptr, &code, &source, &desc, &help};
-                    QAxBase::qt_static_metacall(that, QMetaObject::InvokeMetaMethod,
-                                                exceptionSignal - mo->methodOffset(), argv);
-                    printWarning = false;
-                }
-            }
-            if (printWarning) {
-                qWarning("QAxBase: Error calling IDispatch member %s: Exception thrown by server", name.toLatin1().data());
-                qWarning("             Code       : %d", code);
-                qWarning("             Source     : %s", source.toLatin1().data());
-                qWarning("             Description: %s", desc.toLatin1().data());
-                qWarning("             Help       : %s", help.toLatin1().data());
-                qWarning("         Connect to the exception(int,QString,QString,QString) signal to catch this exception");
-            }
-        }
+        handleException(exc, name);
         return false;
     case DISP_E_MEMBERNOTFOUND:
-        qWarning("QAxBase: Error calling IDispatch member %s: Member not found", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: Member not found",
+                 qPrintable(name));
         return false;
     case DISP_E_NONAMEDARGS:
-        qWarning("QAxBase: Error calling IDispatch member %s: No named arguments", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: No named arguments",
+                 qPrintable(name));
         return false;
     case DISP_E_OVERFLOW:
-        qWarning("QAxBase: Error calling IDispatch member %s: Overflow", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: Overflow",
+                 qPrintable(name));
         return false;
     case DISP_E_PARAMNOTFOUND:
-        qWarning("QAxBase: Error calling IDispatch member %s: Parameter %d not found", name.toLatin1().data(), argerr);
+        qWarning("QAxBase: Error calling IDispatch member %s: Parameter %d not found",
+                 qPrintable(name), argerr);
         return false;
     case DISP_E_TYPEMISMATCH:
-        qWarning("QAxBase: Error calling IDispatch member %s: Type mismatch in parameter %d", name.toLatin1().data(), argerr);
+        qWarning("QAxBase: Error calling IDispatch member %s: Type mismatch in parameter %d",
+                 qPrintable(name), argerr);
         return false;
     case DISP_E_UNKNOWNINTERFACE:
-        qWarning("QAxBase: Error calling IDispatch member %s: Unknown interface", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: Unknown interface",
+                 qPrintable(name));
         return false;
     case DISP_E_UNKNOWNLCID:
-        qWarning("QAxBase: Error calling IDispatch member %s: Unknown locale ID", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: Unknown locale ID",
+                 qPrintable(name));
         return false;
     case DISP_E_PARAMNOTOPTIONAL:
-        qWarning("QAxBase: Error calling IDispatch member %s: Non-optional parameter missing", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: Non-optional parameter missing",
+                 qPrintable(name));
         return false;
     default:
-        qWarning("QAxBase: Error calling IDispatch member %s: Unknown error", name.toLatin1().data());
+        qWarning("QAxBase: Error calling IDispatch member %s: Unknown error",
+                 qPrintable(name));
         return false;
     }
 }
@@ -3546,7 +3510,7 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
         break;
     }
 
-    checkHRESULT(hres, &excepinfo, this, QLatin1String(propname), argerr);
+    d->checkHRESULT(hres, &excepinfo, QLatin1String(propname), argerr);
     return index;
 }
 
@@ -3669,7 +3633,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     if (params.rgvarg != static_rgvarg)
         delete [] params.rgvarg;
 
-    checkHRESULT(hres, &excepinfo, this, QString::fromLatin1(slotname), params.cArgs-argerr-1);
+    d->checkHRESULT(hres, &excepinfo, QString::fromLatin1(slotname), params.cArgs-argerr-1);
     return index;
 }
 
@@ -3678,19 +3642,19 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
 */
 int QAxBase::qt_static_metacall(QAxBase *_t, QMetaObject::Call _c, int _id, void **_a)
 {
+    if (_c != QMetaObject::InvokeMetaMethod)
+        return 0;
     Q_ASSERT(_t != nullptr);
-    if (_c == QMetaObject::InvokeMetaMethod) {
-        const QMetaObject *mo = _t->metaObject();
-        switch (mo->method(_id + mo->methodOffset()).methodType()) {
-        case QMetaMethod::Signal:
-            QMetaObject::activate(_t->qObject(), mo, _id, _a);
-            return _id - mo->methodCount();
-        case QMetaMethod::Method:
-        case QMetaMethod::Slot:
-            return _t->internalInvoke(_c, _id, _a);
-        default:
-            break;
-        }
+    const QMetaObject *mo = _t->metaObject();
+    switch (mo->method(_id + mo->methodOffset()).methodType()) {
+    case QMetaMethod::Signal:
+        QMetaObject::activate(_t->qObject(), mo, _id, _a);
+        return _id - mo->methodCount();
+    case QMetaMethod::Method:
+    case QMetaMethod::Slot:
+        return _t->internalInvoke(_c, _id, _a);
+    default:
+        break;
     }
     return 0;
 }
@@ -3988,7 +3952,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     if (arg && arg != staticarg)
         delete[] arg;
 
-    return checkHRESULT(hres, &excepinfo, this, QLatin1String(function), uint(varc) - argerr - 1);
+    return d->checkHRESULT(hres, &excepinfo, QLatin1String(function), uint(varc) - argerr - 1);
 }
 
 /*!
@@ -4218,7 +4182,8 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
     case VT_EMPTY:
 #ifdef QT_CHECK_STATE
         {
-            const char *coclass = metaObject()->classInfo(metaObject()->indexOfClassInfo("CoClass")).value();
+            auto mo = metaObject();
+            const char *coclass = mo->classInfo(mo->indexOfClassInfo("CoClass")).value();
             qWarning("QAxBase::querySubObject: %s: Error calling function or property in %s (%s)"
                 , name, control().toLatin1().data(), coclass ? coclass: "unknown");
         }
@@ -4227,7 +4192,8 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
     default:
 #ifdef QT_CHECK_STATE
         {
-            const char *coclass = metaObject()->classInfo(metaObject()->indexOfClassInfo("CoClass")).value();
+            auto mo = metaObject();
+            const char *coclass = mo->classInfo(mo->indexOfClassInfo("CoClass")).value();
             qWarning("QAxBase::querySubObject: %s: Method or property is not of interface type in %s (%s)"
                 , name, control().toLatin1().data(), coclass ? coclass: "unknown");
         }
