@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout *layout = new QHBoxLayout(Workbase);
     m_mdiArea = new QMdiArea(Workbase);
     layout->addWidget(m_mdiArea);
-    layout->setMargin(0);
+    layout->setContentsMargins(0, 0, 0, 0);
 
     connect(m_mdiArea, &QMdiArea::subWindowActivated, this, &MainWindow::updateGUI);
     connect(actionFileExit, &QAction::triggered, QCoreApplication::quit);
