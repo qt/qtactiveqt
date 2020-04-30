@@ -1,7 +1,7 @@
 TEMPLATE = app
 
 CONFIG += qaxserver_no_postlink
-QT += widgets axserver axcontainer printsupport
+QT += widgets axserver axcontainer axcontainer-private printsupport
 
 SOURCES  = main.cpp docuwindow.cpp mainwindow.cpp invokemethod.cpp changeproperties.cpp ambientproperties.cpp controlinfo.cpp
 HEADERS  = docuwindow.h mainwindow.h invokemethod.h changeproperties.h ambientproperties.h controlinfo.h

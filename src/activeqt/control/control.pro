@@ -1,6 +1,7 @@
 TARGET   = QtAxServer
 
-QT += core-private gui-private widgets axbase
+QT += widgets
+QT_PRIVATE += core-private gui-private widgets-private axbase-private
 CONFIG  += static
 
 DEFINES += QAX_SERVER
@@ -11,7 +12,7 @@ HEADERS =   qaxaggregated.h \
             qaxbindable.h \
             qaxfactory.h \
             qclassfactory_p.h \
-            ../shared/qaxtypes.h
+            ../shared/qaxtypes_p.h
 
 SOURCES =   qaxaggregated.cpp \
             qaxserver.cpp \
@@ -28,6 +29,4 @@ LIBS += -lshell32
 MODULE = axserver
 MODULE_DEFINES = QAXSERVER
 MODULE_CONFIG = idcidl force_import_plugins
-MODULE_MASTER_HEADER = ActiveQt
-CONFIG  += no_module_headers
 load(qt_module)

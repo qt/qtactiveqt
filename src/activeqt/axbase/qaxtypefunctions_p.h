@@ -48,37 +48,64 @@
 **
 ****************************************************************************/
 
-#ifndef QAXTYPES_H
-#define QAXTYPES_H
+#ifndef QAXTYPEFUNCTIONS_P_H
+#define QAXTYPEFUNCTIONS_P_H
 
-#include <ActiveQt/qaxtypefunctions.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API. It exists purely as an
+// implementation detail. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qt_windows.h>
+
+#include <QtGui/qcolor.h>
+#include <QtGui/qfont.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qvariant.h>
 
 QT_BEGIN_NAMESPACE
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wnon-virtual-dtor") // gcc complains about IAxServerBase inheriting IUnknown with non virtual destructor.
 
-#ifdef QAX_SERVER
-#   define QVariantToVARIANTFunc QVariantToVARIANT_server
-#   define VARIANTToQVariantFunc VARIANTToQVariant_server
-#else
-#   define QVariantToVARIANTFunc QVariantToVARIANT_container
-#   define VARIANTToQVariantFunc VARIANTToQVariant_container
-#endif
-
-extern bool QVariantToVARIANTFunc(const QVariant &var, VARIANT &arg, const QByteArray &typeName = QByteArray(), bool out = false);
-extern QVariant VARIANTToQVariantFunc(const VARIANT &arg, const QByteArray &typeName, uint type = 0);
-
-inline bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &typeName = QByteArray(), bool out = false)
+extern GUID IID_IAxServerBase;
+struct IAxServerBase : public IUnknown
 {
-    return QVariantToVARIANTFunc(var, arg, typeName, out);
+    virtual IUnknown *clientSite() const = 0;
+    virtual void emitPropertyChanged(const char*) = 0;
+    virtual bool emitRequestPropertyChange(const char*) = 0;
+    virtual QObject *qObject() const = 0;
+    virtual void reportError(int code, const QString &src, const QString &desc, const QString &context) = 0;
+};
+
+#define HIMETRIC_PER_INCH   2540
+#define MAP_PIX_TO_LOGHIM(x,ppli)   ((HIMETRIC_PER_INCH*(x) + ((ppli)>>1)) / (ppli))
+#define MAP_LOGHIM_TO_PIX(x,ppli)   (((ppli)*(x) + HIMETRIC_PER_INCH/2) / HIMETRIC_PER_INCH)
+#define QAX_NUM_PARAMS 8
+
+static inline BSTR QStringToBSTR(const QString &str)
+{
+    return SysAllocStringLen(reinterpret_cast<const OLECHAR*>(str.unicode()), UINT(str.length()));
 }
 
-inline QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint type = 0)
+static inline uint QColorToOLEColor(const QColor &col)
 {
-    return VARIANTToQVariantFunc(arg, typeName, type);
+    return qRgba(col.blue(), col.green(), col.red(), 0x00);
 }
 
-#undef QVariantToVARIANTFunc
-#undef VARIANTToQVariantFunc
+extern QColor OLEColorToQColor(uint col);
+extern bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeName, uint type = 0);
+extern void clearVARIANT(VARIANT *var);
 
+#define QAX_INPROC_SERVER  (0x51540001)
+#define QAX_OUTPROC_SERVER (0x51540002)
+
+QT_WARNING_POP
 QT_END_NAMESPACE
 
-#endif // QAXTYPES_H
+#endif // QAXTYPEFUNCTIONS_P_H

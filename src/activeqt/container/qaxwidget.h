@@ -51,7 +51,7 @@
 #ifndef QAXWIDGET_H
 #define QAXWIDGET_H
 
-#include <ActiveQt/qaxbase.h>
+#include <QtAxContainer/qaxbase.h>
 #include <QtWidgets/qwidget.h>
 
 QT_BEGIN_NAMESPACE

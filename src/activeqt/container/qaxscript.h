@@ -51,7 +51,7 @@
 #ifndef QAXSCRIPT_H
 #define QAXSCRIPT_H
 
-#include <ActiveQt/qaxobject.h>
+#include <QtAxContainer/qaxobject.h>
 
 struct IActiveScript;
 

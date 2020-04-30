@@ -98,6 +98,8 @@ public:
     bool checkHRESULT(long hres, tagEXCEPINFO *exc, const QString &name, uint argerr);
     void handleException(tagEXCEPINFO *exc, const QString &name);
 
+    static QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint type = 0);
+
     QAxBase *q;
     QString ctrl;
     UuidEventSinkHash eventSink;

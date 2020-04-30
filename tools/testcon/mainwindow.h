@@ -29,7 +29,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <ActiveQt/QAxSelect>
+#include <QtAxContainer/QAxSelect>
 #include <QVector>
 
 #include "ui_mainwindow.h"

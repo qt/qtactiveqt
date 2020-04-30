@@ -53,8 +53,9 @@
 #include <ocidl.h>
 #include <olectl.h>
 
-#include "qaxtypes.h"
-#include "qaxutils_p.h"
+#include "qaxtypes_p.h"
+#include <QtAxBase/private/qaxutils_p.h>
+#include <QtAxBase/private/qaxtypefunctions_p.h>
 
 #include <qcursor.h>
 #include <qpixmap.h>

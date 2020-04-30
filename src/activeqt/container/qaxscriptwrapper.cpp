@@ -50,7 +50,7 @@
 
 #include "qaxobject.h"
 
-#include <ActiveQt/qaxfactory.h>
+#include <QtAxServer/qaxfactory.h>
 
 #include <qt_windows.h>
 

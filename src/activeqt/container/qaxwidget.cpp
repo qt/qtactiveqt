@@ -49,9 +49,10 @@
 ****************************************************************************/
 
 #include "qaxwidget.h"
-#include "../shared/qaxutils_p.h"
+#include <QtAxBase/private/qaxutils_p.h>
+#include <QtAxBase/private/qaxtypefunctions_p.h>
 
-#include <ActiveQt/qaxaggregated.h>
+#include <QtAxServer/qaxaggregated.h>
 
 #include <qabstracteventdispatcher.h>
 #include <qapplication.h>
@@ -104,7 +105,7 @@
     };
 #endif
 
-#include "../shared/qaxtypes.h"
+#include "../shared/qaxtypes_p.h"
 
 QT_BEGIN_NAMESPACE
 

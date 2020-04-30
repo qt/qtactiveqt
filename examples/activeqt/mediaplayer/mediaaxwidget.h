@@ -51,7 +51,7 @@
 #ifndef MEDIAAXWIDGET_H
 #define MEDIAAXWIDGET_H
 
-#include <ActiveQt/QAxWidget>
+#include <QtAxContainer/QAxWidget>
 #include <qt_windows.h>
 
 // Overrides the translateKeyEvent() function to pass keystrokes

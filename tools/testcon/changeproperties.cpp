@@ -34,7 +34,7 @@
 #include <QtCore/QMetaObject>
 #include <QtCore/QMetaProperty>
 #include <QtCore/QRegularExpression>
-#include <ActiveQt/QAxWidget>
+#include <QtAxContainer/QAxWidget>
 
 QT_BEGIN_NAMESPACE
 

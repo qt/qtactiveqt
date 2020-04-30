@@ -28,10 +28,7 @@
 
 #include <qt_windows.h>
 #include <QAxFactory>
-#include <ActiveQt/QAxFactory>
-#include <ActiveQt/ActiveQt>
-#include <ActiveQt>
-
+#include <QtAxServer/QAxFactory>
 
 QT_BEGIN_NAMESPACE
 QAxFactory *qax_instantiate()

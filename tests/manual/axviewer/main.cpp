@@ -29,8 +29,8 @@
 #include "metaobjectdump.h"
 #include "textdialog.h"
 
-#include <ActiveQt/QAxSelect>
-#include <ActiveQt/QAxWidget>
+#include <QtAxContainer/QAxSelect>
+#include <QtAxContainer/QAxWidget>
 
 #include <QtGui/QAction>
 #include <QtWidgets/QApplication>

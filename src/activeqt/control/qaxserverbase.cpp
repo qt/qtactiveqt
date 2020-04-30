@@ -83,8 +83,9 @@
 #include "qaxbindable.h"
 #include "qaxaggregated.h"
 
-#include "../shared/qaxtypes.h"
-#include "../shared/qaxutils_p.h"
+#include "../shared/qaxtypes_p.h"
+#include <QtAxBase/private/qaxutils_p.h>
+#include <QtAxBase/private/qaxtypefunctions_p.h>
 
 #include "qclassfactory_p.h"
 

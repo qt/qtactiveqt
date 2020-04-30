@@ -51,7 +51,7 @@
 #ifndef QAXOBJECT_H
 #define QAXOBJECT_H
 
-#include <ActiveQt/qaxbase.h>
+#include <QtAxContainer/qaxbase.h>
 
 QT_BEGIN_NAMESPACE
 

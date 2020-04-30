@@ -1,6 +1,7 @@
 TARGET   = QtAxContainer
 
-QT += core-private gui gui-private widgets widgets-private axbase
+QT += widgets
+QT_PRIVATE += core-private gui-private widgets-private axbase-private
 CONFIG  += static
 
 HEADERS =   ../control/qaxaggregated.h \
@@ -10,8 +11,7 @@ HEADERS =   ../control/qaxaggregated.h \
             qaxobject.h \
             qaxscript.h \
             qaxselect.h \
-            ../shared/qaxtypes.h \
-            ../shared/qaxutils_p.h
+            ../shared/qaxtypes_p.h
 
 SOURCES =   qaxbase.cpp \
             qaxdump.cpp \
@@ -20,13 +20,10 @@ SOURCES =   qaxbase.cpp \
             qaxscript.cpp \
             qaxscriptwrapper.cpp \
             qaxselect.cpp \
-            ../shared/qaxtypes.cpp \
-            ../shared/qaxutils.cpp
+            ../shared/qaxtypes.cpp
 
 FORMS =     qaxselect.ui
 
 MODULE = axcontainer
 MODULE_CONFIG = dumpcpp
-MODULE_MASTER_HEADER = ActiveQt
-CONFIG += no_module_headers
 load(qt_module)

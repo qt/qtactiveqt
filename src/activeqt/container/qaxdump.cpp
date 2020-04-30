@@ -50,6 +50,8 @@
 
 #include "qaxbase.h"
 
+#include <QtAxBase/private/qaxtypefunctions_p.h>
+
 #include <qmetaobject.h>
 #include <quuid.h>
 #include <qt_windows.h>
@@ -57,7 +59,7 @@
 
 #include <ctype.h>
 
-#include "../shared/qaxtypes.h"
+#include "../shared/qaxtypes_p.h"
 
 QT_BEGIN_NAMESPACE
 

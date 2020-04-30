@@ -55,6 +55,8 @@
 #include "qaxobject.h"
 #include "qaxbase_p.h"
 
+#include <QtAxBase/private/qaxtypefunctions_p.h>
+
 #include <qfile.h>
 #include <qwidget.h>
 #include <quuid.h>
@@ -80,8 +82,8 @@
 #include <ocidl.h>
 #include <ctype.h>
 
-#include "../shared/qaxtypes.h"
-#include "../shared/qaxutils_p.h"
+#include "../shared/qaxtypes_p.h"
+#include <QtAxBase/private/qaxutils_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -643,6 +645,11 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     addProperty(dispID, propname, propsignal);
 
     return propname;
+}
+
+QVariant QAxBasePrivate::VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint type)
+{
+    return ::VARIANTToQVariant(arg, typeName, type);
 }
 
 /*!

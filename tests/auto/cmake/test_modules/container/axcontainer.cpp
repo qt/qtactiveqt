@@ -27,9 +27,7 @@
 ****************************************************************************/
 
 #include <qt_windows.h>
-#include <ActiveQt>
-#include <ActiveQt/ActiveQt>
-#include <ActiveQt/QAxWidget>
+#include <QtAxContainer/QAxWidget>
 #include <QAxWidget>
 
 int main(int argc, char **argv)

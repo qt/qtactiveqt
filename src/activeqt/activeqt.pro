@@ -2,8 +2,8 @@ win32:!winrt {
     TEMPLATE = subdirs
 
     CONFIG += ordered
-    axshared.file = axshared.prx
-    SUBDIRS = axshared container control
+    activeqt.file = activeqt.prx
+    SUBDIRS = axbase control container activeqt
 } else {
     # fake project for creating the documentation
     message("ActiveQt is a Windows Desktop-only module. Will just generate a docs target.")

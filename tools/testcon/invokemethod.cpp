@@ -29,8 +29,10 @@
 #include "invokemethod.h"
 
 #include <qt_windows.h>
-#include <ActiveQt/ActiveQt>
+#include <QtAxContainer/QAxBase>
 #include <QtWidgets/QCompleter>
+#include <QtCore/QMetaObject>
+#include <QtCore/QMetaMethod>
 
 QT_BEGIN_NAMESPACE
 

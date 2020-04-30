@@ -53,7 +53,9 @@
 #include <qmetaobject.h>
 
 #include <qt_windows.h> // for IUnknown
-#include "../shared/qaxtypes.h"
+#include "../shared/qaxtypes_p.h"
+
+#include <QtAxBase/private/qaxtypefunctions_p.h>
 
 QT_BEGIN_NAMESPACE
 

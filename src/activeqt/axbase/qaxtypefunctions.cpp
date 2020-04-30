@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 #include <qt_windows.h>
-#include "qaxtypefunctions.h"
+#include "qaxtypefunctions_p.h"
 #include <qcursor.h>
 #include <qpixmap.h>
 #include <qsize.h>
