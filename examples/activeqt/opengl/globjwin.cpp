@@ -110,7 +110,7 @@ GLObjectWindow::GLObjectWindow(QWidget *parent)
 
     // Put the GL widget inside the frame
     QHBoxLayout *flayout = new QHBoxLayout(f);
-    flayout->setMargin(0);
+    flayout->setContentsMargins(0, 0, 0, 0);
     flayout->addWidget(c, 1);
 
     hlayout->setMenuBar(m);
