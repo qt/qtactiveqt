@@ -48,7 +48,6 @@
 **
 ****************************************************************************/
 
-#define QT_NO_CAST_TO_ASCII
 #define NOMINMAX
 
 #include <qabstracteventdispatcher.h>
@@ -2384,8 +2383,10 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 nameLength = name.length();
                 name += '(';
                 // no parameter - shortcut
-                if (!pDispParams->cArgs)
-                    index = mo->indexOfSlot((name + ')'));
+                if (!pDispParams->cArgs) {
+                    const QByteArray slotName = name + ')';
+                    index = mo->indexOfSlot(slotName.constData());
+                }
                 // search
                 if (index == -1) {
                     for (int i = 0; i < mo->methodCount(); ++i) {

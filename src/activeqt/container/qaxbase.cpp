@@ -564,7 +564,8 @@ public:
     static bool signalHasReceivers(QObject *qobject, const char *signalName)
     {
         Q_ASSERT(qobject);
-        return static_cast<QAxObject *>(qobject)->receivers(QByteArray::number(QSIGNAL_CODE) + signalName);
+        const QByteArray name = QByteArray::number(QSIGNAL_CODE) + signalName;
+        return static_cast<QAxObject *>(qobject)->receivers(name.constData()) > 0;
     }
 
     IConnectionPoint *cpoint = nullptr;
@@ -1505,7 +1506,7 @@ public:
     void readEventInfo();
     void readEventInterface(ITypeInfo *eventinfo, IConnectionPoint *cpoint);
 
-    inline void addClassInfo(const char *key, const char *value)
+    inline void addClassInfo(const QByteArray &key, const  QByteArray &value)
     {
         classinfo_list.insert(key, value);
     }
