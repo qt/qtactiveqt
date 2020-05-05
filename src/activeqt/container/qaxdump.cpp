@@ -160,20 +160,23 @@ QString qax_generateDocumentation(QAxBase *that)
 
     stream << "<h3>Interfaces</h3>" << Qt::endl;
     stream << "<ul>" << Qt::endl;
-    const char *inter = nullptr;
-    UINT interCount = 1;
-    while ((inter = mo->classInfo(mo->indexOfClassInfo("Interface " + QByteArray::number(interCount))).value())) {
-        stream << "<li>" << inter << Qt::endl;
-        interCount++;
+    for (int interCount = 1; ; ++interCount) {
+         const QByteArray name = "Interface " + QByteArray::number(interCount);
+         const int index = mo->indexOfClassInfo(name.constData());
+         if (index < 0)
+             break;
+         stream << "<li>" << mo->classInfo(index).value() << Qt::endl;
     }
     stream << "</ul>" << Qt::endl;
 
     stream << "<h3>Event Interfaces</h3>" << Qt::endl;
     stream << "<ul>" << Qt::endl;
-    interCount = 1;
-    while ((inter = mo->classInfo(mo->indexOfClassInfo("Event Interface " + QByteArray::number(interCount))).value())) {
-        stream << "<li>" << inter << Qt::endl;
-        interCount++;
+    for (int interCount = 1; ; ++interCount) {
+        const QByteArray name = ("Event Interface " + QByteArray::number(interCount));
+        const int index = mo->indexOfClassInfo(name.constData());
+        if (index < 0)
+            break;
+        stream << "<li>" <<  mo->classInfo(index).value() << Qt::endl;
     }
     stream << "</ul>" << Qt::endl;
 
@@ -272,7 +275,7 @@ QString qax_generateDocumentation(QAxBase *that)
                              QLatin1String(name.constData()) + QLatin1Char(' ') +
                              QLatin1String(prototype.constData()) + QLatin1String("<tt> [signal]</tt></h3>\n");
             if (typeLib) {
-                interCount = 0;
+                UINT interCount = 0;
                 do {
                     if (typeInfo)
                         typeInfo->Release();

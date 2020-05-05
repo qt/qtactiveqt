@@ -267,18 +267,21 @@ static void UpdateRegistryKeys(bool bRegister, const QString keyPath, QScopedPoi
                 const QString versionLessProgId = module + dot + className;
                 const QString progId = versionLessProgId + dot + classMajorVersion;
                 QString key = slash + progId;
-                settings->setValue(key + QLatin1String("/."), className + QLatin1String(" Class"));
+                settings->setValue(key + QLatin1String("/."),
+                                   QString(className + QLatin1String(" Class")));
                 settings->setValue(key + QLatin1String("/CLSID/."), classId);
                 if (insertable)
                     settings->setValue(key + QLatin1String("/Insertable/."), QVariant(QLatin1String("")));
 
                 key = slash + module + dot + className;
-                settings->setValue(key + QLatin1String("/."), className + QLatin1String(" Class"));
+                settings->setValue(key + QLatin1String("/."),
+                                   QString(className + QLatin1String(" Class")));
                 settings->setValue(key + QLatin1String("/CLSID/."), classId);
                 settings->setValue(key + QLatin1String("/CurVer/."), progId);
 
                 key = QLatin1String("/CLSID/") + classId;
-                settings->setValue(key + QLatin1String("/."), className + QLatin1String(" Class"));
+                settings->setValue(key + QLatin1String("/."),
+                                   QString(className + QLatin1String(" Class")));
                 settings->setValue(key + QLatin1String("/AppID"), appId);
                 if (control)
                     settings->setValue(key + QLatin1String("/Control/."), QVariant(QLatin1String("")));
@@ -288,12 +291,12 @@ static void UpdateRegistryKeys(bool bRegister, const QString keyPath, QScopedPoi
                     settings->setValue(key + QLatin1String("/InProcServer32/."), file);
                 else
                     settings->setValue(key + QLatin1String("/LocalServer32/."),
-                                      QLatin1Char('\"') + file + QLatin1String("\" -activex"));
+                                       QString(QLatin1Char('\"') + file + QLatin1String("\" -activex")));
                 settings->setValue(key + QLatin1String("/MiscStatus/."), control ? QLatin1String("1") : QLatin1String("0"));
                 settings->setValue(key + QLatin1String("/MiscStatus/1/."), QString::number(olemisc));
                 settings->setValue(key + QLatin1String("/Programmable/."), QVariant(QLatin1String("")));
-                settings->setValue(key + QLatin1String("/ToolboxBitmap32/."), QLatin1Char('\"') +
-                                  file + QLatin1String("\", 101"));
+                settings->setValue(key + QLatin1String("/ToolboxBitmap32/."),
+                                   QString(QLatin1Char('\"') + file + QLatin1String("\", 101")));
                 settings->setValue(key + QLatin1String("/TypeLib/."), libId);
                 settings->setValue(key + QLatin1String("/Version/."), classVersion);
                 settings->setValue(key + QLatin1String("/VersionIndependentProgID/."), versionLessProgId);
@@ -318,7 +321,8 @@ static void UpdateRegistryKeys(bool bRegister, const QString keyPath, QScopedPoi
 
                         if (!extension.isEmpty()) {
                             key = slash + extension;
-                            settings->setValue(key + QLatin1String("/."), module + dot + className);
+                            settings->setValue(key + QLatin1String("/."),
+                                               QString(module + dot + className));
                             settings->setValue(key + QLatin1String("/Content Type"), mime);
 
                             mime.replace(slash, QLatin1Char('\\'));
