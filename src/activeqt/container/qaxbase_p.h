@@ -76,6 +76,17 @@ QT_BEGIN_NAMESPACE
 class QAxBase;
 class QAxEventSink;
 
+class QAxBasePrivateSignalBridge
+{
+public:
+    virtual ~QAxBasePrivateSignalBridge() = default;
+
+    virtual void emitException(int code, const QString &source, const QString &desc,
+                               const QString &help) = 0;
+    virtual void emitPropertyChanged(const QString &name) = 0;
+    virtual void emitSignal(const QString &name, int argc, void *argv) = 0;
+};
+
 class QAxBasePrivate
 {
     Q_DISABLE_COPY_MOVE(QAxBasePrivate)
@@ -124,6 +135,7 @@ public:
     mutable QMap<QString, LONG> verbs;
 
     QMetaObject *metaobj = nullptr;
+    QAxBasePrivateSignalBridge *signalBridge = nullptr;
 };
 
 QT_END_NAMESPACE

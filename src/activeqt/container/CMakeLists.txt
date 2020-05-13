@@ -13,6 +13,7 @@ qt_add_module(AxContainer
         qaxbase.cpp qaxbase.h qaxbase_p.h
         qaxdump.cpp
         qaxobject.cpp qaxobject.h
+        qaxobjectinterface.h
         qaxscript.cpp qaxscript.h
         qaxscriptwrapper.cpp
         qaxselect.cpp qaxselect.h qaxselect.ui

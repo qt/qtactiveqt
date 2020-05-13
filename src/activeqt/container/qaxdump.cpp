@@ -139,7 +139,7 @@ static QByteArray toType(const QByteArray &t)
 
 QString qax_generateDocumentation(QAxBase *that)
 {
-    that->metaObject();
+    that->axBaseMetaObject();
 
     if (that->isNull())
         return QString();
@@ -153,7 +153,7 @@ QString qax_generateDocumentation(QAxBase *that)
     QString docu;
     QTextStream stream(&docu, QIODevice::WriteOnly);
 
-    const QMetaObject *mo = that->metaObject();
+    const QMetaObject *mo = that->axBaseMetaObject();
     QString coClass  = QLatin1String(mo->classInfo(mo->indexOfClassInfo("CoClass")).value());
 
     stream << "<h1 align=center>" << coClass << " Reference</h1>" << Qt::endl;

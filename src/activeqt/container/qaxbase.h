@@ -65,11 +65,10 @@ class QUuid;
 class QAxEventSink;
 class QAxObject;
 class QAxBasePrivate;
+class QAxBasePrivateSignalBridge;
 
 class QAxBase
 {
-    QDOC_PROPERTY(QString control READ control WRITE setControl)
-
 public:
     using PropertyBag = QMap<QString, QVariant>;
 
@@ -99,9 +98,9 @@ public:
                                            const QVariant &v8 = QVariant());
     QAxObject* querySubObject(const char *name, QList<QVariant> &vars);
 
-    virtual const QMetaObject *metaObject() const;
-    virtual int qt_metacall(QMetaObject::Call, int, void **);
-    static int qt_static_metacall(QAxBase *, QMetaObject::Call, int, void **);
+    const QMetaObject *axBaseMetaObject() const;
+    int axBase_qt_metacall(QMetaObject::Call, int, void **);
+    static int axBase_qt_static_metacall(QAxBase *, QMetaObject::Call, int, void **);
 
     virtual QObject *qObject() const = 0;
     virtual const char *className() const = 0;
@@ -120,23 +119,16 @@ public:
 
     QVariant asVariant() const;
 
-#ifdef Q_QDOC
-Q_SIGNALS:
-    void signal(const QString&,int,void*);
-    void propertyChanged(const QString&);
-    void exception(int,const QString&,const QString&,const QString&);
-#endif
-
 public:
-    virtual void clear();
+    void clear();
     bool setControl(const QString&);
 
     void disableMetaObject();
     void disableClassInfo();
     void disableEventSink();
 
-    unsigned long classContext() const;
-    void setClassContext(unsigned long classContext);
+    ulong classContext() const;
+    void setClassContext(ulong classContext);
 
 protected:
     virtual bool initialize(IUnknown** ptr);
@@ -156,13 +148,7 @@ protected:
                                         const QVariant &var7, const QVariant &var8);
 
     virtual const QMetaObject *fallbackMetaObject() const = 0;
-
-    struct qt_meta_stringdata_QAxBase_t {
-        const uint offsetsAndSize[26];
-        char stringdata[88];
-    };
-    static const qt_meta_stringdata_QAxBase_t qt_meta_stringdata_QAxBase;
-    static const uint qt_meta_data_QAxBase[];
+    void axBaseInit(QAxBasePrivateSignalBridge *b);
 
 private:
     enum DynamicCallHelperFlags {

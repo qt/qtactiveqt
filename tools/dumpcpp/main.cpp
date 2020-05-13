@@ -272,7 +272,7 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
             continue;
 
         QByteArray propertyName(property.name());
-        if (propertyName == "control" || propertyName == className)
+        if (propertyName == className)
             continue;
 
         if (!(category & OnlyInlines)) {

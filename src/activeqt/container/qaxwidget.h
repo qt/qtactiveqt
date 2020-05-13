@@ -52,6 +52,7 @@
 #define QAXWIDGET_H
 
 #include <QtAxContainer/qaxbase.h>
+#include <QtAxContainer/qaxobjectinterface.h>
 #include <QtWidgets/qwidget.h>
 
 QT_BEGIN_NAMESPACE
@@ -62,9 +63,24 @@ class QAxAggregated;
 class QAxClientSite;
 class QAxWidgetPrivate;
 
-class QAxWidget : public QWidget, public QAxBase
+class QAxBaseWidget : public QWidget, public QAxObjectInterface
 {
-    Q_OBJECT_FAKE
+    Q_OBJECT
+    Q_PROPERTY(ulong classContext READ classContext WRITE setClassContext)
+    Q_PROPERTY(QString control READ control WRITE setControl RESET clear)
+protected:
+    using QWidget::QWidget;
+
+public:
+
+Q_SIGNALS:
+    void exception(int code, const QString &source, const QString &desc, const QString &help);
+    void propertyChanged(const QString &name);
+    void signal(const QString &name, int argc, void *argv);
+};
+
+class QAxWidget : public QAxBaseWidget, public QAxBase
+{
 public:
     QObject* qObject() const override { return const_cast<QAxWidget *>(this); }
     const char *className() const override;
@@ -74,6 +90,11 @@ public:
     explicit QAxWidget(IUnknown *iface, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     ~QAxWidget() override;
 
+    ulong classContext() const override;
+    void setClassContext(ulong classContext) override;
+
+    QString control() const override;
+    bool setControl(const QString &) override;
     void clear() override;
     bool doVerb(const QString &verb);
 
@@ -81,6 +102,11 @@ public:
     QSize minimumSizeHint() const override;
 
     virtual QAxAggregated *createAggregate();
+
+    const QMetaObject *metaObject() const override;
+    int qt_metacall(QMetaObject::Call call, int id, void **v) override;
+    Q_DECL_HIDDEN_STATIC_METACALL static void qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a);
+    void *qt_metacast(const char *) override;
 
 protected:
     bool initialize(IUnknown **) override;

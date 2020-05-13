@@ -387,21 +387,13 @@ public:
         if (qobject->signalsBlocked())
             return S_OK;
 
-        const QMetaObject *meta = combase->metaObject();
+        const QMetaObject *meta = combase->axBaseMetaObject();
         const QMetaObjectExtra &moExtra =  moextra_cache.value(meta);
 
         int index = -1;
         // emit the generic signal "as is"
-        if (signalHasReceivers(qobject, "signal(QString,int,void*)")) {
-            index = meta->indexOfSignal("signal(QString,int,void*)");
-            Q_ASSERT(index != -1);
-
-            QString nameString = QLatin1String(signame);
-            void *argv[] = {nullptr, &nameString, &pDispParams->cArgs, &pDispParams->rgvarg};
-            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
-                                        index - meta->methodOffset(), argv);
-        }
-
+        combase->d->signalBridge->emitSignal(QLatin1String(signame),
+                                             pDispParams->cArgs, pDispParams->rgvarg);
         HRESULT hres = S_OK;
 
         // get the signal information from the metaobject
@@ -472,7 +464,7 @@ public:
 
             if (ok) {
                 // emit the generated signal if everything went well
-                QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index - meta->methodOffset(), argv);
+                QAxBase::axBase_qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index - meta->methodOffset(), argv);
                 // update the VARIANT for references and free memory
                 for (p = 0; p < pcount; ++p) {
                     bool out;
@@ -504,7 +496,7 @@ public:
         if (dispID == DISPID_UNKNOWN || !combase)
             return S_OK;
 
-        const QMetaObject *meta = combase->metaObject();
+        const QMetaObject *meta = combase->axBaseMetaObject();
         if (!meta)
             return S_OK;
 
@@ -517,19 +509,13 @@ public:
             return S_OK;
 
         // emit the generic signal
-        int index = meta->indexOfSignal("propertyChanged(QString)");
-        if (index != -1) {
-            QString propnameString = QString::fromLatin1(propname);
-            void *argv[] = {nullptr, &propnameString};
-            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
-                                        index - meta->methodOffset(), argv);
-        }
+        combase->d->signalBridge->emitPropertyChanged(QString::fromLatin1(propname));
 
         QByteArray signame = propsigs.value(dispID);
         if (signame.isEmpty())
             return S_OK;
 
-        index = meta->indexOfSignal(signame);
+        const int index = meta->indexOfSignal(signame);
         if (index == -1) // bindable but not marked as bindable in typelib
             return S_OK;
 
@@ -546,8 +532,8 @@ public:
                 argv[1] = &var;
 
             // emit the "changed" signal
-            QAxBase::qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
-                                        index - meta->methodOffset(), argv);
+            QAxBase::axBase_qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
+                                              index - meta->methodOffset(), argv);
         }
         return S_OK;
     }
@@ -612,6 +598,7 @@ QAxBasePrivate::~QAxBasePrivate()
     }
 
     CoFreeUnusedLibraries();
+    delete signalBridge;
 }
 
 QByteArray QAxEventSink::findProperty(DISPID dispID)
@@ -637,7 +624,7 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     typeinfo->Release();
 
     QByteArray propsignal(propname + "Changed(");
-    const QMetaObject *mo = combase->metaObject();
+    const QMetaObject *mo = combase->axBaseMetaObject();
     int index = mo->indexOfProperty(propname);
     const QMetaProperty prop = mo->property(index);
     propsignal += prop.typeName();
@@ -894,60 +881,6 @@ void QAxBase::initializeFrom(QAxBase *that)
     }
 }
 
-/*!
-    \property QAxBase::control
-    \brief the name of the COM object wrapped by this QAxBase object.
-
-    Setting this property initializes the COM object. Any COM object
-    previously set is shut down.
-
-    The most efficient way to set this property is by using the
-    registered component's UUID, e.g.
-
-    \snippet src_activeqt_container_qaxbase.cpp 7
-
-    The second fastest way is to use the registered control's class
-    name (with or without version number), e.g.
-
-    \snippet src_activeqt_container_qaxbase.cpp 8
-
-    The slowest, but easiest way to use is to use the control's full
-    name, e.g.
-
-    \snippet src_activeqt_container_qaxbase.cpp 9
-
-    It is also possible to initialize the object from a file, e.g.
-
-    \snippet src_activeqt_container_qaxbase.cpp 10
-
-    If the component's UUID is used the following patterns can be used
-    to initialize the control on a remote machine, to initialize a
-    licensed control or to connect to a running object:
-    \list
-    \li To initialize the control on a different machine use the following
-    pattern:
-
-    \snippet src_activeqt_container_qaxbase.cpp 11
-
-    \li To initialize a licensed control use the following pattern:
-
-    \snippet src_activeqt_container_qaxbase.cpp 12
-
-    \li To connect to an already running object use the following pattern:
-
-    \snippet src_activeqt_container_qaxbase.cpp 13
-
-    \endlist
-    The first two patterns can be combined, e.g. to initialize a licensed
-    control on a remote machine:
-
-    \snippet src_activeqt_container_qaxbase.cpp 14
-
-    The control's read function always returns the control's UUID, if provided including the license
-    key, and the name of the server, but not including the username, the domain or the password.
-
-    \sa setClassContext()
-*/
 bool QAxBase::setControl(const QString &c)
 {
     if (!c.compare(d->ctrl, Qt::CaseInsensitive))
@@ -1029,7 +962,7 @@ void QAxBase::disableEventSink()
 
     \return the context the ActiveX control will run in (default CLSCTX_SERVER).
 */
-unsigned long QAxBase::classContext() const
+ulong QAxBase::classContext() const
 {
     return d->classContext;
 }
@@ -1047,7 +980,7 @@ unsigned long QAxBase::classContext() const
     Note that this function must be called before setControl() to have any
     effect.
 */
-void QAxBase::setClassContext(unsigned long classContext)
+void QAxBase::setClassContext(ulong classContext)
 {
     d->classContext = classContext;
 }
@@ -1185,7 +1118,7 @@ long QAxBase::indexOfVerb(const QString &verb) const
     if remote or licensed initialization fails, CoCreateInstance
     is used directly to create the object.
 
-    See the \l control property documentation for details about
+    See the \l QAxBaseWidget::control property documentation for details about
     supported patterns.
 
     The interface returned in \a ptr must be referenced exactly once
@@ -1236,6 +1169,14 @@ bool QAxBase::initialize(IUnknown **ptr)
 }
 
 /*!
+    \internal
+*/
+void QAxBase::axBaseInit(QAxBasePrivateSignalBridge *b)
+{
+    d->signalBridge = b;
+}
+
+/*!
     Creates an instance of a licensed control, and returns the IUnknown interface
     to the object in \a ptr. This functions returns true if successful, otherwise
     returns false.
@@ -1247,10 +1188,11 @@ bool QAxBase::initialize(IUnknown **ptr)
 */
 bool QAxBase::initializeLicensed(IUnknown** ptr)
 {
-    int at = control().lastIndexOf(QLatin1String("}:"));
+    const QString ctl = control();
+    int at = ctl.lastIndexOf(QLatin1String("}:"));
 
-    QString clsid(control().left(at));
-    QString key(control().mid(at+2));
+    QString clsid(ctl.left(at));
+    QString key(ctl.mid(at+2));
 
     IClassFactory *factory = nullptr;
     CoGetClassObject(QUuid(clsid), CLSCTX_SERVER, nullptr, IID_IClassFactory,
@@ -1330,8 +1272,9 @@ bool QAxBase::initializeLicensedHelper(void *f, const QString &key, IUnknown **p
 */
 bool QAxBase::initializeActive(IUnknown** ptr)
 {
-    int at = control().lastIndexOf(QLatin1String("}&"));
-    QString clsid(control().left(at));
+    const QString ctl = control();
+    int at = ctl.lastIndexOf(QLatin1String("}&"));
+    QString clsid(ctl.left(at));
 
     GetActiveObject(QUuid(clsid), nullptr, ptr);
 
@@ -1399,10 +1342,11 @@ static inline void setIdentityString(const QString &v, ULONG &length, USHORT *&t
 */
 bool QAxBase::initializeRemote(IUnknown** ptr)
 {
-    int at = control().lastIndexOf(QLatin1String("/{"));
+    const QString ctl = control();
+    int at = ctl.lastIndexOf(QLatin1String("/{"));
 
-    QString server(control().left(at));
-    QString clsid(control().mid(at+1));
+    QString server(ctl.left(at));
+    QString clsid(ctl.mid(at+1));
 
     QString user;
     QString domain;
@@ -1482,7 +1426,7 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
 
     Returns the result of the QueryInterface implementation of the COM object.
 
-    \sa control
+    \sa control()
 */
 long QAxBase::queryInterface(const QUuid &uuid, void **iface) const
 {
@@ -2945,20 +2889,6 @@ QMetaObject *MetaObjectGenerator::tryCache()
     return nullptr;
 }
 
-static int nameToBuiltinType(const QByteArray &typeName)
-{
-    int id = QMetaType::type(typeName);
-    return (id < QMetaType::User) ? id : QMetaType::UnknownType;
-}
-
-static uint nameToTypeInfo(const QByteArray &typeName, QMetaStringTable &strings)
-{
-    int id = nameToBuiltinType(typeName);
-    const int result = id != QMetaType::UnknownType
-        ? id : (IsUnresolvedType) | strings.enter(typeName);
-    return uint(result);
-}
-
 static void addMetaProperty(QMetaObjectBuilder &builder, const QByteArray &name,
                             const QByteArray &type, uint flags)
 {
@@ -3055,19 +2985,9 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     for (auto it = classinfo_list.cbegin(), cend = classinfo_list.cend(); it != cend; ++it)
         builder.addClassInfo(it.key(), it.value());
 
-    // add each method. Signals must be added before other methods, to match moc.
-    addMetaMethod(builder, &QMetaObjectBuilder::addSignal,
-                  "exception(int,QString,QString,QString)", "code,source,desc,help");
-    addMetaMethod(builder, &QMetaObjectBuilder::addSignal,
-                  "propertyChanged(QString)", "name");
-    addMetaMethod(builder, &QMetaObjectBuilder::addSignal,
-                  "signal(QString,int,void*)", "name,argc,argv");
     buildMethods(signal_list, moExtra, builder, &QMetaObjectBuilder::addSignal);
     buildMethods(slot_list, moExtra, builder, &QMetaObjectBuilder::addSlot);
 
-    // each property
-    addMetaProperty(builder, "control", "QString",
-                    Readable | Writable | Designable | Scriptable | Stored | Editable | StdCppSet);
     for (auto it = property_list.cbegin(), end = property_list.cend(); it != end; ++it) {
         const QByteArray &name = it.key();
         const QByteArray &type = it.value().type;
@@ -3108,69 +3028,10 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     return metaobj;
 }
 
-#define QT_MOC_LITERAL(ofs, len) \
-    uint(offsetof(qt_meta_stringdata_QAxBase_t, stringdata) + ofs), len
-
-const QAxBase::qt_meta_stringdata_QAxBase_t QAxBase::qt_meta_stringdata_QAxBase = {
-    {
-QT_MOC_LITERAL(0, 7),
-QT_MOC_LITERAL(8, 6),
-QT_MOC_LITERAL(15, 0),
-QT_MOC_LITERAL(16, 4),
-QT_MOC_LITERAL(21, 4),
-QT_MOC_LITERAL(26, 4),
-QT_MOC_LITERAL(31, 15),
-QT_MOC_LITERAL(47, 9),
-QT_MOC_LITERAL(57, 4),
-QT_MOC_LITERAL(62, 6),
-QT_MOC_LITERAL(69, 4),
-QT_MOC_LITERAL(74, 4),
-QT_MOC_LITERAL(79, 7)
-    },
-    "QAxBase\0signal\0\0name\0argc\0argv\0"
-    "propertyChanged\0exception\0code\0source\0"
-    "desc\0help\0control\0"
-};
-#undef QT_MOC_LITERAL
-
 /*!
     \fn const QMetaObject *QAxBase::fallbackMetaObject() const
     \internal
 */
-
-/*!
-    \internal
-    \class QAxBase::qt_meta_stringdata_QAxBase_t
-*/
-
-const uint QAxBase::qt_meta_data_QAxBase[] = {
-
- // content:
-       7,       // revision
-       0,       // classname
-       0,    0, // classinfo
-       3,   14, // methods
-       1,   48, // properties
-       0,    0, // enums/sets
-       0,    0, // constructors
-       0,       // flags
-       3,       // signalCount
-
- // signals: name, argc, parameters, tag, flags
-       1,    3,   29,    2, 0x05,
-       6,    1,   36,    2, 0x05,
-       7,    4,   39,    2, 0x05,
-
- // signals: parameters
-    QMetaType::Void, QMetaType::QString, QMetaType::Int, QMetaType::VoidStar,    3,    4,    5,
-    QMetaType::Void, QMetaType::QString,    3,
-    QMetaType::Void, QMetaType::Int, QMetaType::QString, QMetaType::QString, QMetaType::QString,    8,    9,   10,   11,
-
- // properties: name, type, flags
-      12, QMetaType::QString, 0x00095000,
-
-       0        // eod
-};
 
 /*!
     \internal
@@ -3179,7 +3040,7 @@ const uint QAxBase::qt_meta_data_QAxBase[] = {
     provided by the IDispatch and ITypeInfo interface implementations
     in the COM object.
 */
-const QMetaObject *QAxBase::metaObject() const
+const QMetaObject *QAxBase::axBaseMetaObject() const
 {
     if (d->metaobj)
         return d->metaobj;
@@ -3324,8 +3185,6 @@ void QAxBase::connectNotify()
 
 void QAxBasePrivate::handleException(tagEXCEPINFO *exc, const QString &name)
 {
-    const QMetaObject *mo = metaObject();
-    const int exceptionSignal = mo->indexOfSignal("exception(int,QString,QString,QString)");
     if (exc->pfnDeferredFillIn)
         exc->pfnDeferredFillIn(exc);
     int code = exc->wCode ? exc->wCode : exc->scode;
@@ -3336,11 +3195,8 @@ void QAxBasePrivate::handleException(tagEXCEPINFO *exc, const QString &name)
     if (helpContext && !help.isEmpty())
         help += QString::fromLatin1(" [%1]").arg(helpContext);
 
-    if (QAxEventSink::signalHasReceivers(q->qObject(), "exception(int,QString,QString,QString)")) {
-        void *argv[] = {nullptr, &code, &source, &desc, &help};
-        QAxBase::qt_static_metacall(q, QMetaObject::InvokeMetaMethod,
-                                    exceptionSignal - mo->methodOffset(), argv);
-    } else {
+    signalBridge->emitException(code, source, desc, help);
+    if (!QAxEventSink::signalHasReceivers(q->qObject(), "exception(int,QString,QString,QString)")) {
         qWarning(R"(QAxBase: Error calling IDispatch member %s: Exception thrown by server
              Code       : %d
              Source     : %s
@@ -3412,27 +3268,9 @@ bool QAxBasePrivate::checkHRESULT(HRESULT hres, EXCEPINFO *exc, const QString &n
 */
 int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
 {
-    const QMetaObject *mo = metaObject();
+    const QMetaObject *mo = axBaseMetaObject();
     const QMetaProperty prop = mo->property(index + mo->propertyOffset());
     QByteArray propname = prop.name();
-
-    // hardcoded control property
-    if (propname == "control") {
-        switch(call) {
-        case QMetaObject::ReadProperty:
-            *static_cast<QString*>(*v) = control();
-            break;
-        case QMetaObject::WriteProperty:
-            setControl(*static_cast<const QString*>(*v));
-            break;
-        case QMetaObject::ResetProperty:
-            clear();
-            break;
-        default:
-            break;
-        }
-        return index - mo->propertyCount();
-    }
 
     // get the IDispatch
     if (!d->ptr || !prop.isValid())
@@ -3534,7 +3372,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     if (!disp)
         return index;
 
-    const QMetaObject *mo = metaObject();
+    const QMetaObject *mo = axBaseMetaObject();
     // get the slot information
     const QMetaMethod slot = mo->method(index + mo->methodOffset());
     Q_ASSERT(slot.methodType() == QMetaMethod::Slot);
@@ -3650,12 +3488,12 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
 /*!
     \internal
 */
-int QAxBase::qt_static_metacall(QAxBase *_t, QMetaObject::Call _c, int _id, void **_a)
+int QAxBase::axBase_qt_static_metacall(QAxBase *_t, QMetaObject::Call _c, int _id, void **_a)
 {
     if (_c != QMetaObject::InvokeMetaMethod)
         return 0;
     Q_ASSERT(_t != nullptr);
-    const QMetaObject *mo = _t->metaObject();
+    const QMetaObject *mo = _t->axBaseMetaObject();
     switch (mo->method(_id + mo->methodOffset()).methodType()) {
     case QMetaMethod::Signal:
         QMetaObject::activate(_t->qObject(), mo, _id, _a);
@@ -3672,9 +3510,9 @@ int QAxBase::qt_static_metacall(QAxBase *_t, QMetaObject::Call _c, int _id, void
 /*!
     \internal
 */
-int QAxBase::qt_metacall(QMetaObject::Call call, int id, void **v)
+int QAxBase::axBase_qt_metacall(QMetaObject::Call call, int id, void **v)
 {
-    const QMetaObject *mo = metaObject();
+    const QMetaObject *mo = axBaseMetaObject();
     if (isNull() && mo->property(id + mo->propertyOffset()).name() != QByteArray("control")) {
         qWarning("QAxBase::qt_metacall: Object is not initialized, or initialization failed");
         return id;
@@ -3682,7 +3520,7 @@ int QAxBase::qt_metacall(QMetaObject::Call call, int id, void **v)
 
     switch(call) {
     case QMetaObject::InvokeMetaMethod:
-        id = qt_static_metacall(this, call, id, v);
+        id = axBase_qt_static_metacall(this, call, id, v);
         break;
     case QMetaObject::ReadProperty:
     case QMetaObject::WriteProperty:
@@ -3706,7 +3544,7 @@ int QAxBase::qt_metacall(QMetaObject::Call call, int id, void **v)
 #ifdef QT_CHECK_STATE
 static void qax_noSuchFunction(int disptype, const QByteArray &name, const QByteArray &function, const QAxBase *that)
 {
-    const QMetaObject *metaObject = that->metaObject();
+    const QMetaObject *metaObject = that->axBaseMetaObject();
     const char *coclass = metaObject->classInfo(metaObject->indexOfClassInfo("CoClass")).value();
 
     if (disptype == DISPATCH_METHOD) {
@@ -3754,8 +3592,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
         return false;
     }
 
-    const QMetaObject *mo = metaObject();
-    d->metaObject();
+    const QMetaObject *mo = axBaseMetaObject();
     Q_ASSERT(d->metaobj);
     const QMetaObjectExtra &moExtra = moextra_cache.value(d->metaobj);
 
@@ -4192,7 +4029,7 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
     case VT_EMPTY:
 #ifdef QT_CHECK_STATE
         {
-            auto mo = metaObject();
+            auto mo = axBaseMetaObject();
             const char *coclass = mo->classInfo(mo->indexOfClassInfo("CoClass")).value();
             qWarning("QAxBase::querySubObject: %s: Error calling function or property in %s (%s)"
                 , name, control().toLatin1().data(), coclass ? coclass: "unknown");
@@ -4202,7 +4039,7 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
     default:
 #ifdef QT_CHECK_STATE
         {
-            auto mo = metaObject();
+            auto mo = axBaseMetaObject();
             const char *coclass = mo->classInfo(mo->indexOfClassInfo("CoClass")).value();
             qWarning("QAxBase::querySubObject: %s: Method or property is not of interface type in %s (%s)"
                 , name, control().toLatin1().data(), coclass ? coclass: "unknown");
@@ -4309,7 +4146,7 @@ QAxBase::PropertyBag QAxBase::propertyBag() const
         persist->Release();
         return result;
     }
-    const QMetaObject *mo = metaObject();
+    const QMetaObject *mo = axBaseMetaObject();
     for (int p = mo->propertyOffset(); p < mo->propertyCount(); ++p) {
         const QMetaProperty property = mo->property(p);
         QVariant var = qObject()->property(property.name());
@@ -4349,7 +4186,7 @@ void QAxBase::setPropertyBag(const PropertyBag &bag)
         pbag->Release();
         persist->Release();
     } else {
-        const QMetaObject *mo = metaObject();
+        const QMetaObject *mo = axBaseMetaObject();
         for (int p = mo->propertyOffset(); p < mo->propertyCount(); ++p) {
             const QMetaProperty property = mo->property(p);
             QVariant var = bag.value(QLatin1String(property.name()));
@@ -4366,7 +4203,7 @@ void QAxBase::setPropertyBag(const PropertyBag &bag)
     Depending on the control implementation this setting might be
     ignored for some properties.
 
-    \sa setPropertyWritable(), propertyChanged()
+    \sa setPropertyWritable(), QAxBaseWidget::propertyChanged(), QAxBaseObject::propertyChanged()
 */
 bool QAxBase::propertyWritable(const char *prop) const
 {
@@ -4382,7 +4219,7 @@ bool QAxBase::propertyWritable(const char *prop) const
     Depending on the control implementation this setting might be
     ignored for some properties.
 
-    \sa propertyWritable(), propertyChanged()
+    \sa propertyWritable(), QAxBaseWidget::propertyChanged(), QAxBaseObject::propertyChanged()
 */
 void QAxBase::setPropertyWritable(const char *prop, bool ok)
 {
@@ -4393,7 +4230,7 @@ void QAxBase::setPropertyWritable(const char *prop, bool ok)
     Returns true if there is no COM object loaded by this wrapper;
     otherwise return false.
 
-    \sa control
+    \sa control()
 */
 bool QAxBase::isNull() const
 {
@@ -4448,38 +4285,6 @@ void *qax_createObjectWrapper(int metaType, IUnknown *iface)
 
     return object;
 }
-
-/*!
-    \fn void QAxBase::signal(const QString &name, int argc, void *argv)
-
-    This generic signal gets emitted when the COM object issues the
-    event \a name. \a argc is the number of parameters provided by the
-    event (DISPPARAMS.cArgs), and \a argv is the pointer to the
-    parameter values (DISPPARAMS.rgvarg). Note that the order of parameter
-    values is turned around, ie. the last element of the array is the first
-    parameter in the function.
-
-    \snippet src_activeqt_container_qaxbase.cpp 20
-
-    Use this signal if the event has parameters of unsupported data
-    types. Otherwise, connect directly to the signal \a name.
-*/
-
-/*!
-    \fn void QAxBase::propertyChanged(const QString &name)
-
-    If the COM object supports property notification, this signal gets
-    emitted when the property called \a name is changed.
-*/
-
-/*!
-    \fn void QAxBase::exception(int code, const QString &source, const QString &desc, const QString &help)
-
-    This signal is emitted when the COM object throws an exception while called using the OLE automation
-    interface IDispatch. \a code, \a source, \a desc and \a help provide information about the exception as
-    provided by the COM server and can be used to provide useful feedback to the end user. \a help includes
-    the help file, and the help context ID in brackets, e.g. "filename [id]".
-*/
 
 /*!
     \fn QObject *QAxBase::qObject() const

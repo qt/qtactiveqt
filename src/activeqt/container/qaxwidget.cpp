@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include "qaxwidget.h"
+#include "qaxbase_p.h"
 #include <QtAxBase/private/qaxutils_p.h>
 #include <QtAxBase/private/qaxtypefunctions_p.h>
 
@@ -108,6 +109,31 @@
 #include "../shared/qaxtypes_p.h"
 
 QT_BEGIN_NAMESPACE
+
+class QAxWidgetSignalBridge : public QAxBasePrivateSignalBridge
+{
+public:
+    explicit QAxWidgetSignalBridge(QAxBaseWidget *w) : m_w(w) {}
+
+    void emitException(int code, const QString &source, const QString &desc,
+                       const QString &help) override
+    {
+        emit m_w->exception(code, source, desc, help);
+    }
+
+    void emitPropertyChanged(const QString &name) override
+    {
+        emit m_w->propertyChanged(name);
+    }
+
+    void emitSignal(const QString &name, int argc, void *argv) override
+    {
+        emit m_w->signal(name, argc, argv);
+    }
+
+private:
+    QAxBaseWidget *m_w;
+};
 
 /*  \class QAxHostWidget
     \brief The QAxHostWidget class is the actual container widget.
@@ -1873,6 +1899,120 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
 }
 
 /*!
+   \class QAxBaseWidget
+   \brief QAxBaseWidget provides static properties and signals for QAxWidget.
+   \inmodule QAxContainer
+   \since 6.0
+*/
+
+/*!
+    \property QAxBaseWidget::classContext
+    \brief the context the ActiveX control will run in (default CLSCTX_SERVER).
+
+    The property affects the "dwClsContext" argument when calling
+    CoCreateInstance. This can be used to control in-proc vs. out-of-proc
+    startup for controls supporting both alternatives. Also, it can be used to
+    modify/reduce control permissions when used with CLSCTX_ENABLE_CLOAKING
+    and an impersonation token.
+
+    Note that it must be set before setControl() to have any effect.
+    \sa control
+*/
+
+/*!
+    \property QAxBaseWidget::control
+    \brief the name of the COM object wrapped by this QAxBaseWidget object.
+
+    Setting this property initializes the COM object. Any COM object
+    previously set is shut down.
+
+    The most efficient way to set this property is by using the
+    registered component's UUID, e.g.
+
+    \snippet src_activeqt_container_qaxbase.cpp 7
+
+    The second fastest way is to use the registered control's class
+    name (with or without version number), e.g.
+
+    \snippet src_activeqt_container_qaxbase.cpp 8
+
+    The slowest, but easiest way to use is to use the control's full
+    name, e.g.
+
+    \snippet src_activeqt_container_qaxbase.cpp 9
+
+    It is also possible to initialize the object from a file, e.g.
+
+    \snippet src_activeqt_container_qaxbase.cpp 10
+
+    If the component's UUID is used the following patterns can be used
+    to initialize the control on a remote machine, to initialize a
+    licensed control or to connect to a running object:
+    \list
+    \li To initialize the control on a different machine use the following
+    pattern:
+
+    \snippet src_activeqt_container_qaxbase.cpp 11
+
+    \li To initialize a licensed control use the following pattern:
+
+    \snippet src_activeqt_container_qaxbase.cpp 12
+
+    \li To connect to an already running object use the following pattern:
+
+    \snippet src_activeqt_container_qaxbase.cpp 13
+
+    \endlist
+    The first two patterns can be combined, e.g. to initialize a licensed
+    control on a remote machine:
+
+    \snippet src_activeqt_container_qaxbase.cpp 14
+
+    The control's read function always returns the control's UUID, if provided including the license
+    key, and the name of the server, but not including the username, the domain or the password.
+
+    \sa classContext
+*/
+
+/*!
+    \fn void QAxBaseWidget::signal(const QString &name, int argc, void *argv)
+
+    This generic signal gets emitted when the COM object issues the
+    event \a name. \a argc is the number of parameters provided by the
+    event (DISPPARAMS.cArgs), and \a argv is the pointer to the
+    parameter values (DISPPARAMS.rgvarg). Note that the order of parameter
+    values is turned around, ie. the last element of the array is the first
+    parameter in the function.
+
+    \snippet src_activeqt_container_qaxbase.cpp 20
+
+    Use this signal if the event has parameters of unsupported data
+    types. Otherwise, connect directly to the signal \a name.
+
+    \sa QAxBaseObject::signal()
+*/
+
+/*!
+    \fn void QAxBaseWidget::propertyChanged(const QString &name)
+
+    If the COM object supports property notification, this signal gets
+    emitted when the property called \a name is changed.
+
+    \sa QAxBaseObject::propertyChanged()
+*/
+
+/*!
+    \fn void QAxBaseWidget::exception(int code, const QString &source, const QString &desc, const QString &help)
+
+    This signal is emitted when the COM object throws an exception while called using the OLE automation
+    interface IDispatch. \a code, \a source, \a desc and \a help provide information about the exception as
+    provided by the COM server and can be used to provide useful feedback to the end user. \a help includes
+    the help file, and the help context ID in brackets, e.g. "filename [id]".
+
+    \sa QAxBaseObject::exception()
+*/
+
+/*!
     \class QAxWidget
     \brief The QAxWidget class is a QWidget that wraps an ActiveX control.
 
@@ -1914,19 +2054,15 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     \sa QAxBase, QAxObject, QAxScript, {ActiveQt Framework}
 */
 
-const QMetaObject QAxWidget::staticMetaObject = {
-    { &QWidget::staticMetaObject, qt_meta_stringdata_QAxBase.offsetsAndSize,
-      qt_meta_data_QAxBase, qt_static_metacall, nullptr, nullptr }
-};
-
 /*!
     Creates an empty QAxWidget widget and propagates \a parent
     and \a f to the QWidget constructor. To initialize a control,
     call setControl().
 */
 QAxWidget::QAxWidget(QWidget *parent, Qt::WindowFlags f)
-: QWidget(parent, f)
+: QAxBaseWidget(parent, f)
 {
+    axBaseInit(new QAxWidgetSignalBridge(this));
 }
 
 /*!
@@ -1936,8 +2072,9 @@ QAxWidget::QAxWidget(QWidget *parent, Qt::WindowFlags f)
     \sa setControl()
 */
 QAxWidget::QAxWidget(const QString &c, QWidget *parent, Qt::WindowFlags f)
-: QWidget(parent, f)
+: QAxBaseWidget(parent, f)
 {
+    axBaseInit(new QAxWidgetSignalBridge(this));
     setControl(c);
 }
 
@@ -1946,8 +2083,9 @@ QAxWidget::QAxWidget(const QString &c, QWidget *parent, Qt::WindowFlags f)
     \a parent and \a f are propagated to the QWidget contructor.
 */
 QAxWidget::QAxWidget(IUnknown *iface, QWidget *parent, Qt::WindowFlags f)
-: QWidget(parent, f), QAxBase(iface)
+: QAxBaseWidget(parent, f), QAxBase(iface)
 {
+    axBaseInit(new QAxWidgetSignalBridge(this));
 }
 
 /*!
@@ -2043,6 +2181,26 @@ QAxAggregated *QAxWidget::createAggregate()
     return nullptr;
 }
 
+ulong QAxWidget::classContext() const
+{
+    return QAxBase::classContext();
+}
+
+void QAxWidget::setClassContext(ulong classContext)
+{
+    QAxBase::setClassContext(classContext);
+}
+
+QString QAxWidget::control() const
+{
+    return QAxBase::control();
+}
+
+bool QAxWidget::setControl(const QString &c)
+{
+    return QAxBase::setControl(c);
+}
+
 /*!
     \reimp
 
@@ -2052,7 +2210,7 @@ void QAxWidget::clear()
 {
     if (isNull())
         return;
-    if (!control().isEmpty()) {
+    if (!QAxBase::control().isEmpty()) {
         ATOM filter_ref = FindAtom(qaxatom);
         if (filter_ref)
             DeleteAtom(filter_ref);
@@ -2102,7 +2260,7 @@ bool QAxWidget::doVerb(const QString &verb)
 */
 void QAxWidget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
-    QAxBase::qt_static_metacall(qobject_cast<QAxWidget*>(_o), _c, _id, _a);
+    QAxBase::axBase_qt_static_metacall(static_cast<QAxWidget *>(_o), _c, _id, _a);
 }
 
 /*!
@@ -2118,7 +2276,7 @@ const QMetaObject *QAxWidget::fallbackMetaObject() const
 */
 const QMetaObject *QAxWidget::metaObject() const
 {
-    return QAxBase::metaObject();
+    return QAxBase::axBaseMetaObject();
 }
 
 /*!
@@ -2126,7 +2284,7 @@ const QMetaObject *QAxWidget::metaObject() const
 */
 const QMetaObject *QAxWidget::parentMetaObject() const
 {
-    return &QWidget::staticMetaObject;
+    return &QAxBaseWidget::staticMetaObject;
 }
 
 /*!
@@ -2136,7 +2294,7 @@ void *QAxWidget::qt_metacast(const char *cname)
 {
     if (!qstrcmp(cname, "QAxWidget")) return static_cast<void *>(this);
     if (!qstrcmp(cname, "QAxBase")) return static_cast<QAxBase *>(this);
-    return QWidget::qt_metacast(cname);
+    return QAxBaseWidget::qt_metacast(cname);
 }
 
 /*!
@@ -2152,10 +2310,10 @@ const char *QAxWidget::className() const
 */
 int QAxWidget::qt_metacall(QMetaObject::Call call, int id, void **v)
 {
-    id = QWidget::qt_metacall(call, id, v);
+    id = QAxBaseWidget::qt_metacall(call, id, v);
     if (id < 0)
         return id;
-    return QAxBase::qt_metacall(call, id, v);
+    return QAxBase::axBase_qt_metacall(call, id, v);
 }
 
 /*!

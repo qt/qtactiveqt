@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include "qaxobject.h"
+#include "qaxbase_p.h"
 
 #include <quuid.h>
 #include <qmetaobject.h>
@@ -57,6 +58,97 @@
 #include <windows.h>
 
 QT_BEGIN_NAMESPACE
+
+class QAxObjectSignalBridge : public QAxBasePrivateSignalBridge
+{
+public:
+    explicit QAxObjectSignalBridge(QAxBaseObject *o) : m_o(o) {}
+
+    void emitException(int code, const QString &source, const QString &desc,
+                       const QString &help) override
+    {
+        emit m_o->exception(code, source, desc, help);
+    }
+
+    void emitPropertyChanged(const QString &name) override
+    {
+        emit m_o->propertyChanged(name);
+    }
+
+    void emitSignal(const QString &name, int argc, void *argv) override
+    {
+        emit m_o->signal(name, argc, argv);
+    }
+
+private:
+    QAxBaseObject *m_o;
+};
+
+/*!
+   \class QAxBaseObject
+   \brief QAxBaseObject provides static properties and signals for QAxObject.
+   \inmodule QAxContainer
+   \since 6.0
+*/
+
+/*!
+    \property QAxBaseObject::classContext
+    \brief the context the ActiveX control will run in (default CLSCTX_SERVER).
+
+    The property affects the "dwClsContext" argument when calling
+    CoCreateInstance. This can be used to control in-proc vs. out-of-proc
+    startup for controls supporting both alternatives. Also, it can be used to
+    modify/reduce control permissions when used with CLSCTX_ENABLE_CLOAKING
+    and an impersonation token.
+
+    Note that it must be set before setControl() to have any effect.
+    \sa QAxBaseWidget::control
+*/
+
+/*!
+    \property QAxBaseObject::control
+    \brief the name of the COM object wrapped by this QAxBaseObject object.
+
+    Setting this property initializes the COM object. Any COM object
+    previously set is shut down.
+
+    The most efficient way to set this property is by using the
+    registered component's UUID, e.g.
+    \sa QAxBaseWidget::control, QAxBaseWidget::classContext
+*/
+
+/*!
+    \fn void QAxBaseObject::signal(const QString &name, int argc, void *argv)
+
+    This generic signal gets emitted when the COM object issues the
+    event \a name. \a argc is the number of parameters provided by the
+    event (DISPPARAMS.cArgs), and \a argv is the pointer to the
+    parameter values (DISPPARAMS.rgvarg). Note that the order of parameter
+    values is turned around, ie. the last element of the array is the first
+    parameter in the function.
+
+    \sa QAxBaseWidget::signal()
+*/
+
+/*!
+    \fn void QAxBaseObject::propertyChanged(const QString &name)
+
+    If the COM object supports property notification, this signal gets
+    emitted when the property called \a name is changed.
+
+    \sa QAxBaseWidget::propertyChanged()
+*/
+
+/*!
+    \fn void QAxBaseObject::exception(int code, const QString &source, const QString &desc, const QString &help)
+
+    This signal is emitted when the COM object throws an exception while called using the OLE automation
+    interface IDispatch. \a code, \a source, \a desc and \a help provide information about the exception as
+    provided by the COM server and can be used to provide useful feedback to the end user. \a help includes
+    the help file, and the help context ID in brackets, e.g. "filename [id]".
+
+    \sa QAxBaseWidget::exception()
+*/
 
 /*!
     \class QAxObject
@@ -90,19 +182,14 @@ QT_BEGIN_NAMESPACE
     \sa QAxBase, QAxWidget, QAxScript, {ActiveQt Framework}
 */
 
-const QMetaObject QAxObject::staticMetaObject = {
-    { &QObject::staticMetaObject, qt_meta_stringdata_QAxBase.offsetsAndSize,
-      qt_meta_data_QAxBase, qt_static_metacall, nullptr, nullptr }
-};
-
 /*!
     Creates an empty COM object and propagates \a parent to the
-    QObject constructor. To initialize the object, call \link
-    QAxBase::setControl() setControl \endlink.
+    QObject constructor. To initialize the object, call setControl().
 */
 QAxObject::QAxObject(QObject *parent)
-: QObject(parent)
+: QAxBaseObject(parent)
 {
+    axBaseInit(new QAxObjectSignalBridge(this));
 }
 
 /*!
@@ -112,8 +199,9 @@ QAxObject::QAxObject(QObject *parent)
     \sa setControl()
 */
 QAxObject::QAxObject(const QString &c, QObject *parent)
-: QObject(parent)
+: QAxBaseObject(parent)
 {
+    axBaseInit(new QAxObjectSignalBridge(this));
     setControl(c);
 }
 
@@ -122,8 +210,9 @@ QAxObject::QAxObject(const QString &c, QObject *parent)
     iface. \a parent is propagated to the QObject constructor.
 */
 QAxObject::QAxObject(IUnknown *iface, QObject *parent)
-: QObject(parent), QAxBase(iface)
+: QAxBaseObject(parent), QAxBase(iface)
 {
+    axBaseInit(new QAxObjectSignalBridge(this));
 }
 
 /*!
@@ -135,12 +224,37 @@ QAxObject::~QAxObject()
     clear();
 }
 
+unsigned long QAxObject::classContext() const
+{
+    return QAxBase::classContext();
+}
+
+void QAxObject::setClassContext(ulong classContext)
+{
+    QAxBase::setClassContext(classContext);
+}
+
+QString QAxObject::control() const
+{
+    return QAxBase::control();
+}
+
+bool QAxObject::setControl(const QString &c)
+{
+    return QAxBase::setControl(c);
+}
+
+void QAxObject::clear()
+{
+    QAxBase::clear();
+}
+
 /*!
     \internal
 */
 void QAxObject::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
-    QAxBase::qt_static_metacall(qobject_cast<QAxObject*>(_o), _c, _id, _a);
+    QAxBase::axBase_qt_static_metacall(static_cast<QAxObject *>(_o), _c, _id, _a);
 }
 
 /*!
@@ -156,7 +270,7 @@ const QMetaObject *QAxObject::fallbackMetaObject() const
 */
 const QMetaObject *QAxObject::metaObject() const
 {
-    return QAxBase::metaObject();
+    return QAxBase::axBaseMetaObject();
 }
 
 /*!
@@ -164,7 +278,7 @@ const QMetaObject *QAxObject::metaObject() const
 */
 const QMetaObject *QAxObject::parentMetaObject() const
 {
-    return &QObject::staticMetaObject;
+    return &QAxBaseObject::staticMetaObject;
 }
 
 /*!
@@ -174,7 +288,7 @@ void *QAxObject::qt_metacast(const char *cname)
 {
     if (!qstrcmp(cname, "QAxObject")) return static_cast<void *>(this);
     if (!qstrcmp(cname, "QAxBase")) return static_cast<QAxBase *>(this);
-    return QObject::qt_metacast(cname);
+    return QAxBaseObject::qt_metacast(cname);
 }
 
 /*!
@@ -190,10 +304,10 @@ const char *QAxObject::className() const
 */
 int QAxObject::qt_metacall(QMetaObject::Call call, int id, void **v)
 {
-    id = QObject::qt_metacall(call, id, v);
+    id = QAxBaseObject::qt_metacall(call, id, v);
     if (id < 0)
         return id;
-    return QAxBase::qt_metacall(call, id, v);
+    return QAxBase::axBase_qt_metacall(call, id, v);
 }
 
 /*!

@@ -549,17 +549,15 @@ void MainWindow::updateGUI()
 
     const auto axw = axWidgets();
     for (QAxWidget *container : axw) {
-        container->disconnect(SIGNAL(signal(QString,int,void*)));
+        disconnect(container, &QAxWidget::signal, this, nullptr);
         if (actionLogSignals->isChecked())
-            connect(container, SIGNAL(signal(QString,int,void*)), this, SLOT(logSignal(QString,int,void*)));
+            connect(container, &QAxWidget::signal, this, &MainWindow::logSignal);
+        disconnect(container, &QAxWidget::exception, this, nullptr);
+        connect(container, &QAxWidget::exception, this, &MainWindow::logException);
 
-        container->disconnect(SIGNAL(exception(int,QString,QString,QString)));
-        connect(container, SIGNAL(exception(int,QString,QString,QString)),
-                this, SLOT(logException(int,QString,QString,QString)));
-
-        container->disconnect(SIGNAL(propertyChanged(QString)));
+        disconnect(container, &QAxWidget::propertyChanged, this, nullptr);
         if (actionLogProperties->isChecked())
-            connect(container, SIGNAL(propertyChanged(QString)), this, SLOT(logPropertyChanged(QString)));
+            connect(container, &QAxWidget::propertyChanged, this, &MainWindow::logPropertyChanged);
         container->blockSignals(actionFreezeEvents->isChecked());
     }
 }
