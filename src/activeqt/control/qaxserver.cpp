@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the ActiveQt framework of the Qt Toolkit.
@@ -50,6 +50,8 @@
 
 #include "qaxbindable.h"
 #include "qaxfactory.h"
+
+#include <QtAxBase/private/qaxutils_p.h>
 
 #include <qapplication.h>
 #include <qdatetime.h>
@@ -437,7 +439,7 @@ HRESULT UpdateRegistry(bool bRegister, bool perUser)
     QString file = QString::fromWCharArray(qAxModuleFilename);
     const QString module = QFileInfo(file).baseName();
 
-    const QString libFile = qAxInit();
+    QString libFile = qAxInit();
     auto libFile_cleanup = qScopeGuard([] { qAxCleanup(); });
 
     TLIBATTR *libAttr = nullptr;
@@ -449,7 +451,7 @@ HRESULT UpdateRegistry(bool bRegister, bool perUser)
 
     if (bRegister) {
         if (!perUser) {
-            HRESULT hr = RegisterTypeLib(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), nullptr);
+            HRESULT hr = RegisterTypeLib(qAxTypeLibrary, qaxQString2MutableOleChars(libFile), nullptr);
             if (FAILED(hr)) {
                 qWarning("Failing to register %s due to insufficient permission.", qPrintable(module));
                 return hr;
@@ -457,7 +459,7 @@ HRESULT UpdateRegistry(bool bRegister, bool perUser)
         } else {
 #ifndef Q_CC_MINGW
             // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
-            RegisterTypeLibForUser(qAxTypeLibrary, reinterpret_cast<wchar_t *>(const_cast<ushort *>(libFile.utf16())), nullptr);
+            RegisterTypeLibForUser(qAxTypeLibrary, qaxQString2MutableOleChars(libFile), nullptr);
 #endif
         }
     } else {

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the ActiveQt framework of the Qt Toolkit.
@@ -2003,7 +2003,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                 qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->eventsID(class_name), &eventInfo);
                 if (eventInfo) {
                     QString uni_name = QLatin1String(name);
-                    OLECHAR *olename = reinterpret_cast<OLECHAR *>(const_cast<ushort *>(uni_name.utf16()));
+                    OLECHAR *olename = qaxQString2MutableOleChars(uni_name);
                     eventInfo->GetIDsOfNames(&olename, 1, &eventId);
                     eventInfo->Release();
                 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the ActiveQt framework of the Qt Toolkit.
@@ -220,7 +220,7 @@ inline DISPID QMetaObjectExtra::dispIDofName(const QByteArray &name, IDispatch *
     if (dispid == DISPID_UNKNOWN) {
         // get the Dispatch ID from the object
         QString unicodeName = QLatin1String(name);
-        OLECHAR *names = reinterpret_cast<wchar_t *>(const_cast<ushort *>(unicodeName.utf16()));
+        OLECHAR *names = qaxQString2MutableOleChars(unicodeName);
         disp->GetIDsOfNames(IID_NULL, &names, 1, LOCALE_USER_DEFAULT, &dispid);
         if (dispid != DISPID_UNKNOWN)
             dispIDs.insert(name, dispid);
@@ -1377,6 +1377,14 @@ bool QAxBase::initializeFromFile(IUnknown** ptr)
 #define COAUTHIDENTITY AUTH_IDENTITY
 #endif
 
+// Set string values to COAUTHIDENTITY fields. Use data(), no need for 0-termination.
+static inline void setIdentityString(const QString &v, ULONG &length, USHORT *&target)
+{
+    length = ULONG(v.size());
+    target = length > 0
+        ? const_cast<USHORT *>(reinterpret_cast<const USHORT *>(v.data()))
+        : nullptr;
+}
 
 /*!
     Creates the instance on a remote server, and returns the IUnknown interface
@@ -1429,15 +1437,9 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
         d->ctrl = d->ctrl + QChar::fromLatin1(':') + key;
 
     COAUTHIDENTITY authIdentity;
-    authIdentity.UserLength = ULONG(user.length());
-    authIdentity.User = authIdentity.UserLength
-        ? const_cast<ushort *>(user.utf16()) : nullptr;
-    authIdentity.DomainLength = ULONG(domain.length());
-    authIdentity.Domain = authIdentity.DomainLength
-        ? const_cast<ushort *>(domain.utf16()) : nullptr;
-    authIdentity.PasswordLength = ULONG(passwd.length());
-    authIdentity.Password = authIdentity.PasswordLength
-        ? const_cast<ushort *>(passwd.utf16()) : nullptr;
+    setIdentityString(user, authIdentity.UserLength, authIdentity.User);
+    setIdentityString(domain, authIdentity.DomainLength,  authIdentity.Domain);
+    setIdentityString(passwd, authIdentity.PasswordLength, authIdentity.Password);
     authIdentity.Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
 
     COAUTHINFO authInfo;
@@ -1453,7 +1455,7 @@ bool QAxBase::initializeRemote(IUnknown** ptr)
     serverInfo.dwReserved1 = 0;
     serverInfo.dwReserved2 = 0;
     serverInfo.pAuthInfo = &authInfo;
-    serverInfo.pwszName = reinterpret_cast<wchar_t *>(const_cast<ushort *>(server.utf16()));
+    serverInfo.pwszName = qaxQString2MutableOleChars(server);
 
     IClassFactory *factory = nullptr;
     HRESULT res = CoGetClassObject(QUuid(clsid), CLSCTX_REMOTE_SERVER, &serverInfo,

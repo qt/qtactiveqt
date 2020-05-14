@@ -66,6 +66,7 @@
 #include <QtCore/qmetatype.h>
 #include <QtCore/qpair.h>
 #include <QtCore/qrect.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -105,6 +106,12 @@ static inline RECT qaxContentRect(const QSize &size)  // Size with topleft = 0,0
 {
     RECT result = { 0, 0, size.width(), size.height() };
     return result;
+}
+
+static inline wchar_t *qaxQString2MutableOleChars(QString &s) // must be passed an lvalue
+{
+    // using utf16() to force NUL-termination:
+    return const_cast<wchar_t *>(reinterpret_cast<const wchar_t *>(s.utf16()));
 }
 
 #ifdef QT_WIDGETS_LIB
