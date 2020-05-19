@@ -57,7 +57,7 @@
 #include <QtCore/qitemselectionmodel.h>
 #include <QtCore/qsysinfo.h>
 #include <QtCore/qtextstream.h>
-#include <QtWidgets/qdesktopwidget.h>
+#include <QtGui/qscreen.h>
 #include <QtWidgets/qpushbutton.h>
 
 #include <qt_windows.h>
@@ -362,7 +362,7 @@ QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags flags)
     d->selectUi.setupUi(this);
     d->setOkButtonEnabled(false);
 
-    const QRect availableGeometry = QApplication::desktop()->availableGeometry(this);
+    const QRect availableGeometry = screen()->availableGeometry();
     resize(availableGeometry.width() / 4, availableGeometry.height() * 2 / 3);
 
 #ifndef QT_NO_CURSOR
