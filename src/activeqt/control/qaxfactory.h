@@ -142,8 +142,7 @@ inline bool QAxFactory::stopServer()
     QT_BEGIN_NAMESPACE \
     QAxFactory *qax_instantiate()               \
     {                                                   \
-        IMPL *impl = new IMPL(QUuid(TYPELIB), QUuid(APPID));    \
-        return impl;                                    \
+        return new IMPL(QUuid(TYPELIB), QUuid(APPID));    \
     } \
     QT_END_NAMESPACE
 
@@ -152,18 +151,16 @@ inline bool QAxFactory::stopServer()
     class QAxDefaultFactory : public QAxFactory \
     { \
     public: \
-        QAxDefaultFactory(const QUuid &app, const QUuid &lib) \
+        explicit QAxDefaultFactory(const QUuid &app, const QUuid &lib) \
         : QAxFactory(app, lib), className(QLatin1String(#Class)) {} \
         QStringList featureList() const override \
         { \
-            QStringList list; \
-            list << className; \
-            return list; \
+            return {className}; \
         } \
         const QMetaObject *metaObject(const QString &key) const override \
         { \
             if (key == className) \
-            return &Class::staticMetaObject; \
+                return &Class::staticMetaObject; \
             return nullptr; \
         } \
         QObject *createObject(const QString &key) override \
@@ -200,12 +197,16 @@ template<class T>
 class QAxClass : public QAxFactory
 {
 public:
-    QAxClass(const QString &libId, const QString &appId)
+    explicit QAxClass(const QString &libId, const QString &appId)
     : QAxFactory(libId, appId)
     {}
 
     const QMetaObject *metaObject(const QString &) const override { return &T::staticMetaObject; }
-    QStringList featureList() const override { return QStringList(QLatin1String(T::staticMetaObject.className())); }
+    QStringList featureList() const override
+    {
+        return {QLatin1String(T::staticMetaObject.className())};
+    }
+
     QObject *createObject(const QString &key) override
     {
         const QMetaObject &mo = T::staticMetaObject;
@@ -285,14 +286,15 @@ private:
         } \
         ~QAxFactoryList() override { qDeleteAll(factories); } \
         QStringList featureList() const override {  return factoryKeys; } \
-        const QMetaObject *metaObject(const QString&key) const override { \
-            QAxFactory *f = factories[key]; \
+        const QMetaObject *metaObject(const QString&key) const override \
+        { \
+            QAxFactory *f = factories.value(key); \
             return f ? f->metaObject(key) : nullptr; \
         } \
         QObject *createObject(const QString &key) override { \
             if (!creatable.value(key)) \
                 return nullptr; \
-            QAxFactory *f = factories[key]; \
+            QAxFactory *f = factories.value(key); \
             return f ? f->createObject(key) : nullptr; \
         } \
         QUuid classID(const QString &key) const override { \
@@ -308,12 +310,12 @@ private:
             return f ? f->eventsID(key) : QUuid(); \
         } \
         void registerClass(const QString &key, QSettings *s) const override { \
-            QAxFactory *f = factories.value(key); \
-            if (f) f->registerClass(key, s); \
+            if (QAxFactory *f = factories.value(key)) \
+                f->registerClass(key, s); \
         } \
         void unregisterClass(const QString &key, QSettings *s) const override { \
-            QAxFactory *f = factories.value(key); \
-            if (f) f->unregisterClass(key, s); \
+            if (QAxFactory *f = factories.value(key)) \
+                f->unregisterClass(key, s); \
         } \
         QString exposeToSuperClass(const QString &key) const override { \
             QAxFactory *f = factories.value(key); \
@@ -329,9 +331,8 @@ private:
         } \
     }; \
     QAxFactory *qax_instantiate()               \
-    {                                                   \
-        QAxFactoryList *impl = new QAxFactoryList();    \
-        return impl;                                    \
+    {                                           \
+        return new QAxFactoryList();            \
     } \
     QT_END_NAMESPACE
 
