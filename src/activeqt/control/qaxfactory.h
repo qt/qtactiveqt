@@ -260,7 +260,6 @@ private:
         { \
             QAxFactory *factory = nullptr; \
             QStringList keys; \
-            QStringList::Iterator it; \
 
 #define QAXCLASS(Class) \
             factory = new QAxClass<Class>(typeLibID().toString(), appID().toString()); \
