@@ -8,7 +8,9 @@ HEADERS =   ../control/qaxaggregated.h \
             qaxbase.h \
             qaxbase_p.h \
             qaxwidget.h \
+            qaxwidget_p.h \
             qaxobject.h \
+            qaxobject_p.h \
             qaxobjectinterface.h \
             qaxscript.h \
             qaxselect.h \

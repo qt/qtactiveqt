@@ -57,7 +57,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QAxHostWindow;
 class QAxAggregated;
 
 class QAxClientSite;
@@ -68,15 +67,16 @@ class QAxBaseWidget : public QWidget, public QAxObjectInterface
     Q_OBJECT
     Q_PROPERTY(ulong classContext READ classContext WRITE setClassContext)
     Q_PROPERTY(QString control READ control WRITE setControl RESET clear)
-protected:
-    using QWidget::QWidget;
-
 public:
 
 Q_SIGNALS:
     void exception(int code, const QString &source, const QString &desc, const QString &help);
     void propertyChanged(const QString &name);
     void signal(const QString &name, int argc, void *argv);
+
+protected:
+    using QWidget::QWidget;
+    QAxBaseWidget(QWidgetPrivate &d, QWidget *parent, Qt::WindowFlags f);
 };
 
 class QAxWidget : public QAxBaseWidget, public QAxBase
@@ -121,10 +121,9 @@ protected:
     void connectNotify(const QMetaMethod &signal) override;
     const QMetaObject *fallbackMetaObject() const override;
 private:
-    friend class QAxClientSite;
-    QAxClientSite *container = nullptr;
+    Q_DECLARE_PRIVATE(QAxWidget)
 
-    QAxWidgetPrivate *m_unused = nullptr;
+    friend class QAxClientSite;
     const QMetaObject *parentMetaObject() const override;
 };
 

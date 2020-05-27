@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2015 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the ActiveQt framework of the Qt Toolkit.
@@ -48,80 +48,32 @@
 **
 ****************************************************************************/
 
-#ifndef QAXOBJECT_H
-#define QAXOBJECT_H
+#ifndef QAXOBJECT_P_H
+#define QAXOBJECT_P_H
 
-#include <QtAxContainer/qaxbase.h>
-#include <QtAxContainer/qaxobjectinterface.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API. It exists purely as an
+// implementation detail. This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtAxContainer/qaxobject.h>
+#include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QAxObjectPrivate;
-
-class QAxBaseObject : public QObject, public QAxObjectInterface
+class QAxObjectPrivate : public QObjectPrivate
 {
-    Q_OBJECT
-    Q_PROPERTY(ulong classContext READ classContext WRITE setClassContext)
-    Q_PROPERTY(QString control READ control WRITE setControl RESET clear)
-
-Q_SIGNALS:
-    void exception(int code, const QString &source, const QString &desc, const QString &help);
-    void propertyChanged(const QString &name);
-    void signal(const QString &name, int argc, void *argv);
-
-protected:
-    using QObject::QObject;
-    QAxBaseObject(QObjectPrivate &d, QObject* parent);
-};
-
-class QAxObject : public QAxBaseObject, public QAxBase
-{
-    friend class QAxEventSink;
-    Q_DECLARE_PRIVATE(QAxObject)
+    Q_DECLARE_PUBLIC(QAxObject)
 public:
-    QObject* qObject() const override { return static_cast<QObject *>(const_cast<QAxObject *>(this)); }
-    const char *className() const override;
-
-    explicit QAxObject(QObject *parent = nullptr);
-    explicit QAxObject(const QString &c, QObject *parent = nullptr);
-    explicit QAxObject(IUnknown *iface, QObject *parent = nullptr);
-    ~QAxObject() override;
-
-    ulong classContext() const override;
-    void setClassContext(ulong classContext) override;
-
-    QString control() const override;
-    bool setControl(const QString &c) override;
-    void clear() override;
-
-    bool doVerb(const QString &verb);
-
-    const QMetaObject *metaObject() const override;
-    int qt_metacall(QMetaObject::Call call, int id, void **v) override;
-    Q_DECL_HIDDEN_STATIC_METACALL static void qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a);
-    void *qt_metacast(const char *) override;
-
-protected:
-    void connectNotify(const QMetaMethod &signal) override;
-    const QMetaObject *fallbackMetaObject() const override;
-
-private:
-    const QMetaObject *parentMetaObject() const override;
+    void clear();
 };
-
-template <> inline QAxObject *qobject_cast<QAxObject*>(const QObject *o)
-{
-    void *result = o ? const_cast<QObject *>(o)->qt_metacast("QAxObject") : nullptr;
-    return reinterpret_cast<QAxObject*>(result);
-}
-
-template <> inline QAxObject *qobject_cast<QAxObject*>(QObject *o)
-{
-    void *result = o ? o->qt_metacast("QAxObject") : nullptr;
-    return reinterpret_cast<QAxObject*>(result);
-}
 
 QT_END_NAMESPACE
-Q_DECLARE_METATYPE(QAxObject*)
 
-#endif // QAXOBJECT_H
+#endif // QAXOBJECT_P_H

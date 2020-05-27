@@ -12,12 +12,12 @@ qt_add_module(AxContainer
         ../shared/qaxtypes.cpp ../shared/qaxtypes_p.h
         qaxbase.cpp qaxbase.h qaxbase_p.h
         qaxdump.cpp
-        qaxobject.cpp qaxobject.h
+        qaxobject.cpp qaxobject.h qaxobject_p.h
         qaxobjectinterface.h
         qaxscript.cpp qaxscript.h
         qaxscriptwrapper.cpp
         qaxselect.cpp qaxselect.h qaxselect.ui
-        qaxwidget.cpp qaxwidget.h
+        qaxwidget.cpp qaxwidget.h qaxwidget_p.h
     LIBRARIES
         Qt::AxBasePrivate
         Qt::CorePrivate

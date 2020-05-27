@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include "qaxwidget.h"
+#include "qaxwidget_p.h"
 #include "qaxbase_p.h"
 #include <QtAxBase/private/qaxutils_p.h>
 #include <QtAxBase/private/qaxtypefunctions_p.h>
@@ -2012,6 +2013,11 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     \sa QAxBaseObject::exception()
 */
 
+QAxBaseWidget::QAxBaseWidget(QWidgetPrivate &d, QWidget *parent, Qt::WindowFlags f)
+    : QWidget(d, parent, f)
+{
+}
+
 /*!
     \class QAxWidget
     \brief The QAxWidget class is a QWidget that wraps an ActiveX control.
@@ -2060,7 +2066,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     call setControl().
 */
 QAxWidget::QAxWidget(QWidget *parent, Qt::WindowFlags f)
-: QAxBaseWidget(parent, f)
+: QAxBaseWidget(*new QAxWidgetPrivate, parent, f)
 {
     axBaseInit(new QAxWidgetSignalBridge(this));
 }
@@ -2072,7 +2078,7 @@ QAxWidget::QAxWidget(QWidget *parent, Qt::WindowFlags f)
     \sa setControl()
 */
 QAxWidget::QAxWidget(const QString &c, QWidget *parent, Qt::WindowFlags f)
-: QAxBaseWidget(parent, f)
+: QAxBaseWidget(*new QAxWidgetPrivate, parent, f)
 {
     axBaseInit(new QAxWidgetSignalBridge(this));
     setControl(c);
@@ -2083,7 +2089,7 @@ QAxWidget::QAxWidget(const QString &c, QWidget *parent, Qt::WindowFlags f)
     \a parent and \a f are propagated to the QWidget contructor.
 */
 QAxWidget::QAxWidget(IUnknown *iface, QWidget *parent, Qt::WindowFlags f)
-: QAxBaseWidget(parent, f), QAxBase(iface)
+: QAxBaseWidget(*new QAxWidgetPrivate, parent, f), QAxBase(iface)
 {
     axBaseInit(new QAxWidgetSignalBridge(this));
 }
@@ -2096,9 +2102,10 @@ QAxWidget::QAxWidget(IUnknown *iface, QWidget *parent, Qt::WindowFlags f)
 */
 QAxWidget::~QAxWidget()
 {
-    if (container)
-        container->reset(this);
-    clear();
+    Q_D(QAxWidget);
+    if (d->container)
+        d->container->reset(this);
+    d->clear();
 }
 
 /*!
@@ -2152,10 +2159,11 @@ bool QAxWidget::createHostWindow(bool initialized)
 */
 bool QAxWidget::createHostWindow(bool initialized, const QByteArray &data)
 {
-    if (!container) // Potentially called repeatedly from QAxBase::metaObject(), QAxWidget::initialize()
-        container = new QAxClientSite(this);
+    Q_D(QAxWidget);
+    if (!d->container) // Potentially called repeatedly from QAxBase::metaObject(), QAxWidget::initialize()
+        d->container = new QAxClientSite(this);
 
-    container->activateObject(initialized, data);
+    d->container->activateObject(initialized, data);
 
     ATOM filter_ref = FindAtom(qaxatom);
     if (!filter_ref)
@@ -2208,9 +2216,16 @@ bool QAxWidget::setControl(const QString &c)
 */
 void QAxWidget::clear()
 {
-    if (isNull())
+    Q_D(QAxWidget);
+    d->clear();
+}
+
+void QAxWidgetPrivate::clear()
+{
+    Q_Q(QAxWidget);
+    if (q->isNull())
         return;
-    if (!QAxBase::control().isEmpty()) {
+    if (!q->QAxBase::control().isEmpty()) {
         ATOM filter_ref = FindAtom(qaxatom);
         if (filter_ref)
             DeleteAtom(filter_ref);
@@ -2222,8 +2237,8 @@ void QAxWidget::clear()
     if (container)
         container->deactivate();
 
-    QAxBase::clear();
-    setFocusPolicy(Qt::NoFocus);
+    q->QAxBase::clear();
+    q->setFocusPolicy(Qt::NoFocus);
 
     if (container) {
         container->releaseAll();
@@ -2242,12 +2257,11 @@ void QAxWidget::clear()
 */
 bool QAxWidget::doVerb(const QString &verb)
 {
+    Q_D(QAxWidget);
     if (!verbs().contains(verb))
         return false;
 
-    HRESULT hres = container->doVerb(indexOfVerb(verb));
-
-    return hres == S_OK;
+    return d->container->doVerb(indexOfVerb(verb)) == S_OK;
 }
 
  /*!
@@ -2321,8 +2335,9 @@ int QAxWidget::qt_metacall(QMetaObject::Call call, int id, void **v)
 */
 QSize QAxWidget::sizeHint() const
 {
-    if (container) {
-        QSize sh = container->sizeHint();
+    Q_D(const QAxWidget);
+    if (d->container) {
+        QSize sh = d->container->sizeHint();
         if (sh.isValid())
             return sh;
     }
@@ -2335,8 +2350,9 @@ QSize QAxWidget::sizeHint() const
 */
 QSize QAxWidget::minimumSizeHint() const
 {
-    if (container) {
-        QSize sh = container->minimumSizeHint();
+    Q_D(const QAxWidget);
+    if (d->container) {
+        QSize sh = d->container->minimumSizeHint();
         if (sh.isValid())
             return sh;
     }
@@ -2349,22 +2365,23 @@ QSize QAxWidget::minimumSizeHint() const
 */
 void QAxWidget::changeEvent(QEvent *e)
 {
-    if (isNull() || !container)
+    Q_D(QAxWidget);
+    if (isNull() || !d->container)
         return;
 
     switch (e->type()) {
     case QEvent::EnabledChange:
-        container->emitAmbientPropertyChange(DISPID_AMBIENT_UIDEAD);
+        d->container->emitAmbientPropertyChange(DISPID_AMBIENT_UIDEAD);
         break;
     case QEvent::FontChange:
-        container->emitAmbientPropertyChange(DISPID_AMBIENT_FONT);
+        d->container->emitAmbientPropertyChange(DISPID_AMBIENT_FONT);
         break;
     case QEvent::PaletteChange:
-        container->emitAmbientPropertyChange(DISPID_AMBIENT_BACKCOLOR);
-        container->emitAmbientPropertyChange(DISPID_AMBIENT_FORECOLOR);
+        d->container->emitAmbientPropertyChange(DISPID_AMBIENT_BACKCOLOR);
+        d->container->emitAmbientPropertyChange(DISPID_AMBIENT_FORECOLOR);
         break;
     case QEvent::ActivationChange:
-        container->windowActivationChange();
+        d->container->windowActivationChange();
         break;
     default:
         break;
@@ -2376,8 +2393,9 @@ void QAxWidget::changeEvent(QEvent *e)
 */
 void QAxWidget::resizeEvent(QResizeEvent *)
 {
-    if (container)
-        container->resize(size());
+    Q_D(QAxWidget);
+    if (d->container)
+        d->container->resize(size());
 }
 
 /*!

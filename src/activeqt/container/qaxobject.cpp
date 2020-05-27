@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include "qaxobject.h"
+#include "qaxobject_p.h"
 #include "qaxbase_p.h"
 
 #include <quuid.h>
@@ -83,6 +84,11 @@ public:
 private:
     QAxBaseObject *m_o;
 };
+
+QAxBaseObject::QAxBaseObject(QObjectPrivate &d, QObject *parent)
+    : QObject(d, parent)
+{
+}
 
 /*!
    \class QAxBaseObject
@@ -187,7 +193,7 @@ private:
     QObject constructor. To initialize the object, call setControl().
 */
 QAxObject::QAxObject(QObject *parent)
-: QAxBaseObject(parent)
+: QAxBaseObject(*new QAxObjectPrivate, parent)
 {
     axBaseInit(new QAxObjectSignalBridge(this));
 }
@@ -199,7 +205,7 @@ QAxObject::QAxObject(QObject *parent)
     \sa setControl()
 */
 QAxObject::QAxObject(const QString &c, QObject *parent)
-: QAxBaseObject(parent)
+: QAxBaseObject(*new QAxObjectPrivate, parent)
 {
     axBaseInit(new QAxObjectSignalBridge(this));
     setControl(c);
@@ -210,7 +216,7 @@ QAxObject::QAxObject(const QString &c, QObject *parent)
     iface. \a parent is propagated to the QObject constructor.
 */
 QAxObject::QAxObject(IUnknown *iface, QObject *parent)
-: QAxBaseObject(parent), QAxBase(iface)
+: QAxBaseObject(*new QAxObjectPrivate, parent), QAxBase(iface)
 {
     axBaseInit(new QAxObjectSignalBridge(this));
 }
@@ -221,7 +227,8 @@ QAxObject::QAxObject(IUnknown *iface, QObject *parent)
 */
 QAxObject::~QAxObject()
 {
-    clear();
+    Q_D(QAxObject);
+    d->clear();
 }
 
 unsigned long QAxObject::classContext() const
@@ -246,7 +253,14 @@ bool QAxObject::setControl(const QString &c)
 
 void QAxObject::clear()
 {
-    QAxBase::clear();
+    Q_D(QAxObject);
+    d->clear();
+}
+
+void QAxObjectPrivate::clear()
+{
+    Q_Q(QAxObject);
+    q->QAxBase::clear();
 }
 
 /*!
