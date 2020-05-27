@@ -392,8 +392,8 @@ public:
 
         int index = -1;
         // emit the generic signal "as is"
-        combase->d->signalBridge->emitSignal(QLatin1String(signame),
-                                             pDispParams->cArgs, pDispParams->rgvarg);
+        combase->d->emitSignal(QLatin1String(signame),
+                               pDispParams->cArgs, pDispParams->rgvarg);
         HRESULT hres = S_OK;
 
         // get the signal information from the metaobject
@@ -464,7 +464,7 @@ public:
 
             if (ok) {
                 // emit the generated signal if everything went well
-                QAxBase::axBase_qt_static_metacall(combase, QMetaObject::InvokeMetaMethod, index - meta->methodOffset(), argv);
+                QAxBasePrivate::qtStaticMetaCall(combase, QMetaObject::InvokeMetaMethod, index - meta->methodOffset(), argv);
                 // update the VARIANT for references and free memory
                 for (p = 0; p < pcount; ++p) {
                     bool out;
@@ -509,7 +509,7 @@ public:
             return S_OK;
 
         // emit the generic signal
-        combase->d->signalBridge->emitPropertyChanged(QString::fromLatin1(propname));
+        combase->d->emitPropertyChanged(QString::fromLatin1(propname));
 
         QByteArray signame = propsigs.value(dispID);
         if (signame.isEmpty())
@@ -532,8 +532,8 @@ public:
                 argv[1] = &var;
 
             // emit the "changed" signal
-            QAxBase::axBase_qt_static_metacall(combase, QMetaObject::InvokeMetaMethod,
-                                              index - meta->methodOffset(), argv);
+            QAxBasePrivate::qtStaticMetaCall(combase, QMetaObject::InvokeMetaMethod,
+                                                      index - meta->methodOffset(), argv);
         }
         return S_OK;
     }
@@ -573,8 +573,8 @@ public:
     \class QAxBasePrivate
 */
 
-QAxBasePrivate::QAxBasePrivate(QAxBase *b)
-    : q(b), useEventSink(true), useMetaObject(true), useClassInfo(true),
+QAxBasePrivate::QAxBasePrivate()
+    : useEventSink(true), useMetaObject(true), useClassInfo(true),
      cachedMetaObject(false), initialized(false), tryCache(false)
 {
     // protect initialization
@@ -598,7 +598,6 @@ QAxBasePrivate::~QAxBasePrivate()
     }
 
     CoFreeUnusedLibraries();
-    delete signalBridge;
 }
 
 QByteArray QAxEventSink::findProperty(DISPID dispID)
@@ -825,19 +824,9 @@ QVariant QAxBasePrivate::VARIANTToQVariant(const VARIANT &arg, const QByteArray 
 */
 
 /*!
-    Creates a QAxBase object that wraps the COM object \a iface. If \a
-    iface is 0 (the default), use setControl() to instantiate a COM
-    object.
+    Creates a QAxBase object.
 */
-QAxBase::QAxBase(IUnknown *iface)
-{
-    d = new QAxBasePrivate(this);
-    d->ptr = iface;
-    if (d->ptr) {
-        d->ptr->AddRef();
-        d->initialized = true;
-    }
-}
+QAxBase::QAxBase() = default;
 
 /*!
     Shuts down the COM object and destroys the QAxBase object.
@@ -848,9 +837,6 @@ QAxBase::~QAxBase()
 {
 
     clear();
-
-    delete d;
-    d = nullptr;
 }
 
 /*!
@@ -1171,9 +1157,15 @@ bool QAxBase::initialize(IUnknown **ptr)
 /*!
     \internal
 */
-void QAxBase::axBaseInit(QAxBasePrivateSignalBridge *b)
+void QAxBase::axBaseInit(QAxBasePrivate *b, IUnknown *iface)
 {
-    d->signalBridge = b;
+    d = b;
+    d->q = this;
+    d->ptr = iface;
+    if (d->ptr) {
+        d->ptr->AddRef();
+        d->initialized = true;
+    }
 }
 
 /*!
@@ -3044,7 +3036,7 @@ const QMetaObject *QAxBase::axBaseMetaObject() const
 {
     if (d->metaobj)
         return d->metaobj;
-    const QMetaObject* parentObject = parentMetaObject();
+    const QMetaObject* parentObject = d->parentMetaObject();
 
     if (!d->ptr && !d->initialized) {
         const_cast<QAxBase*>(this)->initialize(&d->ptr);
@@ -3058,7 +3050,7 @@ const QMetaObject *QAxBase::axBaseMetaObject() const
 
     // return the default meta object if not yet initialized
     if (!d->ptr || !d->useMetaObject)
-        return fallbackMetaObject();
+        return d->fallbackMetaObject();
 
     MetaObjectGenerator generator(const_cast<QAxBase *>(this), d);
     return generator.metaObject(parentObject);
@@ -3195,7 +3187,7 @@ void QAxBasePrivate::handleException(tagEXCEPINFO *exc, const QString &name)
     if (helpContext && !help.isEmpty())
         help += QString::fromLatin1(" [%1]").arg(helpContext);
 
-    signalBridge->emitException(code, source, desc, help);
+    emitException(code, source, desc, help);
     if (!QAxEventSink::signalHasReceivers(q->qObject(), "exception(int,QString,QString,QString)")) {
         qWarning(R"(QAxBase: Error calling IDispatch member %s: Exception thrown by server
              Code       : %d
@@ -3485,10 +3477,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     return index;
 }
 
-/*!
-    \internal
-*/
-int QAxBase::axBase_qt_static_metacall(QAxBase *_t, QMetaObject::Call _c, int _id, void **_a)
+int QAxBasePrivate::qtStaticMetaCall(QAxBase *_t, QMetaObject::Call _c, int _id, void **_a)
 {
     if (_c != QMetaObject::InvokeMetaMethod)
         return 0;
@@ -3507,25 +3496,22 @@ int QAxBase::axBase_qt_static_metacall(QAxBase *_t, QMetaObject::Call _c, int _i
     return 0;
 }
 
-/*!
-    \internal
-*/
-int QAxBase::axBase_qt_metacall(QMetaObject::Call call, int id, void **v)
+int QAxBasePrivate::qtMetaCall(QMetaObject::Call call, int id, void **v)
 {
-    const QMetaObject *mo = axBaseMetaObject();
-    if (isNull() && mo->property(id + mo->propertyOffset()).name() != QByteArray("control")) {
+    const QMetaObject *mo = q->axBaseMetaObject();
+    if (q->isNull() && mo->property(id + mo->propertyOffset()).name() != QByteArray("control")) {
         qWarning("QAxBase::qt_metacall: Object is not initialized, or initialization failed");
         return id;
     }
 
     switch(call) {
     case QMetaObject::InvokeMetaMethod:
-        id = axBase_qt_static_metacall(this, call, id, v);
+        id = qtStaticMetaCall(q, call, id, v);
         break;
     case QMetaObject::ReadProperty:
     case QMetaObject::WriteProperty:
     case QMetaObject::ResetProperty:
-        id = internalProperty(call, id, v);
+        id = q->internalProperty(call, id, v);
         break;
     case QMetaObject::QueryPropertyScriptable:
     case QMetaObject::QueryPropertyDesignable:
@@ -4249,7 +4235,7 @@ QVariant QAxBase::asVariant() const
     }
 
     QVariant qvar;
-    QByteArray cn(className());
+    QByteArray cn(d->className());
     if (cn == "QAxObject" || cn == "QAxWidget" || cn == "QAxBase") {
         if (d->dispatch())
             qvar.setValue(d->dispatch());
@@ -4287,13 +4273,19 @@ void *qax_createObjectWrapper(int metaType, IUnknown *iface)
 }
 
 /*!
-    \fn QObject *QAxBase::qObject() const
     \internal
 */
+QObject *QAxBase::qObject() const
+{
+    return d->qObject();
+}
 
 /*!
-    \fn const char *QAxBase::className() const
     \internal
 */
+const char *QAxBase::className() const
+{
+    return d->className();
+}
 
 QT_END_NAMESPACE

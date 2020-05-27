@@ -65,14 +65,12 @@ class QUuid;
 class QAxEventSink;
 class QAxObject;
 class QAxBasePrivate;
-class QAxBasePrivateSignalBridge;
 
 class QAxBase
 {
 public:
     using PropertyBag = QMap<QString, QVariant>;
 
-    explicit QAxBase(IUnknown *iface = nullptr);
     virtual ~QAxBase();
 
     QString control() const;
@@ -99,11 +97,9 @@ public:
     QAxObject* querySubObject(const char *name, QList<QVariant> &vars);
 
     const QMetaObject *axBaseMetaObject() const;
-    int axBase_qt_metacall(QMetaObject::Call, int, void **);
-    static int axBase_qt_static_metacall(QAxBase *, QMetaObject::Call, int, void **);
 
-    virtual QObject *qObject() const = 0;
-    virtual const char *className() const = 0;
+    const char *className() const;
+    QObject *qObject() const;
 
     PropertyBag propertyBag() const;
     void setPropertyBag(const PropertyBag&);
@@ -131,6 +127,8 @@ public:
     void setClassContext(ulong classContext);
 
 protected:
+    explicit QAxBase();
+
     virtual bool initialize(IUnknown** ptr);
     bool initializeRemote(IUnknown** ptr);
     bool initializeLicensed(IUnknown** ptr);
@@ -147,8 +145,7 @@ protected:
                                         const QVariant &var5, const QVariant &var6,
                                         const QVariant &var7, const QVariant &var8);
 
-    virtual const QMetaObject *fallbackMetaObject() const = 0;
-    void axBaseInit(QAxBasePrivateSignalBridge *b);
+    void axBaseInit(QAxBasePrivate *b, IUnknown *iface = nullptr);
 
 private:
     enum DynamicCallHelperFlags {
@@ -157,11 +154,11 @@ private:
 
     friend class QAxScript;
     friend class QAxEventSink;
+    friend class QAxBasePrivate;
     friend void *qax_createObjectWrapper(int, IUnknown*);
     bool initializeLicensedHelper(void *factory, const QString &key, IUnknown **ptr);
-    QAxBasePrivate *d;
+    QAxBasePrivate *d = nullptr;
 
-    virtual const QMetaObject *parentMetaObject() const = 0;
     int internalProperty(QMetaObject::Call, int index, void **v);
     int internalInvoke(QMetaObject::Call, int index, void **v);
     bool dynamicCallHelper(const char *name, void *out, QList<QVariant> &var,

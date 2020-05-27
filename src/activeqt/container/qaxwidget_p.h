@@ -64,16 +64,27 @@
 
 #include <QtAxContainer/qaxwidget.h>
 #include <private/qwidget_p.h>
+#include <private/qaxbase_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QAxClientSite;
 
-class QAxWidgetPrivate : public QWidgetPrivate
+class QAxWidgetPrivate : public QWidgetPrivate, public QAxBasePrivate
 {
     Q_DECLARE_PUBLIC(QAxWidget)
 public:
     void clear();
+
+    QObject* qObject() const override;
+    const char *className() const override;
+    const QMetaObject *fallbackMetaObject() const override;
+    const QMetaObject *parentMetaObject() const override;
+
+    void emitException(int code, const QString &source, const QString &desc,
+                       const QString &help) override;
+    void emitPropertyChanged(const QString &name) override;
+    void emitSignal(const QString &name, int argc, void *argv) override;
 
     QAxClientSite *container = nullptr;
 };

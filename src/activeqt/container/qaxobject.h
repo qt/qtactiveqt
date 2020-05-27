@@ -79,9 +79,6 @@ class QAxObject : public QAxBaseObject, public QAxBase
     friend class QAxEventSink;
     Q_DECLARE_PRIVATE(QAxObject)
 public:
-    QObject* qObject() const override { return static_cast<QObject *>(const_cast<QAxObject *>(this)); }
-    const char *className() const override;
-
     explicit QAxObject(QObject *parent = nullptr);
     explicit QAxObject(const QString &c, QObject *parent = nullptr);
     explicit QAxObject(IUnknown *iface, QObject *parent = nullptr);
@@ -103,10 +100,6 @@ public:
 
 protected:
     void connectNotify(const QMetaMethod &signal) override;
-    const QMetaObject *fallbackMetaObject() const override;
-
-private:
-    const QMetaObject *parentMetaObject() const override;
 };
 
 template <> inline QAxObject *qobject_cast<QAxObject*>(const QObject *o)

@@ -111,30 +111,24 @@
 
 QT_BEGIN_NAMESPACE
 
-class QAxWidgetSignalBridge : public QAxBasePrivateSignalBridge
+void QAxWidgetPrivate::emitException(int code, const QString &source, const QString &desc,
+                                     const QString &help)
 {
-public:
-    explicit QAxWidgetSignalBridge(QAxBaseWidget *w) : m_w(w) {}
+    Q_Q(QAxWidget);
+    emit q->exception(code, source, desc, help);
+}
 
-    void emitException(int code, const QString &source, const QString &desc,
-                       const QString &help) override
-    {
-        emit m_w->exception(code, source, desc, help);
-    }
+void  QAxWidgetPrivate::emitPropertyChanged(const QString &name)
+{
+    Q_Q(QAxWidget);
+    emit q->propertyChanged(name);
+}
 
-    void emitPropertyChanged(const QString &name) override
-    {
-        emit m_w->propertyChanged(name);
-    }
-
-    void emitSignal(const QString &name, int argc, void *argv) override
-    {
-        emit m_w->signal(name, argc, argv);
-    }
-
-private:
-    QAxBaseWidget *m_w;
-};
+void  QAxWidgetPrivate::emitSignal(const QString &name, int argc, void *argv)
+{
+    Q_Q(QAxWidget);
+    emit q->signal(name, argc, argv);
+}
 
 /*  \class QAxHostWidget
     \brief The QAxHostWidget class is the actual container widget.
@@ -2068,7 +2062,8 @@ QAxBaseWidget::QAxBaseWidget(QWidgetPrivate &d, QWidget *parent, Qt::WindowFlags
 QAxWidget::QAxWidget(QWidget *parent, Qt::WindowFlags f)
 : QAxBaseWidget(*new QAxWidgetPrivate, parent, f)
 {
-    axBaseInit(new QAxWidgetSignalBridge(this));
+    Q_D(QAxWidget);
+    axBaseInit(d);
 }
 
 /*!
@@ -2080,7 +2075,8 @@ QAxWidget::QAxWidget(QWidget *parent, Qt::WindowFlags f)
 QAxWidget::QAxWidget(const QString &c, QWidget *parent, Qt::WindowFlags f)
 : QAxBaseWidget(*new QAxWidgetPrivate, parent, f)
 {
-    axBaseInit(new QAxWidgetSignalBridge(this));
+    Q_D(QAxWidget);
+    axBaseInit(d);
     setControl(c);
 }
 
@@ -2089,9 +2085,10 @@ QAxWidget::QAxWidget(const QString &c, QWidget *parent, Qt::WindowFlags f)
     \a parent and \a f are propagated to the QWidget contructor.
 */
 QAxWidget::QAxWidget(IUnknown *iface, QWidget *parent, Qt::WindowFlags f)
-: QAxBaseWidget(*new QAxWidgetPrivate, parent, f), QAxBase(iface)
+: QAxBaseWidget(*new QAxWidgetPrivate, parent, f)
 {
-    axBaseInit(new QAxWidgetSignalBridge(this));
+    Q_D(QAxWidget);
+    axBaseInit(d, iface);
 }
 
 /*!
@@ -2274,15 +2271,12 @@ bool QAxWidget::doVerb(const QString &verb)
 */
 void QAxWidget::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
-    QAxBase::axBase_qt_static_metacall(static_cast<QAxWidget *>(_o), _c, _id, _a);
+    QAxBasePrivate::qtStaticMetaCall(static_cast<QAxWidget *>(_o), _c, _id, _a);
 }
 
-/*!
-    \internal
-*/
-const QMetaObject *QAxWidget::fallbackMetaObject() const
+const QMetaObject *QAxWidgetPrivate::fallbackMetaObject() const
 {
-    return &staticMetaObject;
+    return &QAxWidget::staticMetaObject;
 }
 
 /*!
@@ -2293,10 +2287,7 @@ const QMetaObject *QAxWidget::metaObject() const
     return QAxBase::axBaseMetaObject();
 }
 
-/*!
-    \internal
-*/
-const QMetaObject *QAxWidget::parentMetaObject() const
+const QMetaObject *QAxWidgetPrivate::parentMetaObject() const
 {
     return &QAxBaseWidget::staticMetaObject;
 }
@@ -2311,10 +2302,13 @@ void *QAxWidget::qt_metacast(const char *cname)
     return QAxBaseWidget::qt_metacast(cname);
 }
 
-/*!
-    \internal
-*/
-const char *QAxWidget::className() const
+QObject* QAxWidgetPrivate::qObject() const
+{
+    Q_Q(const QAxWidget);
+    return static_cast<QObject *>(const_cast<QAxWidget *>(q));
+}
+
+const char *QAxWidgetPrivate::className() const
 {
     return "QAxWidget";
 }
@@ -2324,10 +2318,11 @@ const char *QAxWidget::className() const
 */
 int QAxWidget::qt_metacall(QMetaObject::Call call, int id, void **v)
 {
+    Q_D(QAxWidget);
     id = QAxBaseWidget::qt_metacall(call, id, v);
     if (id < 0)
         return id;
-    return QAxBase::axBase_qt_metacall(call, id, v);
+    return d->qtMetaCall(call, id, v);
 }
 
 /*!

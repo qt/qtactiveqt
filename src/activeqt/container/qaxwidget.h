@@ -82,9 +82,6 @@ protected:
 class QAxWidget : public QAxBaseWidget, public QAxBase
 {
 public:
-    QObject* qObject() const override { return const_cast<QAxWidget *>(this); }
-    const char *className() const override;
-
     explicit QAxWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     explicit QAxWidget(const QString &c, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
     explicit QAxWidget(IUnknown *iface, QWidget *parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
@@ -119,12 +116,10 @@ protected:
     virtual bool translateKeyEvent(int message, int keycode) const;
 
     void connectNotify(const QMetaMethod &signal) override;
-    const QMetaObject *fallbackMetaObject() const override;
 private:
     Q_DECLARE_PRIVATE(QAxWidget)
 
     friend class QAxClientSite;
-    const QMetaObject *parentMetaObject() const override;
 };
 
 template <> inline QAxWidget *qobject_cast<QAxWidget*>(const QObject *o)

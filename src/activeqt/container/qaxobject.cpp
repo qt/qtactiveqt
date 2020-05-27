@@ -60,31 +60,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QAxObjectSignalBridge : public QAxBasePrivateSignalBridge
-{
-public:
-    explicit QAxObjectSignalBridge(QAxBaseObject *o) : m_o(o) {}
-
-    void emitException(int code, const QString &source, const QString &desc,
-                       const QString &help) override
-    {
-        emit m_o->exception(code, source, desc, help);
-    }
-
-    void emitPropertyChanged(const QString &name) override
-    {
-        emit m_o->propertyChanged(name);
-    }
-
-    void emitSignal(const QString &name, int argc, void *argv) override
-    {
-        emit m_o->signal(name, argc, argv);
-    }
-
-private:
-    QAxBaseObject *m_o;
-};
-
 QAxBaseObject::QAxBaseObject(QObjectPrivate &d, QObject *parent)
     : QObject(d, parent)
 {
@@ -156,6 +131,25 @@ QAxBaseObject::QAxBaseObject(QObjectPrivate &d, QObject *parent)
     \sa QAxBaseWidget::exception()
 */
 
+void QAxObjectPrivate::emitException(int code, const QString &source, const QString &desc,
+                                     const QString &help)
+{
+    Q_Q(QAxObject);
+    emit q->exception(code, source, desc, help);
+}
+
+void  QAxObjectPrivate::emitPropertyChanged(const QString &name)
+{
+    Q_Q(QAxObject);
+    emit q->propertyChanged(name);
+}
+
+void  QAxObjectPrivate::emitSignal(const QString &name, int argc, void *argv)
+{
+    Q_Q(QAxObject);
+    emit q->signal(name, argc, argv);
+}
+
 /*!
     \class QAxObject
     \brief The QAxObject class provides a QObject that wraps a COM object.
@@ -195,7 +189,8 @@ QAxBaseObject::QAxBaseObject(QObjectPrivate &d, QObject *parent)
 QAxObject::QAxObject(QObject *parent)
 : QAxBaseObject(*new QAxObjectPrivate, parent)
 {
-    axBaseInit(new QAxObjectSignalBridge(this));
+    Q_D(QAxObject);
+    axBaseInit(d);
 }
 
 /*!
@@ -207,7 +202,8 @@ QAxObject::QAxObject(QObject *parent)
 QAxObject::QAxObject(const QString &c, QObject *parent)
 : QAxBaseObject(*new QAxObjectPrivate, parent)
 {
-    axBaseInit(new QAxObjectSignalBridge(this));
+    Q_D(QAxObject);
+    axBaseInit(d);
     setControl(c);
 }
 
@@ -216,9 +212,10 @@ QAxObject::QAxObject(const QString &c, QObject *parent)
     iface. \a parent is propagated to the QObject constructor.
 */
 QAxObject::QAxObject(IUnknown *iface, QObject *parent)
-: QAxBaseObject(*new QAxObjectPrivate, parent), QAxBase(iface)
+: QAxBaseObject(*new QAxObjectPrivate, parent)
 {
-    axBaseInit(new QAxObjectSignalBridge(this));
+    Q_D(QAxObject);
+    axBaseInit(d, iface);
 }
 
 /*!
@@ -268,15 +265,12 @@ void QAxObjectPrivate::clear()
 */
 void QAxObject::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
-    QAxBase::axBase_qt_static_metacall(static_cast<QAxObject *>(_o), _c, _id, _a);
+    QAxBasePrivate::qtStaticMetaCall(static_cast<QAxObject *>(_o), _c, _id, _a);
 }
 
-/*!
-    \internal
-*/
-const QMetaObject *QAxObject::fallbackMetaObject() const
+const QMetaObject *QAxObjectPrivate::fallbackMetaObject() const
 {
-    return &staticMetaObject;
+    return &QAxObject::staticMetaObject;
 }
 
 /*!
@@ -287,10 +281,7 @@ const QMetaObject *QAxObject::metaObject() const
     return QAxBase::axBaseMetaObject();
 }
 
-/*!
-    \internal
-*/
-const QMetaObject *QAxObject::parentMetaObject() const
+const QMetaObject *QAxObjectPrivate::parentMetaObject() const
 {
     return &QAxBaseObject::staticMetaObject;
 }
@@ -305,10 +296,12 @@ void *QAxObject::qt_metacast(const char *cname)
     return QAxBaseObject::qt_metacast(cname);
 }
 
-/*!
-    \internal
-*/
-const char *QAxObject::className() const
+QObject* QAxObjectPrivate::qObject() const
+{
+    Q_Q(const QAxObject);
+    return static_cast<QObject *>(const_cast<QAxObject *>(q));
+}
+const char *QAxObjectPrivate::className() const
 {
     return "QAxObject";
 }
@@ -318,10 +311,11 @@ const char *QAxObject::className() const
 */
 int QAxObject::qt_metacall(QMetaObject::Call call, int id, void **v)
 {
+    Q_D(QAxObject);
     id = QAxBaseObject::qt_metacall(call, id, v);
     if (id < 0)
         return id;
-    return QAxBase::axBase_qt_metacall(call, id, v);
+    return d->qtMetaCall(call, id, v);
 }
 
 /*!

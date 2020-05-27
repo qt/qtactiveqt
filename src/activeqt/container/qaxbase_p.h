@@ -76,25 +76,27 @@ QT_BEGIN_NAMESPACE
 class QAxBase;
 class QAxEventSink;
 
-class QAxBasePrivateSignalBridge
-{
-public:
-    virtual ~QAxBasePrivateSignalBridge() = default;
-
-    virtual void emitException(int code, const QString &source, const QString &desc,
-                               const QString &help) = 0;
-    virtual void emitPropertyChanged(const QString &name) = 0;
-    virtual void emitSignal(const QString &name, int argc, void *argv) = 0;
-};
-
 class QAxBasePrivate
 {
     Q_DISABLE_COPY_MOVE(QAxBasePrivate)
 public:
     using UuidEventSinkHash = QHash<QUuid, QAxEventSink*>;
 
-    explicit QAxBasePrivate(QAxBase *b);
+    explicit QAxBasePrivate();
     ~QAxBasePrivate();
+
+    virtual QObject *qObject() const = 0;
+    virtual const char *className() const = 0;
+    virtual const QMetaObject *fallbackMetaObject() const = 0;
+    virtual const QMetaObject *parentMetaObject() const = 0;
+
+    virtual void emitException(int code, const QString &source, const QString &desc,
+                               const QString &help) = 0;
+    virtual void emitPropertyChanged(const QString &name) = 0;
+    virtual void emitSignal(const QString &name, int argc, void *argv) = 0;
+
+    int qtMetaCall(QMetaObject::Call, int, void **);
+    static int qtStaticMetaCall(QAxBase *, QMetaObject::Call, int, void **);
 
     IDispatch *dispatch() const
     {
@@ -111,7 +113,7 @@ public:
 
     static QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint type = 0);
 
-    QAxBase *q;
+    QAxBase *q = nullptr;
     QString ctrl;
     UuidEventSinkHash eventSink;
     uint useEventSink       :1;
@@ -135,7 +137,6 @@ public:
     mutable QMap<QString, LONG> verbs;
 
     QMetaObject *metaobj = nullptr;
-    QAxBasePrivateSignalBridge *signalBridge = nullptr;
 };
 
 QT_END_NAMESPACE
