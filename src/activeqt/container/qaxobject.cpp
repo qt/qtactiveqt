@@ -250,6 +250,11 @@ bool QAxObject::setControl(const QString &c)
 
 void QAxObject::clear()
 {
+    resetControl();
+}
+
+void QAxObject::resetControl()
+{
     Q_D(QAxObject);
     d->clear();
 }

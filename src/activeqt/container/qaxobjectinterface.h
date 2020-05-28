@@ -66,7 +66,7 @@ public:
     virtual void setClassContext(ulong classContext) = 0;
 
     virtual QString control() const = 0;
-    virtual void clear() = 0;
+    virtual void resetControl() = 0;
     virtual bool setControl(const QString &c) = 0;
 };
 

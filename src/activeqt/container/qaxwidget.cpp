@@ -2207,11 +2207,20 @@ bool QAxWidget::setControl(const QString &c)
 }
 
 /*!
+    Shuts down the ActiveX control.
+    \sa resetControl()
+*/
+void QAxWidget::clear()
+{
+    resetControl();
+}
+
+/*!
     \reimp
 
     Shuts down the ActiveX control.
 */
-void QAxWidget::clear()
+void QAxWidget::resetControl()
 {
     Q_D(QAxWidget);
     d->clear();

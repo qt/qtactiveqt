@@ -62,7 +62,7 @@ class QAxBaseObject : public QObject, public QAxObjectInterface
 {
     Q_OBJECT
     Q_PROPERTY(ulong classContext READ classContext WRITE setClassContext)
-    Q_PROPERTY(QString control READ control WRITE setControl RESET clear)
+    Q_PROPERTY(QString control READ control WRITE setControl RESET resetControl)
 
 Q_SIGNALS:
     void exception(int code, const QString &source, const QString &desc, const QString &help);
@@ -89,7 +89,8 @@ public:
 
     QString control() const override;
     bool setControl(const QString &c) override;
-    void clear() override;
+    void resetControl() override;
+    void clear();
 
     bool doVerb(const QString &verb);
 

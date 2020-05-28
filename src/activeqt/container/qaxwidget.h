@@ -66,7 +66,7 @@ class QAxBaseWidget : public QWidget, public QAxObjectInterface
 {
     Q_OBJECT
     Q_PROPERTY(ulong classContext READ classContext WRITE setClassContext)
-    Q_PROPERTY(QString control READ control WRITE setControl RESET clear)
+    Q_PROPERTY(QString control READ control WRITE setControl RESET resetControl)
 public:
 
 Q_SIGNALS:
@@ -92,7 +92,8 @@ public:
 
     QString control() const override;
     bool setControl(const QString &) override;
-    void clear() override;
+    void resetControl() override;
+    void clear();
     bool doVerb(const QString &verb);
 
     QSize sizeHint() const override;

@@ -104,7 +104,7 @@
 */
 
 /*!
-    \fn virtual void QAxObjectInterface::clear()
+    \fn virtual void QAxObjectInterface::resetControl()
 
     Disconnects and destroys the COM object.
 
