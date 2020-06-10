@@ -2405,7 +2405,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                         if (rmatch.hasMatch()) {
                             name.chop(rmatch.capturedLength(0));
                             name += '(';
-                            int overload = rmatch.capturedRef(1).toInt() + 1;
+                            int overload = rmatch.capturedView(1).toInt() + 1;
 
                             for (int s = 0; s < qt.object->metaObject()->methodCount(); ++s) {
                                 QMetaMethod slot = qt.object->metaObject()->method(s);

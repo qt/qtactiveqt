@@ -148,7 +148,7 @@ static QString replaceEnvironmentVariables(QString in)
         const int closingPercentPos = in.indexOf(QLatin1Char('%'), openInPercentPos + 1);
         if (closingPercentPos < 0)
             break;
-        const QStringRef varName = in.midRef(openInPercentPos + 1, closingPercentPos - openInPercentPos - 1);
+        const QStringView varName = QStringView{in}.mid(openInPercentPos + 1, closingPercentPos - openInPercentPos - 1);
         const QString contents = QString::fromLocal8Bit(qgetenv(varName.toLocal8Bit()));
         in.replace(openInPercentPos, closingPercentPos - openInPercentPos + 1, contents);
     }
