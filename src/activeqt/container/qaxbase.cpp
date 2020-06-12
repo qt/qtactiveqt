@@ -2895,7 +2895,6 @@ static void addMetaProperty(QMetaObjectBuilder &builder, const QByteArray &name,
     propertyBuilder.setDesignable(flags & Designable);
     propertyBuilder.setScriptable(flags & Scriptable);
     propertyBuilder.setStored(flags & Stored);
-    propertyBuilder.setEditable(flags & Editable);
     propertyBuilder.setUser(flags & User);
 }
 
@@ -3512,13 +3511,6 @@ int QAxBasePrivate::qtMetaCall(QMetaObject::Call call, int id, void **v)
     case QMetaObject::WriteProperty:
     case QMetaObject::ResetProperty:
         id = q->internalProperty(call, id, v);
-        break;
-    case QMetaObject::QueryPropertyScriptable:
-    case QMetaObject::QueryPropertyDesignable:
-    case QMetaObject::QueryPropertyStored:
-    case QMetaObject::QueryPropertyEditable:
-    case QMetaObject::QueryPropertyUser:
-        id -= mo->propertyCount();
         break;
     default:
         break;

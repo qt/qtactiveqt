@@ -962,9 +962,9 @@ static HRESULT classIDL(QObject *o, const QMetaObject *mo, const QString &classN
         out << "\t\t[id(" << id << ')';
         if (!property.isWritable())
             out << ", readonly";
-        if (isBindable && property.isScriptable(o))
+        if (isBindable && property.isScriptable())
             out << ", bindable";
-        if (!property.isDesignable(o))
+        if (!property.isDesignable())
             out << ", nonbrowsable";
         if (isBindable)
             out << ", requestedit";
