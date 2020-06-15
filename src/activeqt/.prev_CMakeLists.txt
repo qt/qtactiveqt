@@ -1,15 +1,15 @@
 # Generated from activeqt.pro.
 
-# special case begin
-add_subdirectory(axbase)
-add_subdirectory(control)
-add_subdirectory(container)
+#####################################################################
+## activeqt Binary:
+#####################################################################
 
-qt_add_module(ActiveQt HEADER_MODULE MODULE_INCLUDE_NAME ActiveQt)
-qt_add_docs(ActiveQt
-    doc/activeqt.qdocconf
+qt_add_executable(activeqt
+    GUI
+    PUBLIC_LIBRARIES
+        Qt::Gui
 )
-# special case end
+
 ## Scopes:
 #####################################################################
 

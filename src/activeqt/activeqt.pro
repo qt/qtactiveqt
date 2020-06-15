@@ -1,4 +1,4 @@
-win32:!winrt {
+win32 {
     TEMPLATE = subdirs
 
     CONFIG += ordered
