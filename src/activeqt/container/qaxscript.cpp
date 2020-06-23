@@ -64,7 +64,7 @@
 #include <qmetaobject.h>
 #include <quuid.h>
 #include <qwidget.h>
-#include <qvector.h>
+#include <qlist.h>
 
 #include <qt_windows.h>
 #ifndef QT_NO_QAXSCRIPT
@@ -77,7 +77,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QAxEngineDescriptor { QString name, extension, code; };
-static QVector<QAxEngineDescriptor> engines;
+static QList<QAxEngineDescriptor> engines;
 
 class QAxScriptManagerPrivate
 {

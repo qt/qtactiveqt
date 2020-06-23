@@ -80,7 +80,7 @@ extern bool qax_dispatchEqualsIDispatch;
 extern void qax_deleteMetaObject(QMetaObject *mo);
 
 static QMap<QByteArray, QByteArray> namespaceForType;
-static QVector<QByteArray> strings;
+static QList<QByteArray> strings;
 static QHash<QByteArray, int> stringIndex; // Optimization, speeds up generation
 static QByteArrayList vTableOnlyStubs;
 

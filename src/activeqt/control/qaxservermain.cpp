@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 #include <qstringlist.h>
-#include <qvector.h>
+#include <qlist.h>
 
 #include "qaxfactory.h"
 
@@ -228,7 +228,7 @@ struct Arg {
             free(argv.at(i));
     }
 
-    QVector<char *> argv;
+    QList<char *> argv;
 };
 } // namespace
 

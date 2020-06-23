@@ -191,7 +191,7 @@ static void formatMetaObject(QTextStream &str, const QMetaObject *mo, const  QBy
 
 QTextStream &operator<<(QTextStream &str, const QMetaObject &o)
 {
-    QVector<const QMetaObject *> klasses;
+    QList<const QMetaObject *> klasses;
     for (auto s = &o; s; s = s->superClass())
         klasses.prepend(s);
 

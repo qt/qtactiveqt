@@ -76,7 +76,7 @@
 #include <qabstractnativeeventfilter.h>
 
 #include <qcoreapplication.h>
-#include <qvector.h>
+#include <qlist.h>
 #include <private/qthread_p.h>
 
 #include "qaxfactory.h"
@@ -425,7 +425,7 @@ private:
 
     IUnknown *m_outerUnknown = nullptr;
     IAdviseSink *m_spAdviseSink = nullptr;
-    QVector<STATDATA> adviseSinks;
+    QList<STATDATA> adviseSinks;
     IOleClientSite *m_spClientSite = nullptr;
     IOleInPlaceSite *m_spInPlaceSite = nullptr;
     IOleInPlaceSiteWindowless *m_spInPlaceSiteWindowless = nullptr;
@@ -642,7 +642,7 @@ public:
     QAxConnection(QAxConnection &&) = delete;
     QAxConnection &operator=(QAxConnection &&) = delete;
 
-    using Connections = QVector<CONNECTDATA>;
+    using Connections = QList<CONNECTDATA>;
 
     QAxConnection(QAxServerBase *parent, const QUuid &uuid)
         : that(parent), iid(uuid)

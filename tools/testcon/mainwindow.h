@@ -30,7 +30,7 @@
 #define MAINWINDOW_H
 
 #include <QtAxContainer/QAxSelect>
-#include <QVector>
+#include <QList>
 
 #include "ui_mainwindow.h"
 
@@ -97,7 +97,7 @@ protected slots:
 
 private:
     QAxWidget *activeAxWidget() const;
-    QVector<QAxWidget *> axWidgets() const;
+    QList<QAxWidget *> axWidgets() const;
 
     static MainWindow *m_instance;
 

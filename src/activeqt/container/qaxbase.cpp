@@ -138,16 +138,16 @@ public:
     void parsePrototype(const QByteArray &prototype) const;
     DISPID dispIDofName(const QByteArray &name, IDispatch *disp) const;
 
-    const QVector<QUuid> &connectionInterfaces() const { return m_connectionInterfaces;  }
+    const QList<QUuid> &connectionInterfaces() const { return m_connectionInterfaces; }
 
-   const UuidDispIdMapping &sigs() const { return m_sigs; }
-   const UuidDispIdMapping &propsigs() const { return m_propsigs; }
-   const UuidDispIdMapping &props() const { return m_props; }
+    const UuidDispIdMapping &sigs() const { return m_sigs; }
+    const UuidDispIdMapping &propsigs() const { return m_propsigs; }
+    const UuidDispIdMapping &props() const { return m_props; }
 
 private:
     friend class MetaObjectGenerator;
     // save information about QAxEventSink connections, and connect when found in cache
-    QVector<QUuid> m_connectionInterfaces;
+    QList<QUuid> m_connectionInterfaces;
     // DISPID -> signal name
     UuidDispIdMapping m_sigs;
     // DISPID -> property changed signal name

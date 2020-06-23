@@ -105,9 +105,9 @@ QAxWidget *MainWindow::activeAxWidget() const
     return nullptr;
 }
 
-QVector<QAxWidget *> MainWindow::axWidgets() const
+QList<QAxWidget *> MainWindow::axWidgets() const
 {
-    QVector<QAxWidget *> result;
+    QList<QAxWidget *> result;
     const auto mdiSubWindows = m_mdiArea->subWindowList();
     for (const QMdiSubWindow *subWindow : mdiSubWindows)
         if (QAxWidget *axWidget = qobject_cast<QAxWidget *>(subWindow->widget()))
