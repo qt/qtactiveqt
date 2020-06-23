@@ -29,6 +29,7 @@
     \module QAxServer
     \title QAxServer C++ Classes
     \ingroup modules
+    \qtcmakepackage AxServer
     \qtvariable axserver
 
     \brief The QAxServer module is a Windows-only static library that

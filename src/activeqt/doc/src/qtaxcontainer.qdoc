@@ -28,6 +28,7 @@
     \module QAxContainer
     \title QAxContainer C++ Classes
     \ingroup modules
+    \qtcmakepackage AxContainer
     \qtvariable axcontainer
 
     \brief The QAxContainer module is a Windows-only extension for
