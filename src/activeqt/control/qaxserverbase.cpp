@@ -2984,7 +2984,7 @@ HRESULT WINAPI QAxServerBase::Load(IPropertyBag *bag, IErrorLog * /*log*/)
 
     updateGeometry();
 
-    Q_UNUSED(error)
+    Q_UNUSED(error);
     return /*error ? E_FAIL :*/ S_OK;
 }
 
@@ -3016,7 +3016,7 @@ HRESULT WINAPI QAxServerBase::Save(IPropertyBag *bag, BOOL clearDirty, BOOL /*sa
         bag->Write(bstr, &var);
         SysFreeString(bstr);
     }
-    Q_UNUSED(error)
+    Q_UNUSED(error);
     return /*error ? E_FAIL :*/ S_OK;
 }
 

@@ -241,7 +241,7 @@ QUuid QAxFactory::eventsID(const QString &key) const
 void QAxFactory::registerClass(const QString &key, QSettings *settings) const
 {
     Q_UNUSED(key);
-    Q_UNUSED(settings)
+    Q_UNUSED(settings);
 }
 
 /*!
@@ -255,7 +255,7 @@ void QAxFactory::registerClass(const QString &key, QSettings *settings) const
 void QAxFactory::unregisterClass(const QString &key, QSettings *settings) const
 {
     Q_UNUSED(key);
-    Q_UNUSED(settings)
+    Q_UNUSED(settings);
 }
 
 /*!
@@ -317,7 +317,7 @@ QString QAxFactory::exposeToSuperClass(const QString &key) const
 */
 bool QAxFactory::stayTopLevel(const QString &key) const
 {
-    Q_UNUSED(key)
+    Q_UNUSED(key);
     return false;
 }
 

@@ -476,7 +476,7 @@ bool MainWindow::loadScript(const QString &file)
     }
     return script;
 #else // !QT_NO_QAXSCRIPT
-    Q_UNUSED(file)
+    Q_UNUSED(file);
     noScriptMessage(this);
     return false;
 #endif
