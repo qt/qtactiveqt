@@ -4357,8 +4357,9 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
             const QMouseEvent *me = static_cast<const QMouseEvent *>(e);
             int button = me->buttons() & Qt::MouseButtonMask;
             int state = mapModifiers(me->modifiers());
-            int x = me->x();
-            int y = me->y();
+            const auto pos = me->position().toPoint();
+            int x = pos.x();
+            int y = pos.y();
             void *argv[] = {
                 nullptr,
                 &button,
@@ -4374,8 +4375,9 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
             const QMouseEvent *me = static_cast<const QMouseEvent *>(e);
             int button = me->button();
             int state = mapModifiers(me->modifiers());
-            int x = me->x();
-            int y = me->y();
+            const auto pos = me->position().toPoint();
+            int x = pos.x();
+            int y = pos.y();
             void *argv[] = {
                 nullptr,
                 &button,
@@ -4400,8 +4402,9 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
             const QMouseEvent *me = static_cast<const QMouseEvent *>(e);
             int button = me->button();
             int state = mapModifiers(me->modifiers());
-            int x = me->x();
-            int y = me->y();
+            const auto pos = me->position().toPoint();
+            int x = pos.x();
+            int y = pos.y();
             void *argv[] = {
                 nullptr,
                 &button,
