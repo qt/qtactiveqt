@@ -140,7 +140,6 @@ class QAxHostWidget : public QWidget
     Q_DISABLE_COPY_MOVE(QAxHostWidget)
     friend class QAxClientSite;
 public:
-    Q_OBJECT_CHECK
     QAxHostWidget(QWidget *parent, QAxClientSite *ax);
     ~QAxHostWidget() override;
 
