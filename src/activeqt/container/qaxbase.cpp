@@ -2092,7 +2092,7 @@ void MetaObjectGenerator::readClassInfo()
     if (dispInfo && !typelib)
         dispInfo->GetContainingTypeLib(&typelib, &index);
 
-    if (!typelib) {
+    if (!typelib && !that->control().isEmpty()) {
         QSettings controls(QLatin1String("HKEY_LOCAL_MACHINE\\Software"), QSettings::NativeFormat);
         QString tlid = controls.value(QLatin1String("/Classes/CLSID/") + that->control() + QLatin1String("/TypeLib/.")).toString();
         QString tlfile;
@@ -2159,8 +2159,11 @@ void MetaObjectGenerator::readClassInfo()
         }
     }
 
-    if (!d || !dispInfo || !cacheKey.isEmpty() || !d->tryCache)
+    if (!d || !dispInfo || !cacheKey.isEmpty() || !d->tryCache) {
+        if (disp && !dispInfo)
+            qWarning("%s: IDispatch %p does not provide interface information", Q_FUNC_INFO, disp);
         return;
+    }
 
     TYPEATTR *typeattr = nullptr;
     dispInfo->GetTypeAttr(&typeattr);
