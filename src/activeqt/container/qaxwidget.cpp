@@ -1883,7 +1883,7 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
 
     QPainter painter(this);
     QPixmap pixmap = qt_pixmapFromWinHBITMAP(hBmp);
-    pixmap.setDevicePixelRatio(devicePixelRatioF());
+    pixmap.setDevicePixelRatio(devicePixelRatio());
     painter.drawPixmap(0, 0, pixmap);
 
     SelectObject(hBmp_hdc, old_hBmp);
