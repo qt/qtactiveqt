@@ -56,6 +56,7 @@
 #include <quuid.h>
 #include <qt_windows.h>
 #include <qtextstream.h>
+#include <qiodevicebase.h>
 
 #include <ctype.h>
 
@@ -151,7 +152,7 @@ QString qax_generateDocumentation(QAxBase *that)
         dispatch->GetTypeInfo(0, LOCALE_SYSTEM_DEFAULT, &typeInfo);
 
     QString docu;
-    QTextStream stream(&docu, QIODevice::WriteOnly);
+    QTextStream stream(&docu, QIODeviceBase::WriteOnly);
 
     const QMetaObject *mo = that->axBaseMetaObject();
     QString coClass  = QLatin1String(mo->classInfo(mo->indexOfClassInfo("CoClass")).value());

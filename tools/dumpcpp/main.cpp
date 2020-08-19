@@ -361,7 +361,7 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                 if (propertyType.endsWith('*')) {
                     out << '{' << Qt::endl;
                     out << "    int typeId = qRegisterMetaType<" << propertyType << ">(\"" << propertyType << "\", &value);" << Qt::endl;
-                    out << "    setProperty(\"" << propertyName << "\", QVariant(typeId, &value));" << Qt::endl;
+                    out << "    setProperty(\"" << propertyName << "\", QVariant(QMetaType(typeId), &value));" << Qt::endl;
                     out << '}' << Qt::endl;
                 } else {
                     out << "{ setProperty(\"" << propertyName << "\", QVariant(value)); }" << Qt::endl;

@@ -2995,7 +2995,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
     // each enum in form name\0
     for (auto it = enum_list.cbegin(), end = enum_list.cend(); it != end; ++it) {
         QMetaEnumBuilder enumBuilder = builder.addEnumerator(it.key());
-        for (auto v : it.value())
+        for (const auto &v : it.value())
             enumBuilder.addKey(v.first, v.second);
     }
 
@@ -3332,7 +3332,7 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
                     qvar = *reinterpret_cast<const QVariant *>(v[0]);
                     proptype = nullptr;
                 } else {
-                    qvar = QVariant(typeId, v[0]);
+                    qvar = QVariant(prop.metaType(), v[0]);
                     if (typeId < QMetaType::User)
                         proptype = moExtra.propertyType(propname);
                 }
@@ -3416,7 +3416,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
         QVariant::Type vt = QVariant::nameToType(type);
         QVariant qvar;
         if (vt != QVariant::UserType && vt != int(QMetaType::QVariant))
-            qvar = QVariant(vt, v[p + 1]);
+            qvar = QVariant(QMetaType(int(vt)), v[p + 1]);
 
         if (!qvar.isValid()) {
             if (type == "IDispatch*") {
@@ -3431,7 +3431,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
             } else if (mo->indexOfEnumerator(type) != -1) {
                 qvar = *reinterpret_cast<const int *>(v[p + 1]);
             } else {
-                qvar = QVariant(QMetaType::type(type), v[p + 1]);
+                qvar = QVariant(QMetaType(QMetaType::type(type)), v[p + 1]);
             }
         }
 
@@ -4243,7 +4243,7 @@ QVariant QAxBase::asVariant() const
         int typeId = QMetaType::type(cn);
         if (typeId == QMetaType::UnknownType)
             typeId = qRegisterMetaType<QObject *>(cn);
-        qvar = QVariant(typeId, &object);
+        qvar = QVariant(QMetaType(typeId), &object);
     }
 
     return qvar;

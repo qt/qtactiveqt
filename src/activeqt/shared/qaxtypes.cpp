@@ -955,13 +955,14 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                     int pointerTypeId = QMetaType::type(pointerType);
                     if (!pointerTypeId)
                         pointerTypeId = qRegisterMetaType<QObject *>(pointerType);
-                    var = QVariant(pointerTypeId, &qObj);
+                    var = QVariant(QMetaType(pointerTypeId), &qObj);
                 } else
 #endif
                 {
                     if (!typeName.isEmpty()) {
                         if (arg.vt & VT_BYREF) {
-                            var = QVariant(qRegisterMetaType<IDispatch**>("IDispatch**"), &arg.ppdispVal);
+                            static const int dispatchId = qRegisterMetaType<IDispatch**>("IDispatch**");
+                            var = QVariant(QMetaType(dispatchId), &arg.ppdispVal);
                         } else {
 #ifndef QAX_SERVER
                             if (typeName == "QVariant") {
@@ -975,10 +976,14 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                                 int metaType = QMetaType::type(typeNameStr);
                                 Q_ASSERT(metaType != 0);
                                 auto object = static_cast<QAxObject*>(qax_createObjectWrapper(metaType, disp));
-                                var = QVariant(QMetaType::type(typeName), &object);
-                            } else
+                                var = QVariant(QMetaType(QMetaType::type(typeName)), &object);
+                            } else {
 #endif
-                                var = QVariant(qRegisterMetaType<IDispatch*>(typeName), &disp);
+                                static const int dispatchId = qRegisterMetaType<IDispatch*>(typeName.constData());
+                                var = QVariant(QMetaType(dispatchId), &disp);
+#ifndef QAX_SERVER
+                            }
+#endif
                         }
                     }
                 }
