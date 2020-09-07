@@ -87,14 +87,14 @@ void ChangeProperties::on_buttonSet_clicked()
 
     QString prop = item->text(0);
     QVariant value = activex->property(prop.toLatin1());
-    QVariant::Type type = value.type();
+    int type = value.type();
     if (!value.isValid()) {
         const QMetaObject *mo = activex->metaObject();
         const QMetaProperty property = mo->property(mo->indexOfProperty(prop.toLatin1()));
-        type = QVariant::nameToType(property.typeName());
+        type = QMetaType::fromName(property.typeName()).id();
     }
     switch (type) {
-    case QVariant::Color:
+    case QMetaType::QColor:
         {
             QColor col;
             col.setNamedColor(editValue->text());
@@ -109,7 +109,7 @@ void ChangeProperties::on_buttonSet_clicked()
             }
         }
         break;
-    case QVariant::Font:
+    case QMetaType::QFont:
         {
             QFont fnt;
             if (fnt.fromString(editValue->text())) {
@@ -123,7 +123,7 @@ void ChangeProperties::on_buttonSet_clicked()
             }
         }
         break;
-    case QVariant::Pixmap:
+    case QMetaType::QPixmap:
         {
             QString fileName = editValue->text();
             if (fileName.isEmpty())
@@ -135,13 +135,13 @@ void ChangeProperties::on_buttonSet_clicked()
             value = QVariant::fromValue(pm);
         }
         break;
-    case QVariant::Bool:
+    case QMetaType::Bool:
         {
             const QString txt = editValue->text();
             value = QVariant(txt != QLatin1String("0") && txt.compare(QLatin1String("false"), Qt::CaseInsensitive));
         }
         break;
-    case QVariant::List:
+    case QMetaType::QVariantList:
         {
             QStringList txtList = editValue->text().split(QRegularExpression(QLatin1String("[,;]")));
             QVariantList varList;

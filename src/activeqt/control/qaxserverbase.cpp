@@ -2061,17 +2061,15 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                         // convert enum values to int
                         variant = QVariant(*reinterpret_cast<int *>(argv[p+1]));
                     } else {
-                        QVariant::Type vt = QVariant::nameToType(ptype);
-                        if (vt == QVariant::UserType) {
+                        const QMetaType metaType = QMetaType::fromName(ptype);
+                        if (metaType.id() == QMetaType::User) {
                             if (ptype.endsWith('*')) {
-                                variant = QVariant(QMetaType(QMetaType::type(ptype)), reinterpret_cast<void **>(argv[p+1]));
-                                // variant.setValue(*(void**)(argv[p + 1]), ptype);
+                                variant = QVariant(metaType, reinterpret_cast<void **>(argv[p+1]));
                             } else {
-                                variant = QVariant(QMetaType(QMetaType::type(ptype)), argv[p+1]);
-                                // variant.setValue(argv[p + 1], ptype);
+                                variant = QVariant(metaType, argv[p+1]);
                             }
                         } else {
-                            variant = QVariant(QMetaType(int(vt)), argv[p + 1]);
+                            variant = QVariant(metaType, argv[p + 1]);
                         }
                     }
 
@@ -2515,15 +2513,15 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 
             // return value
             if (!type.isEmpty() && type != "void") {
-                QVariant::Type vt = QVariant::nameToType(type);
-                if (vt == int(QMetaType::QVariant)) {
+                int vt = QMetaType::fromName(type).id();
+                if (vt == QMetaType::QVariant) {
                     argv[0] = varp;
                 } else {
-                    if (vt == QVariant::UserType)
-                        vt = QVariant::Invalid;
-                    else if (vt == QVariant::Invalid && mo->indexOfEnumerator(slot.typeName()) != -1)
-                        vt = QVariant::Int;
-                    varp[0] = QVariant(vt);
+                    if (vt == QMetaType::User)
+                        vt = QMetaType::UnknownType;
+                    else if (vt == QMetaType::UnknownType && mo->indexOfEnumerator(slot.typeName()) != -1)
+                        vt = QMetaType::Int;
+                    varp[0] = QVariant(QMetaType(vt));
                     if (varp[0].type() == QVariant::Invalid)
                         argv[0] = nullptr;
                     else
@@ -2553,7 +2551,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 }
                 if (!type.isEmpty() && type != "void" && pvarResult) {
                     if (!varp[0].isValid() && type != "QVariant")
-                        varp[0] = QVariant(QMetaType(QMetaType::type(type)), argv_pointer);
+                        varp[0] = QVariant(QMetaType::fromName(type), argv_pointer);
 //                        varp[0].setValue(argv_pointer[0], type);
                     ok = QVariantToVARIANT(varp[0], *pvarResult, type);
                 }

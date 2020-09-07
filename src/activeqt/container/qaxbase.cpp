@@ -3412,11 +3412,11 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     int p;
     for (p = 0; p < int(params.cArgs); ++p) {
         bool out;
-        QByteArray type = moExtra.paramType(signature, p, &out);
-        QVariant::Type vt = QVariant::nameToType(type);
+        const QByteArray type = moExtra.paramType(signature, p, &out);
+        const QMetaType metaType = QMetaType::fromName(type);
         QVariant qvar;
-        if (vt != QVariant::UserType && vt != int(QMetaType::QVariant))
-            qvar = QVariant(QMetaType(int(vt)), v[p + 1]);
+        if (metaType.id() != QMetaType::User && metaType.id() != QMetaType::QVariant)
+            qvar = QVariant(metaType, v[p + 1]);
 
         if (!qvar.isValid()) {
             if (type == "IDispatch*") {
@@ -3431,7 +3431,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
             } else if (mo->indexOfEnumerator(type) != -1) {
                 qvar = *reinterpret_cast<const int *>(v[p + 1]);
             } else {
-                qvar = QVariant(QMetaType(QMetaType::type(type)), v[p + 1]);
+                qvar = QVariant(metaType, v[p + 1]);
             }
         }
 
@@ -3983,7 +3983,7 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
         if (res.pdispVal) {
             if (rettype.isEmpty() || rettype == "IDispatch*" || rettype == "QVariant") {
                 object = new QAxObject(res.pdispVal, qObject());
-            } else if (QMetaType::type(rettype)) {
+            } else if (QMetaType::fromName(rettype).id() != QMetaType::UnknownType) {
                 QVariant qvar = VARIANTToQVariant(res, rettype, 0);
                 object = *static_cast<QAxObject**>(qvar.data());
 //                qVariantGet(qvar, object, rettype);
@@ -3997,7 +3997,7 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
         if (res.punkVal) {
             if (rettype.isEmpty() || rettype == "IUnknown*") {
                 object = new QAxObject(res.punkVal, qObject());
-            } else if (QMetaType::type(rettype)) {
+            } else if (QMetaType::fromName(rettype).id() != QMetaType::UnknownType) {
                 QVariant qvar = VARIANTToQVariant(res, rettype, 0);
                 object = *static_cast<QAxObject**>(qvar.data());
 //                qVariantGet(qvar, object, rettype);
@@ -4240,10 +4240,10 @@ QVariant QAxBase::asVariant() const
         cn.remove(0, cn.lastIndexOf(':') + 1);
         cn += '*';
         QObject *object = qObject();
-        int typeId = QMetaType::type(cn);
-        if (typeId == QMetaType::UnknownType)
-            typeId = qRegisterMetaType<QObject *>(cn);
-        qvar = QVariant(QMetaType(typeId), &object);
+        QMetaType metaType = QMetaType::fromName(cn);
+        if (metaType.id() == QMetaType::UnknownType)
+            metaType = QMetaType(qRegisterMetaType<QObject *>(cn));
+        qvar = QVariant(metaType, &object);
     }
 
     return qvar;
@@ -4256,7 +4256,7 @@ void *qax_createObjectWrapper(int metaType, IUnknown *iface)
     if (!iface)
         return nullptr;
 
-    void *object = QMetaType::create(metaType, nullptr);
+    void *object = QMetaType(metaType).create(nullptr);
     QAxBasePrivate *d = reinterpret_cast<const QAxObject *>(object)->d;
 
     d->ptr = iface;

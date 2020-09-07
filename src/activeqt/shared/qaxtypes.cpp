@@ -267,22 +267,25 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
 {
     QVariant qvar = var;
     // "type" is the expected type, so coerce if necessary
-    const QVariant::Type proptype = typeName.isEmpty() ? QVariant::Invalid : QVariant::nameToType(typeName);
-    if (proptype != QVariant::Invalid
-        && proptype != QVariant::UserType
-        && proptype != int(QMetaType::QVariant)
+    const int proptype = typeName.isEmpty()
+        ? QMetaType::UnknownType
+        : QMetaType::fromName(typeName).id();
+    if (proptype != QMetaType::UnknownType
+        && proptype != QMetaType::User
+        && proptype != QMetaType::QVariant
         && proptype != qvar.type()) {
-        if (qvar.canConvert(proptype))
-            qvar.convert(proptype);
+        const QMetaType metaType(proptype);
+        if (qvar.canConvert(metaType))
+            qvar.convert(metaType);
         else
-            qvar = QVariant(proptype);
+            qvar = QVariant(metaType);
     }
 
     if (out && arg.vt == (VT_VARIANT|VT_BYREF) && arg.pvarVal) {
         return QVariantToVARIANT(var, *arg.pvarVal, typeName, false);
     }
 
-    if (out && proptype == QVariant::UserType && typeName == "QVariant") {
+    if (out && proptype == QMetaType::User && typeName == "QVariant") {
         VARIANT *pVariant = new VARIANT;
         QVariantToVARIANT(var, *pVariant, QByteArray(), false);
         arg.vt = VT_VARIANT|VT_BYREF;
@@ -444,10 +447,10 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             const auto list = qvar.toList();
             const int count = list.count();
             VARTYPE vt = VT_VARIANT;
-            QVariant::Type listType = QVariant::Type(QMetaType::QVariant);
+            int listType = QMetaType::QVariant;
             if (!typeName.isEmpty() && typeName.startsWith("QList<")) {
                 const QByteArray listTypeName = typeName.mid(6, typeName.length() - 7); // QList<int> -> int
-                listType = QVariant::nameToType(listTypeName);
+                listType = QMetaType::fromName(listTypeName).id();
             }
 
             VARIANT variant;
@@ -510,8 +513,8 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                 array = SafeArrayCreateVector(vt, 0, count);
                 for (LONG index = 0; index < count; ++index) {
                     QVariant elem = list.at(index);
-                    if (listType != QVariant::Type(QMetaType::QVariant))
-                        elem.convert(listType);
+                    if (listType != QMetaType::QVariant)
+                        elem.convert(QMetaType(listType));
                     VariantInit(&variant);
                     QVariantToVARIANT(elem, variant, elem.typeName());
                     SafeArrayPutElement(array, &index, pElement);
@@ -704,7 +707,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                     qAxFactory()->createObjectWrapper(static_cast<QObject*>(user), &arg.pdispVal);
                 }
 #else
-            } else if (QMetaType::type(subType)) {
+            } else if (QMetaType::fromName(subType).id() != QMetaType::UnknownType) {
                 if (out) {
                     qWarning().noquote() << msgOutParameterNotSupported("subtype");
                     arg.vt = VT_EMPTY;
@@ -895,17 +898,17 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
     case VT_DATE:
         var = DATEToQDateTime(arg.date);
         if (type == QVariant::Date || (!type && (typeName == "QDate" || typeName == "QDate*"))) {
-            var.convert(QVariant::Date);
+            var.convert(QMetaType(QMetaType::QDate));
         } else if (type == QVariant::Time || (!type && (typeName == "QTime" || typeName == "QTime*"))) {
-            var.convert(QVariant::Time);
+            var.convert(QMetaType(QMetaType::QTime));
         }
         break;
     case VT_DATE|VT_BYREF:
         var = DATEToQDateTime(*arg.pdate);
         if (type == QVariant::Date || (!type && (typeName == "QDate" || typeName == "QDate*"))) {
-            var.convert(QVariant::Date);
+            var.convert(QMetaType(QMetaType::QDate));
         } else if (type == QVariant::Time || (!type && (typeName == "QTime" || typeName == "QTime*"))) {
-            var.convert(QVariant::Time);
+            var.convert(QMetaType(QMetaType::QTime));
         }
         break;
     case VT_VARIANT:
@@ -952,10 +955,10 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                     QObject *qObj = iface->qObject();
                     iface->Release();
                     QByteArray pointerType = qObj ? QByteArray(qObj->metaObject()->className()) + '*' : typeName;
-                    int pointerTypeId = QMetaType::type(pointerType);
-                    if (!pointerTypeId)
-                        pointerTypeId = qRegisterMetaType<QObject *>(pointerType);
-                    var = QVariant(QMetaType(pointerTypeId), &qObj);
+                    QMetaType pointerMetaType = QMetaType::fromName(pointerType);
+                    if (pointerMetaType.id() == QMetaType::UnknownType)
+                        pointerMetaType = QMetaType(qRegisterMetaType<QObject *>(pointerType));
+                    var = QVariant(pointerMetaType, &qObj);
                 } else
 #endif
                 {
@@ -968,15 +971,15 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
                             if (typeName == "QVariant") {
                                 QAxObject *object = new QAxObject(disp);
                                 var = QVariant::fromValue<QAxObject*>(object);
-                            } else if (typeName != "IDispatch*" && QMetaType::type(typeName)) {
+                            } else if (typeName != "IDispatch*" &&  QMetaType::fromName(typeName).id() != QMetaType::UnknownType) {
                                 QByteArray typeNameStr = QByteArray(typeName);
                                 int pIndex = typeName.lastIndexOf('*');
                                 if (pIndex != -1)
                                     typeNameStr = typeName.left(pIndex);
-                                int metaType = QMetaType::type(typeNameStr);
-                                Q_ASSERT(metaType != 0);
-                                auto object = static_cast<QAxObject*>(qax_createObjectWrapper(metaType, disp));
-                                var = QVariant(QMetaType(QMetaType::type(typeName)), &object);
+                                const QMetaType metaType = QMetaType::fromName(typeNameStr);
+                                Q_ASSERT(metaType.id() != QMetaType::UnknownType);
+                                auto object = static_cast<QAxObject*>(qax_createObjectWrapper(metaType.id(), disp));
+                                var = QVariant(metaType, &object);
                             } else {
 #endif
                                 static const int dispatchId = qRegisterMetaType<IDispatch*>(typeName.constData());
@@ -1224,22 +1227,23 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint 
         break;
     }
 
-    QVariant::Type proptype = (QVariant::Type)type;
-    if (proptype == QVariant::Invalid && !typeName.isEmpty()) {
-        if (typeName != "QVariant")
-            proptype = QVariant::nameToType(typeName);
-    }
-    if (proptype != QVariant::Type(QMetaType::QVariant) && proptype != QVariant::LastType && proptype != QVariant::Invalid && var.type() != proptype) {
-        if (var.canConvert(proptype)) {
+    const int proptype = type != QMetaType::UnknownType || typeName.isEmpty() || typeName == "QVariant"
+        ? int(type)
+        : QMetaType::fromName(typeName).id();
+
+    if (proptype != QMetaType::QVariant && proptype != QVariant::LastType
+        && QMetaType::UnknownType && var.type() != proptype) {
+        QMetaType propertyMetaType(proptype);
+        if (var.canConvert(propertyMetaType)) {
             QVariant oldvar = var;
-            if (oldvar.convert(proptype))
+            if (oldvar.convert(propertyMetaType))
                 var = oldvar;
-        } else if (proptype == QVariant::StringList && var.type() == QVariant::List) {
+        } else if (proptype == QMetaType::QStringList && var.type() == QVariant::List) {
             bool allStrings = true;
             QStringList strings;
             const QVariantList list(var.toList());
             for (const QVariant &variant : list) {
-                if (variant.canConvert(QVariant::String))
+                if (variant.canConvert(QMetaType(QMetaType::QString)))
                     strings << variant.toString();
                 else
                     allStrings = false;

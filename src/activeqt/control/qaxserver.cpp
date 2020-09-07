@@ -106,7 +106,7 @@ QAxFactory *qAxFactory()
         QStringList keys(qax_factory->featureList());
         for (int i = 0; i < keys.count(); ++i) {
             QByteArray pointerType = keys.at(i).toLatin1() + '*';
-            if (!QMetaType::type(pointerType.constData()))
+            if (QMetaType::fromName(pointerType).id() == QMetaType::UnknownType)
                 qRegisterMetaType<void *>(pointerType);
         }
     }
@@ -1259,11 +1259,11 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
             QByteArray cleanType = qax_clean_type(className, mo).toLatin1();
             out << "\tcoclass " << cleanType << ';' << Qt::endl;
             subtypes.append(cleanType);
-            if (!QMetaType::type(cleanType))
+            if (QMetaType::fromName(cleanType).id() == QMetaType::UnknownType)
                 qRegisterMetaType<void *>(cleanType);
             cleanType += '*';
             subtypes.append(cleanType);
-            if (!QMetaType::type(cleanType))
+            if (QMetaType::fromName(cleanType).id() == QMetaType::UnknownType)
                 qRegisterMetaType<void *>(cleanType);
         }
     }

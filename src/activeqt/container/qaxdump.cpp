@@ -120,10 +120,8 @@ static QByteArray namedPrototype(const QByteArrayList &parameterTypes, const QBy
 
 static QByteArray toType(const QByteArray &t)
 {
-    QByteArray type = t;
-    int vartype = QVariant::nameToType(type);
-    if (vartype == QVariant::Invalid)
-        type = "int";
+    QByteArray type = QMetaType::fromName(type).id() != QMetaType::UnknownType
+        ? t : QByteArrayLiteral("int");
 
     if (type.at(0) == 'Q')
         type.remove(0, 1);
@@ -326,14 +324,14 @@ QString qax_generateDocumentation(QAxBase *that)
                              QLatin1String(type.constData()) +
                              QLatin1Char(' ') + QLatin1String(name.constData()) + QLatin1String("</h3>\n");
             detail += docuFromName(typeInfo, QString::fromLatin1(name));
-            QVariant::Type vartype = QVariant::nameToType(type);
             if (!prop.isReadable())
                 continue;
 
-            if (prop.isEnumType())
-                vartype = QVariant::Int;
+            const int vartype = prop.isEnumType()
+                ? int(QMetaType::Int)
+                : QMetaType::fromName(type).id();
 
-            if (vartype != QVariant::Invalid) {
+            if (vartype != QMetaType::UnknownType) {
                 detail += QLatin1String("<p>Read this property's value using QObject::property:<pre>\n");
                 if (prop.isEnumType())
                     detail += QLatin1String("\tint val = ");
