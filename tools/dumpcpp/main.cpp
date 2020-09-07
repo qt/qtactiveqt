@@ -322,8 +322,8 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                 out << indent << "    " << propertyType << " qax_pointer = 0;" << Qt::endl;
                 QByteArray simplePropTypeWithNamespace = propertyType;
                 simplePropTypeWithNamespace.replace('*', "");
-                out << indent << "    qRegisterMetaType<" << propertyType << ">(\"" << property.typeName() << "\", &qax_pointer);" << Qt::endl;
-                out << indent << "    qRegisterMetaType<" << simplePropTypeWithNamespace << ">(\"" << simplePropType << "\", qax_pointer);" << Qt::endl;
+                out << indent << "    qRegisterMetaType<" << propertyType << ">(\"" << property.typeName() << "\");" << Qt::endl;
+                out << indent << "    qRegisterMetaType<" << simplePropTypeWithNamespace << ">(\"" << simplePropType << "\");" << Qt::endl;
             }
             out << indent << "    QVariant qax_result = property(\"" << propertyName << "\");" << Qt::endl;
             if (propertyType.length() && propertyType.at(propertyType.length()-1) == '*')
@@ -360,7 +360,7 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
             if (!(category & NoInlines)) {
                 if (propertyType.endsWith('*')) {
                     out << '{' << Qt::endl;
-                    out << "    int typeId = qRegisterMetaType<" << propertyType << ">(\"" << propertyType << "\", &value);" << Qt::endl;
+                    out << "    int typeId = qRegisterMetaType<" << propertyType << ">(\"" << propertyType << "\");" << Qt::endl;
                     out << "    setProperty(\"" << propertyName << "\", QVariant(QMetaType(typeId), &value));" << Qt::endl;
                     out << '}' << Qt::endl;
                 } else {
@@ -496,9 +496,9 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                         out << "#ifdef QAX_DUMPCPP_" << simpleSlotType.left(simpleSlotType.indexOf(':')).toUpper() << "_H" << Qt::endl;
                     QByteArray simpleSlotTypeWithNamespace = slotType;
                     simpleSlotTypeWithNamespace.replace('*', "");
-                    out << indent << "    qRegisterMetaType<" << simpleSlotTypeWithNamespace << "*>(\"" << simpleSlotType << "*\", &qax_result);" << Qt::endl;
+                    out << indent << "    qRegisterMetaType<" << simpleSlotTypeWithNamespace << "*>(\"" << simpleSlotType << "*\");" << Qt::endl;
                     if (!vTableOnlyStubs.contains(simpleSlotTypeWithNamespace))
-                        out << indent << "    qRegisterMetaType<" << simpleSlotTypeWithNamespace << ">(\"" << simpleSlotType << "\", qax_result);" << Qt::endl;
+                        out << indent << "    qRegisterMetaType<" << simpleSlotTypeWithNamespace << ">(\"" << simpleSlotType << "\");" << Qt::endl;
                     if (foreignNamespace)
                         out << "#endif" << Qt::endl;
                 }
@@ -957,39 +957,6 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         declOut << '}' << Qt::endl;
         declOut << Qt::endl;
 
-        // partial template specialization for qMetaTypeCreateHelper and qMetaTypeConstructHelper
-        declOut << "QT_BEGIN_NAMESPACE" << Qt::endl << Qt::endl;
-        declOut << "namespace QtMetaTypePrivate {" << Qt::endl;
-        for (int t = 0; t < subtypes.count(); ++t) {
-            QByteArray subType(subtypes.at(t));
-
-            declOut << "template<>" << Qt::endl;
-            declOut << "struct QMetaTypeFunctionHelper<" << libName << "::" << subType << ", /* Accepted */ true> {" << Qt::endl;
-
-            declOut << "    static void Destruct(void *t)" << Qt::endl;
-            declOut << "    {" << Qt::endl;
-            declOut << "        Q_UNUSED(t)" << Qt::endl; // Silence MSVC that warns for POD types.
-            declOut << "        static_cast<" << libName << "::" << subType << "*>(t)->" << libName << "::" << subType << "::~" << subType << "();" << Qt::endl;
-            declOut << "    }" << Qt::endl;
-
-            declOut << "    static void *Construct(void *where, const void *t)" << Qt::endl;
-            declOut << "    {" << Qt::endl;
-            declOut << "        Q_ASSERT(!t);" << Qt::endl;
-            declOut << "        Q_UNUSED(t)" << Qt::endl; // Silence warnings for release builds
-            declOut << "        return new (where) " << libName << "::" << subType << ';' << Qt::endl;
-            declOut << "    }" << Qt::endl;
-
-            declOut << "#ifndef QT_NO_DATASTREAM" << Qt::endl;
-
-            declOut << "    static void Save(QDataStream &stream, const void *t) { stream << *static_cast<const " << libName << "::" << subType << "*>(t); }" << Qt::endl;
-            declOut << "    static void Load(QDataStream &stream, void *t) { stream >> *static_cast<" << libName << "::" << subType << "*>(t); }" << Qt::endl;
-
-            declOut << "#endif // QT_NO_DATASTREAM" << Qt::endl;
-
-            declOut << "};" << Qt::endl << Qt::endl;
-        }
-        declOut << "} // namespace QtMetaTypePrivate" << Qt::endl;
-        declOut << "QT_END_NAMESPACE" << Qt::endl << Qt::endl;
         declOut << "#endif" << Qt::endl;
         declOut << Qt::endl;
     }
