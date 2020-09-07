@@ -127,7 +127,7 @@ public:
     void setClassContext(ulong classContext);
 
 protected:
-    explicit QAxBase();
+    QAxBase();
 
     virtual bool initialize(IUnknown** ptr);
     bool initializeRemote(IUnknown** ptr);
