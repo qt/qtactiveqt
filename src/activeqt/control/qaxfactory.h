@@ -198,7 +198,7 @@ class QAxClass : public QAxFactory
 {
 public:
     explicit QAxClass(const QString &libId, const QString &appId)
-    : QAxFactory(libId, appId)
+    : QAxFactory(QUuid(libId), QUuid(appId))
     {}
 
     const QMetaObject *metaObject(const QString &) const override { return &T::staticMetaObject; }
@@ -257,7 +257,7 @@ private:
         QHash<QString, bool> creatable; \
     public: \
         QAxFactoryList() \
-        : QAxFactory(IDTypeLib, IDApp) \
+        : QAxFactory(QUuid(IDTypeLib), QUuid(IDApp)) \
         { \
             QAxFactory *factory = nullptr; \
             QStringList keys; \

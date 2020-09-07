@@ -209,7 +209,7 @@ static inline QStringList commandLineArguments()
 static inline bool matchesOption(const QString &arg, const char *option)
 {
     return (arg.startsWith(QLatin1Char('/')) || arg.startsWith(QLatin1Char('-')))
-        && arg.rightRef(arg.size() - 1).compare(QLatin1String(option), Qt::CaseInsensitive) == 0;
+        && arg.right(arg.size() - 1).compare(QLatin1String(option), Qt::CaseInsensitive) == 0;
 }
 
 namespace {

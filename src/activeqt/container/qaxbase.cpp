@@ -581,8 +581,8 @@ QAxBasePrivate::QAxBasePrivate()
     QMutexLocker locker(&cache_mutex);
     mo_cache_ref++;
 
-    qRegisterMetaType<IUnknown*>("IUnknown*", &ptr);
-    qRegisterMetaType<IDispatch*>("IDispatch*", &disp);
+    qRegisterMetaType<IUnknown*>("IUnknown*");
+    qRegisterMetaType<IDispatch*>("IDispatch*");
 }
 
 QAxBasePrivate::~QAxBasePrivate()
@@ -3115,7 +3115,7 @@ void QAxBase::connectNotify()
         IID conniid;
         cpoint->GetConnectionInterface(&conniid);
         // workaround for typelibrary bug of Word.Application
-        QString connuuid(QUuid(conniid).toString());
+        const QUuid connuuid(conniid);
         if (d->eventSink.contains(connuuid))
             break;
 
@@ -3166,7 +3166,7 @@ void QAxBase::connectNotify()
 
     // make sure we don't try again
     if (!d->eventSink.count())
-        d->eventSink.insert(QString(), 0);
+        d->eventSink.insert(QUuid{}, nullptr);
 }
 
 /*!

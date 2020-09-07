@@ -819,7 +819,8 @@ static QByteArray addDefaultArguments(const QByteArray &prototype, int numDefArg
             type += ' ' + ptype.mid(in + 5, ptype.indexOf(' ', in + 5) - in - 5);
         if (type == "struct")
             type += ' ' + ptype.mid(in + 7, ptype.indexOf(' ', in + 7) - in - 7);
-        ptype.replace(in, type.length(), QByteArray("VARIANT /*was: ") + type + "*/");
+        const QByteArray replacement = QByteArray("VARIANT /*was: ") + type + "*/";
+        ptype.replace(in, type.length(), replacement);
         --numDefArgs;
     }
 

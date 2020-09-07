@@ -2661,7 +2661,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 unsigned contextID = 0;
                 const int br = context.indexOf(QLatin1Char('[')); // "error[42]"
                 if (br != -1) {
-                    contextID = context.midRef(br + 1, context.size() - br - 2).toUInt();
+                    contextID = context.mid(br + 1, context.size() - br - 2).toUInt();
                     context.truncate(br-1);
                 }
                 pexcepinfo->bstrHelpFile = QStringToBSTR(context);
