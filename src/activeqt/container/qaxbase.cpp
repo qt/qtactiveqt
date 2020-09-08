@@ -68,7 +68,8 @@
 #include <qsettings.h>
 #include <qdebug.h>
 #include <QGuiApplication>
-#include <qpa/qplatformnativeinterface.h>
+#include <private/qguiapplication_p.h>
+#include <qpa/qplatformintegration.h>
 
 #ifndef QT_NO_THREAD
 #   include <qmutex.h>
@@ -1114,6 +1115,8 @@ long QAxBase::indexOfVerb(const QString &verb) const
 */
 bool QAxBase::initialize(IUnknown **ptr)
 {
+    using QWindowsApplication = QPlatformInterface::Private::QWindowsApplication;
+
     if (*ptr || control().isEmpty())
         return false;
 
@@ -1121,11 +1124,8 @@ bool QAxBase::initialize(IUnknown **ptr)
     // Otherwise painter can get corrupted if Invoke or some other COM method that cause Windows
     // messages to be processed is called during an existing paint operation when WM_PAINT is
     // also in the queue.
-    static bool asyncExposeSet = false;
-    if (!asyncExposeSet && QGuiApplication::platformNativeInterface()) {
-        QGuiApplication::platformNativeInterface()->setProperty("asyncExpose", QVariant(true));
-        asyncExposeSet = true;
-    }
+    if (auto nativeWindowsApp = dynamic_cast<QWindowsApplication *>(QGuiApplicationPrivate::platformIntegration()))
+        nativeWindowsApp->setAsyncExpose(true);
 
     *ptr = nullptr;
 
