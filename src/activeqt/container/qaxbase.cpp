@@ -1115,7 +1115,7 @@ long QAxBase::indexOfVerb(const QString &verb) const
 */
 bool QAxBase::initialize(IUnknown **ptr)
 {
-    using QWindowsApplication = QPlatformInterface::Private::QWindowsApplication;
+    using QWindowsApplication = QNativeInterface::Private::QWindowsApplication;
 
     if (*ptr || control().isEmpty())
         return false;
