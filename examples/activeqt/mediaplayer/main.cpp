@@ -173,7 +173,6 @@ void MainWindow::updateWindowTitle(const QString &state)
 
 int main(int argc, char *argv[])
 {
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
     QCoreApplication::setApplicationName(QLatin1String("Active Qt Media Player"));

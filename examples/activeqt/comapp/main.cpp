@@ -248,7 +248,6 @@ QAXFACTORY_END()
 //! [6] //! [7]
 int main(int argc, char *argv[])
 {
-    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QApplication app(argc, argv);
     app.setQuitOnLastWindowClosed(false);
 
