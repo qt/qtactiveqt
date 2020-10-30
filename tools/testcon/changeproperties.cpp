@@ -87,7 +87,7 @@ void ChangeProperties::on_buttonSet_clicked()
 
     QString prop = item->text(0);
     QVariant value = activex->property(prop.toLatin1());
-    int type = value.type();
+    int type = value.metaType().id();
     if (!value.isValid()) {
         const QMetaObject *mo = activex->metaObject();
         const QMetaProperty property = mo->property(mo->indexOfProperty(prop.toLatin1()));
@@ -208,31 +208,31 @@ void ChangeProperties::updateProperties()
             }
             QVariant var = activex->property(property.name());
 
-            switch (var.type()) {
-            case QVariant::Color:
+            switch (var.metaType().id()) {
+            case QMetaType::QColor:
                 {
                     QColor col = qvariant_cast<QColor>(var);
                     item->setText(2, col.name());
                 }
                 break;
-            case QVariant::Font:
+            case QMetaType::QFont:
                 {
                     QFont fnt = qvariant_cast<QFont>(var);
                     item->setText(2, fnt.toString());
                 }
                 break;
-            case QVariant::Bool:
+            case QMetaType::Bool:
                 {
                     item->setText(2, var.toBool() ? QLatin1String("true") : QLatin1String("false"));
                 }
                 break;
-            case QVariant::Pixmap:
+            case QMetaType::QPixmap:
                 {
                     QPixmap pm = qvariant_cast<QPixmap>(var);
                     item->setIcon(2, pm);
                 }
                 break;
-            case QVariant::List:
+            case QMetaType::QVariantList:
                 {
                     const auto varList = var.toList();
                     QStringList strList;
@@ -241,7 +241,7 @@ void ChangeProperties::updateProperties()
                     item->setText(2, strList.join(QLatin1String(", ")));
                 }
                 break;
-            case QVariant::Int:
+            case QMetaType::Int:
                 if (property.isEnumType()) {
                     const QMetaEnum enumerator = mo->enumerator(mo->indexOfEnumerator(property.typeName()));
                     item->setText(2, QString::fromLatin1(enumerator.valueToKey(var.toInt())));

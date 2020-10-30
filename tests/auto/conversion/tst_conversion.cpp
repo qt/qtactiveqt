@@ -41,7 +41,7 @@ bool QVariantToVARIANT_container(const QVariant &var, VARIANT &arg,
                                  bool out = false);
 
 QVariant VARIANTToQVariant_container(const VARIANT &arg, const QByteArray &typeName,
-                                     uint type = 0);
+                                     int type = 0);
 
 QT_END_NAMESPACE
 

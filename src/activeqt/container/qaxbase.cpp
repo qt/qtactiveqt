@@ -445,7 +445,7 @@ public:
                 varp[p + 1] = VARIANTToQVariant(pDispParams->rgvarg[pcount - p - 1], ptype);
                 argv_pointer[p + 1] = nullptr;
                 if (varp[p + 1].isValid()) {
-                    if (varp[p + 1].type() == QVariant::UserType) {
+                    if (varp[p + 1].metaType().id() >= QMetaType::User) {
                         argv[p + 1] = varp[p + 1].data();
                     } else if (ptype == "QVariant") {
                         argv[p + 1] = varp + p + 1;
@@ -529,7 +529,7 @@ public:
 
             const QMetaProperty metaProp = meta->property(meta->indexOfProperty(propname));
             void *argv[] = {nullptr, var.data()};
-            if (metaProp.type() == QVariant::Type(QMetaType::QVariant) || metaProp.type() == QVariant::LastType)
+            if (metaProp.metaType().id() == QMetaType::QVariant)
                 argv[1] = &var;
 
             // emit the "changed" signal
@@ -3301,11 +3301,12 @@ int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
             hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &arg, &excepinfo, nullptr);
 
             // map result VARIANTARG to void*
-            uint type = QVariant::Int;
+            int type = QMetaType::Int;
             if (!prop.isEnumType())
-                type = prop.type();
+                type = prop.metaType().id();
             QVariantToVoidStar(VARIANTToQVariant(arg, proptype, type), *v, proptype, type);
-            if ((arg.vt != VT_DISPATCH && arg.vt != VT_UNKNOWN) || type == QVariant::Pixmap || type == QVariant::Font)
+            if ((arg.vt != VT_DISPATCH && arg.vt != VT_UNKNOWN)
+                || type == QMetaType::QPixmap || type == QMetaType::QFont)
                 clearVARIANT(&arg);
         }
         break;
@@ -3721,7 +3722,9 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
             else
                 paramType = moExtra.paramType(normFunction, i, &out);
 
-            if ((!parse && d->useMetaObject && var.type() == QVariant::String) || var.type() == QVariant::ByteArray) {
+            const int vType = var.metaType().id();
+            if ((!parse && d->useMetaObject && vType == QMetaType::QString)
+                || vType == QMetaType::QByteArray) {
                 int enumIndex =mo->indexOfEnumerator(paramType);
                 if (enumIndex != -1) {
                     QMetaEnum metaEnum =mo->enumerator(enumIndex);
@@ -3903,8 +3906,11 @@ QVariant QAxBase::dynamicCall(const char *function, QList<QVariant> &vars, unsig
         return QVariant();
 
     QVariant qvar = VARIANTToQVariant(res, rettype);
-    if ((res.vt != VT_DISPATCH && res.vt != VT_UNKNOWN) || qvar.type() == QVariant::Pixmap || qvar.type() == QVariant::Font)
+    const int vType = qvar.metaType().id();
+    if ((res.vt != VT_DISPATCH && res.vt != VT_UNKNOWN)
+        || vType == QMetaType::QPixmap || vType == QMetaType::QFont) {
         clearVARIANT(&res);
+    }
 
     return qvar;
 }

@@ -78,14 +78,16 @@ QT_BEGIN_NAMESPACE
 #endif
 
 extern bool QVariantToVARIANTFunc(const QVariant &var, VARIANT &arg, const QByteArray &typeName = QByteArray(), bool out = false);
-extern QVariant VARIANTToQVariantFunc(const VARIANT &arg, const QByteArray &typeName, uint type = 0);
+extern QVariant VARIANTToQVariantFunc(const VARIANT &arg, const QByteArray &typeName,
+                                      int type = 0);
 
 inline bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &typeName = QByteArray(), bool out = false)
 {
     return QVariantToVARIANTFunc(var, arg, typeName, out);
 }
 
-inline QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, uint type = 0)
+inline QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName,
+                                  int type = 0)
 {
     return VARIANTToQVariantFunc(arg, typeName, type);
 }

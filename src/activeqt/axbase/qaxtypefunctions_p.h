@@ -99,7 +99,8 @@ static inline uint QColorToOLEColor(const QColor &col)
 }
 
 extern QColor OLEColorToQColor(uint col);
-extern bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeName, uint type = 0);
+extern bool QVariantToVoidStar(const QVariant &var, void *data,
+                               const QByteArray &typeName, int type = 0);
 extern void clearVARIANT(VARIANT *var);
 
 #define QAX_INPROC_SERVER  (0x51540001)

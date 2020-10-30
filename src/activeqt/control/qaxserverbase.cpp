@@ -2491,7 +2491,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 varp[p + 1] = VARIANTToQVariant(pDispParams->rgvarg[pcount - p - 1], ptype);
                 argv_pointer[p + 1] = nullptr;
                 if (varp[p + 1].isValid()) {
-                    if (varp[p + 1].type() == QVariant::UserType) {
+                    if (varp[p + 1].metaType().id() >= QMetaType::User) {
                         argv[p + 1] = varp[p + 1].data();
                     } else if (ptype == "QVariant") {
                         argv[p + 1] = varp + p + 1;
@@ -2522,7 +2522,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                     else if (vt == QMetaType::UnknownType && mo->indexOfEnumerator(slot.typeName()) != -1)
                         vt = QMetaType::Int;
                     varp[0] = QVariant(QMetaType(vt));
-                    if (varp[0].type() == QVariant::Invalid)
+                    if (varp[0].metaType().id() == QMetaType::UnknownType)
                         argv[0] = nullptr;
                     else
                         argv[0] = const_cast<void*>(varp[0].constData());
@@ -2589,7 +2589,8 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 *pDispParams->rgdispidNamedArgs != DISPID_PROPERTYPUT)
                 return DISP_E_BADPARAMCOUNT;
 
-            QVariant var = VARIANTToQVariant(*pDispParams->rgvarg, property.typeName(), property.type());
+            QVariant var = VARIANTToQVariant(*pDispParams->rgvarg,
+                                             property.typeName(), property.metaType().id());
             if (!var.isValid()) {
                 if (puArgErr)
                     *puArgErr = 0;
@@ -2974,8 +2975,11 @@ HRESULT WINAPI QAxServerBase::Load(IPropertyBag *bag, IErrorLog * /*log*/)
         var.vt = VT_EMPTY;
         HRESULT res = bag->Read(bstr, &var, nullptr);
         if (property.isWritable() && var.vt != VT_EMPTY) {
-            if (res != S_OK || !qt.object->setProperty(pname, VARIANTToQVariant(var, property.typeName(), property.type())))
+            if (res != S_OK
+                || !qt.object->setProperty(pname, VARIANTToQVariant(var, property.typeName(),
+                                                                    property.metaType().id()))) {
                 error = true;
+            }
         }
         SysFreeString(bstr);
     }
@@ -3338,7 +3342,7 @@ HRESULT WINAPI QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
         if (var.vt != VT_DISPATCH || !isWidget)
             break;
         {
-            QVariant qvar = VARIANTToQVariant(var, "QFont", QVariant::Font);
+            QVariant qvar = VARIANTToQVariant(var, "QFont", QMetaType::QFont);
             QFont qfont = qvariant_cast<QFont>(qvar);
             qt.widget->setFont(qfont);
         }

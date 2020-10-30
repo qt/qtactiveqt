@@ -76,88 +76,88 @@ QColor OLEColorToQColor(uint col)
         - internalInvoke(update out parameters/return value)
 
 */
-bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeName, uint type)
+bool QVariantToVoidStar(const QVariant &var, void *data, const QByteArray &typeName, int type)
 {
     if (!data)
         return true;
 
-    if (type == QMetaType::QVariant || type == uint(QVariant::LastType) || (type == 0 && typeName == "QVariant")) {
+    if (type == QMetaType::QVariant || (type == QMetaType::UnknownType && typeName == "QVariant")) {
         *reinterpret_cast<QVariant *>(data) = var;
         return true;
     }
 
-    switch (var.type()) {
-    case QVariant::Invalid:
+    switch (var.metaType().id()) {
+    case QMetaType::UnknownType:
         break;
-    case QVariant::String:
+    case QMetaType::QString:
         *reinterpret_cast<QString *>(data) = var.toString();
         break;
-    case QVariant::Int:
+    case QMetaType::Int:
         *reinterpret_cast<int *>(data) = var.toInt();
         break;
-    case QVariant::UInt:
+    case QMetaType::UInt:
         *reinterpret_cast<uint *>(data) = var.toUInt();
         break;
-    case QVariant::Bool:
+    case QMetaType::Bool:
         *reinterpret_cast<bool *>(data) = var.toBool();
         break;
-    case QVariant::Double:
+    case QMetaType::Double:
         *reinterpret_cast<double *>(data) = var.toDouble();
         break;
-    case QVariant::Color:
+    case QMetaType::QColor:
         *reinterpret_cast<QColor *>(data) = qvariant_cast<QColor>(var);
         break;
-    case QVariant::Date:
+    case QMetaType::QDate:
         *reinterpret_cast<QDate *>(data) = var.toDate();
         break;
-    case QVariant::Time:
+    case QMetaType::QTime:
         *reinterpret_cast<QTime *>(data) = var.toTime();
         break;
-    case QVariant::DateTime:
+    case QMetaType::QDateTime:
         *reinterpret_cast<QDateTime *>(data) = var.toDateTime();
         break;
-    case QVariant::Font:
+    case QMetaType::QFont:
         *reinterpret_cast<QFont *>(data) = qvariant_cast<QFont>(var);
         break;
-    case QVariant::Pixmap:
+    case QMetaType::QPixmap:
         *reinterpret_cast<QPixmap *>(data) = qvariant_cast<QPixmap>(var);
         break;
 #ifndef QT_NO_CURSOR
-    case QVariant::Cursor:
+    case QMetaType::QCursor:
         *reinterpret_cast<QCursor *>(data) = qvariant_cast<QCursor>(var);
         break;
 #endif
-    case QVariant::List:
+    case QMetaType::QVariantList:
         *reinterpret_cast<QVariantList *>(data) = var.toList();
         break;
-    case QVariant::StringList:
+    case QMetaType::QStringList:
         *reinterpret_cast<QStringList *>(data) = var.toStringList();
         break;
-    case QVariant::ByteArray:
+    case QMetaType::QByteArray:
         *reinterpret_cast<QByteArray *>(data) = var.toByteArray();
         break;
-    case QVariant::LongLong:
+    case QMetaType::LongLong:
         *reinterpret_cast<qint64 *>(data) = var.toLongLong();
         break;
-    case QVariant::ULongLong:
+    case QMetaType::ULongLong:
         *reinterpret_cast<quint64 *>(data) = var.toULongLong();
         break;
-    case QVariant::Rect:
+    case QMetaType::QRect:
         *reinterpret_cast<QRect *>(data) = var.toRect();
         break;
-    case QVariant::Size:
+    case QMetaType::QSize:
         *reinterpret_cast<QSize *>(data) = var.toSize();
         break;
-    case QVariant::Point:
+    case QMetaType::QPoint:
         *reinterpret_cast<QPoint *>(data) = var.toPoint();
         break;
-    case QVariant::UserType:
-        *reinterpret_cast<void **>(data) =
-            *reinterpret_cast<void **>(const_cast<void *>(var.constData()));
-//        qVariantGet(var, *(void**)data, typeName);
-        break;
     default:
-        qWarning("QVariantToVoidStar: Unhandled QVariant type");
+        if (var.metaType().id() >= QMetaType::User) {
+            *reinterpret_cast<void **>(data) =
+                *reinterpret_cast<void **>(const_cast<void *>(var.constData()));
+        } else {
+            qWarning("QVariantToVoidStar: Unhandled QVariant type");
+        }
         return false;
     }
 
