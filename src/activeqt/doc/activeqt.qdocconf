@@ -37,7 +37,7 @@ qhp.ActiveQt.subprojects.qaxserverclasses.sortPages = true
 
 tagfile                 = ../../../doc/activeqt/activeqt.tags
 
-depends                 += qtcore qtdesigner qtdoc qtopengl qtscript qtwidgets qtgui
+depends                 += qtcore qtdesigner qtdoc qtopengl qtwidgets qtgui
 
 headerdirs  += ..
 
