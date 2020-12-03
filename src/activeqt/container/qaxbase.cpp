@@ -921,6 +921,9 @@ bool QAxBase::setControl(const QString &c)
     return true;
 }
 
+/*!
+    Returns the ActiveX control.
+*/
 QString QAxBase::control() const
 {
     return d->ctrl;
