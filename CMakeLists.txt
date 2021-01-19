@@ -15,11 +15,13 @@ if (NOT WIN32)
     return()
 endif()
 
-find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets PrintSupport) # special case
-find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Qml Quick) # special case
+find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core) # special case
+find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Qml Quick Gui Widgets PrintSupport) # special case
 
-if(NOT TARGET Qt::Widgets)
-    message(NOTICE "Skipping the build as the condition \"TARGET Qt::Widgets\" is not met.")
+if(NOT TARGET Qt::Gui OR NOT TARGET Qt::Widgets OR NOT TARGET Qt::PrintSupport)
+    message(NOTICE "Skipping the build as the condition \"TARGET Qt::Gui\", \"TARGET Qt::Widget\" "
+            "or \"TARGET Qt::Printsupport\" is not met.")
     return()
 endif()
+
 qt_build_repo()
