@@ -194,7 +194,8 @@ static bool dllInstall(const QString &input, bool doRegister)
     }
 
     typedef HRESULT(__stdcall* DllInstallProc)(BOOL bInstall, PCWSTR pszCmdLine);
-    DllInstallProc DllInstall = reinterpret_cast<DllInstallProc>(GetProcAddress(hdll, "DllInstall"));
+    DllInstallProc DllInstall = reinterpret_cast<DllInstallProc>
+            (reinterpret_cast<void *>(GetProcAddress(hdll, "DllInstall")));
     if (!DllInstall) {
         fprintf(stderr, "Library file %s doesn't appear to be a COM library supporting DllInstall\n", qPrintable(input));
         return false;
@@ -219,7 +220,8 @@ static bool registerServer(const QString &input, bool perUser)
             }
 
             typedef HRESULT(__stdcall* RegServerProc)();
-            RegServerProc DllRegisterServer = reinterpret_cast<RegServerProc>(GetProcAddress(hdll, "DllRegisterServer"));
+            RegServerProc DllRegisterServer = reinterpret_cast<RegServerProc>
+                    (reinterpret_cast<void *>(GetProcAddress(hdll, "DllRegisterServer")));
             if (!DllRegisterServer) {
                 fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
                 return false;
@@ -246,7 +248,8 @@ static bool unregisterServer(const QString &input, bool perUser)
             }
 
             typedef HRESULT(__stdcall* RegServerProc)();
-            RegServerProc DllUnregisterServer = reinterpret_cast<RegServerProc>(GetProcAddress(hdll, "DllUnregisterServer"));
+            RegServerProc DllUnregisterServer = reinterpret_cast<RegServerProc>
+                    (reinterpret_cast<void *>(GetProcAddress(hdll, "DllUnregisterServer")));
             if (!DllUnregisterServer) {
                 fprintf(stderr, "Library file %s doesn't appear to be a COM library\n", qPrintable(input));
                 return false;
@@ -273,7 +276,8 @@ static HRESULT dumpIdl(const QString &input, const QString &idlfile, const QStri
             return 3;
         }
         typedef HRESULT(__stdcall* DumpIDLProc)(const QString&, const QString&);
-        DumpIDLProc DumpIDL = reinterpret_cast<DumpIDLProc>(GetProcAddress(hdll, "DumpIDL"));
+        DumpIDLProc DumpIDL = reinterpret_cast<DumpIDLProc>
+                (reinterpret_cast<void *>(GetProcAddress(hdll, "DumpIDL")));
         if (!DumpIDL) {
             fprintf(stderr, "Couldn't resolve 'DumpIDL' symbol in %s\n", qPrintable(input));
             return 3;

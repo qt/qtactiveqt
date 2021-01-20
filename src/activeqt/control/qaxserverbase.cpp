@@ -2399,8 +2399,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                     if (index == -1) {
                         QRegularExpression regexp(QLatin1String("_([0-9])\\("));
                         QRegularExpressionMatch rmatch;
-                        QString::fromLatin1(name.constData()).lastIndexOf(regexp, -1, &rmatch);
-                        if (rmatch.hasMatch()) {
+                        if (QString::fromLatin1(name.constData()).lastIndexOf(regexp, -1, &rmatch) != -1) {
                             name.chop(rmatch.capturedLength(0));
                             name += '(';
                             int overload = rmatch.capturedView(1).toInt() + 1;
