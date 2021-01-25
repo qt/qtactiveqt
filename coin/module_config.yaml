@@ -1,8 +1,8 @@
 version: 2
 accept_configuration:
   condition: property
-  property: features
-  not_contains_value: Disable
+  property: target.os
+  equals_value: "Windows"
 
 instructions:
   Build:
