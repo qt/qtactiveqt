@@ -10,11 +10,6 @@ project(QtActiveQt # special case
     LANGUAGES CXX C
 )
 
-if (NOT WIN32)
-    message(NOTICE "Skipping the build as the condition \"WIN32\" is not met.")
-    return()
-endif()
-
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core) # special case
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Qml Quick Gui Widgets PrintSupport) # special case
 
