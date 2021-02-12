@@ -1,8 +1,15 @@
 version: 2
 accept_configuration:
-  condition: property
-  property: target.os
-  equals_value: "Windows"
+  condition: or
+  conditions:
+    # Include all windows targets
+    - condition: property
+      property: target.os
+      equals_value: "Windows"
+    # Include documentation build
+    - condition: property
+      property: features
+      contains_value: Documentation
 
 instructions:
   Build:
