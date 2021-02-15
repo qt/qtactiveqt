@@ -9,7 +9,20 @@ instructions:
     - type: EnvironmentVariable
       variableName: BUILD_DOCUMENTATION
       variableValue: "1"
+    - type: EnvironmentVariable
+      variableName: QT_CI_SKIP_MODULE_BUILD
+      variableValue: "1"
+      enable_if:
+        condition: property
+        property: features
+        contains_value: Documentation
     - !include "{{qt/qtbase}}/coin_module_build_template_v2.yaml"
 
   Test:
-    - !include "{{qt/qtbase}}/coin_module_test_template_v3.yaml"
+    - type: Group
+      instructions:
+        - !include "{{qt/qtbase}}/coin_module_test_template_v3.yaml"
+      disable_if:
+        condition: property
+        property: features
+        contains_value: Documentation
