@@ -75,8 +75,8 @@
 #include <qpa/qplatformnativeinterface.h>
 #include <qabstractnativeeventfilter.h>
 
-#include <qcoreapplication.h>
 #include <qlist.h>
+#include <private/qguiapplication_p.h>
 #include <private/qthread_p.h>
 
 #include "qaxfactory.h"
@@ -938,7 +938,7 @@ HRESULT QClassFactory::CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, voi
     if (qAxOutProcServer)
         QAbstractEventDispatcher::instance()->installNativeEventFilter(qax_winEventFilter());
     else
-        QApplication::instance()->d_func()->in_exec = true;
+        QGuiApplicationPrivate::instance()->in_exec = true;
 
     // hook into eventloop; this allows a server to create his own QApplication object
     if (!qax_hhook && qax_ownQApp) {
@@ -1031,7 +1031,8 @@ HRESULT QClassFactory::CreateInstanceLic(IUnknown *pUnkOuter, IUnknown * /* pUnk
 void QClassFactory::cleanupCreatedApplication(QCoreApplication &app)
 {
     // Cleanup similar to QCoreApplication::exec()
-    app.d_func()->execCleanup();
+    QCoreApplicationPrivate *priv = static_cast<QCoreApplicationPrivate *>(QObjectPrivate::get(&app));
+    priv->execCleanup();
 }
 
 
