@@ -60,6 +60,8 @@
 
 QT_BEGIN_NAMESPACE
 
+QAxObjectInterface::~QAxObjectInterface() = default;
+
 QAxBaseObject::QAxBaseObject(QObjectPrivate &d, QObject *parent)
     : QObject(d, parent)
 {

@@ -60,7 +60,7 @@ class QString;
 class QAxObjectInterface
 {
 public:
-    virtual ~QAxObjectInterface() = default;
+    virtual ~QAxObjectInterface();
 
     virtual ulong classContext() const = 0;
     virtual void setClassContext(ulong classContext) = 0;
