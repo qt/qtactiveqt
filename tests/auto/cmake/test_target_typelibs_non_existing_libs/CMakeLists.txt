@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.14)
+project(tst_typelibs)
+
+find_package(Qt6 COMPONENTS AxContainer Gui Widgets CONFIG REQUIRED)
+
+add_executable(tst_typelibs main.cpp)
+target_link_libraries(tst_typelibs PRIVATE Qt6::AxContainer Qt6::Gui Qt6::Widgets)
+
+qt6_target_typelibs(tst_typelibs LIBRARIES "ieframe.dll" "qt100notexistinglib.dll")

@@ -2,8 +2,8 @@
 
 add_subdirectory(conversion)
 add_subdirectory(qaxobject)
-# add_subdirectory(dumpcpp) (needs typelib target) # special case
-# add_subdirectory(cmake) # special case
+add_subdirectory(dumpcpp)
+add_subdirectory(cmake)
 if(NOT GCC)
     add_subdirectory(qaxscript)
 endif()
