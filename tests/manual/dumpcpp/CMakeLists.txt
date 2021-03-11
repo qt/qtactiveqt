@@ -22,5 +22,7 @@ qt_internal_add_manual_test(dumpcpp # special case
 # TEMPLATE = "app"
 # TYPELIBS = "$$(SystemRoot)\\system32\\ieframe.dll"
 
+qt6_target_typelibs(tst_dumpcpp LIBRARIES "ieframe.dll") # special case
+
 ## Scopes:
 #####################################################################

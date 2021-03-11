@@ -1,0 +1,72 @@
+# Generates a C++ namespace for a type library and adds generated sources to the target. Arguments:
+#
+# LIBRARIES: List of type libraries. A type library (.tlb) is a binary file that stores information
+#   about a COM or DCOM object's properties and methods in a form that is accessible to other
+#   applications at runtime. The list may contain either the path to the library or the name
+#   of the library.
+#   If the library name is specified, the function will search for the library according to the
+#   CMake find_file function rules. See https://cmake.org/cmake/help/latest/command/find_file.html
+#   for details.
+#   Note: The library name must include a file suffix, e.g "ieframe.dll".
+#
+# OUTPUT_DIRECTORY: Custom location of the generated source files.
+#   ${CMAKE_CURRENT_BINARY_DIR} is the default location if not specified. (OPTIONAL)
+#
+# COMPAT: Adds compatibility flag to the dumpcpp call, that generates namespace with
+#   dynamicCall-compatible API. (OPTIONAL)
+#
+# This function is currently in Technical Preview.
+# Its signature and behavior might change.
+function(qt6_target_typelibs target)
+    cmake_parse_arguments(arg "COMPAT" "OUTPUT_DIRECTORY" "LIBRARIES" ${ARGN})
+    if(NOT arg_LIBRARIES)
+        message(FATAL_ERROR "qt6_target_typelibs: LIBRARIES are not specified")
+    endif()
+
+    set(output_directory "${CMAKE_CURRENT_BINARY_DIR}")
+    if(arg_OUTPUT_DIRECTORY)
+        set(output_directory "${arg_OUTPUT_DIRECTORY}")
+    endif()
+
+    set(extra_args "")
+    if(arg_COMPAT)
+        list(APPEND extra_args "-compat")
+    endif()
+
+    set(out_sources "")
+    foreach(lib IN LISTS arg_LIBRARIES)
+        unset(libpath CACHE)
+        # If lib exists on the filesystem, we assume the user provided the path.
+        get_filename_component(lib_abspath "${lib}" ABSOLUTE)
+        if(EXISTS "${lib_abspath}")
+            set(libpath "${lib_abspath}")
+        else()
+            find_file(libpath NAMES "${lib}")
+            if(NOT libpath)
+                message(FATAL_ERROR "qt6_target_typelibs: Unable to find type lib with name ${lib}")
+            endif()
+        endif()
+
+        get_filename_component(out_basename "${libpath}" NAME_WE)
+        set(out_filebasepath "${output_directory}/${out_basename}")
+
+        set(out_header "${out_filebasepath}.h")
+        set_source_files_properties("${out_header}" PROPERTIES HEADER_FILE_ONLY TRUE)
+        set(out_source "${out_filebasepath}.cpp")
+        list(APPEND out_sources "${out_header}" "${out_source}")
+
+        add_custom_command(OUTPUT "${out_header}" "${out_source}"
+            COMMAND ${QT_CMAKE_EXPORT_NAMESPACE}::dumpcpp
+                "${libpath}" -o "${out_filebasepath}"
+                ${extra_args}
+            DEPENDS ${QT_CMAKE_EXPORT_NAMESPACE}::dumpcpp
+            WORKING_DIRECTORY "${output_directory}"
+            COMMENT "Generate type lib sources ${out_header} ${out_source}..."
+        )
+    endforeach()
+
+    set_source_files_properties("${out_sources}" PROPERTIES SKIP_AUTOGEN TRUE)
+
+    target_sources(${target} PRIVATE "${out_sources}")
+    target_include_directories(${target} PRIVATE "${output_directory}")
+endfunction()
