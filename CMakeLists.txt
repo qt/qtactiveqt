@@ -10,6 +10,18 @@ project(QtActiveQt # special case
     LANGUAGES CXX C
 )
 
+if (NOT WIN32)
+    message(NOTICE "Condition \"WIN32\" is not met, enabling documentation build only.")
+    # special case begin
+    set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
+    find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals)
+    qt_build_repo_begin()
+    add_subdirectory(src/activeqt/doc)
+    qt_build_repo_end()
+    # special case end
+    return()
+endif()
+
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core) # special case
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Qml Quick Gui Widgets PrintSupport) # special case
 
