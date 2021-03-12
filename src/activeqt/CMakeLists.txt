@@ -5,8 +5,8 @@ add_subdirectory(axbase)
 add_subdirectory(control)
 add_subdirectory(container)
 
-qt_add_module(ActiveQt HEADER_MODULE MODULE_INCLUDE_NAME ActiveQt)
-qt_add_docs(ActiveQt
+qt_internal_add_module(ActiveQt HEADER_MODULE MODULE_INCLUDE_NAME ActiveQt)
+qt_internal_add_docs(ActiveQt
     doc/activeqt.qdocconf
 )
 # special case end

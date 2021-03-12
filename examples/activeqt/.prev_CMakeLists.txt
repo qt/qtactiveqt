@@ -1,0 +1,17 @@
+# Generated from activeqt.pro.
+
+add_subdirectory(comapp)
+add_subdirectory(hierarchy)
+add_subdirectory(menus)
+add_subdirectory(multiple)
+add_subdirectory(simple)
+add_subdirectory(wrapper)
+if(MINGW OR QT_BUILD_SHARED_LIBS)
+    add_subdirectory(mediaplayer)
+endif()
+if(QT_CONFIG___contains___opengl AND NOT QT_CONFIG___contains___opengles2)
+    add_subdirectory(opengl)
+endif()
+if(TARGET Qt::QuickControls2)
+    add_subdirectory(simpleqml)
+endif()

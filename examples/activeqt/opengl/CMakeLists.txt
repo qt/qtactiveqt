@@ -22,10 +22,14 @@ find_package(Qt6 COMPONENTS AxServer)
 find_package(Qt6 COMPONENTS OpenGL)
 find_package(Qt6 COMPONENTS OpenGLWidgets)
 
-add_qt_gui_executable(openglax
+qt_add_executable(openglax
     glbox.cpp glbox.h
     globjwin.cpp globjwin.h
     main.cpp
+)
+set_target_properties(openglax PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
 )
 target_link_libraries(openglax PUBLIC
     Qt::AxServer

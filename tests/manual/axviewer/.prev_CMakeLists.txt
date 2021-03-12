@@ -4,7 +4,7 @@
 ## axviewer Binary:
 #####################################################################
 
-qt_add_executable(axviewer
+qt_add_manual_test(axviewer
     SOURCES
         ../shared/metaobjectdump.cpp ../shared/metaobjectdump.h
         ../shared/textdialog.cpp ../shared/textdialog.h

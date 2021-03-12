@@ -4,10 +4,10 @@
 ## testcon Binary:
 #####################################################################
 
-qt_internal_add_executable(testcon # special case
+qt_add_executable(testcon
     GUI
-#    OUTPUT_DIRECTORY "$$[QT_INSTALL_BINS]" # special case
-#    INSTALL_DIRECTORY "$$[QT_INSTALL_BINS]" # special case
+    OUTPUT_DIRECTORY "$$[QT_INSTALL_BINS]"
+    INSTALL_DIRECTORY "$$[QT_INSTALL_BINS]"
     SOURCES
         ambientproperties.cpp ambientproperties.h ambientproperties.ui
         changeproperties.cpp changeproperties.h changeproperties.ui
@@ -34,7 +34,7 @@ set(testcon_resource_files
     "images/filenew.png"
 )
 
-qt_internal_add_resource(testcon "testcon" # special case
+qt_add_resource(testcon "testcon"
     PREFIX
         "/"
     FILES

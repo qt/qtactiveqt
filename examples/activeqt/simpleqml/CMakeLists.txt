@@ -22,8 +22,12 @@ find_package(Qt6 COMPONENTS AxServer)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS QuickWidgets)
 
-add_qt_gui_executable(simpleqmlax
+qt_add_executable(simpleqmlax
     main.cpp
+)
+set_target_properties(simpleqmlax PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
 )
 target_link_libraries(simpleqmlax PUBLIC
     Qt::AxServer

@@ -4,7 +4,7 @@
 ## AxServer Module:
 #####################################################################
 
-qt_add_module(AxServer
+qt_internal_add_module(AxServer # special case
     STATIC
     QMAKE_MODULE_CONFIG idcidl force_import_plugins
     SOURCES

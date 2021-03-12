@@ -4,7 +4,7 @@
 ## qaxobject Test:
 #####################################################################
 
-qt_add_test(qaxobject
+qt_internal_add_test(qaxobject # special case
     SOURCES
         tst_qaxobject.cpp
     PUBLIC_LIBRARIES

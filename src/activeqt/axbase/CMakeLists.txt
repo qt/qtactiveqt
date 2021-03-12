@@ -4,7 +4,7 @@
 ## AxBase Module:
 #####################################################################
 
-qt_add_module(AxBase
+qt_internal_add_module(AxBase # special case
     STATIC
     INTERNAL_MODULE
     SOURCES
