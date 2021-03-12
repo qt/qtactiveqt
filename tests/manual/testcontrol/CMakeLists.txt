@@ -4,7 +4,7 @@
 ## testcontrol Binary:
 #####################################################################
 
-qt_add_executable(testcontrol
+qt_internal_add_manual_test(testcontrol # special case
     GUI
     SOURCES
         main.cpp

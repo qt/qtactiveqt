@@ -4,7 +4,7 @@
 ## dumpcpp Binary:
 #####################################################################
 
-qt_add_executable(dumpcpp
+qt_internal_add_manual_test(dumpcpp # special case
     SOURCES
         ../shared/metaobjectdump.cpp ../shared/metaobjectdump.h
         ../shared/textdialog.cpp ../shared/textdialog.h

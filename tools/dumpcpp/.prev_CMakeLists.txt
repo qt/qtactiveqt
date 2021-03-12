@@ -5,9 +5,8 @@
 #####################################################################
 
 qt_get_tool_target_name(target_name dumpcpp)
-qt_internal_add_tool(${target_name} # special case
+qt_add_tool(${target_name}
     TARGET_DESCRIPTION "Active Qt DumpCpp"
-    TOOLS_TARGET AxContainer # special case
     SOURCES
         main.cpp
         moc.cpp moc.h

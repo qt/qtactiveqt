@@ -20,8 +20,12 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS AxServer)
 find_package(Qt6 COMPONENTS Widgets)
 
-add_qt_gui_executable(comapp
+qt_add_executable(comapp
     main.cpp
+)
+set_target_properties(comapp PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
 )
 target_link_libraries(comapp PUBLIC
     Qt::AxServer

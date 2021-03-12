@@ -20,10 +20,14 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS AxServer)
 
-add_qt_gui_executable(multipleax
+qt_add_executable(multipleax
     ax1.h
     ax2.h
     main.cpp
+)
+set_target_properties(multipleax PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
 )
 target_link_libraries(multipleax PUBLIC
     Qt::AxServer

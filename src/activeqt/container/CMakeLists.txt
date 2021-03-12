@@ -4,7 +4,7 @@
 ## AxContainer Module:
 #####################################################################
 
-qt_add_module(AxContainer
+qt_internal_add_module(AxContainer # special case
     STATIC
     QMAKE_MODULE_CONFIG dumpcpp
     SOURCES

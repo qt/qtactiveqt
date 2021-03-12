@@ -20,9 +20,13 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS AxServer)
 
-add_qt_gui_executable(menusax
+qt_add_executable(menusax
     main.cpp
     menus.cpp menus.h
+)
+set_target_properties(menusax PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
 )
 target_link_libraries(menusax PUBLIC
     Qt::AxServer

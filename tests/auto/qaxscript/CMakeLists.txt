@@ -4,7 +4,7 @@
 ## qaxscript Test:
 #####################################################################
 
-qt_add_test(qaxscript
+qt_internal_add_test(qaxscript # special case
     SOURCES
         tst_qaxscript.cpp
     PUBLIC_LIBRARIES
