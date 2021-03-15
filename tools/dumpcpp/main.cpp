@@ -29,6 +29,7 @@
 #include "moc.h"
 
 #include <QAxObject>
+#include <QAxBaseWidget>
 #include <QFile>
 #include <QMetaObject>
 #include <QMetaEnum>
@@ -41,7 +42,6 @@
 #include <QCoreApplication>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
-#include <QWidget>
 #include <QFileInfo>
 #include <qt_windows.h>
 #include <ocidl.h>
@@ -549,7 +549,6 @@ bool generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
     qualifiedClassName += className;
 
     const QString moCode = mocCode(mo, QLatin1String(qualifiedClassName),
-                                   category.testFlag(ActiveX) ? QLatin1String("QWidget") : QLatin1String("QObject"),
                                    errorString);
     if (moCode.isEmpty()) {
         out << "#error moc error\n";
@@ -613,6 +612,13 @@ static void writeForwardDeclaration(QTextStream &declOut, const QByteArray &clas
     } else {
         declOut << "    " << className << ';' << Qt::endl;
     }
+}
+
+static const QMetaObject *baseMetaObject(ObjectCategories c)
+{
+    return c.testFlag(ActiveX)
+        ? &QAxBaseWidget::staticMetaObject
+        : &QAxBaseObject::staticMetaObject;
 }
 
 bool generateTypeLibrary(QString typeLibFile, QString outname,
@@ -726,16 +732,10 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 // trigger meta object to collect references to other type libraries
                 switch (typekind) {
                 case TKIND_COCLASS:
-                    if (category & ActiveX)
-                        metaObject = qax_readClassInfo(typelib, typeinfo, &QWidget::staticMetaObject);
-                    else
-                        metaObject = qax_readClassInfo(typelib, typeinfo, &QObject::staticMetaObject);
+                    metaObject = qax_readClassInfo(typelib, typeinfo, baseMetaObject(category));
                     break;
                 case TKIND_DISPATCH:
-                    if (category & ActiveX)
-                        metaObject = qax_readInterfaceInfo(typelib, typeinfo, &QWidget::staticMetaObject);
-                    else
-                        metaObject = qax_readInterfaceInfo(typelib, typeinfo, &QObject::staticMetaObject);
+                    metaObject = qax_readInterfaceInfo(typelib, typeinfo, baseMetaObject(category));
                     break;
                 case TKIND_RECORD:
                 case TKIND_ENUM:
@@ -864,16 +864,10 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
 
         switch (typekind) {
         case TKIND_COCLASS:
-            if (object_category & ActiveX)
-                metaObject = qax_readClassInfo(typelib, typeinfo, &QWidget::staticMetaObject);
-            else
-                metaObject = qax_readClassInfo(typelib, typeinfo, &QObject::staticMetaObject);
+            metaObject = qax_readClassInfo(typelib, typeinfo, baseMetaObject(object_category));
             break;
         case TKIND_DISPATCH:
-            if (object_category & ActiveX)
-                metaObject = qax_readInterfaceInfo(typelib, typeinfo, &QWidget::staticMetaObject);
-            else
-                metaObject = qax_readInterfaceInfo(typelib, typeinfo, &QObject::staticMetaObject);
+            metaObject = qax_readInterfaceInfo(typelib, typeinfo, baseMetaObject(object_category));
             break;
         case TKIND_INTERFACE: { // only stub: QTBUG-27792, explicitly disable copy in inherited
                                 // class to make related error messages clearer

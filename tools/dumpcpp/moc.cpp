@@ -262,16 +262,13 @@ static QString cleanCode(QString code, const QString &className, const QString &
 }
 
 QString mocCode(const QMetaObject *mo, const QString &qualifiedClassName,
-                QString baseClass, QString *errorString)
+                QString *errorString)
 {
     QStringList name = qualifiedClassName.split(QLatin1String("::"));
     if (name.isEmpty())
         name.append(QLatin1String(mo->className()));
 
-    if (baseClass.isEmpty()) {
-        if (const auto sc = mo->superClass())
-            baseClass = QLatin1String(sc->className());
-    }
+    const QString baseClass = QLatin1String(mo->superClass()->className());
 
     const QString tempPattern = QDir::tempPath() + QLatin1Char('/')
         + name.constLast().toLower() + QLatin1String("_XXXXXX.h");

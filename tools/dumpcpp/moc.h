@@ -41,7 +41,7 @@ QByteArray setterName(const QByteArray &propertyName);
 void formatCppEnum(QTextStream &str, const QMetaEnum &metaEnum);
 
 QString mocCode(const QMetaObject *, const QString &qualifiedClassName,
-                QString baseClass, QString *errorString);
+                QString *errorString);
 
 QT_END_NAMESPACE
 
