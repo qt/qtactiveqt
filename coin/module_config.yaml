@@ -6,16 +6,9 @@ accept_configuration:
     - condition: property
       property: target.os
       equals_value: "Windows"
-    # Include documentation build
-    - condition: property
-      property: features
-      contains_value: Documentation
 
 instructions:
   Build:
-    - type: EnvironmentVariable
-      variableName: BUILD_DOCUMENTATION
-      variableValue: "1"
     - type: EnvironmentVariable
       variableName: QT_CI_SKIP_MODULE_BUILD
       variableValue: "1"
