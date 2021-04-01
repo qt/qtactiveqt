@@ -96,7 +96,9 @@
     compiler installation)
     \li Attach the resulting type library as a binary resource to the server
     binary (again using the \l idc tool)
-    \li Register the server
+    \li Register the server. This step may require administrative privileges
+        and can be skipped by setting the \c qaxserver_no_register
+        configuration.
     \endlist
 
     To skip the post-processing step, also set the \c qaxserver_no_postlink
