@@ -4,7 +4,7 @@
 ## axviewer Binary:
 #####################################################################
 
-qt_internal_add_manual_test(axviewer # special case
+qt_internal_add_manual_test(tst_axviewer_manual # special case
     SOURCES
         ../shared/metaobjectdump.cpp ../shared/metaobjectdump.h
         ../shared/textdialog.cpp ../shared/textdialog.h
@@ -24,46 +24,51 @@ qt_internal_add_manual_test(axviewer # special case
 ## Scopes:
 #####################################################################
 
-qt_extend_target(axviewer CONDITION EXISTS _ss_DIAGLIB
+# special case begin
+set(diaglib_path "${CMAKE_CURRENT_SOURCE_DIR}/../../../../qtbase/tests/manual/diaglib")
+qt_internal_extend_target(tst_axviewer_manual CONDITION EXISTS "${diaglib_path}"
     SOURCES
-        ../../../../qtbase/tests/manual/diaglib/eventfilter.cpp ../../../../qtbase/tests/manual/diaglib/eventfilter.h
-        ../../../../qtbase/tests/manual/diaglib/nativewindowdump.h
-        ../../../../qtbase/tests/manual/diaglib/qwindowdump.cpp ../../../../qtbase/tests/manual/diaglib/qwindowdump.h
-        ../../../../qtbase/tests/manual/diaglib/textdump.cpp ../../../../qtbase/tests/manual/diaglib/textdump.h
+        "${diaglib_path}/eventfilter.cpp" "${diaglib_path}/eventfilter.h"
+        "${diaglib_path}/nativewindowdump.h"
+        "${diaglib_path}/qwindowdump.cpp" "${diaglib_path}/qwindowdump.h"
+        "${diaglib_path}/textdump.cpp" "${diaglib_path}/textdump.h"
     DEFINES
         QT_DIAG_LIB
     INCLUDE_DIRECTORIES
-        ../../../../qtbase/tests/manual/diaglib
+        "${diaglib_path}"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
 )
 
-qt_extend_target(axviewer CONDITION (EXISTS _ss_DIAGLIB) AND (WIN32)
+qt_internal_extend_target(tst_axviewer_manual CONDITION (EXISTS "${diaglib_path}") AND (WIN32)
     SOURCES
-        ../../../../qtbase/tests/manual/diaglib/nativewindowdump_win.cpp
+        "${diaglib_path}/nativewindowdump_win.cpp"
     PUBLIC_LIBRARIES
         user32
 )
 
-qt_extend_target(axviewer CONDITION (EXISTS _ss_DIAGLIB) AND (NOT (WIN32))
+qt_internal_extend_target(tst_axviewer_manual CONDITION (EXISTS "${diaglib_path}") AND (NOT (WIN32))
     SOURCES
-        ../../../../qtbase/tests/manual/diaglib/nativewindowdump.cpp
+        "${diaglib_path}/nativewindowdump.cpp"
 )
 
-qt_extend_target(axviewer CONDITION (EXISTS _ss_DIAGLIB) AND (QT_FEATURE_widgets)
+qt_internal_extend_target(tst_axviewer_manual CONDITION (EXISTS "${diaglib_path}") AND
+    TARGET Qt::Widgets
     SOURCES
-        ../../../../qtbase/tests/manual/diaglib/debugproxystyle.cpp ../../../../qtbase/tests/manual/diaglib/debugproxystyle.h
-        ../../../../qtbase/tests/manual/diaglib/logwidget.cpp ../../../../qtbase/tests/manual/diaglib/logwidget.h
-        ../../../../qtbase/tests/manual/diaglib/qwidgetdump.cpp ../../../../qtbase/tests/manual/diaglib/qwidgetdump.h
+        "${diaglib_path}/debugproxystyle.cpp" "${diaglib_path}/debugproxystyle.h"
+        "${diaglib_path}/logwidget.cpp" "${diaglib_path}/logwidget.h"
+        "${diaglib_path}/qwidgetdump.cpp" "${diaglib_path}/qwidgetdump.h"
     PUBLIC_LIBRARIES
         Qt::WidgetsPrivate
 )
 
-qt_extend_target(axviewer CONDITION (EXISTS _ss_DIAGLIB) AND (QT_FEATURE_opengl)
+qt_internal_extend_target(tst_axviewer_manual CONDITION (EXISTS "${diaglib_path}") AND
+    TARGET Qt::OpenGL AND TARGET Qt::OpenGLWidgets
     SOURCES
-        ../../../../qtbase/tests/manual/diaglib/glinfo.cpp ../../../../qtbase/tests/manual/diaglib/glinfo.h
+        "${diaglib_path}/glinfo.cpp" "${diaglib_path}/glinfo.h"
     PUBLIC_LIBRARIES
         Qt::OpenGL
         Qt::OpenGLWidgets
 )
+# special case end
