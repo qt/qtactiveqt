@@ -23,8 +23,11 @@ if (NOT WIN32)
 endif()
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core) # special case
-find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Qml Quick Gui Widgets PrintSupport) # special case
-
+# special case begin
+find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Qml Quick Gui Widgets
+    PrintSupport OpenGL OpenGLWidgets
+)
+# special case end
 if(NOT TARGET Qt::Gui OR NOT TARGET Qt::Widgets OR NOT TARGET Qt::PrintSupport)
     message(NOTICE "Skipping the build as the condition \"TARGET Qt::Gui\", \"TARGET Qt::Widget\" "
             "or \"TARGET Qt::Printsupport\" is not met.")
