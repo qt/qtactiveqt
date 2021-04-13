@@ -41,7 +41,7 @@ qt_internal_add_module(AxServer # special case
 ## Scopes:
 #####################################################################
 
-qt_extend_target(AxServer CONDITION MINGW
+qt_internal_extend_target(AxServer CONDITION MINGW
     DEFINES
         QT_NEEDS_QMAIN
 )

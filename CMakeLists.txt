@@ -35,5 +35,6 @@ if(NOT TARGET Qt::Gui OR NOT TARGET Qt::Widgets OR NOT TARGET Qt::PrintSupport)
 endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/src/activeqt/container/Qt6AxContainerMacros.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/src/activeqt/control/Qt6AxServerMacros.cmake")
 
 qt_build_repo()
