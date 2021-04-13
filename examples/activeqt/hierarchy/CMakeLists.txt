@@ -15,21 +15,15 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/activeqt/hierarchy")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Widgets)
-find_package(Qt6 COMPONENTS AxServer)
+find_package(Qt6 COMPONENTS Core Gui Widgets AxServer)
 
-qt_add_executable(hierarchyax
+qt6_add_axserver_library(hierarchyax
     main.cpp
     objects.cpp objects.h
-)
-set_target_properties(hierarchyax PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+    hierarchy.def
+    hierarchy.rc
 )
 target_link_libraries(hierarchyax PUBLIC
-    Qt::AxServer
     Qt::Core
     Qt::Gui
     Qt::Widgets

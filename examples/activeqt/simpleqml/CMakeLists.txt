@@ -15,29 +15,19 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/activeqt/simpleqml")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Widgets)
-find_package(Qt6 COMPONENTS AxServer)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS QuickWidgets)
-
-qt_add_executable(simpleqmlax
+find_package(Qt6 COMPONENTS Core Gui Widgets AxServer Quick QuickWidgets)
+qt6_add_axserver_library(simpleqmlax
     main.cpp
-)
-set_target_properties(simpleqmlax PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+    simpleqml.def
+    simpleqml.rc
 )
 target_link_libraries(simpleqmlax PUBLIC
-    Qt::AxServer
     Qt::Core
     Qt::Gui
     Qt::Quick
     Qt::QuickWidgets
     Qt::Widgets
 )
-
 
 # Resources:
 set(simpleqml_resource_files

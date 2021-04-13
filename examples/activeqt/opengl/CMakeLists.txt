@@ -15,24 +15,16 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/activeqt/opengl")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Widgets)
-find_package(Qt6 COMPONENTS AxServer)
-find_package(Qt6 COMPONENTS OpenGL)
-find_package(Qt6 COMPONENTS OpenGLWidgets)
+find_package(Qt6 COMPONENTS Core Gui Widgets AxServer OpenGL OpenGLWidgets)
 
-qt_add_executable(openglax
+qt6_add_axserver_executable(openglax
     glbox.cpp glbox.h
     globjwin.cpp globjwin.h
     main.cpp
-)
-set_target_properties(openglax PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+    opengl.def
+    opengl.rc
 )
 target_link_libraries(openglax PUBLIC
-    Qt::AxServer
     Qt::Core
     Qt::Gui
     Qt::OpenGL

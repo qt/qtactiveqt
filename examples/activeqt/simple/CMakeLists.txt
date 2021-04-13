@@ -15,20 +15,13 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/activeqt/simple")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Widgets)
-find_package(Qt6 COMPONENTS AxServer)
-
-qt_add_executable(simpleax
+find_package(Qt6 COMPONENTS Core Gui Widgets AxServer)
+qt6_add_axserver_executable(simpleax
     main.cpp
-)
-set_target_properties(simpleax PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+    simple.def
+    simple.rc
 )
 target_link_libraries(simpleax PUBLIC
-    Qt::AxServer
     Qt::Core
     Qt::Gui
     Qt::Widgets

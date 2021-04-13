@@ -15,22 +15,16 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/activeqt/multiple")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Widgets)
-find_package(Qt6 COMPONENTS AxServer)
+find_package(Qt6 COMPONENTS Core Gui Widgets AxServer)
 
-qt_add_executable(multipleax
+qt6_add_axserver_library(multipleax
     ax1.h
     ax2.h
     main.cpp
-)
-set_target_properties(multipleax PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+    multipleax.def
+    multipleax.rc
 )
 target_link_libraries(multipleax PUBLIC
-    Qt::AxServer
     Qt::Core
     Qt::Gui
     Qt::Widgets
