@@ -7,6 +7,7 @@
 #include "qaxbindable.h"
 #include "qaxfactory.h"
 #include "qaxobject.h"
+#include "qaxobjectinterface.h"
 #include "qaxscript.h"
 #include "qaxselect.h"
 #include "qaxtypefunctions.h"

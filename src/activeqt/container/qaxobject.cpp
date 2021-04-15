@@ -187,6 +187,8 @@ void  QAxObjectPrivate::emitSignal(const QString &name, int argc, void *argv)
 /*!
     Creates an empty COM object and propagates \a parent to the
     QObject constructor. To initialize the object, call setControl().
+
+    \sa {control}{setControl()}
 */
 QAxObject::QAxObject(QObject *parent)
 : QAxBaseObject(*new QAxObjectPrivate, parent)
@@ -199,7 +201,7 @@ QAxObject::QAxObject(QObject *parent)
     Creates a QAxObject that wraps the COM object \a c. \a parent is
     propagated to the QObject constructor.
 
-    \sa setControl()
+    \sa {control}{setControl()}
 */
 QAxObject::QAxObject(const QString &c, QObject *parent)
 : QAxBaseObject(*new QAxObjectPrivate, parent)
