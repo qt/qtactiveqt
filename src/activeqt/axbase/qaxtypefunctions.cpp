@@ -63,7 +63,7 @@ QColor OLEColorToQColor(uint col)
     return QColor(GetRValue(col),GetGValue(col),GetBValue(col));
 }
 
-/*!
+/*
     Copies the data in \a var into \a data.
 
     Used by

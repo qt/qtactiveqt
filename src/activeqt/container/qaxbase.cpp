@@ -819,7 +819,7 @@ QVariant QAxBasePrivate::VARIANTToQVariant(const VARIANT &arg, const QByteArray 
 */
 
 /*!
-    \typedef QAxBase::PropertyBag
+    \typealias QAxBase::PropertyBag
 
     A QMap<QString,QVariant> that can store properties as name:value pairs.
 */

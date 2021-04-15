@@ -135,6 +135,7 @@
     \li \l{QAxServer C++ Classes}
     \endlist
 
+    \target ActiveQt Examples
     \section1 Examples
     \list
     \li \l{Multiple Example (ActiveQt)}
