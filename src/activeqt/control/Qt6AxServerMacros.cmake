@@ -69,11 +69,14 @@ function(qt6_target_idl target)
     set(output_tlb "${CMAKE_CURRENT_BINARY_DIR}/${target}$<CONFIG>.tlb")
 
     set(tlb_command_list "")
-    list(APPEND tlb_command_list ${QT_TOOL_PATH_SETUP_COMMAND})
-    list(APPEND tlb_command_list COMMAND ${QT_CMAKE_EXPORT_NAMESPACE}::idc
-        "$<TARGET_FILE:${target}>" /idl "${output_idl}" -version 1.0
+    _qt_internal_wrap_tool_command(tlb_command_list APPEND
+        "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>" "$<TARGET_FILE:${target}>"
+        /idl "${output_idl}" -version 1.0
     )
-    list(APPEND tlb_command_list COMMAND midl "${output_idl}" /nologo /tlb "${output_tlb}")
+
+    _qt_internal_wrap_tool_command(tlb_command_list APPEND
+        midl "${output_idl}" /nologo /tlb "${output_tlb}"
+    )
 
     get_target_property(sources ${target} "SOURCES")
     set(has_rc FALSE)
@@ -84,7 +87,8 @@ function(qt6_target_idl target)
         endif()
     endforeach()
     if(has_rc)
-        list(APPEND tlb_command_list COMMAND ${QT_CMAKE_EXPORT_NAMESPACE}::idc
+        _qt_internal_wrap_tool_command(tlb_command_list APPEND
+            "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>"
             "$<TARGET_FILE:${target}>" /tlb "${output_tlb}"
         )
     else()
@@ -96,8 +100,9 @@ target will be a separate file."
     endif()
 
     if(NOT arg_SKIP_AX_SERVER_REGISTRATION AND NOT QT_SKIP_AX_SERVER_REGISTRATION)
-        list(APPEND tlb_command_list COMMAND ${QT_CMAKE_EXPORT_NAMESPACE}::idc
-            "$<TARGET_FILE:${target}>" /regserver
+        _qt_internal_wrap_tool_command(tlb_command_list APPEND
+            "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>"
+             "$<TARGET_FILE:${target}>" /regserver
         )
     endif()
     add_custom_command(TARGET ${target} POST_BUILD
