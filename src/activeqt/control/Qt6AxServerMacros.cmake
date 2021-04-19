@@ -14,15 +14,7 @@ function(qt6_add_axserver_executable target)
     qt_add_executable(${target} ${arg_UNPARSED_ARGUMENTS})
     set_target_properties(${target} PROPERTIES WIN32_EXECUTABLE TRUE)
     target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::AxServer)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
-        # Need to wrap in an EVAL CODE or else ${target} won't be evaluated
-        # due to special behavior of cmake_language() argument handling
-        cmake_language(EVAL CODE
-            "cmake_language(DEFER CALL qt6_target_idl ${target} ${arg_SKIP_AX_SERVER_REGISTRATION})"
-        )
-    else()
-        qt6_target_idl(${target} ${arg_SKIP_AX_SERVER_REGISTRATION})
-    endif()
+    qt6_target_idl(${target} ${arg_SKIP_AX_SERVER_REGISTRATION})
 endfunction()
 
 # Adds an ActiveX server library, generates an IDL file and links the produced .tbl to the
@@ -40,15 +32,7 @@ function(qt6_add_axserver_library target)
     endif()
     add_library(${target} SHARED ${arg_UNPARSED_ARGUMENTS})
     target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::AxServer)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
-        # Need to wrap in an EVAL CODE or else ${target} won't be evaluated
-        # due to special behavior of cmake_language() argument handling
-        cmake_language(EVAL CODE
-            "cmake_language(DEFER CALL qt6_target_idl ${target} ${arg_SKIP_AX_SERVER_REGISTRATION})"
-        )
-    else()
-        qt6_target_idl(${target} ${arg_SKIP_AX_SERVER_REGISTRATION})
-    endif()
+    qt6_target_idl(${target} ${arg_SKIP_AX_SERVER_REGISTRATION})
 endfunction()
 
 # Adds post-build rules to generate and link IDC/MIDL artifacts to the library or executable.
@@ -78,26 +62,15 @@ function(qt6_target_idl target)
         midl "${output_idl}" /nologo /tlb "${output_tlb}"
     )
 
-    get_target_property(sources ${target} "SOURCES")
-    set(has_rc FALSE)
-    foreach(src IN LISTS sources)
-        if(src MATCHES ".*\\.rc$")
-            set(has_rc TRUE)
-            break()
-        endif()
-    endforeach()
-    if(has_rc)
-        _qt_internal_wrap_tool_command(tlb_command_list APPEND
-            "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>"
-            "$<TARGET_FILE:${target}>" /tlb "${output_tlb}"
-        )
-    else()
-        message(AUTHOR_WARNING "No rc-file linked into project. The type library of the ${target} \
-target will be a separate file."
-        )
-        # TODO: Perhaps it makes sense to add an installation rule that delivers the generated .tlb
-        # file as a part of the development package.
-    endif()
+    set(rc_files "$<FILTER:$<TARGET_PROPERTY:${target},SOURCES>,INCLUDE,\\.rc$>")
+    set(have_rc_files "$<NOT:$<BOOL:$<STREQUAL:${rc_files},>>>")
+    set(rc_cmd "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>$<SEMICOLON>\
+$<TARGET_FILE:${target}>$<SEMICOLON>/tlb$<SEMICOLON>${output_tlb}")
+    set(no_rc_cmd "echo \"No rc-file linked into project. The type library of the ${target} \
+target will be a separate file.\"")
+    _qt_internal_wrap_tool_command(tlb_command_list APPEND
+        "$<IF:${have_rc_files},${rc_cmd},${no_rc_cmd}>"
+    )
 
     if(NOT arg_SKIP_AX_SERVER_REGISTRATION AND NOT QT_SKIP_AX_SERVER_REGISTRATION)
         _qt_internal_wrap_tool_command(tlb_command_list APPEND
@@ -110,6 +83,7 @@ target will be a separate file."
         DEPENDS
             ${QT_CMAKE_EXPORT_NAMESPACE}::idc
         VERBATIM
+        COMMAND_EXPAND_LISTS
     )
 endfunction()
 
