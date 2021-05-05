@@ -20,24 +20,24 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS AxContainer)
 
+qt_add_executable(qutlook
+    addressview.cpp addressview.h
+    main.cpp
 )
+
 set_target_properties(qutlook PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
+qt6_target_typelibs(qutlook "msoutl:{00062FFF-0000-0000-C000-000000000046}")
+
 target_link_libraries(qutlook PUBLIC
     Qt::AxContainer
     Qt::Core
     Qt::Gui
     Qt::Widgets
 )
-
-if(NOT TYPELIBS_ISEMPTY)
-    target_sources(qutlook PUBLIC
-        addressview.cpp addressview.h
-        main.cpp
-    )
-endif()
 
 install(TARGETS qutlook
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

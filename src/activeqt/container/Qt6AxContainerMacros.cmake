@@ -8,6 +8,10 @@
 #   CMake find_file function rules. See https://cmake.org/cmake/help/latest/command/find_file.html
 #   for details.
 #   Note: The library name must include a file suffix, e.g "ieframe.dll".
+#   LIBRARIES also may contain the library UUID in the following format:
+#       <generated_files_basename>:<{00000000-0000-0000-0000-000000000000}>
+#   The 'generated_files_basename' may contain ASCII letters, numbers and underscores and will be
+#    used as the base name for the generated files.
 #
 # OUTPUT_DIRECTORY: Custom location of the generated source files.
 #   ${CMAKE_CURRENT_BINARY_DIR} is the default location if not specified. (OPTIONAL)
@@ -34,22 +38,34 @@ function(qt6_target_typelibs target)
     endif()
 
     set(out_sources "")
+    set(hex "[a-fA-F0-9]")
+    set(ident_ "[a-fA-F0-9_]")
     foreach(lib IN LISTS arg_LIBRARIES)
         unset(libpath CACHE)
-        # If lib exists on the filesystem, we assume the user provided the path.
-        get_filename_component(lib_abspath "${lib}" ABSOLUTE)
-        if(EXISTS "${lib_abspath}")
-            set(libpath "${lib_abspath}")
-        else()
-            find_file(libpath NAMES "${lib}")
-            if(NOT libpath)
-                message(FATAL_ERROR "qt6_target_typelibs: Unable to find type lib with name ${lib}")
+        if(lib MATCHES "^(${ident_}+):(\\{${hex}{8}-${hex}{4}-${hex}{4}-${hex}{4}-${hex}{12}\\})$")
+            set(libpath "${CMAKE_MATCH_2}")
+            set(out_basename "${CMAKE_MATCH_1}")
+            string(MAKE_C_IDENTIFIER "${out_basename}" out_basename_valid)
+            if(NOT "${out_basename_valid}" STREQUAL "${out_basename}")
+                message("The specified generated files basename ${out_basename} is not valid\
+C indentifier")
             endif()
+        else()
+            # If lib exists on the filesystem, we assume the user provided the path.
+            get_filename_component(lib_abspath "${lib}" ABSOLUTE)
+            if(EXISTS "${lib_abspath}")
+                set(libpath "${lib_abspath}")
+            else()
+                find_file(libpath NAMES "${lib}")
+                if(NOT libpath)
+                    message(FATAL_ERROR "qt6_target_typelibs: Unable to find type lib with name ${lib}")
+                endif()
+            endif()
+
+            get_filename_component(out_basename "${libpath}" NAME_WE)
         endif()
 
-        get_filename_component(out_basename "${libpath}" NAME_WE)
         set(out_filebasepath "${output_directory}/${out_basename}")
-
         set(out_header "${out_filebasepath}.h")
         set_source_files_properties("${out_header}" PROPERTIES HEADER_FILE_ONLY TRUE)
         set(out_source "${out_filebasepath}.cpp")
