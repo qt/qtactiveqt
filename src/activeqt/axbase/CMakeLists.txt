@@ -4,7 +4,7 @@
 ## AxBase Module:
 #####################################################################
 
-qt_internal_add_module(AxBase # special case
+qt_internal_add_module(AxBasePrivate # special case
     STATIC
     INTERNAL_MODULE
     SOURCES
@@ -30,7 +30,7 @@ qt_internal_add_module(AxBase # special case
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(AxBase CONDITION MINGW
+qt_internal_extend_target(AxBasePrivate CONDITION MINGW
     LIBRARIES
         uuid
 )
