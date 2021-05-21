@@ -48,7 +48,9 @@
 **
 ****************************************************************************/
 
-#define NOMINMAX
+#ifndef NOMINMAX
+#  define NOMINMAX
+#endif
 
 #include <qabstracteventdispatcher.h>
 #include <qapplication.h>
