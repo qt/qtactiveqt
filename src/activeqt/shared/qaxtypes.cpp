@@ -48,7 +48,9 @@
 **
 ****************************************************************************/
 
-#define NOMINMAX
+#ifndef NOMINMAX
+#  define NOMINMAX
+#endif
 
 #include <ocidl.h>
 #include <olectl.h>
