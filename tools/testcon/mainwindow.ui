@@ -362,7 +362,6 @@
           <addaction name="actionLogProperties" />
         </widget>
         <addaction name="actionFreezeEvents" />
-        <addaction name="actionGroupLogging" />
         <addaction name="LoggingMenu" />
         <addaction name="actionFreeUnusedDLLs"/>
       </widget>
