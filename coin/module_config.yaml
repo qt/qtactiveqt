@@ -18,10 +18,10 @@ instructions:
         contains_value: Documentation
     - type: AppendToEnvironmentVariable
       variableName: NON_QTBASE_CONFIGURE_ARGS
-      variableValue: " -DQT_SKIP_AX_SERVER_REGISTRATION=ON"
+      variableValue: " -DQT_NO_AX_SERVER_REGISTRATION=ON"
     - type: AppendToEnvironmentVariable
       variableName: NON_QTBASE_TARGET_CONFIGURE_ARGS
-      variableValue: " -DQT_SKIP_AX_SERVER_REGISTRATION=ON"
+      variableValue: " -DQT_NO_AX_SERVER_REGISTRATION=ON"
     - !include "{{qt/qtbase}}/coin_module_build_template_v2.yaml"
 
   Test:
