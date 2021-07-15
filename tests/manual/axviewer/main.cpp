@@ -148,8 +148,6 @@ void MainWindow::showMetaObject()
 
 int main(int argc, char* argv[])
 {
-    if (isOptionSet(argc, argv, "-s"))
-        QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
     if (!isOptionSet(argc, argv, "-n"))
         QCoreApplication::setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
 
@@ -161,9 +159,6 @@ int main(int argc, char* argv[])
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
     parser.addHelpOption();
     parser.addVersionOption();
-    QCommandLineOption noScalingDummy(QStringLiteral("s"),
-                                      QStringLiteral("Set Qt::AA_DisableHighDpiScaling."));
-    parser.addOption(noScalingDummy);
     QCommandLineOption nativeSiblingsDummy(QStringLiteral("n"),
                                            QStringLiteral("Do not set Qt::AA_DontCreateNativeWidgetSiblings."));
     parser.addOption(nativeSiblingsDummy);
