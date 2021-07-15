@@ -4,8 +4,7 @@
 ## testcon Binary:
 #####################################################################
 
-qt_internal_add_executable(testcon # special case
-    GUI
+qt_internal_add_app(testcon # special case
 #    OUTPUT_DIRECTORY "$$[QT_INSTALL_BINS]" # special case
 #    INSTALL_DIRECTORY "$$[QT_INSTALL_BINS]" # special case
     SOURCES
