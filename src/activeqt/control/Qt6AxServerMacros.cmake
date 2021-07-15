@@ -5,16 +5,16 @@
 # This function is currently in Technical Preview.
 # Its signature and behavior might change.
 function(qt6_add_axserver_executable target)
-    cmake_parse_arguments(arg "SKIP_AX_SERVER_REGISTRATION" "" "" ${ARGN})
-    if(arg_SKIP_AX_SERVER_REGISTRATION)
-        set(arg_SKIP_AX_SERVER_REGISTRATION "SKIP_AX_SERVER_REGISTRATION")
+    cmake_parse_arguments(arg "NO_AX_SERVER_REGISTRATION" "" "" ${ARGN})
+    if(arg_NO_AX_SERVER_REGISTRATION)
+        set(arg_NO_AX_SERVER_REGISTRATION "NO_AX_SERVER_REGISTRATION")
     else()
-        unset(arg_SKIP_AX_SERVER_REGISTRATION)
+        unset(arg_NO_AX_SERVER_REGISTRATION)
     endif()
     qt_add_executable(${target} ${arg_UNPARSED_ARGUMENTS})
     set_target_properties(${target} PROPERTIES WIN32_EXECUTABLE TRUE)
     target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::AxServer)
-    qt6_target_idl(${target} ${arg_SKIP_AX_SERVER_REGISTRATION})
+    qt6_target_idl(${target} ${arg_NO_AX_SERVER_REGISTRATION})
 endfunction()
 
 # Adds an ActiveX server library, generates an IDL file and links the produced .tbl to the
@@ -24,27 +24,27 @@ endfunction()
 # This function is currently in Technical Preview.
 # Its signature and behavior might change.
 function(qt6_add_axserver_library target)
-    cmake_parse_arguments(arg "SKIP_AX_SERVER_REGISTRATION" "" "" ${ARGN})
-    if(arg_SKIP_AX_SERVER_REGISTRATION)
-        set(arg_SKIP_AX_SERVER_REGISTRATION "SKIP_AX_SERVER_REGISTRATION")
+    cmake_parse_arguments(arg "NO_AX_SERVER_REGISTRATION" "" "" ${ARGN})
+    if(arg_NO_AX_SERVER_REGISTRATION)
+        set(arg_NO_AX_SERVER_REGISTRATION "NO_AX_SERVER_REGISTRATION")
     else()
-        unset(arg_SKIP_AX_SERVER_REGISTRATION)
+        unset(arg_NO_AX_SERVER_REGISTRATION)
     endif()
     add_library(${target} SHARED ${arg_UNPARSED_ARGUMENTS})
     target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::AxServer)
-    qt6_target_idl(${target} ${arg_SKIP_AX_SERVER_REGISTRATION})
+    qt6_target_idl(${target} ${arg_NO_AX_SERVER_REGISTRATION})
 endfunction()
 
 # Adds post-build rules to generate and link IDC/MIDL artifacts to the library or executable.
 # Arguments:
-#   SKIP_AX_SERVER_REGISTRATION skips the ActiveX server registration.
-#      Note: You may also use the QT_SKIP_AX_SERVER_REGISTRATION variable to globally skip
+#   NO_AX_SERVER_REGISTRATION skips the ActiveX server registration.
+#      Note: You may also use the QT_NO_AX_SERVER_REGISTRATION variable to globally skip
 #      the ActiveX server registrations.
 #
 # This function is currently in Technical Preview.
 # Its signature and behavior might change.
 function(qt6_target_idl target)
-    cmake_parse_arguments(arg "SKIP_AX_SERVER_REGISTRATION" "" "" ${ARGN})
+    cmake_parse_arguments(arg "NO_AX_SERVER_REGISTRATION" "" "" ${ARGN})
     if(NOT WIN32)
         return()
     endif()
@@ -72,7 +72,7 @@ target will be a separate file.\"")
         "$<IF:${have_rc_files},${rc_cmd},${no_rc_cmd}>"
     )
 
-    if(NOT arg_SKIP_AX_SERVER_REGISTRATION AND NOT QT_SKIP_AX_SERVER_REGISTRATION)
+    if(NOT arg_NO_AX_SERVER_REGISTRATION AND NOT QT_NO_AX_SERVER_REGISTRATION)
         _qt_internal_wrap_tool_command(tlb_command_list APPEND
             "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>"
              "$<TARGET_FILE:${target}>" /regserver
