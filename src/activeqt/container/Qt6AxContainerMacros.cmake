@@ -38,11 +38,17 @@ function(qt6_target_typelibs target)
     endif()
 
     set(out_sources "")
-    set(hex "[a-fA-F0-9]")
-    set(ident_ "[a-fA-F0-9_]")
+
+    # CMake doesn't support quantifiers.
+    set(hex_num "[a-fA-F0-9][a-fA-F0-9]")
+    set(hex_two "${hex_num}${hex_num}")
+    set(hex_four "${hex_two}${hex_two}")
+    set(hex_six "${hex_two}${hex_two}${hex_two}")
+
+    set(ident_ "[a-zA-Z0-9_]")
     foreach(lib IN LISTS arg_LIBRARIES)
         unset(libpath CACHE)
-        if(lib MATCHES "^(${ident_}+):(\\{${hex}{8}-${hex}{4}-${hex}{4}-${hex}{4}-${hex}{12}\\})$")
+        if(lib MATCHES "^(${ident_}+):({${hex_four}-${hex_two}-${hex_two}-${hex_two}-${hex_six}})$")
             set(libpath "${CMAKE_MATCH_2}")
             set(out_basename "${CMAKE_MATCH_1}")
             string(MAKE_C_IDENTIFIER "${out_basename}" out_basename_valid)
