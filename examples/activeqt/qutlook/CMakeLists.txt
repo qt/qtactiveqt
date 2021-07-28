@@ -30,7 +30,7 @@ set_target_properties(qutlook PROPERTIES
     MACOSX_BUNDLE TRUE
 )
 
-qt6_target_typelibs(qutlook "msoutl:{00062FFF-0000-0000-C000-000000000046}")
+qt6_target_typelibs(qutlook LIBRARIES "msoutl:{00062FFF-0000-0000-C000-000000000046}")
 
 target_link_libraries(qutlook PUBLIC
     Qt::AxContainer
