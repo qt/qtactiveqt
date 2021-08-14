@@ -63,6 +63,9 @@
     \li -compat
     \li Generate namespace with dynamicCall-compatible API
     \row
+    \li -controlname
+    \li Use the control class name instead of the UUID in setControl()
+    \row
     \li -v
     \li Print version information
     \row

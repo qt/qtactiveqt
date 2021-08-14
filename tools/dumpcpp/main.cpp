@@ -180,8 +180,16 @@ static void formatConstructorSignature(QTextStream &out, ObjectCategories catego
 
 static void formatConstructorBody(QTextStream &out, const QByteArray &nameSpace,
                                   const QByteArray &className,
-                                  const QString &controlID, ObjectCategories category)
+                                  const QString &controlID, ObjectCategories category, bool useControlName)
 {
+    QString controlName;
+    if (useControlName) {
+        if (!nameSpace.isEmpty())
+            controlName = QString::fromUtf8(nameSpace) + QStringLiteral(".");
+        controlName += QString::fromUtf8(className);
+    } else {
+        controlName = controlID;
+    }
     if (!nameSpace.isEmpty())
         out << nameSpace << "::";
     out << className << "::" << className;
@@ -198,11 +206,11 @@ static void formatConstructorBody(QTextStream &out, const QByteArray &nameSpace,
         out << "    internalRelease();" << Qt::endl;
     } else if (category & Licensed) {
         out << "    if (licenseKey.isEmpty())" << Qt::endl;
-        out << "        setControl(QStringLiteral(\"" << controlID << "\"));" << Qt::endl;
+        out << "        setControl(QStringLiteral(\"" << controlName << "\"));" << Qt::endl;
         out << "    else" << Qt::endl;
-        out << "        setControl(QStringLiteral(\"" << controlID << ":\") + licenseKey);" << Qt::endl;
+        out << "        setControl(QStringLiteral(\"" << controlName << ":\") + licenseKey);" << Qt::endl;
     } else {
-        out << "    setControl(QStringLiteral(\"" << controlID << "\"));" << Qt::endl;
+        out << "    setControl(QStringLiteral(\"" << controlName << "\"));" << Qt::endl;
     }
     out << '}' << Qt::endl << Qt::endl;
 }
@@ -539,6 +547,7 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
 bool generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray &className,
                        const QString &controlID,
                        const QByteArray &nameSpace, ObjectCategories category,
+                       bool useControlName,
                        QString *errorString)
 {
     Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 10, "dumpcpp should generate the same version as moc");
@@ -557,7 +566,7 @@ bool generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
 
     out << moCode << "\n\n";
 
-    formatConstructorBody(out, nameSpace, className, controlID, category);
+    formatConstructorBody(out, nameSpace, className, controlID, category, useControlName);
 
     return true;
 }
@@ -622,7 +631,7 @@ static const QMetaObject *baseMetaObject(ObjectCategories c)
 }
 
 bool generateTypeLibrary(QString typeLibFile, QString outname,
-                         const QString &nameSpace, ObjectCategories category)
+                         const QString &nameSpace, ObjectCategories category, bool useControlName)
 {
     typeLibFile.replace(QLatin1Char('/'), QLatin1Char('\\'));
 
@@ -909,7 +918,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 if (implFile.isOpen()) {
                     QString errorString;
                     if (!generateClassImpl(classImplOut, metaObject, className, guid.toString(), libNameBa,
-                                           object_category, &errorString)) {
+                                           object_category, useControlName, &errorString)) {
                         qWarning("%s", qPrintable(errorString));
                         return false;
                     }
@@ -970,6 +979,7 @@ struct Options
     ProgramMode mode = GenerateMode;
     ObjectCategories category = DefaultObject;
     bool dispatchEqualsIDispatch = false;
+    bool useControlName = false;
 
     QString outname;
     QString typeLib;
@@ -989,6 +999,7 @@ static void parseOptions(Options *options)
     const char outputOptionC[] = "-o";
     const char nameSpaceOptionC[] = "-n";
     const char getfileOptionC[] = "-getfile";
+    const char useControlNameOptionC[] = "-controlname";
 
     QStringList args = QCoreApplication::arguments();
     // Convert Windows-style '/option' into '-option'.
@@ -1036,6 +1047,9 @@ static void parseOptions(Options *options)
     parser.addOption(getFileOption);
     parser.addPositionalArgument(QStringLiteral("input"),
                                  QStringLiteral("A type library file, type library ID, ProgID or CLSID."));
+    QCommandLineOption useControlNameOption(QLatin1String(useControlNameOptionC + 1),
+                                            QStringLiteral("Use the control class name instead of the UUID for setControl()."));
+    parser.addOption(useControlNameOption);
     parser.process(args);
 
     if (parser.isSet(outputOption))
@@ -1053,6 +1067,8 @@ static void parseOptions(Options *options)
         options->typeLib = parser.value(getFileOption);
         options->mode = TypeLibID;
     }
+    if (parser.isSet(useControlNameOption))
+        options->useControlName = true;
     if (!parser.positionalArguments().isEmpty())
         options->typeLib = parser.positionalArguments().first();
 
@@ -1162,7 +1178,7 @@ int main(int argc, char **argv)
         return -2;
     }
 
-    if (!generateTypeLibrary(typeLib, options.outname, options.nameSpace, options.category)) {
+    if (!generateTypeLibrary(typeLib, options.outname, options.nameSpace, options.category, options.useControlName)) {
         qWarning("dumpcpp: error processing type library '%s'", qPrintable(typeLib));
         return -1;
     }
