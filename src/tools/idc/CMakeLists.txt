@@ -12,6 +12,7 @@ qt_internal_add_tool(${target_name} # special case
     SOURCES
         main.cpp
 )
+qt_internal_return_unless_building_tools()
 
 #### Keys ignored in scope 1:.:.:idc.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "Active Qt Interface Description Compiler"
