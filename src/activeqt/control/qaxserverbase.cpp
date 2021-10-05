@@ -235,125 +235,124 @@ public:
     }
 
 // IDispatch
-    STDMETHOD(GetTypeInfoCount)(UINT* pctinfo);
-    STDMETHOD(GetTypeInfo)(UINT itinfo, LCID lcid, ITypeInfo** pptinfo);
-    STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgdispid);
+    STDMETHOD(GetTypeInfoCount)(UINT* pctinfo) override;
+    STDMETHOD(GetTypeInfo)(UINT itinfo, LCID lcid, ITypeInfo** pptinfo) override;
+    STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgdispid) override;
     STDMETHOD(Invoke)(DISPID dispidMember, REFIID riid,
                 LCID lcid, WORD wFlags, DISPPARAMS* pdispparams, VARIANT* pvarResult,
-                EXCEPINFO* pexcepinfo, UINT* puArgErr);
+                EXCEPINFO* pexcepinfo, UINT* puArgErr) override;
 
 // IProvideClassInfo
-    STDMETHOD(GetClassInfo)(ITypeInfo** pptinfo);
+    STDMETHOD(GetClassInfo)(ITypeInfo** pptinfo) override;
 
 // IProvideClassInfo2
-    STDMETHOD(GetGUID)(DWORD dwGuidKind, GUID* pGUID);
+    STDMETHOD(GetGUID)(DWORD dwGuidKind, GUID* pGUID) override;
 
 // IOleObject
-    STDMETHOD(Advise)(IAdviseSink* pAdvSink, DWORD* pdwConnection);
-    STDMETHOD(Close)(DWORD dwSaveOption);
-    STDMETHOD(DoVerb)(LONG iVerb, LPMSG lpmsg, IOleClientSite* pActiveSite, LONG lindex, HWND hwndParent, LPCRECT lprcPosRect);
-    STDMETHOD(EnumAdvise)(IEnumSTATDATA** ppenumAdvise);
-    STDMETHOD(EnumVerbs)(IEnumOLEVERB** ppEnumOleVerb);
-    STDMETHOD(GetClientSite)(IOleClientSite** ppClientSite);
-    STDMETHOD(GetClipboardData)(DWORD dwReserved, IDataObject** ppDataObject);
-    STDMETHOD(GetExtent)(DWORD dwDrawAspect, SIZEL* psizel);
-    STDMETHOD(GetMiscStatus)(DWORD dwAspect, DWORD *pdwStatus);
-    STDMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker** ppmk);
-    STDMETHOD(GetUserClassID)(CLSID* pClsid);
-    STDMETHOD(GetUserType)(DWORD dwFormOfType, LPOLESTR *pszUserType);
-    STDMETHOD(InitFromData)(IDataObject* pDataObject, BOOL fCreation, DWORD dwReserved);
-    STDMETHOD(IsUpToDate)();
-    STDMETHOD(SetClientSite)(IOleClientSite* pClientSite);
-    STDMETHOD(SetColorScheme)(LOGPALETTE* pLogPal);
-    STDMETHOD(SetExtent)(DWORD dwDrawAspect, SIZEL* psizel);
-    STDMETHOD(SetHostNames)(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj);
-    STDMETHOD(SetMoniker)(DWORD dwWhichMoniker, IMoniker* ppmk);
-    STDMETHOD(Unadvise)(DWORD dwConnection);
-    STDMETHOD(Update)();
+    STDMETHOD(Advise)(IAdviseSink* pAdvSink, DWORD* pdwConnection) override;
+    STDMETHOD(Close)(DWORD dwSaveOption) override;
+    STDMETHOD(DoVerb)(LONG iVerb, LPMSG lpmsg, IOleClientSite* pActiveSite, LONG lindex, HWND hwndParent, LPCRECT lprcPosRect) override;
+    STDMETHOD(EnumAdvise)(IEnumSTATDATA** ppenumAdvise) override;
+    STDMETHOD(EnumVerbs)(IEnumOLEVERB** ppEnumOleVerb) override;
+    STDMETHOD(GetClientSite)(IOleClientSite** ppClientSite) override;
+    STDMETHOD(GetClipboardData)(DWORD dwReserved, IDataObject** ppDataObject) override;
+    STDMETHOD(GetExtent)(DWORD dwDrawAspect, SIZEL* psizel) override;
+    STDMETHOD(GetMiscStatus)(DWORD dwAspect, DWORD *pdwStatus) override;
+    STDMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker** ppmk) override;
+    STDMETHOD(GetUserClassID)(CLSID* pClsid) override;
+    STDMETHOD(GetUserType)(DWORD dwFormOfType, LPOLESTR *pszUserType) override;
+    STDMETHOD(InitFromData)(IDataObject* pDataObject, BOOL fCreation, DWORD dwReserved) override;
+    STDMETHOD(IsUpToDate)() override;
+    STDMETHOD(SetClientSite)(IOleClientSite* pClientSite) override;
+    STDMETHOD(SetColorScheme)(LOGPALETTE* pLogPal) override;
+    STDMETHOD(SetExtent)(DWORD dwDrawAspect, SIZEL* psizel) override;
+    STDMETHOD(SetHostNames)(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj) override;
+    STDMETHOD(SetMoniker)(DWORD dwWhichMoniker, IMoniker* ppmk) override;
+    STDMETHOD(Unadvise)(DWORD dwConnection) override;
+    STDMETHOD(Update)() override;
 
 // IViewObject
     STDMETHOD(Draw)(DWORD dwAspect, LONG lIndex, void *pvAspect, DVTARGETDEVICE *ptd,
                     HDC hicTargetDevice, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds,
-                    BOOL(__stdcall*pfnContinue)(ULONG_PTR), ULONG_PTR dwContinue);
+                    BOOL(__stdcall*pfnContinue)(ULONG_PTR), ULONG_PTR dwContinue) override;
     STDMETHOD(GetColorSet)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
-                    HDC hicTargetDev, LOGPALETTE **ppColorSet);
-    STDMETHOD(Freeze)(DWORD dwAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze);
-    STDMETHOD(Unfreeze)(DWORD dwFreeze);
-    STDMETHOD(SetAdvise)(DWORD aspects, DWORD advf, IAdviseSink *pAdvSink);
-    STDMETHOD(GetAdvise)(DWORD *aspects, DWORD *advf, IAdviseSink **pAdvSink);
+                    HDC hicTargetDev, LOGPALETTE **ppColorSet) override;
+    STDMETHOD(Freeze)(DWORD dwAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze) override;
+    STDMETHOD(Unfreeze)(DWORD dwFreeze) override;
+    STDMETHOD(SetAdvise)(DWORD aspects, DWORD advf, IAdviseSink *pAdvSink) override;
+    STDMETHOD(GetAdvise)(DWORD *aspects, DWORD *advf, IAdviseSink **pAdvSink) override;
 
 // IViewObject2
-    STDMETHOD(GetExtent)(DWORD dwAspect, LONG lindex, DVTARGETDEVICE *ptd, LPSIZEL lpsizel);
+    STDMETHOD(GetExtent)(DWORD dwAspect, LONG lindex, DVTARGETDEVICE *ptd, LPSIZEL lpsizel) override;
 
 // IOleControl
-    STDMETHOD(FreezeEvents)(BOOL);
-    STDMETHOD(GetControlInfo)(LPCONTROLINFO);
-    STDMETHOD(OnAmbientPropertyChange)(DISPID);
-    STDMETHOD(OnMnemonic)(LPMSG);
+    STDMETHOD(FreezeEvents)(BOOL) override;
+    STDMETHOD(GetControlInfo)(LPCONTROLINFO) override;
+    STDMETHOD(OnAmbientPropertyChange)(DISPID) override;
+    STDMETHOD(OnMnemonic)(LPMSG) override;
 
 // IOleWindow
-    STDMETHOD(GetWindow)(HWND *pHwnd);
-    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *pHwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
 // IOleInPlaceObject
-    STDMETHOD(InPlaceDeactivate)();
-    STDMETHOD(UIDeactivate)();
-    STDMETHOD(SetObjectRects)(LPCRECT lprcPosRect, LPCRECT lprcClipRect);
-    STDMETHOD(ReactivateAndUndo)();
+    STDMETHOD(InPlaceDeactivate)() override;
+    STDMETHOD(UIDeactivate)() override;
+    STDMETHOD(SetObjectRects)(LPCRECT lprcPosRect, LPCRECT lprcClipRect) override;
+    STDMETHOD(ReactivateAndUndo)() override;
 
 // IOleInPlaceActiveObject
-    STDMETHOD(TranslateAcceleratorW)(MSG *pMsg);
-    STDMETHOD(TranslateAcceleratorA)(MSG *pMsg);
-    STDMETHOD(OnFrameWindowActivate)(BOOL);
-    STDMETHOD(OnDocWindowActivate)(BOOL fActivate);
-    STDMETHOD(ResizeBorder)(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fFrameWindow);
-    STDMETHOD(EnableModeless)(BOOL);
+    STDMETHOD(TranslateAccelerator)(MSG *pMsg) override;
+    STDMETHOD(OnFrameWindowActivate)(BOOL) override;
+    STDMETHOD(OnDocWindowActivate)(BOOL fActivate) override;
+    STDMETHOD(ResizeBorder)(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fFrameWindow) override;
+    STDMETHOD(EnableModeless)(BOOL) override;
 
 // IConnectionPointContainer
-    STDMETHOD(EnumConnectionPoints)(IEnumConnectionPoints**);
-    STDMETHOD(FindConnectionPoint)(REFIID, IConnectionPoint**);
+    STDMETHOD(EnumConnectionPoints)(IEnumConnectionPoints**) override;
+    STDMETHOD(FindConnectionPoint)(REFIID, IConnectionPoint**) override;
 
 // IPersist
-    STDMETHOD(GetClassID)(GUID*clsid)
+    STDMETHOD(GetClassID)(GUID*clsid) override
     {
         *clsid = qAxFactory()->classID(class_name);
         return S_OK;
     }
 
 // IPersistStreamInit
-    STDMETHOD(InitNew)(VOID);
-    STDMETHOD(IsDirty)();
-    STDMETHOD(Load)(IStream *pStm);
-    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty);
-    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize);
+    STDMETHOD(InitNew)(VOID) override;
+    STDMETHOD(IsDirty)() override;
+    STDMETHOD(Load)(IStream *pStm) override;
+    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
 
 // IPersistPropertyBag
-    STDMETHOD(Load)(IPropertyBag *, IErrorLog *);
-    STDMETHOD(Save)(IPropertyBag *, BOOL, BOOL);
+    STDMETHOD(Load)(IPropertyBag *, IErrorLog *) override;
+    STDMETHOD(Save)(IPropertyBag *, BOOL, BOOL) override;
 
 // IPersistStorage
-    STDMETHOD(InitNew)(IStorage *pStg);
-    STDMETHOD(Load)(IStorage *pStg);
-    STDMETHOD(Save)(IStorage *pStg, BOOL fSameAsLoad);
-    STDMETHOD(SaveCompleted)(IStorage *pStgNew);
-    STDMETHOD(HandsOffStorage)();
+    STDMETHOD(InitNew)(IStorage *pStg) override;
+    STDMETHOD(Load)(IStorage *pStg) override;
+    STDMETHOD(Save)(IStorage *pStg, BOOL fSameAsLoad) override;
+    STDMETHOD(SaveCompleted)(IStorage *pStgNew) override;
+    STDMETHOD(HandsOffStorage)() override;
 
 // IPersistFile
-    STDMETHOD(SaveCompleted)(LPCOLESTR fileName);
-    STDMETHOD(GetCurFile)(LPOLESTR *currentFile);
-    STDMETHOD(Load)(LPCOLESTR fileName, DWORD mode);
-    STDMETHOD(Save)(LPCOLESTR fileName, BOOL fRemember);
+    STDMETHOD(SaveCompleted)(LPCOLESTR fileName) override;
+    STDMETHOD(GetCurFile)(LPOLESTR *currentFile) override;
+    STDMETHOD(Load)(LPCOLESTR fileName, DWORD mode) override;
+    STDMETHOD(Save)(LPCOLESTR fileName, BOOL fRemember) override;
 
 // IDataObject
-    STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium);
-    STDMETHOD(GetDataHere)(FORMATETC* /* pformatetc */, STGMEDIUM* /* pmedium */);
-    STDMETHOD(QueryGetData)(FORMATETC* /* pformatetc */);
-    STDMETHOD(GetCanonicalFormatEtc)(FORMATETC* /* pformatectIn */,FORMATETC* /* pformatetcOut */);
-    STDMETHOD(SetData)(FORMATETC* /* pformatetc */, STGMEDIUM* /* pmedium */, BOOL /* fRelease */);
-    STDMETHOD(EnumFormatEtc)(DWORD /* dwDirection */, IEnumFORMATETC** /* ppenumFormatEtc */);
-    STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection);
-    STDMETHOD(DUnadvise)(DWORD dwConnection);
-    STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise);
+    STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium) override;
+    STDMETHOD(GetDataHere)(FORMATETC* /* pformatetc */, STGMEDIUM* /* pmedium */) override;
+    STDMETHOD(QueryGetData)(FORMATETC* /* pformatetc */) override;
+    STDMETHOD(GetCanonicalFormatEtc)(FORMATETC* /* pformatectIn */,FORMATETC* /* pformatetcOut */) override;
+    STDMETHOD(SetData)(FORMATETC* /* pformatetc */, STGMEDIUM* /* pmedium */, BOOL /* fRelease */) override;
+    STDMETHOD(EnumFormatEtc)(DWORD /* dwDirection */, IEnumFORMATETC** /* ppenumFormatEtc */) override;
+    STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection) override;
+    STDMETHOD(DUnadvise)(DWORD dwConnection) override;
+    STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise) override;
 
 // QObject
     int qt_metacall(QMetaObject::Call, int index, void **argv) override;
@@ -561,7 +560,7 @@ public:
 
         return refCount;
     }
-    STDMETHOD(QueryInterface)(REFIID iid, void **iface)
+    STDMETHOD(QueryInterface)(REFIID iid, void **iface) override
     {
         if (!iface)
             return E_POINTER;
@@ -576,7 +575,7 @@ public:
         AddRef();
         return S_OK;
     }
-    STDMETHOD(Next)(ULONG cConnections, IConnectionPoint **cpoint, ULONG *pcFetched)
+    STDMETHOD(Next)(ULONG cConnections, IConnectionPoint **cpoint, ULONG *pcFetched) override
     {
         if (!cpoint)
             return E_POINTER;
@@ -598,7 +597,7 @@ public:
             *pcFetched = i;
         return i == cConnections ? S_OK : S_FALSE;
     }
-    STDMETHOD(Skip)(ULONG cConnections)
+    STDMETHOD(Skip)(ULONG cConnections) override
     {
         const int count = cpoints.count();
         while (cConnections) {
@@ -609,12 +608,12 @@ public:
         }
         return S_OK;
     }
-    STDMETHOD(Reset)()
+    STDMETHOD(Reset)() override
     {
         current = 0;
         return S_OK;
     }
-    STDMETHOD(Clone)(IEnumConnectionPoints **ppEnum)
+    STDMETHOD(Clone)(IEnumConnectionPoints **ppEnum) override
     {
         if (!ppEnum)
             return E_POINTER;
@@ -679,7 +678,7 @@ public:
 
         return refCount;
     }
-    STDMETHOD(QueryInterface)(REFIID iid, void **iface)
+    STDMETHOD(QueryInterface)(REFIID iid, void **iface) override
     {
         if (!iface)
             return E_POINTER;
@@ -696,18 +695,18 @@ public:
         AddRef();
         return S_OK;
     }
-    STDMETHOD(GetConnectionInterface)(IID *pIID)
+    STDMETHOD(GetConnectionInterface)(IID *pIID) override
     {
         if (!pIID)
             return E_POINTER;
         *pIID = iid;
         return S_OK;
     }
-    STDMETHOD(GetConnectionPointContainer)(IConnectionPointContainer **ppCPC)
+    STDMETHOD(GetConnectionPointContainer)(IConnectionPointContainer **ppCPC) override
     {
         return that->QueryInterface(IID_IConnectionPointContainer, reinterpret_cast<void **>(ppCPC));
     }
-    STDMETHOD(Advise)(IUnknown*pUnk, DWORD *pdwCookie)
+    STDMETHOD(Advise)(IUnknown*pUnk, DWORD *pdwCookie) override
     {
         if (!pUnk || !pdwCookie)
             return E_POINTER;
@@ -728,7 +727,7 @@ public:
         *pdwCookie = cd.dwCookie;
         return S_OK;
     }
-    STDMETHOD(Unadvise)(DWORD dwCookie)
+    STDMETHOD(Unadvise)(DWORD dwCookie) override
     {
         const int count = connections.count();
         for (int i = 0; i < count; ++i) {
@@ -742,7 +741,7 @@ public:
         }
         return CONNECT_E_NOCONNECTION;
     }
-    STDMETHOD(EnumConnections)(IEnumConnections **ppEnum)
+    STDMETHOD(EnumConnections)(IEnumConnections **ppEnum) override
     {
         if (!ppEnum)
             return E_POINTER;
@@ -751,7 +750,7 @@ public:
 
         return S_OK;
     }
-    STDMETHOD(Next)(ULONG cConnections, CONNECTDATA *cd, ULONG *pcFetched)
+    STDMETHOD(Next)(ULONG cConnections, CONNECTDATA *cd, ULONG *pcFetched) override
     {
         if (!cd)
             return E_POINTER;
@@ -773,7 +772,7 @@ public:
             *pcFetched = i;
         return i == cConnections ? S_OK : S_FALSE;
     }
-    STDMETHOD(Skip)(ULONG cConnections)
+    STDMETHOD(Skip)(ULONG cConnections) override
     {
         const int count = connections.count();
         while (cConnections) {
@@ -784,12 +783,12 @@ public:
         }
         return S_OK;
     }
-    STDMETHOD(Reset)()
+    STDMETHOD(Reset)() override
     {
         current = 0;
         return S_OK;
     }
-    STDMETHOD(Clone)(IEnumConnections **ppEnum)
+    STDMETHOD(Clone)(IEnumConnections **ppEnum) override
     {
         if (!ppEnum)
             return E_POINTER;
@@ -3659,11 +3658,6 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
     SetWindowLong(pMsg->hwnd, GWL_USERDATA, oldData);
 #endif
     return hres;
-}
-
-HRESULT WINAPI QAxServerBase::TranslateAcceleratorA(MSG *pMsg)
-{
-    return TranslateAcceleratorW(pMsg);
 }
 
 HRESULT WINAPI QAxServerBase::OnFrameWindowActivate(BOOL fActivate)
