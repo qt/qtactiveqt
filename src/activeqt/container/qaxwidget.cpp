@@ -238,7 +238,7 @@ public:
     // IUnknown
     unsigned long WINAPI AddRef() override;
     unsigned long WINAPI Release() override;
-    STDMETHOD(QueryInterface)(REFIID iid, void **iface);
+    STDMETHOD(QueryInterface)(REFIID iid, void **iface) override;
 
     // IDispatch
     HRESULT __stdcall GetTypeInfoCount(unsigned int *) override
@@ -255,149 +255,149 @@ public:
     void emitAmbientPropertyChange(DISPID dispid);
 
     // IOleClientSite
-    STDMETHOD(SaveObject)();
-    STDMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker **ppmk);
-    STDMETHOD(GetContainer)(LPOLECONTAINER FAR* ppContainer);
-    STDMETHOD(ShowObject)();
-    STDMETHOD(OnShowWindow)(BOOL fShow);
-    STDMETHOD(RequestNewObjectLayout)();
+    STDMETHOD(SaveObject)() override;
+    STDMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker **ppmk) override;
+    STDMETHOD(GetContainer)(LPOLECONTAINER FAR* ppContainer) override;
+    STDMETHOD(ShowObject)() override;
+    STDMETHOD(OnShowWindow)(BOOL fShow) override;
+    STDMETHOD(RequestNewObjectLayout)() override;
 
     // IOleControlSite
-    STDMETHOD(OnControlInfoChanged)();
-    STDMETHOD(LockInPlaceActive)(BOOL fLock);
-    STDMETHOD(GetExtendedControl)(IDispatch** ppDisp);
-    STDMETHOD(TransformCoords)(POINTL* pPtlHimetric, POINTF* pPtfContainer, DWORD dwFlags);
-    STDMETHOD(TranslateAccelerator)(LPMSG lpMsg, DWORD grfModifiers);
-    STDMETHOD(OnFocus)(BOOL fGotFocus);
-    STDMETHOD(ShowPropertyFrame)();
+    STDMETHOD(OnControlInfoChanged)() override;
+    STDMETHOD(LockInPlaceActive)(BOOL fLock) override;
+    STDMETHOD(GetExtendedControl)(IDispatch** ppDisp) override;
+    STDMETHOD(TransformCoords)(POINTL* pPtlHimetric, POINTF* pPtfContainer, DWORD dwFlags) override;
+    STDMETHOD(TranslateAccelerator)(LPMSG lpMsg, DWORD grfModifiers) override;
+    STDMETHOD(OnFocus)(BOOL fGotFocus) override;
+    STDMETHOD(ShowPropertyFrame)() override;
 
     // IOleWindow
-    STDMETHOD(GetWindow)(HWND *phwnd);
-    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode);
+    STDMETHOD(GetWindow)(HWND *phwnd) override;
+    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // IOleInPlaceSite
-    STDMETHOD(CanInPlaceActivate)();
-    STDMETHOD(OnInPlaceActivate)();
-    STDMETHOD(OnUIActivate)();
-    STDMETHOD(GetWindowContext)(IOleInPlaceFrame **ppFrame, IOleInPlaceUIWindow **ppDoc, LPRECT lprcPosRect, LPRECT lprcClipRect, LPOLEINPLACEFRAMEINFO lpFrameInfo);
-    STDMETHOD(Scroll)(SIZE scrollExtant);
-    STDMETHOD(OnUIDeactivate)(BOOL fUndoable);
-    STDMETHOD(OnInPlaceDeactivate)();
-    STDMETHOD(DiscardUndoState)();
-    STDMETHOD(DeactivateAndUndo)();
-    STDMETHOD(OnPosRectChange)(LPCRECT lprcPosRect);
+    STDMETHOD(CanInPlaceActivate)() override;
+    STDMETHOD(OnInPlaceActivate)() override;
+    STDMETHOD(OnUIActivate)() override;
+    STDMETHOD(GetWindowContext)(IOleInPlaceFrame **ppFrame, IOleInPlaceUIWindow **ppDoc, LPRECT lprcPosRect, LPRECT lprcClipRect, LPOLEINPLACEFRAMEINFO lpFrameInfo) override;
+    STDMETHOD(Scroll)(SIZE scrollExtant) override;
+    STDMETHOD(OnUIDeactivate)(BOOL fUndoable) override;
+    STDMETHOD(OnInPlaceDeactivate)() override;
+    STDMETHOD(DiscardUndoState)() override;
+    STDMETHOD(DeactivateAndUndo)() override;
+    STDMETHOD(OnPosRectChange)(LPCRECT lprcPosRect) override;
 
 #ifdef QAX_SUPPORT_WINDOWLESS
 // IOleInPlaceSiteEx ###
-    STDMETHOD(OnInPlaceActivateEx)(BOOL* /*pfNoRedraw*/, DWORD /*dwFlags*/)
+    STDMETHOD(OnInPlaceActivateEx)(BOOL* /*pfNoRedraw*/, DWORD /*dwFlags*/) override
     {
         return S_OK;
     }
-    STDMETHOD(OnInPlaceDeactivateEx)(BOOL /*fNoRedraw*/)
+    STDMETHOD(OnInPlaceDeactivateEx)(BOOL /*fNoRedraw*/) override
     {
         return S_OK;
     }
-    STDMETHOD(RequestUIActivate)()
+    STDMETHOD(RequestUIActivate)() override
     {
         return S_OK;
     }
 
 // IOleInPlaceSiteWindowless ###
-    STDMETHOD(CanWindowlessActivate)()
+    STDMETHOD(CanWindowlessActivate)() override
     {
         return S_OK;
     }
-    STDMETHOD(GetCapture)()
+    STDMETHOD(GetCapture)() override
     {
         return S_FALSE;
     }
-    STDMETHOD(SetCapture)(BOOL /*fCapture*/)
+    STDMETHOD(SetCapture)(BOOL /*fCapture*/) override
     {
         return S_FALSE;
     }
-    STDMETHOD(GetFocus)()
+    STDMETHOD(GetFocus)() override
     {
         return S_FALSE;
     }
-    STDMETHOD(SetFocus)(BOOL /*fCapture*/)
+    STDMETHOD(SetFocus)(BOOL /*fCapture*/) override
     {
         return S_FALSE;
     }
-    STDMETHOD(GetDC)(LPCRECT /*pRect*/, DWORD /*grfFlags*/, HDC *phDC)
+    STDMETHOD(GetDC)(LPCRECT /*pRect*/, DWORD /*grfFlags*/, HDC *phDC) override
     {
         *phDC = 0;
         return S_OK;
     }
-    STDMETHOD(ReleaseDC)(HDC hDC)
+    STDMETHOD(ReleaseDC)(HDC hDC) override
     {
         ::ReleaseDC((HWND)widget->winId(), hDC);
         return S_OK;
     }
-    STDMETHOD(InvalidateRect)(LPCRECT pRect, BOOL fErase)
+    STDMETHOD(InvalidateRect)(LPCRECT pRect, BOOL fErase) override
     {
         ::InvalidateRect((HWND)host->winId(), pRect, fErase);
         return S_OK;
     }
-    STDMETHOD(InvalidateRgn)(HRGN hRGN, BOOL fErase)
+    STDMETHOD(InvalidateRgn)(HRGN hRGN, BOOL fErase) override
     {
         ::InvalidateRgn((HWND)host->winId(), hRGN, fErase);
         return S_OK;
     }
-    STDMETHOD(ScrollRect)(int /*dx*/, int /*dy*/, LPCRECT /*pRectScroll*/, LPCRECT /*pRectClip*/)
+    STDMETHOD(ScrollRect)(int /*dx*/, int /*dy*/, LPCRECT /*pRectScroll*/, LPCRECT /*pRectClip*/) override
     {
         return S_OK;
     }
-    STDMETHOD(AdjustRect)(LPRECT /*prc*/)
+    STDMETHOD(AdjustRect)(LPRECT /*prc*/) override
     {
         return S_OK;
     }
 #ifdef Q_CC_GNU // signature incorrect in win32api
-    STDMETHOD(AdjustRect)(LPCRECT /*prc*/)
+    STDMETHOD(AdjustRect)(LPCRECT /*prc*/) override
     {
         RECT rect;
         return AdjustRect(&rect);
     }
 #endif
 
-    STDMETHOD(OnDefWindowMessage)(UINT /*msg*/, WPARAM /*wPara*/, LPARAM /*lParam*/, LRESULT* /*plResult*/)
+    STDMETHOD(OnDefWindowMessage)(UINT /*msg*/, WPARAM /*wPara*/, LPARAM /*lParam*/, LRESULT* /*plResult*/) override
     {
         return S_FALSE;
     }
 #endif
 
     // IOleInPlaceFrame
-    STDMETHOD(InsertMenus(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths));
-    STDMETHOD(SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND hwndActiveObject));
-    STDMETHOD(RemoveMenus(HMENU hmenuShared));
-    STDMETHOD(SetStatusText(LPCOLESTR pszStatusText));
-    STDMETHOD(EnableModeless(BOOL fEnable));
-    STDMETHOD(TranslateAccelerator(LPMSG lpMsg, WORD grfModifiers));
+    STDMETHOD(InsertMenus(HMENU hmenuShared, LPOLEMENUGROUPWIDTHS lpMenuWidths)) override;
+    STDMETHOD(SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND hwndActiveObject)) override;
+    STDMETHOD(RemoveMenus(HMENU hmenuShared)) override;
+    STDMETHOD(SetStatusText(LPCOLESTR pszStatusText)) override;
+    STDMETHOD(EnableModeless(BOOL fEnable)) override;
+    STDMETHOD(TranslateAccelerator(LPMSG lpMsg, WORD grfModifiers)) override;
 
     // IOleInPlaceUIWindow
-    STDMETHOD(GetBorder(LPRECT lprectBorder));
-    STDMETHOD(RequestBorderSpace(LPCBORDERWIDTHS pborderwidths));
-    STDMETHOD(SetBorderSpace(LPCBORDERWIDTHS pborderwidths));
-    STDMETHOD(SetActiveObject(IOleInPlaceActiveObject *pActiveObject, LPCOLESTR pszObjName));
+    STDMETHOD(GetBorder(LPRECT lprectBorder)) override;
+    STDMETHOD(RequestBorderSpace(LPCBORDERWIDTHS pborderwidths)) override;
+    STDMETHOD(SetBorderSpace(LPCBORDERWIDTHS pborderwidths)) override;
+    STDMETHOD(SetActiveObject(IOleInPlaceActiveObject *pActiveObject, LPCOLESTR pszObjName)) override;
 
     // IOleDocumentSite
-    STDMETHOD(ActivateMe(IOleDocumentView *pViewToActivate));
+    STDMETHOD(ActivateMe(IOleDocumentView *pViewToActivate)) override;
 
     // IAdviseSink
-    STDMETHOD_(void, OnDataChange)(FORMATETC* /*pFormatetc*/, STGMEDIUM* /*pStgmed*/)
+    STDMETHOD_(void, OnDataChange)(FORMATETC* /*pFormatetc*/, STGMEDIUM* /*pStgmed*/) override
     {
         AX_DEBUG(QAxClientSite::OnDataChange);
     }
-    STDMETHOD_(void, OnViewChange)(DWORD /*dwAspect*/, LONG /*lindex*/)
+    STDMETHOD_(void, OnViewChange)(DWORD /*dwAspect*/, LONG /*lindex*/) override
     {
         AX_DEBUG(QAxClientSite::OnViewChange);
     }
-    STDMETHOD_(void, OnRename)(IMoniker* /*pmk*/)
+    STDMETHOD_(void, OnRename)(IMoniker* /*pmk*/) override
     {
     }
-    STDMETHOD_(void, OnSave)()
+    STDMETHOD_(void, OnSave)() override
     {
     }
-    STDMETHOD_(void, OnClose)()
+    STDMETHOD_(void, OnClose)() override
     {
     }
 
