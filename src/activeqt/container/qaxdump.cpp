@@ -120,7 +120,7 @@ static QByteArray namedPrototype(const QByteArrayList &parameterTypes, const QBy
 
 static QByteArray toType(const QByteArray &t)
 {
-    QByteArray type = QMetaType::fromName(type).id() != QMetaType::UnknownType
+    QByteArray type = QMetaType::fromName(t).id() != QMetaType::UnknownType
         ? t : QByteArrayLiteral("int");
 
     if (type.at(0) == 'Q')
