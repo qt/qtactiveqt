@@ -1,21 +1,15 @@
-# Generated from opengl.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(openglax LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/activeqt/opengl")
 
-find_package(Qt6 COMPONENTS Core Gui Widgets AxServer OpenGL OpenGLWidgets)
+find_package(Qt6 REQUIRED COMPONENTS AxServer Core Gui OpenGL OpenGLWidgets Widgets)
 
 qt6_add_axserver_executable(openglax
     glbox.cpp glbox.h
@@ -24,6 +18,7 @@ qt6_add_axserver_executable(openglax
     opengl.def
     opengl.rc
 )
+
 target_link_libraries(openglax PUBLIC
     Qt::Core
     Qt::Gui

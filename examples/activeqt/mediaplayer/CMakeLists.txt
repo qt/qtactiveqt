@@ -4,29 +4,27 @@ project(mediaplayer_activeqt LANGUAGES CXX)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/activeqt/mediaplayer_activeqt")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Widgets)
-find_package(Qt6 COMPONENTS AxContainer)
+find_package(Qt6 REQUIRED COMPONENTS AxContainer Core Gui Widgets)
 
 qt_add_executable(mediaplayer_activeqt
     main.cpp
     mainwindow.ui
     mediaaxwidget.h
 )
+
 set_target_properties(mediaplayer_activeqt PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(mediaplayer_activeqt PUBLIC
     Qt::AxContainer
     Qt::Core

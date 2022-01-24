@@ -1,5 +1,3 @@
-# Generated from activeqt.pro.
-
 if(MSVC)
     qt_internal_add_example(comapp)
     qt_internal_add_example(hierarchy)
@@ -7,7 +5,7 @@ if(MSVC)
     qt_internal_add_example(multiple)
     qt_internal_add_example(simple)
     qt_internal_add_example(wrapper)
-    if(TARGET Qt6::OpenGLWidgets AND QT_FEATURE_opengl AND NOT QT_FEATURE_opengles2) # special case
+    if(TARGET Qt6::OpenGLWidgets AND QT_FEATURE_opengl AND NOT QT_FEATURE_opengles2)
         qt_internal_add_example(opengl)
     endif()
     if(TARGET Qt::QuickControls2)
