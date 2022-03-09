@@ -19,9 +19,31 @@ instructions:
     - type: AppendToEnvironmentVariable
       variableName: NON_QTBASE_CONFIGURE_ARGS
       variableValue: " -DQT_NO_AX_SERVER_REGISTRATION=ON"
+      disable_if:
+        condition: property
+        property: features
+        contains_value: UseConfigure
     - type: AppendToEnvironmentVariable
       variableName: NON_QTBASE_TARGET_CONFIGURE_ARGS
       variableValue: " -DQT_NO_AX_SERVER_REGISTRATION=ON"
+      disable_if:
+        condition: property
+        property: features
+        contains_value: UseConfigure
+    - type: AppendToEnvironmentVariable
+      variableName: NON_QTBASE_CMAKE_ARGS
+      variableValue: " -DQT_NO_AX_SERVER_REGISTRATION=ON"
+      enable_if:
+        condition: property
+        property: features
+        contains_value: UseConfigure
+    - type: AppendToEnvironmentVariable
+      variableName: NON_QTBASE_TARGET_CMAKE_ARGS
+      variableValue: " -DQT_NO_AX_SERVER_REGISTRATION=ON"
+      enable_if:
+        condition: property
+        property: features
+        contains_value: UseConfigure
     - !include "{{qt/qtbase}}/coin_module_build_template_v2.yaml"
 
   Test:
