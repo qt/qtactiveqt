@@ -525,9 +525,8 @@ public:
         : cpoints(points.values())
     {
         InitializeCriticalSection(&refCountSection);
-        const int count = cpoints.count();
-        for (int i = 0; i < count; ++i)
-            cpoints.at(i)->AddRef();
+        for (const auto &point : std::as_const(cpoints))
+            point->AddRef();
     }
     QAxSignalVec(const QAxSignalVec &old)
         : cpoints(old.cpoints)
@@ -535,15 +534,13 @@ public:
     {
         InitializeCriticalSection(&refCountSection);
         ref = 0;
-        const int count = cpoints.count();
-        for (int i = 0; i < count; ++i)
-            cpoints.at(i)->AddRef();
+        for (const auto &point : std::as_const(cpoints))
+            point->AddRef();
     }
     virtual ~QAxSignalVec()
     {
-        const int count = cpoints.count();
-        for (int i = 0; i < count; ++i)
-            cpoints.at(i)->Release();
+        for (const auto &point : std::as_const(cpoints))
+            point->Release();
 
         DeleteCriticalSection(&refCountSection);
     }
