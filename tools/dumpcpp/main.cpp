@@ -124,9 +124,9 @@ void generateNameSpace(QTextStream &out, const QMetaObject *mo, const QByteArray
 static QByteArray joinParameterNames(const QByteArrayList &parameterNames)
 {
     QByteArray slotParameters;
-    for (int p = 0; p < parameterNames.count(); ++p) {
+    for (qsizetype p = 0; p < parameterNames.size(); ++p) {
         slotParameters += parameterNames.at(p);
-        if (p < parameterNames.count() - 1)
+        if (p < parameterNames.size() - 1)
             slotParameters += ',';
     }
 
@@ -435,19 +435,19 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
             const auto signatureSplit = slotSignatureTruncated.split(',');
             QByteArrayList parameterSplit;
             if (slotParameters.isEmpty()) { // generate parameter names
-                for (int i = 0; i < signatureSplit.count(); ++i)
+                for (qsizetype i = 0; i < signatureSplit.size(); ++i)
                     parameterSplit << QByteArray("p") + QByteArray::number(i);
             } else {
                 parameterSplit = slotParameters.split(',');
             }
 
-            for (int i = 0; i < signatureSplit.count(); ++i) {
+            for (qsizetype i = 0; i < signatureSplit.count(); ++i) {
                 QByteArray parameterType = signatureSplit.at(i);
                 if (!parameterType.contains("::") && namespaceForType.contains(parameterType))
                     parameterType.prepend(namespaceForType.value(parameterType) + "::");
 
                 QByteArray arraySpec; // transform array method signature "foo(int[4])" ->"foo(int p[4])"
-                const int arrayPos = parameterType.lastIndexOf('[');
+                const qsizetype arrayPos = parameterType.lastIndexOf('[');
                 if (arrayPos != -1) {
                     arraySpec = parameterType.right(parameterType.size() - arrayPos);
                     parameterType.truncate(arrayPos);
@@ -456,11 +456,11 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                 slotNamedSignature += ' ';
                 slotNamedSignature += parameterSplit.at(i);
                 slotNamedSignature += arraySpec;
-                if (defaultArguments >= signatureSplit.count() - i) {
+                if (defaultArguments >= signatureSplit.size() - i) {
                     slotNamedSignature += " = ";
                     slotNamedSignature += parameterType + "()";
                 }
-                if (i + 1 < signatureSplit.count())
+                if (i + 1 < signatureSplit.size())
                     slotNamedSignature += ", ";
             }
             slotNamedSignature += ')';
@@ -774,7 +774,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 typeinfo->Release();
             }
 
-            for (int i = 0; i < qax_qualified_usertypes.count(); ++i) {
+            for (qsizetype i = 0; i < qax_qualified_usertypes.size(); ++i) {
                 QByteArray refType = qax_qualified_usertypes.at(i);
                 QByteArray refTypeLib;
                 if (refType.contains("::")) {
@@ -1096,7 +1096,7 @@ int main(int argc, char **argv)
                            typeLib, QSettings::NativeFormat);
         typeLib.clear();
         QStringList codes = settings.childGroups();
-        for (int c = 0; c < codes.count(); ++c) {
+        for (qsizetype c = 0; c < codes.size(); ++c) {
             const QString keyPrefix = QLatin1Char('/') + codes.at(c) + QLatin1String("/0/");
             if (QT_POINTER_SIZE == 8) {
                 typeLib = settings.value(keyPrefix + QLatin1String("win64/.")).toString();
@@ -1160,7 +1160,7 @@ int main(int argc, char **argv)
         }
         settings.endGroup();
 
-        for (int c = 0; c < codes.count(); ++c) {
+        for (qsizetype c = 0; c < codes.size(); ++c) {
             const QString keyPrefix = key + QLatin1Char('/') + codes.at(c) + QLatin1Char('/');
             if (QT_POINTER_SIZE == 8) {
                 typeLib = settings.value(keyPrefix + QLatin1String("win64/.")).toString();

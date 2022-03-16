@@ -102,15 +102,15 @@ static inline QString docuFromName(ITypeInfo *typeInfo, const QString &name)
 static QByteArray namedPrototype(const QByteArrayList &parameterTypes, const QByteArrayList &parameterNames, int numDefArgs = 0)
 {
     QByteArray prototype("(");
-    for (int p = 0; p < parameterTypes.count(); ++p) {
+    for (qsizetype p = 0; p < parameterTypes.size(); ++p) {
         prototype += parameterTypes.at(p);
 
-        if (p < parameterNames.count())
+        if (p < parameterNames.size())
             prototype += ' ' + parameterNames.at(p);
 
-        if (numDefArgs >= parameterTypes.count() - p)
+        if (numDefArgs >= parameterTypes.size() - p)
             prototype += " = 0";
-        if (p < parameterTypes.count() - 1)
+        if (p < parameterTypes.size() - 1)
             prototype += ", ";
     }
     prototype += ')';
@@ -394,12 +394,12 @@ QString qax_generateDocumentation(QAxBase *that)
     }
     if (!methodDetails.isEmpty()) {
         stream << "<hr><h2>Member Function Documentation</h2>" << Qt::endl;
-        for (int i = 0; i < methodDetails.count(); ++i)
+        for (qsizetype i = 0; i < methodDetails.size(); ++i)
             stream << methodDetails.at(i) << Qt::endl;
     }
     if (!propDetails.isEmpty()) {
         stream << "<hr><h2>Property Documentation</h2>" << Qt::endl;
-        for (int i = 0; i < propDetails.count(); ++i)
+        for (qsizetype i = 0; i < propDetails.size(); ++i)
             stream << propDetails.at(i) << Qt::endl;
     }
 

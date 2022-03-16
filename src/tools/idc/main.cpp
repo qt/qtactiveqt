@@ -145,7 +145,7 @@ static bool attachTypeLibrary(const QString &applicationName, int resource, cons
         return false;
     }
     if (!UpdateResource(hExe, L"TYPELIB", MAKEINTRESOURCE(resource), 0,
-                        const_cast<char *>(data.data()), DWORD(data.count()))) {
+                        const_cast<char *>(data.data()), DWORD(data.size()))) {
         EndUpdateResource(hExe, true);
         if (errorMessage)
             *errorMessage = QString::fromLatin1("Failed to attach type library to binary %1 - could not update file.").arg(applicationName);

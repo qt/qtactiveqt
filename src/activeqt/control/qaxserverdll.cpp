@@ -126,8 +126,8 @@ STDAPI DllCanUnloadNow()
 
     // check if qApp still runs widgets (in other DLLs)
     QWidgetList widgets = QApplication::allWidgets();
-    int count = widgets.count();
-    for (int w = 0; w < widgets.count(); ++w) {
+    qsizetype count = widgets.size();
+    for (qsizetype w = 0; w < widgets.size(); ++w) {
         // remove all Qt generated widgets
         QWidget *widget = widgets.at(w);
         if (widget->windowType() == Qt::Desktop || widget->objectName() == QLatin1String("Qt internal tablet widget"))

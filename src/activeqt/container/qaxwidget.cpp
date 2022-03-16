@@ -1238,11 +1238,11 @@ HRESULT WINAPI QAxClientSite::InsertMenus(HMENU /*hmenuShared*/, LPOLEMENUGROUPW
         }
     }
     if (fileMenu)
-        lpMenuWidths->width[0] = fileMenu->actions().count();
+        lpMenuWidths->width[0] = fileMenu->actions().size();
     if (viewMenu)
-        lpMenuWidths->width[2] = viewMenu->actions().count();
+        lpMenuWidths->width[2] = viewMenu->actions().size();
     if (windowMenu)
-        lpMenuWidths->width[4] = windowMenu->actions().count();
+        lpMenuWidths->width[4] = windowMenu->actions().size();
 
     return S_OK;
 }
