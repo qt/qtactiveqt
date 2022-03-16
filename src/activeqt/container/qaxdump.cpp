@@ -223,7 +223,7 @@ QString qax_generateDocumentation(QAxBase *that)
 
             detail += QLatin1String("<p>Or call the function directly:<pre>\n");
 
-            bool hasParams = slot.parameterTypes().count() != 0;
+            const bool hasParams = !slot.parameterTypes().isEmpty();
             if (hasParams)
                 detail += QLatin1String("\tQVariantList params = ...\n");
             detail += QLatin1String("\t");
@@ -392,12 +392,12 @@ QString qax_generateDocumentation(QAxBase *that)
             stream << "</ul>" << Qt::endl;
         }
     }
-    if (methodDetails.count()) {
+    if (!methodDetails.isEmpty()) {
         stream << "<hr><h2>Member Function Documentation</h2>" << Qt::endl;
         for (int i = 0; i < methodDetails.count(); ++i)
             stream << methodDetails.at(i) << Qt::endl;
     }
-    if (propDetails.count()) {
+    if (!propDetails.isEmpty()) {
         stream << "<hr><h2>Property Documentation</h2>" << Qt::endl;
         for (int i = 0; i < propDetails.count(); ++i)
             stream << propDetails.at(i) << Qt::endl;

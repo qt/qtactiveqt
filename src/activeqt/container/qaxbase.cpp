@@ -2421,7 +2421,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
             if (funcdesc->cParams - funcdesc->cParamsOpt <= 1) {
                 bool dontBreak = false;
                 // getter with non-default-parameters -> fall through to function handling
-                if (funcdesc->invkind == INVOKE_PROPERTYGET && parameters.count() && funcdesc->cParams - funcdesc->cParamsOpt) {
+                if (funcdesc->invkind == INVOKE_PROPERTYGET && !parameters.isEmpty() && funcdesc->cParams - funcdesc->cParamsOpt) {
                     dontBreak = true;
                 } else {
                     uint flags = Readable;
@@ -3071,7 +3071,7 @@ const QMetaObject *QAxBase::axBaseMetaObject() const
 */
 void QAxBase::connectNotify()
 {
-    if (d->eventSink.count()) // already listening
+    if (!d->eventSink.isEmpty()) // already listening
         return;
 
     IEnumConnectionPoints *epoints = nullptr;
@@ -3168,7 +3168,7 @@ void QAxBase::connectNotify()
     typelib->Release();
 
     // make sure we don't try again
-    if (!d->eventSink.count())
+    if (d->eventSink.isEmpty())
         d->eventSink.insert(QUuid{}, nullptr);
 }
 

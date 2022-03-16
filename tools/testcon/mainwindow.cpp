@@ -353,7 +353,7 @@ void MainWindow::on_VerbMenu_aboutToShow()
         VerbMenu->addAction(verbs.at(i));
     }
 
-    if (!verbs.count()) { // no verbs?
+    if (verbs.isEmpty()) { // no verbs?
         VerbMenu->addAction(tr("-- Object does not support any verbs --"))->setEnabled(false);
     }
 }

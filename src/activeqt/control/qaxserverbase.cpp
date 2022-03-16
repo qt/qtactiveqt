@@ -2616,7 +2616,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
     case DISPATCH_METHOD:
     case DISPATCH_PROPERTYPUT:
     case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF:
-        if (m_spAdviseSink || adviseSinks.count()) {
+        if (m_spAdviseSink || !adviseSinks.isEmpty()) {
             FORMATETC fmt;
             fmt.cfFormat = 0;
             fmt.ptd = nullptr;
