@@ -349,7 +349,7 @@ void MainWindow::on_VerbMenu_aboutToShow()
         return;
 
     QStringList verbs = container->verbs();
-    for (int i = 0; i < verbs.count(); ++i) {
+    for (qsizetype i = 0; i < verbs.size(); ++i) {
         VerbMenu->addAction(verbs.at(i));
     }
 
@@ -404,7 +404,7 @@ void MainWindow::on_actionScriptingRun_triggered()
 
     // If we have only one script loaded we can use the cool dialog
     QStringList scriptList = m_scripts->scriptNames();
-    if (scriptList.count() == 1) {
+    if (scriptList.size() == 1) {
         InvokeMethod scriptInvoke(this);
         scriptInvoke.setWindowTitle(tr("Execute Script Function"));
         scriptInvoke.setControl(m_scripts->script(scriptList[0])->scriptEngine());

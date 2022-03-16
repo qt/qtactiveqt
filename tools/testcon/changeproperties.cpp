@@ -145,7 +145,7 @@ void ChangeProperties::on_buttonSet_clicked()
         {
             QStringList txtList = editValue->text().split(QRegularExpression(QLatin1String("[,;]")));
             QVariantList varList;
-            for (int i = 0; i < txtList.count(); ++i) {
+            for (qsizetype i = 0; i < txtList.size(); ++i) {
                 QVariant svar(txtList.at(i));
                 QString str = svar.toString();
                 str = str.trimmed();

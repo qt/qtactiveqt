@@ -447,7 +447,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
     case QMetaType::QVariantList:
         {
             const auto list = qvar.toList();
-            const int count = list.count();
+            const qsizetype count = list.size();
             VARTYPE vt = VT_VARIANT;
             int listType = QMetaType::QVariant;
             if (!typeName.isEmpty() && typeName.startsWith("QList<")) {
@@ -487,7 +487,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             // treated as a 2D array. The column count is taken from the 1st element.
             if (count) {
                 QVariantList col = list.at(0).toList();
-                int maxColumns = col.count();
+                qsizetype maxColumns = col.size();
                 if (maxColumns) {
                     is2D = true;
                     SAFEARRAYBOUND rgsabound[2] = { {0, 0}, {0, 0} };
@@ -498,7 +498,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
                     for (LONG i = 0; i < count; ++i) {
                         rgIndices[0] = i;
                         QVariantList columns = list.at(i).toList();
-                        int columnCount = qMin(maxColumns, columns.count());
+                        qsizetype columnCount = qMin(maxColumns, columns.size());
                         for (LONG j = 0;  j < columnCount; ++j) {
                             const QVariant &elem = columns.at(j);
                             VariantInit(&variant);
@@ -541,7 +541,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
     case QMetaType::QStringList:
         {
             const QStringList list = qvar.toStringList();
-            const int count = list.count();
+            const qsizetype count = list.size();
             SAFEARRAY *array = SafeArrayCreateVector(VT_BSTR, 0, count);
             for (LONG index = 0; index < count; ++index) {
                 QString elem = list.at(index);
@@ -568,7 +568,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
     case QMetaType::QByteArray:
         {
             const QByteArray bytes = qvar.toByteArray();
-            const uint count = bytes.count();
+            const uint count = static_cast<uint>(bytes.size());
             SAFEARRAY *array = SafeArrayCreateVector(VT_UI1, 0, count);
             if (count) {
                 const char *data = bytes.constData();

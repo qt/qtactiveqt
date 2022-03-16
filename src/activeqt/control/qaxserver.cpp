@@ -104,7 +104,7 @@ QAxFactory *qAxFactory()
 
         // register all types with metatype system as pointers
         QStringList keys(qax_factory->featureList());
-        for (int i = 0; i < keys.count(); ++i) {
+        for (int i = 0; i < keys.size(); ++i) {
             QByteArray pointerType = keys.at(i).toLatin1() + '*';
             if (QMetaType::fromName(pointerType).id() == QMetaType::UnknownType)
                 qRegisterMetaType<void *>(pointerType);
@@ -307,7 +307,7 @@ static void UpdateRegistryKeys(bool bRegister, const QString keyPath, QScopedPoi
                 QString mime = QLatin1String(mo->classInfo(mo->indexOfClassInfo("MIME")).value());
                 if (!mime.isEmpty()) {
                     QStringList mimeTypes = mime.split(QLatin1Char(';'));
-                    for (int m = 0; m < mimeTypes.count(); ++m) {
+                    for (qsizetype m = 0; m < mimeTypes.size(); ++m) {
                         mime = mimeTypes.at(m);
                         if (mime.isEmpty())
                             continue;
@@ -397,7 +397,7 @@ static void UpdateRegistryKeys(bool bRegister, const QString keyPath, QScopedPoi
             QString mime = QLatin1String(mo->classInfo(mo->indexOfClassInfo("MIME")).value());
             if (!mime.isEmpty()) {
                 QStringList mimeTypes = mime.split(QLatin1Char(';'));
-                for (int m = 0; m < mimeTypes.count(); ++m) {
+                for (qsizetype m = 0; m < mimeTypes.size(); ++m) {
                     mime = mimeTypes.at(m);
                     if (mime.isEmpty())
                         continue;
@@ -764,7 +764,7 @@ static QByteArray prototype(const QByteArrayList &parameterTypes, const QByteArr
 {
     QByteArray prototype;
 
-    for (int p = 0; p < parameterTypes.count() && *ok; ++p) {
+    for (qsizetype p = 0; p < parameterTypes.size() && *ok; ++p) {
         bool out = false;
         QByteArray type(parameterTypes.at(p));
         const QByteArray &name = parameterNames.at(p);
@@ -795,7 +795,7 @@ static QByteArray prototype(const QByteArrayList &parameterTypes, const QByteArr
         else
             prototype += "p_" + replaceKeyword(name);
 
-        if (p < parameterTypes.count() - 1)
+        if (p < parameterTypes.size() - 1)
             prototype += ", ";
     }
 

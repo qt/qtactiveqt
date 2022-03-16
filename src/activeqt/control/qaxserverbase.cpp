@@ -580,7 +580,7 @@ public:
         if (!pcFetched && cConnections > 1)
             return E_POINTER;
 
-        const int count = cpoints.count();
+        const qsizetype count = cpoints.size();
         unsigned long i;
         for (i = 0; i < cConnections; i++) {
             if (current==count)
@@ -596,7 +596,7 @@ public:
     }
     STDMETHOD(Skip)(ULONG cConnections) override
     {
-        const int count = cpoints.count();
+        const qsizetype count = cpoints.size();
         while (cConnections) {
             if (current == count)
                 return S_FALSE;
@@ -717,7 +717,7 @@ public:
         }
 
         CONNECTDATA cd;
-        cd.dwCookie = connections.count()+1;
+        cd.dwCookie = connections.size() + 1;
         cd.pUnk = pUnk;
         cd.pUnk->AddRef();
         connections.append(cd);
@@ -726,8 +726,8 @@ public:
     }
     STDMETHOD(Unadvise)(DWORD dwCookie) override
     {
-        const int count = connections.count();
-        for (int i = 0; i < count; ++i) {
+        const qsizetype count = connections.size();
+        for (qsizetype i = 0; i < count; ++i) {
             if (connections.at(i).dwCookie == dwCookie) {
                 connections.at(i).pUnk->Release();
                 connections.removeAt(i);
@@ -755,7 +755,7 @@ public:
         if (!pcFetched && cConnections > 1)
             return E_POINTER;
 
-        const int count = connections.count();
+        const qsizetype count = connections.size();
 
         unsigned long i;
         for (i = 0; i < cConnections; i++) {
@@ -771,7 +771,7 @@ public:
     }
     STDMETHOD(Skip)(ULONG cConnections) override
     {
-        const int count = connections.count();
+        const qsizetype count = connections.size();
         while (cConnections) {
             if (current == count)
                 return S_FALSE;
@@ -1144,7 +1144,7 @@ QAxServerBase::~QAxServerBase()
 
     if (m_spAdviseSink) m_spAdviseSink->Release();
     m_spAdviseSink = nullptr;
-    for (int i = 0; i < adviseSinks.count(); ++i) {
+    for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
         adviseSinks.at(i).pAdvSink->Release();
     }
     if (m_spClientSite) m_spClientSite->Release();
@@ -1832,7 +1832,7 @@ void QAxServerBase::update()
             m_spInPlaceSiteWindowless->InvalidateRect(nullptr, true);
     } else if (m_spAdviseSink) {
         m_spAdviseSink->OnViewChange(DVASPECT_CONTENT, -1);
-        for (int i = 0; i < adviseSinks.count(); ++i) {
+        for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
             adviseSinks.at(i).pAdvSink->OnViewChange(DVASPECT_CONTENT, -1);
         }
     }
@@ -1961,7 +1961,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
     const QMetaObject *mo = qt.object->metaObject();
     QMetaMethod signal;
     DISPID eventId = index;
-    int pcount = 0;
+    qsizetype pcount = 0;
     QByteArray type;
     QByteArrayList ptypes;
 
@@ -2014,12 +2014,12 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
             if (!signature.isEmpty())
                 ptypes = signature.split(',');
 
-            pcount = ptypes.count();
+            pcount = ptypes.size();
         }
         break;
     }
     if (pcount && !argv) {
-        qWarning("QAxServerBase::qt_metacall: Missing %d arguments", pcount);
+        qWarning("QAxServerBase::qt_metacall: Missing %d arguments", int(pcount));
         return false;
     }
     if (eventId == -1)
@@ -2048,7 +2048,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
 
                 if (pcount) // Use malloc/free for eval package compatibility
                     dispParams.rgvarg = static_cast<VARIANTARG *>(malloc(size_t(pcount) * sizeof(VARIANTARG)));
-                int p = 0;
+                qsizetype p = 0;
                 for (p = 0; p < pcount; ++p) {
                     VARIANT *arg = dispParams.rgvarg + (pcount - p - 1);
                     VariantInit(arg);
@@ -2432,7 +2432,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
             QByteArrayList ptypes;
             if (!prototype.isEmpty())
                 ptypes = prototype.split(',');
-            UINT pcount = UINT(ptypes.count());
+            UINT pcount = UINT(ptypes.size());
 
             // verify parameter count
             if (pcount > pDispParams->cArgs) {
@@ -2630,7 +2630,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 m_spAdviseSink->OnViewChange(DVASPECT_CONTENT, -1);
                 m_spAdviseSink->OnDataChange(&fmt, &stg);
             }
-            for (int i = 0; i < adviseSinks.count(); ++i) {
+            for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
                 adviseSinks.at(i).pAdvSink->OnDataChange(&fmt, &stg);
             }
         }
@@ -3072,7 +3072,7 @@ HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD /* mode */)
 
     QString mimeType = QLatin1String(mo->classInfo(mimeIndex).value());
     QStringList mimeTypes = mimeType.split(QLatin1Char(';'));
-    for (int m = 0; m < mimeTypes.count(); ++m) {
+    for (qsizetype m = 0; m < mimeTypes.size(); ++m) {
         const QString &mime = mimeTypes.at(m);
         if (mime.count(QLatin1Char(':')) != 2) {
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
@@ -3117,7 +3117,7 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
 
     QString mimeType = QLatin1String(mo->classInfo(mimeIndex).value());
     QStringList mimeTypes = mimeType.split(QLatin1Char(';'));
-    for (int m = 0; m < mimeTypes.count(); ++m) {
+    for (qsizetype m = 0; m < mimeTypes.size(); ++m) {
         const QString &mime = mimeTypes.at(m);
         if (mime.count(QLatin1Char(':')) != 2) {
             qWarning() << class_name << ": Invalid syntax in Q_CLASSINFO for MIME";
@@ -3739,7 +3739,7 @@ HRESULT WINAPI QAxServerBase::GetMiscStatus(DWORD dwAspect, DWORD *pdwStatus)
 */
 HRESULT WINAPI QAxServerBase::Advise(IAdviseSink* pAdvSink, DWORD* pdwConnection)
 {
-    *pdwConnection = DWORD(adviseSinks.count()) + 1;
+    *pdwConnection = DWORD(adviseSinks.size()) + 1;
     STATDATA data = { {0, nullptr, DVASPECT_CONTENT, -1, TYMED_NULL} , 0, pAdvSink, *pdwConnection };
     adviseSinks.append(data);
     pAdvSink->AddRef();
@@ -3774,7 +3774,7 @@ HRESULT WINAPI QAxServerBase::Close(DWORD dwSaveOption)
 
     if (m_spAdviseSink)
         m_spAdviseSink->OnClose();
-    for (int i = 0; i < adviseSinks.count(); ++i) {
+    for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
         adviseSinks.at(i).pAdvSink->OnClose();
     }
 
@@ -4110,7 +4110,7 @@ HRESULT WINAPI QAxServerBase::SetMoniker(DWORD, IMoniker*)
 */
 HRESULT WINAPI QAxServerBase::Unadvise(DWORD dwConnection)
 {
-    for (int i = 0; i < adviseSinks.count(); ++i) {
+    for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
         STATDATA entry = adviseSinks.at(i);
         if (entry.dwConnection == dwConnection) {
             entry.pAdvSink->Release();
@@ -4207,7 +4207,7 @@ HRESULT WINAPI QAxServerBase::DAdvise(FORMATETC *pformatetc, DWORD advf,
     if (pformatetc->dwAspect != DVASPECT_CONTENT)
         return E_FAIL;
 
-    *pdwConnection = adviseSinks.count() + 1;
+    *pdwConnection = adviseSinks.size() + 1;
     STATDATA data = {
         {pformatetc->cfFormat,pformatetc->ptd,pformatetc->dwAspect,pformatetc->lindex,pformatetc->tymed},
         advf, pAdvSink, *pdwConnection

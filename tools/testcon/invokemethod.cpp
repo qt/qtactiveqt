@@ -122,7 +122,7 @@ void InvokeMethod::on_comboMethods_textActivated(const QString &method)
     const auto pnames = slot.parameterNames();
     const auto ptypes = slot.parameterTypes();
 
-    for (int p = 0; p < ptypes.count(); ++p) {
+    for (qsizetype p = 0; p < ptypes.size(); ++p) {
         QString ptype(QString::fromLatin1(ptypes.at(p)));
         if (ptype.isEmpty())
             continue;

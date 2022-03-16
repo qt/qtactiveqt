@@ -149,7 +149,7 @@ QVariant AddressBookModel::data(const QModelIndex &index, int role) const
         cache.insert(index, data);
     }
 
-    if (index.column() < data.count())
+    if (index.column() < data.size())
         return data.at(index.column());
 
     return QVariant();

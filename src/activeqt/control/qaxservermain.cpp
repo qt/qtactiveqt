@@ -134,7 +134,7 @@ bool qax_startServer(QAxFactory::ServerType type)
         return true;
 
     const QStringList keys = qAxFactory()->featureList();
-    const int keyCount = keys.count();
+    const qsizetype keyCount = keys.size();
     if (!keyCount)
         return false;
 
@@ -142,7 +142,7 @@ bool qax_startServer(QAxFactory::ServerType type)
         StartMonitor();
 
     classRegistration = new DWORD[keyCount];
-    int object = 0;
+    qsizetype object = 0;
     for (object = 0; object < keyCount; ++object) {
         IUnknown* p = nullptr;
         CLSID clsid = qAxFactory()->classID(keys.at(object));
@@ -247,7 +247,7 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, 
     int nRet = 0;
     bool run = true;
     bool runServer = false;
-    for (int i = 0; i < cmds.count(); ++i) {
+    for (qsizetype i = 0; i < cmds.size(); ++i) {
         const QString &cmd = cmds.at(i);
         if (matchesOption(cmd, "activex") || matchesOption(cmd, "embedding")) {
             runServer = true;
@@ -269,13 +269,13 @@ EXTERN_C int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE /* hPrevInstance */, 
             break;
         } else if (matchesOption(cmd, "dumpidl")) {
             ++i;
-            if (i < cmds.count()) {
+            if (i < cmds.size()) {
                 const QString &outfile = cmds.at(i);
                 ++i;
                 QString version;
-                if (i < cmds.count() && matchesOption(cmds.at(i), "version")) {
+                if (i < cmds.size() && matchesOption(cmds.at(i), "version")) {
                     ++i;
-                    if (i < cmds.count())
+                    if (i < cmds.size())
                         version = cmds.at(i);
                     else
                         version = QStringLiteral("1.0");

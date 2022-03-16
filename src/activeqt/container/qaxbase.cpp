@@ -186,7 +186,7 @@ int QMetaObjectExtra::numParameter(const QByteArray &prototype) const
     if (!memberInfo.contains(prototype))
         parsePrototype(prototype);
 
-    return memberInfo.value(prototype).count();
+    return memberInfo.value(prototype).size();
 }
 
 QByteArray QMetaObjectExtra::paramType(const QByteArray &prototype, int index, bool *out) const
@@ -198,7 +198,7 @@ QByteArray QMetaObjectExtra::paramType(const QByteArray &prototype, int index, b
         *out = false;
 
     const auto plist = memberInfo.value(prototype);
-    if (index > plist.count() - 1)
+    if (index > plist.size() - 1)
         return QByteArray();
 
     QByteArray param(plist.at(index));
@@ -2321,8 +2321,8 @@ QByteArray MetaObjectGenerator::createPrototype(FUNCDESC *funcdesc, ITypeInfo *t
     if (funcdesc->invkind == INVOKE_FUNC && type == hresult)
         type = nullptr;
 
-    int p;
-    for (p = 1; p < names.count(); ++p) {
+    qsizetype p;
+    for (p = 1; p < names.size(); ++p) {
         // parameter
         QByteArray paramName = names.at(p);
         bool optional = p > (funcdesc->cParams - funcdesc->cParamsOpt);
@@ -2498,9 +2498,9 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
                 bool defargs;
                 do {
                     QByteArray pnames;
-                    for (int p = 0; p < parameters.count(); ++p) {
+                    for (qsizetype p = 0; p < parameters.size(); ++p) {
                         pnames += parameters.at(p);
-                        if (p < parameters.count() - 1)
+                        if (p < parameters.size() - 1)
                             pnames += ',';
                     }
                     defargs = pnames.contains("=0");
@@ -2512,7 +2512,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
 
                     if (defargs) {
                         parameters.takeLast();
-                        int lastParam = prototype.lastIndexOf(',');
+                        qsizetype lastParam = prototype.lastIndexOf(',');
                         if (lastParam == -1)
                             lastParam = prototype.indexOf('(') + 1;
                         prototype.truncate(lastParam);
@@ -2725,9 +2725,9 @@ void MetaObjectGenerator::readEventInterface(ITypeInfo *eventinfo, IConnectionPo
         prototype = createPrototype(/*in*/ funcdesc, eventinfo, names, /*out*/type, parameters);
         if (!hasSignal(prototype)) {
             QByteArray pnames;
-            for (int p = 0; p < parameters.count(); ++p) {
+            for (qsizetype p = 0; p < parameters.size(); ++p) {
                 pnames += parameters.at(p);
-                if (p < parameters.count() - 1)
+                if (p < parameters.size() - 1)
                     pnames += ',';
             }
             addSignal(prototype, pnames);
@@ -3581,7 +3581,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     Q_ASSERT(d->metaobj);
     const QMetaObjectExtra &moExtra = moextra_cache.value(d->metaobj);
 
-    int varc = vars.count();
+    qsizetype varc = vars.size();
 
     QByteArray normFunction = QMetaObject::normalizedSignature(name);
     QByteArray function(normFunction);
@@ -3691,7 +3691,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
                 curArg += cc;
             }
 
-            varc = vars.count();
+            varc = vars.size();
         }
     } else {
         if (d->useMetaObject)
@@ -3713,7 +3713,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
         varc = qMin(varc, moExtra.numParameter(normFunction));
         arg = varc <= QAX_NUM_PARAMS ? staticarg : new VARIANT[varc];
         outArgs = QBitArray(varc);
-        for (int i = 0; i < varc; ++i) {
+        for (qsizetype i = 0; i < varc; ++i) {
             const QVariant &var = vars.at(i);
             VariantInit(arg + (varc - i - 1));
             bool out = false;
@@ -3775,13 +3775,13 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
     }
 
     if (disptype == (DISPATCH_METHOD|DISPATCH_PROPERTYGET) && hres == S_OK && varc) {
-        for (int i = 0; i < varc; ++i)
+        for (qsizetype i = 0; i < varc; ++i)
             if ((arg[varc-i-1].vt & VT_BYREF) || outArgs[i]) // update out-parameters
                 vars[i] = VARIANTToQVariant(arg[varc-i-1], vars.at(i).typeName());
     }
 
     // clean up
-    for (int i = 0; i < varc; ++i)
+    for (qsizetype i = 0; i < varc; ++i)
         clearVARIANT(params.rgvarg+i);
     if (arg && arg != staticarg)
         delete[] arg;

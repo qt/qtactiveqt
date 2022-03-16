@@ -188,7 +188,7 @@ Application *DocumentList::application() const
 
 int DocumentList::count() const
 {
-    return m_list.count();
+    return m_list.size();
 }
 
 Document *DocumentList::item(int index) const
