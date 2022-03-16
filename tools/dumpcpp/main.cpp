@@ -1152,7 +1152,7 @@ int main(int argc, char **argv)
         settings.beginGroup(key);
         QStringList versions = settings.childGroups();
         QStringList codes;
-        if (versions.count()) {
+        if (!versions.isEmpty()) {
             settings.beginGroup(QLatin1Char('/') + versions.last());
             codes = settings.childGroups();
             key += QLatin1Char('/') + versions.last();
