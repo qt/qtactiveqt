@@ -327,7 +327,6 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
             if (qax_qualified_usertypes.contains(simplePropType)) {
                 if (foreignNamespace)
                     out << "#ifdef QAX_DUMPCPP_" << propertyType.left(propertyType.indexOf("::")).toUpper() << "_H" << Qt::endl;
-                out << indent << "    " << propertyType << " qax_pointer = 0;" << Qt::endl;
                 QByteArray simplePropTypeWithNamespace = propertyType;
                 simplePropTypeWithNamespace.replace('*', "");
                 out << indent << "    qRegisterMetaType<" << propertyType << ">(\"" << property.typeName() << "\");" << Qt::endl;
@@ -335,20 +334,21 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
             }
             out << indent << "    QVariant qax_result = property(\"" << propertyName << "\");" << Qt::endl;
             if (propertyType.length() && propertyType.at(propertyType.length()-1) == '*')
-                out << indent << "    if (!qax_result.constData()) return 0;" << Qt::endl;
-            out << indent << "    Q_ASSERT(qax_result.isValid());" << Qt::endl;
+                out << indent << "    if (qax_result.constData() == nullptr)\n"
+                    << indent << "        return nullptr;\n"
+                    << indent << "    Q_ASSERT(qax_result.isValid());" << Qt::endl;
             if (qax_qualified_usertypes.contains(simplePropType)) {
                 simplePropType = propertyType;
                 simplePropType.replace('*', "");
-                out << indent << "    return *(" << propertyType << "*)qax_result.constData();" << Qt::endl;
+                out << indent << "    return *reinterpret_cast<" << propertyType << "*>(qax_result.data());\n";
                 if (foreignNamespace) {
                     out << "#else" << Qt::endl;
-                    out << indent << "    return 0; // foreign namespace not included" << Qt::endl;
+                    out << indent << "    return nullptr; // foreign namespace not included" << Qt::endl;
                     out << "#endif" << Qt::endl;
                 }
 
             } else {
-                out << indent << "    return *(" << propertyType << "*)qax_result.constData();" << Qt::endl;
+                out << indent << "    return *reinterpret_cast<" << propertyType << "*>(qax_result.data());\n";
             }
             out << indent << '}' << Qt::endl;
         } else {
