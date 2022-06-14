@@ -68,6 +68,7 @@
 #include <qmetaobject.h>
 #include <qpixmap.h>
 #include <qregularexpression.h>
+#include <qsizegrip.h>
 #include <qstatusbar.h>
 #include <qwhatsthis.h>
 #include <ocidl.h>
@@ -3783,6 +3784,25 @@ HRESULT WINAPI QAxServerBase::Close(DWORD dwSaveOption)
 
 bool qax_disable_inplaceframe = true;
 
+// Find a status bar to hook into, hide and redirect its messages to
+// IOleInPlaceFrame if and only if the user did not explicitly show it or
+// added some widgets (QTBUG-99294).
+static QStatusBar *findStatusBar(QWidget *w)
+{
+    if (w == nullptr)
+        return nullptr;
+     QStatusBar *result = w->findChild<QStatusBar*>();
+     if (result == nullptr)
+         return nullptr;
+     if (result->isVisible() && result->testAttribute(Qt::WA_WState_ExplicitShowHide))
+         return nullptr;
+     for (auto child : result->children()) {
+         if (child->isWidgetType() && qobject_cast<QSizeGrip *>(child) == nullptr)
+             return nullptr;
+     }
+     return result;
+}
+
 /*
     Executes the steps to activate the control.
 */
@@ -3865,8 +3885,7 @@ HRESULT QAxServerBase::internalActivate()
                         menuBar->hide();
                         menuBar->installEventFilter(this);
                     }
-                    statusBar = qt.widget ? qt.widget->findChild<QStatusBar*>() : nullptr;
-                    if (statusBar && !statusBar->isVisible()) {
+                    if (auto *statusBar = findStatusBar(qt.widget)) {
                         const int index = statusBar->metaObject()->indexOfSignal("messageChanged(QString)");
                         QMetaObject::connect(statusBar, index, this, STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX);
                         statusBar->hide();
