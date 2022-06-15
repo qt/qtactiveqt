@@ -215,6 +215,12 @@ static void formatConstructorBody(QTextStream &out, const QByteArray &nameSpace,
     out << '}' << Qt::endl << Qt::endl;
 }
 
+// Hash of C# only types.
+static const QSet<QByteArray> cSharpTypes = {
+    "ICloneable", "ICollection", "IDisposable", "IEnumerable",
+    "IList", "ISerializable", "_Attribute"
+};
+
 void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                        const QByteArray &className, const QByteArray &nameSpace,
                        ObjectCategories category)
@@ -245,6 +251,11 @@ void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                 continue;
 
             QByteArray iface_class = info.value();
+            if (cSharpTypes.contains(iface_class)) {
+                qWarning("Skipping constructor %s(%s *) (C#-only type).",
+                         className.constData(), iface_class.constData());
+                continue;
+            }
 
             out << "    " << className << '(' << iface_class << " *iface)" << Qt::endl;
 
