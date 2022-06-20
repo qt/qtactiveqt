@@ -1803,6 +1803,63 @@ MetaObjectGenerator::~MetaObjectGenerator()
 
 bool qax_dispatchEqualsIDispatch = true;
 QByteArrayList qax_qualified_usertypes;
+// Value strings for enums
+QHash<QByteArray, QByteArray> qax_enum_values;
+
+// Read enum values
+QList<QPair<QByteArray, int> > qax_readEnumValues(ITypeLib *typelib, UINT index)
+{
+    QList<QPair<QByteArray, int> > result;
+
+    // Get the type information for the enum
+    ITypeInfo *enuminfo = nullptr;
+    typelib->GetTypeInfo(index, &enuminfo);
+    if (!enuminfo)
+        return result;
+
+    // Get the attributes of the enum type
+    TYPEATTR *typeattr = nullptr;
+    enuminfo->GetTypeAttr(&typeattr);
+    if (typeattr == nullptr) {
+        enuminfo->Release();
+        return result;
+    }
+
+    // Get all values of the enumeration
+    result.reserve(typeattr->cVars);
+    for (UINT vd = 0; vd < typeattr->cVars; ++vd) {
+        VARDESC *vardesc = nullptr;
+        enuminfo->GetVarDesc(vd, &vardesc);
+        if (vardesc != nullptr) {
+            if (vardesc->varkind == VAR_CONST) {
+                const int value = vardesc->lpvarValue->lVal;
+                QByteArray valueName = qaxTypeInfoName(enuminfo,  vardesc->memid);
+                result.append({valueName, value});
+            }
+            enuminfo->ReleaseVarDesc(vardesc);
+        }
+    }
+    enuminfo->ReleaseTypeAttr(typeattr);
+    enuminfo->Release();
+    return result;
+}
+
+// Format enum values into a string v1=1, v2=2,...
+static QByteArray enumValueString(ITypeLib *typelib, UINT index)
+{
+    QByteArray result;
+    const auto enumValues = qax_readEnumValues(typelib, index);
+    const auto last = enumValues.size() - 1;
+    for (qsizetype i = 0; i <= last; ++i) {
+        const auto &enumValue = enumValues.at(i);
+        result += "        " + enumValue.first + '='
+                  + QByteArray::number(enumValue.second);
+        if (i < last)
+            result += ',';
+        result += '\n';
+    }
+    return result;
+}
 
 QByteArray MetaObjectGenerator::usertypeToString(const TYPEDESC &tdesc, ITypeInfo *info, const QByteArray &function)
 {
@@ -1859,8 +1916,11 @@ QByteArray MetaObjectGenerator::usertypeToString(const TYPEDESC &tdesc, ITypeInf
                         }
                         break;
                     case TKIND_ENUM:
-                        if (typeLibName != current_typelib)
+                        if (typeLibName != current_typelib) {
                             userTypeName.prepend(typeLibName + "::");
+                            // For dumpcpp
+                            qax_enum_values.insert(userTypeName, enumValueString(usertypelib, index));
+                        }
                         if (!qax_qualified_usertypes.contains("enum " + userTypeName))
                             qax_qualified_usertypes << "enum " + userTypeName;
                         break;
@@ -2213,10 +2273,9 @@ void MetaObjectGenerator::readEnumInfo()
         TYPEKIND typekind;
         typelib->GetTypeInfoType(i, &typekind);
         if (typekind == TKIND_ENUM) {
-            // Get the type information for the enum
-            ITypeInfo *enuminfo = nullptr;
-            typelib->GetTypeInfo(i, &enuminfo);
-            if (!enuminfo)
+            // Get the values of the enum
+            const auto values = qax_readEnumValues(typelib, i);
+            if (values.isEmpty())
                 continue;
 
             // Get the name of the enumeration
@@ -2230,31 +2289,15 @@ void MetaObjectGenerator::readEnumInfo()
             }
 
             // Get the attributes of the enum type
-            TYPEATTR *typeattr = nullptr;
-            enuminfo->GetTypeAttr(&typeattr);
-            if (typeattr) {
-                // Get all values of the enumeration
-                for (UINT vd = 0; vd < typeattr->cVars; ++vd) {
-                    VARDESC *vardesc = nullptr;
-                    enuminfo->GetVarDesc(vd, &vardesc);
-                    if (vardesc && vardesc->varkind == VAR_CONST) {
-                        int value = vardesc->lpvarValue->lVal;
-                        int memid = vardesc->memid;
-                        // Get the name of the value
-                        QByteArray valueName = qaxTypeInfoName(enuminfo, memid);
-                        if (valueName.isEmpty())
-                            valueName = "value" + QByteArray::number(valueindex++);
-                        if (clashCheck.contains(QString::fromLatin1(valueName)))
-                            valueName += QByteArray::number(++clashIndex);
-
-                        clashCheck.insert(QString::fromLatin1(valueName));
-                        addEnumValue(enumName, valueName, value);
-                    }
-                    enuminfo->ReleaseVarDesc(vardesc);
-                }
+            for (const auto &value : values) {
+                QByteArray valueName = value.first;
+                if (valueName.isEmpty())
+                    valueName = "value" + QByteArray::number(valueindex++);
+                if (clashCheck.contains(QString::fromLatin1(valueName)))
+                    valueName += QByteArray::number(++clashIndex);
+                clashCheck.insert(QString::fromLatin1(valueName));
+                addEnumValue(enumName, valueName, value.second);
             }
-            enuminfo->ReleaseTypeAttr(typeattr);
-            enuminfo->Release();
         }
     }
 
