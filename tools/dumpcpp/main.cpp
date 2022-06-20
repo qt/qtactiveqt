@@ -50,6 +50,7 @@ extern QMetaObject *qax_readEnumInfo(ITypeLib *typeLib, const QMetaObject *paren
 extern QMetaObject *qax_readClassInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const QMetaObject *parentObject);
 extern QMetaObject *qax_readInterfaceInfo(ITypeLib *typeLib, ITypeInfo *typeInfo, const QMetaObject *parentObject);
 extern QByteArrayList qax_qualified_usertypes;
+extern QHash<QByteArray, QByteArray> qax_enum_values;
 extern QString qax_docuFromName(ITypeInfo *typeInfo, const QString &name);
 extern bool qax_dispatchEqualsIDispatch;
 extern void qax_deleteMetaObject(QMetaObject *mo);
@@ -596,19 +597,6 @@ static QByteArrayList vTableOnlyStubsFromTypeLib(ITypeLib *typelib, const QStrin
     return result;
 }
 
-static void writeForwardDeclaration(QTextStream &declOut, const QByteArray &className)
-{
-    if (className.startsWith("enum ")) {
-        declOut << "#ifndef Q_CC_MINGW\n"
-                << "    " << className << ';' << Qt::endl // Only MSVC accepts this
-                << "#else\n"
-                << "    " << className << " {};" << Qt::endl
-                << "#endif\n";
-    } else {
-        declOut << "    " << className << ';' << Qt::endl;
-    }
-}
-
 static const QMetaObject *baseMetaObject(ObjectCategories c)
 {
     return c.testFlag(ActiveX)
@@ -782,9 +770,16 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                 if (libName != QLatin1String(nspace)) {
                     declOut << "namespace " << nspace << " {" << Qt::endl;
                     for (const auto &className : it.value()) {
-                        if (className.contains(' ')) {
-                            writeForwardDeclaration(declOut, className);
-                            namespaceForType.insert(className.mid(className.indexOf(' ') + 1), nspace);
+                        const auto spacePos = className.indexOf(' ');
+                        if (spacePos != -1) {
+                            const QByteArray name = className.mid(spacePos + 1);
+                            if (className.startsWith("enum ")) {
+                                declOut << "    " << className << " {\n"
+                                    << qax_enum_values.value(nspace + "::" + name) << "    };\n";
+                            } else {
+                                declOut << "    " << className << ";\n";
+                            }
+                            namespaceForType.insert(name, nspace);
                         } else {
                             declOut << "    class " << className << ';' << Qt::endl;
                             opaquePointerTypes.append(nspace + "::" + className);
