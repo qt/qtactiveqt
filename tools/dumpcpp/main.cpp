@@ -544,12 +544,36 @@ bool generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
         qualifiedClassName = nameSpace + "::";
     qualifiedClassName += className;
 
-    const QString moCode = mocCode(mo, QLatin1String(qualifiedClassName),
-                                   errorString);
+    QString moCode = mocCode(mo, QLatin1String(qualifiedClassName), errorString);
     if (moCode.isEmpty()) {
         out << "#error moc error\n";
         return false;
     }
+
+    // Postprocess the moc output to fully qualify types. This works around moc
+    // not having any semantic type information, and a fix for QTBUG-100145.
+    constexpr QStringView typeAndForceComplete(u"QtPrivate::TypeAndForceComplete<");
+    qsizetype nextTypeAndForceComplete = 0;
+    do {
+        nextTypeAndForceComplete = moCode.indexOf(typeAndForceComplete, nextTypeAndForceComplete);
+        if (nextTypeAndForceComplete == -1)
+            break;
+        const auto startType = nextTypeAndForceComplete + typeAndForceComplete.length();
+        const auto lengthType = moCode.indexOf(u',', startType) - startType;
+        if (lengthType == -1)
+            break;
+
+        QString type = moCode.sliced(startType, lengthType);
+        if (type.endsWith(u'*'))
+            type.chop(1);
+        type = type.trimmed();
+        const auto namespaceForTypeEntry = namespaceForType.constFind(type.toUtf8());
+        if (namespaceForTypeEntry != namespaceForType.constEnd()) {
+            const auto ns = QString::fromUtf8(namespaceForTypeEntry.value());
+            moCode.insert(startType, ns + QStringView(u"::"));
+        }
+        nextTypeAndForceComplete = startType + lengthType;
+    } while (true);
 
     out << moCode << "\n\n";
 
