@@ -1,3 +1,6 @@
+# Copyright (C) 2022 The Qt Company Ltd.
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+
 # Generates a C++ namespace for a type library and adds generated sources to the target. Arguments:
 #
 # LIBRARIES: List of type libraries. A type library (.tlb) is a binary file that stores information
