@@ -388,7 +388,7 @@ public:
         if (qobject->signalsBlocked())
             return S_OK;
 
-        const QMetaObject *meta = combase->axBaseMetaObject();
+        const QMetaObject *meta = qobject->metaObject();
         const QMetaObjectExtra &moExtra =  moextra_cache.value(meta);
 
         int index = -1;
@@ -497,16 +497,16 @@ public:
         if (dispID == DISPID_UNKNOWN || !combase)
             return S_OK;
 
-        const QMetaObject *meta = combase->axBaseMetaObject();
+        QObject *qobject = combase->qObject();
+        if (qobject->signalsBlocked())
+            return S_OK;
+
+        const QMetaObject *meta = qobject->metaObject();
         if (!meta)
             return S_OK;
 
         QByteArray propname(findProperty(dispID));
         if (propname.isEmpty())
-            return S_OK;
-
-        QObject *qobject = combase->qObject();
-        if (qobject->signalsBlocked())
             return S_OK;
 
         // emit the generic signal
@@ -624,7 +624,7 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     typeinfo->Release();
 
     QByteArray propsignal(propname + "Changed(");
-    const QMetaObject *mo = combase->axBaseMetaObject();
+    const QMetaObject *mo = combase->qObject()->metaObject();
     int index = mo->indexOfProperty(propname);
     const QMetaProperty prop = mo->property(index);
     propsignal += prop.typeName();
@@ -3308,7 +3308,7 @@ bool QAxBasePrivate::checkHRESULT(HRESULT hres, EXCEPINFO *exc, const QString &n
 */
 int QAxBase::internalProperty(QMetaObject::Call call, int index, void **v)
 {
-    const QMetaObject *mo = axBaseMetaObject();
+    const QMetaObject *mo = qObject()->metaObject();
     const QMetaProperty prop = mo->property(index + mo->propertyOffset());
     QByteArray propname = prop.name();
 
@@ -3413,7 +3413,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
     if (!disp)
         return index;
 
-    const QMetaObject *mo = axBaseMetaObject();
+    const QMetaObject *mo = qObject()->metaObject();
     // get the slot information
     const QMetaMethod slot = mo->method(index + mo->methodOffset());
     Q_ASSERT(slot.methodType() == QMetaMethod::Slot);
@@ -3531,7 +3531,7 @@ int QAxBasePrivate::qtStaticMetaCall(QAxBase *_t, QMetaObject::Call _c, int _id,
     if (_c != QMetaObject::InvokeMetaMethod)
         return 0;
     Q_ASSERT(_t != nullptr);
-    const QMetaObject *mo = _t->axBaseMetaObject();
+    const QMetaObject *mo = _t->qObject()->metaObject();
     switch (mo->method(_id + mo->methodOffset()).methodType()) {
     case QMetaMethod::Signal:
         QMetaObject::activate(_t->qObject(), mo, _id, _a);
@@ -3547,7 +3547,7 @@ int QAxBasePrivate::qtStaticMetaCall(QAxBase *_t, QMetaObject::Call _c, int _id,
 
 int QAxBasePrivate::qtMetaCall(QMetaObject::Call call, int id, void **v)
 {
-    const QMetaObject *mo = q->axBaseMetaObject();
+    const QMetaObject *mo = q->qObject()->metaObject();
     if (q->isNull() && mo->property(id + mo->propertyOffset()).name() != QByteArray("control")) {
         qWarning("QAxBase::qt_metacall: Object is not initialized, or initialization failed");
         return id;
@@ -3572,7 +3572,7 @@ int QAxBasePrivate::qtMetaCall(QMetaObject::Call call, int id, void **v)
 #ifdef QT_CHECK_STATE
 static void qax_noSuchFunction(int disptype, const QByteArray &name, const QByteArray &function, const QAxBase *that)
 {
-    const QMetaObject *metaObject = that->axBaseMetaObject();
+    const QMetaObject *metaObject = that->qObject()->metaObject();
     const char *coclass = metaObject->classInfo(metaObject->indexOfClassInfo("CoClass")).value();
 
     if (disptype == DISPATCH_METHOD) {
@@ -3620,7 +3620,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
         return false;
     }
 
-    const QMetaObject *mo = axBaseMetaObject();
+    const QMetaObject *mo = qObject()->metaObject();
     Q_ASSERT(d->metaobj);
     const QMetaObjectExtra &moExtra = moextra_cache.value(d->metaobj);
 
@@ -4062,7 +4062,7 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
     case VT_EMPTY:
 #ifdef QT_CHECK_STATE
         {
-            auto mo = axBaseMetaObject();
+            auto mo = qObject()->metaObject();
             const char *coclass = mo->classInfo(mo->indexOfClassInfo("CoClass")).value();
             qWarning("QAxBase::querySubObject: %s: Error calling function or property in %s (%s)"
                 , name, control().toLatin1().data(), coclass ? coclass: "unknown");
@@ -4072,7 +4072,7 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
     default:
 #ifdef QT_CHECK_STATE
         {
-            auto mo = axBaseMetaObject();
+            auto mo = qObject()->metaObject();
             const char *coclass = mo->classInfo(mo->indexOfClassInfo("CoClass")).value();
             qWarning("QAxBase::querySubObject: %s: Method or property is not of interface type in %s (%s)"
                 , name, control().toLatin1().data(), coclass ? coclass: "unknown");
@@ -4179,7 +4179,7 @@ QAxBase::PropertyBag QAxBase::propertyBag() const
         persist->Release();
         return result;
     }
-    const QMetaObject *mo = axBaseMetaObject();
+    const QMetaObject *mo = qObject()->metaObject();
     for (int p = mo->propertyOffset(); p < mo->propertyCount(); ++p) {
         const QMetaProperty property = mo->property(p);
         QVariant var = qObject()->property(property.name());
@@ -4219,7 +4219,7 @@ void QAxBase::setPropertyBag(const PropertyBag &bag)
         pbag->Release();
         persist->Release();
     } else {
-        const QMetaObject *mo = axBaseMetaObject();
+        const QMetaObject *mo = qObject()->metaObject();
         for (int p = mo->propertyOffset(); p < mo->propertyCount(); ++p) {
             const QMetaProperty property = mo->property(p);
             QVariant var = bag.value(QLatin1String(property.name()));
