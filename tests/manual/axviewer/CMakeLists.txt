@@ -14,7 +14,7 @@ qt_internal_add_manual_test(tst_axviewer_manual # special case
         main.cpp
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::AxContainer
         Qt::Gui
         Qt::Widgets
@@ -39,7 +39,7 @@ qt_internal_extend_target(tst_axviewer_manual CONDITION EXISTS "${diaglib_path}"
         QT_DIAG_LIB
     INCLUDE_DIRECTORIES
         "${diaglib_path}"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
 )
@@ -47,7 +47,7 @@ qt_internal_extend_target(tst_axviewer_manual CONDITION EXISTS "${diaglib_path}"
 qt_internal_extend_target(tst_axviewer_manual CONDITION (EXISTS "${diaglib_path}") AND (WIN32)
     SOURCES
         "${diaglib_path}/nativewindowdump_win.cpp"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         user32
 )
 
@@ -62,7 +62,7 @@ qt_internal_extend_target(tst_axviewer_manual CONDITION (EXISTS "${diaglib_path}
         "${diaglib_path}/debugproxystyle.cpp" "${diaglib_path}/debugproxystyle.h"
         "${diaglib_path}/logwidget.cpp" "${diaglib_path}/logwidget.h"
         "${diaglib_path}/qwidgetdump.cpp" "${diaglib_path}/qwidgetdump.h"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::WidgetsPrivate
 )
 
@@ -70,7 +70,7 @@ qt_internal_extend_target(tst_axviewer_manual CONDITION (EXISTS "${diaglib_path}
     TARGET Qt::OpenGL AND TARGET Qt::OpenGLWidgets
     SOURCES
         "${diaglib_path}/glinfo.cpp" "${diaglib_path}/glinfo.h"
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::OpenGL
         Qt::OpenGLWidgets
 )

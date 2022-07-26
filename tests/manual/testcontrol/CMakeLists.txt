@@ -12,7 +12,7 @@ qt_internal_add_manual_test(tst_testcontrol_manual # special case
     SOURCES
         main.cpp
         testcontrol.rc
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::AxServer
         Qt::Gui
         Qt::Widgets

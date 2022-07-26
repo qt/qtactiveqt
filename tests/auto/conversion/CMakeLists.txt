@@ -10,7 +10,7 @@
 qt_internal_add_test(conversion # special case
     SOURCES
         tst_conversion.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::AxContainer
         Qt::Gui
 )

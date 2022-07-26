@@ -14,7 +14,7 @@ qt_internal_add_manual_test(tst_dumpcpp_manual # special case
         main.cpp
     INCLUDE_DIRECTORIES
         ../shared
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::AxContainer
         Qt::Gui
         Qt::Test
