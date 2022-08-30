@@ -12,6 +12,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QToolBar>
+#include <QLibraryInfo>
 
 #include <QScreen>
 
