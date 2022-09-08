@@ -71,8 +71,7 @@ void ChangeProperties::on_buttonSet_clicked()
     switch (type) {
     case QMetaType::QColor:
         {
-            QColor col;
-            col.setNamedColor(editValue->text());
+            const QColor col = QColor::fromString(editValue->text());
             if (col.isValid()) {
                 value = QVariant::fromValue(col);
             } else {
