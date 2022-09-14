@@ -55,14 +55,19 @@ function(qt6_target_idl target)
     set(output_idl "${CMAKE_CURRENT_BINARY_DIR}/${target}$<CONFIG>.idl")
     set(output_tlb "${CMAKE_CURRENT_BINARY_DIR}/${target}$<CONFIG>.tlb")
 
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     set(tlb_command_list "")
-    _qt_internal_wrap_tool_command(tlb_command_list APPEND
-        "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>" "$<TARGET_FILE:${target}>"
-        /idl "${output_idl}" -version 1.0
+
+    list(APPEND tlb_command_list
+        COMMAND
+            "${tool_wrapper}"
+            "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>" "$<TARGET_FILE:${target}>"
+            /idl "${output_idl}" -version 1.0
     )
 
-    _qt_internal_wrap_tool_command(tlb_command_list APPEND
-        midl "${output_idl}" /nologo /tlb "${output_tlb}"
+    list(APPEND tlb_command_list
+        COMMAND
+            "${tool_wrapper}" midl "${output_idl}" /nologo /tlb "${output_tlb}"
     )
 
     set(rc_files "$<FILTER:$<TARGET_PROPERTY:${target},SOURCES>,INCLUDE,\\.rc$>")
@@ -71,14 +76,17 @@ function(qt6_target_idl target)
 $<TARGET_FILE:${target}>$<SEMICOLON>/tlb$<SEMICOLON>${output_tlb}")
     set(no_rc_cmd "echo \"No rc-file linked into project. The type library of the ${target} \
 target will be a separate file.\"")
-    _qt_internal_wrap_tool_command(tlb_command_list APPEND
-        "$<IF:${have_rc_files},${rc_cmd},${no_rc_cmd}>"
+    list(APPEND tlb_command_list
+        COMMAND
+            "${tool_wrapper}" "$<IF:${have_rc_files},${rc_cmd},${no_rc_cmd}>"
     )
 
     if(NOT arg_NO_AX_SERVER_REGISTRATION AND NOT QT_NO_AX_SERVER_REGISTRATION)
-        _qt_internal_wrap_tool_command(tlb_command_list APPEND
-            "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>"
-             "$<TARGET_FILE:${target}>" /regserver
+        list(APPEND tlb_command_list
+            COMMAND
+                "${tool_wrapper}"
+                "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>"
+                "$<TARGET_FILE:${target}>" /regserver
         )
     endif()
     add_custom_command(TARGET ${target} POST_BUILD
