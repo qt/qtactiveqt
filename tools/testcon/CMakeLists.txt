@@ -18,7 +18,7 @@ qt_internal_add_app(testcon # special case
         invokemethod.cpp invokemethod.h invokemethod.ui
         main.cpp
         mainwindow.cpp mainwindow.h mainwindow.ui
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::AxContainer
         Qt::AxContainerPrivate
         Qt::AxServer

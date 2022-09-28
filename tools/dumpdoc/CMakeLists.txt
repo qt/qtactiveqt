@@ -13,7 +13,7 @@ qt_internal_add_tool(${target_name} # special case
     TOOLS_TARGET AxContainer # special case
     SOURCES
         main.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::AxContainer
         Qt::Gui
         Qt::Widgets

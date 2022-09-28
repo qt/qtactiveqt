@@ -17,7 +17,7 @@ qt_internal_add_tool(${target_name} # special case
     DEFINES
         QT_ASCII_CAST_WARNINGS
         QT_NO_CAST_TO_ASCII
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::AxContainer
         Qt::CorePrivate
         Qt::Gui
