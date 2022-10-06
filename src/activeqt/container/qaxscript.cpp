@@ -694,7 +694,7 @@ bool QAxScript::load(const QString &code, const QString &language)
         if (code.contains(QLatin1String("End Sub"), Qt::CaseInsensitive))
             lang = QLatin1String("VBScript");
 
-        for (const QAxEngineDescriptor &engine : qAsConst(engines)) {
+        for (const QAxEngineDescriptor &engine : std::as_const(engines)) {
             if (!engine.code.isEmpty() && code.contains(engine.code)) {
                 lang = engine.name;
                 break;
@@ -1056,7 +1056,7 @@ QAxScript *QAxScriptManager::load(const QString &file, const QString &name)
     if (file.endsWith(QLatin1String(".js"))) {
         language = QLatin1String("JScript");
     } else {
-        for (const QAxEngineDescriptor &engine : qAsConst(engines)) {
+        for (const QAxEngineDescriptor &engine : std::as_const(engines)) {
             if (!engine.extension.isEmpty() && file.endsWith(engine.extension)) {
                 language = engine.name;
                 break;
@@ -1186,7 +1186,7 @@ QString QAxScriptManager::scriptFileFilter()
     QString specialFiles = QLatin1String(";;VBScript Files (*.vbs *.dsm)"
         ";;JavaScript Files (*.js)");
 
-    for (const QAxEngineDescriptor &engine : qAsConst(engines)) {
+    for (const QAxEngineDescriptor &engine : std::as_const(engines)) {
         if (!engine.extension.isEmpty()) {
             allFiles += QLatin1String(" *") + engine.extension;
             specialFiles += QLatin1String(";;") + engine.name

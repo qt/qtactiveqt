@@ -815,7 +815,7 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
                     declOut << '}' << Qt::endl << Qt::endl;
                 }
             }
-            for (const QByteArray &opaquePointerType : qAsConst(opaquePointerTypes))
+            for (const QByteArray &opaquePointerType : std::as_const(opaquePointerTypes))
                 declOut << "Q_DECLARE_OPAQUE_POINTER(" << opaquePointerType << "*)" << Qt::endl;
             declOut << Qt::endl;
         }
