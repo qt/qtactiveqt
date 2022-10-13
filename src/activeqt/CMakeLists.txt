@@ -17,7 +17,24 @@ add_subdirectory(container)
 # same time.
 set(QT_FEATURE_headersclean_BACKUP "${QT_FEATURE_headersclean}")
 set(QT_FEATURE_headersclean OFF)
-qt_internal_add_module(ActiveQt HEADER_MODULE MODULE_INCLUDE_NAME ActiveQt)
+qt_internal_add_module(ActiveQt
+    HEADER_MODULE
+    MODULE_INCLUDE_NAME ActiveQt
+    SOURCES
+        axbase/qaxtypefunctions_p.h
+        axbase/qaxutils_p.h
+        container/qaxbase.h container/qaxbase_p.h
+        container/qaxobject.h container/qaxobject_p.h
+        container/qaxobjectinterface.h
+        container/qaxscript.h
+        container/qaxselect.h
+        container/qaxwidget.h container/qaxwidget_p.h
+        control/qaxaggregated.h
+        control/qaxbindable.h
+        control/qaxfactory.h
+        control/qclassfactory_p.h
+        shared/qaxtypes_p.h
+)
 qt_internal_add_docs(ActiveQt
     doc/activeqt.qdocconf
 )
