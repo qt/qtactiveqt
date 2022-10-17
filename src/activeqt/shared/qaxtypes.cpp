@@ -702,6 +702,25 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
     return true;
 }
 
+#ifdef QAX_SERVER
+static QVariant axServer(IUnknown *unknown, const QByteArray &typeName)
+{
+    IAxServerBase *iface = nullptr;
+    if (unknown && typeName != "IDispatch*" && typeName != "IUnknown*")
+        unknown->QueryInterface(IID_IAxServerBase, reinterpret_cast<void**>(&iface));
+    if (iface == nullptr)
+        return {};
+
+    auto *qObj = iface->qObject();
+    iface->Release();
+    QByteArray pointerType = qObj ? QByteArray(qObj->metaObject()->className()) + '*' : typeName;
+    QMetaType pointerMetaType = QMetaType::fromName(pointerType);
+    if (pointerMetaType.id() == QMetaType::UnknownType)
+        pointerMetaType = QMetaType(qRegisterMetaType<QObject *>(pointerType));
+    return QVariant(pointerMetaType, &qObj);
+}
+#endif // QAX_SERVER
+
 #undef QVARIANT_TO_VARIANT_POD
 
 /*
@@ -913,17 +932,8 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, int t
                 }
             } else {
 #ifdef QAX_SERVER
-                IAxServerBase *iface = 0;
-                if (disp && typeName != "IDispatch*")
-                    disp->QueryInterface(IID_IAxServerBase, reinterpret_cast<void**>(&iface));
-                if (iface) {
-                    QObject *qObj = iface->qObject();
-                    iface->Release();
-                    QByteArray pointerType = qObj ? QByteArray(qObj->metaObject()->className()) + '*' : typeName;
-                    QMetaType pointerMetaType = QMetaType::fromName(pointerType);
-                    if (pointerMetaType.id() == QMetaType::UnknownType)
-                        pointerMetaType = QMetaType(qRegisterMetaType<QObject *>(pointerType));
-                    var = QVariant(pointerMetaType, &qObj);
+                if (auto axs = axServer(disp, typeName); axs.isValid()) {
+                    var = axs;
                 } else
 #endif
                 {
@@ -967,6 +977,10 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, int t
             else
                 unkn = arg.punkVal;
             var.setValue(unkn);
+#ifdef QAX_SERVER
+            if (auto axs = axServer(unkn, typeName); axs.isValid())
+                var = axs;
+#endif
         }
         break;
     case VT_ARRAY|VT_VARIANT:
