@@ -2502,9 +2502,8 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                     }
                 }
                 if (!type.isEmpty() && type != "void" && pvarResult) {
-                    if (!varp[0].isValid() && type != "QVariant")
+                    if (argv[0] == argv_pointer && type != "QVariant")
                         varp[0] = QVariant(QMetaType::fromName(type), argv_pointer);
-//                        varp[0].setValue(argv_pointer[0], type);
                     ok = QVariantToVARIANT(varp[0], *pvarResult, type);
                 }
             }
