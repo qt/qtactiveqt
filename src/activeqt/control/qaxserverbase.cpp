@@ -2294,6 +2294,13 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
     if (isWidget)
         oldSizeHint = qt.widget->sizeHint();
 
+    if (wFlags == (DISPATCH_PROPERTYGET|DISPATCH_METHOD)
+        && !pvarResult && (pDispParams->cArgs || pDispParams->cNamedArgs)) {
+        // some client language might allow "value = object.bar = 'newvalue'", and
+        // call us with a get|method but without pvarResult set? QTBUG-106024
+        wFlags |= DISPATCH_PROPERTYPUT;
+    }
+
     switch (wFlags) {
     case DISPATCH_PROPERTYGET|DISPATCH_METHOD:
     case DISPATCH_PROPERTYGET:
@@ -2521,6 +2528,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
         break;
     case DISPATCH_PROPERTYPUT:
     case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF:
+    case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYGET|DISPATCH_METHOD:
         {
             if (index == -1) {
                 index = mo->indexOfProperty(name);
@@ -2535,10 +2543,11 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 return DISP_E_MEMBERNOTFOUND;
             if (!pDispParams->cArgs)
                 return DISP_E_PARAMNOTOPTIONAL;
-            if (pDispParams->cArgs != 1 ||
-                pDispParams->cNamedArgs != 1 ||
-                *pDispParams->rgdispidNamedArgs != DISPID_PROPERTYPUT)
-                return DISP_E_BADPARAMCOUNT;
+            if (wFlags != (DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYGET|DISPATCH_METHOD)
+                && (pDispParams->cArgs != 1 || pDispParams->cNamedArgs != 1
+                    || *pDispParams->rgdispidNamedArgs != DISPID_PROPERTYPUT)) {
+                    return DISP_E_BADPARAMCOUNT;
+            }
 
             QVariant var = VARIANTToQVariant(*pDispParams->rgvarg,
                                              property.typeName(), property.metaType().id());
