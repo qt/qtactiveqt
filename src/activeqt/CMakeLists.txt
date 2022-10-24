@@ -8,18 +8,15 @@ add_subdirectory(axbase)
 add_subdirectory(control)
 add_subdirectory(container)
 
-# We disable this headersclean check this way, since syncqt adds the header files from the
-# subdirectories to the ActiveQt module. This triggers the headersclean rules creation and
-# execution, but they fail because ActiveQt module doesn't link the necessary libraries so
-# their compile flags and include directories are missing.
-# We cannot simply link libraries because the missing include directories belong to the
-# AxServer and AxContainer modules which have conflicting object files and cannot be linked in the
-# same time.
-set(QT_FEATURE_headersclean_BACKUP "${QT_FEATURE_headersclean}")
-set(QT_FEATURE_headersclean OFF)
+# We disable the headersclean check, since these header files don't belong to the ActiveQt module.
+# Headersclean rules fail because ActiveQt module doesn't link the necessary libraries so their
+# compile flags and include directories are missing. We cannot simply link libraries because the
+# missing include directories belong to the AxServer and AxContainer modules which have conflicting
+# object files and meaning and cannot be linked in the same time.
 qt_internal_add_module(ActiveQt
     HEADER_MODULE
     MODULE_INCLUDE_NAME ActiveQt
+    NO_HEADERSCLEAN_CHECK
     SOURCES
         axbase/qaxtypefunctions_p.h
         axbase/qaxutils_p.h
@@ -38,7 +35,6 @@ qt_internal_add_module(ActiveQt
 qt_internal_add_docs(ActiveQt
     doc/activeqt.qdocconf
 )
-set(QT_FEATURE_headersclean "${QT_FEATURE_headersclean_BACKUP}")
 
 # special case end
 ## Scopes:
