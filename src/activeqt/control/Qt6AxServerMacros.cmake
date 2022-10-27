@@ -85,8 +85,8 @@ function(qt6_target_idl target)
     set(rc_files "$<FILTER:$<TARGET_PROPERTY:${target},SOURCES>,INCLUDE,\\.rc$>")
     set(have_rc_files "$<NOT:$<BOOL:$<STREQUAL:${rc_files},>>>")
 
-    set(no_rc_cmd "echo \"No rc-file linked into project. The type library of the ${target} \
-target will be a separate file.\"")
+    set(no_rc_cmd "echo$<SEMICOLON>No rc-file linked into project. The type library of the \
+${target} target will be a separate file.")
 
     set(idc_args
         "$<SEMICOLON>$<TARGET_FILE:${target}>$<SEMICOLON>/tlb$<SEMICOLON>${output_tlb}")
