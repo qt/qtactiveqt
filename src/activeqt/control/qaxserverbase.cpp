@@ -609,7 +609,7 @@ public:
         connections = old.connections;
         that = old.that;
         iid = old.iid;
-        for (const CONNECTDATA &connection : qAsConst(connections))
+        for (const CONNECTDATA &connection : std::as_const(connections))
             connection.pUnk->AddRef();
     }
     virtual ~QAxConnection()
