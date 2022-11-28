@@ -3,18 +3,17 @@
 
 #ifndef SANDBOXING_H
 #define SANDBOXING_H
-#include <windows.h>
+#include <QAxSelect>
 
-/** RAII class for temporarily impersonating low-integrity level for the current thread.
-    Intended to be used together with CLSCTX_ENABLE_CLOAKING when creating COM objects.
-    Based on "Designing Applications to Run at a Low Integrity Level" https://msdn.microsoft.com/en-us/library/bb625960.aspx */
-struct LowIntegrity {
-    LowIntegrity();
 
-    ~LowIntegrity();
+class Sandboxing
+{
+public:
+    static std::unique_ptr<Sandboxing> Create(QAxSelect::SandboxingLevel level);
 
-private:
-    HANDLE m_token = nullptr;
+    Sandboxing() {}
+
+    virtual ~Sandboxing() {}
 };
 
 #endif // SANDBOXING_H

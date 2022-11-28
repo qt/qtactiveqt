@@ -95,17 +95,22 @@ bool MainWindow::addControlFromClsid(const QString &clsid, QAxSelect::Sandboxing
 
     bool result = false;
     {
-        std::unique_ptr<LowIntegrity> low_integrity;
+        // RAII object for impersonating sandboxing on current thread
+        std::unique_ptr<Sandboxing> sandbox_impl;
 
-        if (sandboxing == QAxSelect::SandboxingProcess) {
+        switch (sandboxing) {
+        case QAxSelect::SandboxingNone:
+            break; // sandboxing disabled
+        case QAxSelect::SandboxingProcess:
             // require out-of-process
             container->setClassContext(CLSCTX_LOCAL_SERVER);
-        } else if (sandboxing == QAxSelect::SandboxingLowIntegrity) {
-            // impersonate "low integrity"
-            low_integrity.reset(new LowIntegrity);
-            // require out-of-process and
-            // propagate integrity level when calling setControl
+            break;
+        default:
+            // impersonate desired sandboxing
+            sandbox_impl = Sandboxing::Create(sandboxing);
+            // require out-of-process and activate impersonation
             container->setClassContext(CLSCTX_LOCAL_SERVER | CLSCTX_ENABLE_CLOAKING);
+            break;
         }
 
         result = container->setControl(clsid);
