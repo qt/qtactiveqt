@@ -3,13 +3,14 @@
 
 #ifndef SANDBOXING_H
 #define SANDBOXING_H
+#include <QString>
 #include <QAxSelect>
 
 
 class Sandboxing
 {
 public:
-    static std::unique_ptr<Sandboxing> Create(QAxSelect::SandboxingLevel level);
+    static std::unique_ptr<Sandboxing> Create(QAxSelect::SandboxingLevel level, const QString &clsid);
 
     Sandboxing() {}
 

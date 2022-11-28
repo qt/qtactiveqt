@@ -107,7 +107,7 @@ bool MainWindow::addControlFromClsid(const QString &clsid, QAxSelect::Sandboxing
             break;
         default:
             // impersonate desired sandboxing
-            sandbox_impl = Sandboxing::Create(sandboxing);
+            sandbox_impl = Sandboxing::Create(sandboxing, clsid);
             // require out-of-process and activate impersonation
             container->setClassContext(CLSCTX_LOCAL_SERVER | CLSCTX_ENABLE_CLOAKING);
             break;

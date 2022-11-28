@@ -30,6 +30,7 @@ QT_BEGIN_NAMESPACE
     \value SandboxingNone No specific sandboxing desired
     \value SandboxingProcess Run ActiveX control in a separate process
     \value SandboxingLowIntegrity Run ActiveX control in a separate low-integrity process
+    \value SandboxingAppContainer Run ActiveX control in a separate AppContainer-isolated process
 
     Sandboxing requires that the ActiveX is either built as an EXE, or as a DLL with AppID "DllSurrogate" enabled.
 */
@@ -327,7 +328,8 @@ QAxSelect::QAxSelect(QWidget *parent, Qt::WindowFlags flags)
     d->filterModel->setSourceModel(new ControlList(this));
     d->selectUi.ActiveXList->setModel(d->filterModel);
 
-    QStringList sandboxingOptions = { QLatin1String("None"), QLatin1String("Process isolation"), QLatin1String("Low integrity process") };
+    QStringList sandboxingOptions = { QLatin1String("None"), QLatin1String("Process isolation"),
+                                      QLatin1String("Low integrity process"), QLatin1String("AppContainer process") };
     d->selectUi.SandboxingCombo->addItems(sandboxingOptions);
 
     connect(d->selectUi.ActiveXList->selectionModel(), &QItemSelectionModel::currentChanged,
@@ -373,6 +375,8 @@ QAxSelect::SandboxingLevel QAxSelect::sandboxingLevel() const
         return SandboxingProcess;
     case 2:
         return SandboxingLowIntegrity;
+    case 3:
+        return SandboxingAppContainer;
     default:
         break;
     }

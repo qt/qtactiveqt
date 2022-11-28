@@ -18,6 +18,7 @@ public:
         SandboxingNone = 0,
         SandboxingProcess,
         SandboxingLowIntegrity,
+        SandboxingAppContainer,
     };
 
     explicit QAxSelect(QWidget *parent = nullptr, Qt::WindowFlags flags = Qt::WindowFlags());
