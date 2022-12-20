@@ -10,6 +10,8 @@
 #include <QTemporaryFile>
 #include <QTextStream>
 
+#include <private/qtools_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QByteArray setterName(const QByteArray &propertyName)
@@ -18,7 +20,7 @@ QByteArray setterName(const QByteArray &propertyName)
     if (isupper(setter.at(0))) {
         setter = "Set" + setter;
     } else {
-        setter[0] = char(toupper(setter[0]));
+        setter[0] = QtMiscUtils::toAsciiUpper(setter[0]);
         setter = "set" + setter;
     }
     return setter;
