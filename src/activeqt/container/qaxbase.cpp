@@ -31,6 +31,7 @@
 #include <private/qobject_p.h>
 #include <private/qmetaobject_p.h>
 #include <private/qmetaobjectbuilder_p.h>
+#include <private/qtools_p.h>
 
 #include <qt_windows.h>
 #include <ocidl.h>
@@ -2284,7 +2285,7 @@ void MetaObjectGenerator::addSetterSlot(const QByteArray &property)
     if (isupper(prototype.at(0))) {
         prototype.insert(0, "Set");
     } else {
-        prototype[0] = char(toupper(prototype[0]));
+        prototype[0] = QtMiscUtils::toAsciiUpper(prototype[0]);
         prototype.insert(0, "set");
     }
     const QByteArray type = propertyType(property);
@@ -2482,7 +2483,7 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
                     set = "Set";
                 } else {
                     set = "set";
-                    prototype[0] = char(toupper(prototype[0]));
+                    prototype[0] = QtMiscUtils::toAsciiUpper(prototype[0]);
                 }
 
                 prototype = set + prototype;
