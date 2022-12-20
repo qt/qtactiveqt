@@ -10,6 +10,7 @@
 #include <qt_windows.h>
 #include <qtextstream.h>
 #include <qiodevicebase.h>
+#include <private/qtools_p.h>
 
 #include <ctype.h>
 
@@ -78,7 +79,7 @@ static QByteArray toType(const QByteArray &t)
 
     if (type.at(0) == 'Q')
         type.remove(0, 1);
-    type[0] = toupper(type.at(0));
+    type[0] = QtMiscUtils::toAsciiLower(type.at(0));
     if (type == "VariantList")
         type = "List";
     else if (type == "Map<QVariant,QVariant>")
@@ -316,7 +317,7 @@ QString qax_generateDocumentation(QAxBase *that)
                     setterSlot = "Set" + name;
                 } else {
                     QByteArray nameUp = name;
-                    nameUp[0] = char(toupper(nameUp.at(0)));
+                    nameUp[0] = QtMiscUtils::toAsciiUpper(nameUp.at(0));
                     setterSlot = "set" + nameUp;
                 }
                 detail += QLatin1String("<a href=\"#") + QString::fromLatin1(setterSlot) + QLatin1String("\">") +
