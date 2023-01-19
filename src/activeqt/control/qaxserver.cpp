@@ -438,8 +438,7 @@ HRESULT UpdateRegistry(bool bRegister, bool perUser)
     // we try to create the ActiveX widgets later on...
     bool delete_qApp = false;
     if (!qApp) {
-        static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
-        (void)new QApplication(argc, nullptr);
+        (void)new QApplication(__argc, __argv);
         delete_qApp = true;
     }
 
@@ -1145,8 +1144,7 @@ extern "C" HRESULT __stdcall DumpIDL(const QString &outfile, const QString &ver)
     // dummy application to create widgets
     bool delete_qApp = false;
     if (!qApp) {
-        static int argc = 0; // static lifetime, since it's passed as reference to QApplication, which has a lifetime exceeding the stack frame
-        (void)new QApplication(argc, nullptr);
+        (void)new QApplication(__argc, __argv);
         delete_qApp = true;
     }
 
