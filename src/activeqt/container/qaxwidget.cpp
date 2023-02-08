@@ -25,6 +25,7 @@
 #include <quuid.h>
 #include <qwhatsthis.h>
 #include <qabstractnativeeventfilter.h>
+#include <private/qpixmap_win_p.h>
 
 #include <windowsx.h>
 #include <ocidl.h>
@@ -1799,9 +1800,6 @@ void QAxHostWidget::focusOutEvent(QFocusEvent *e)
     AX_DEBUG(Deactivating in-place object);
     axhost->m_spInPlaceObject->UIDeactivate();
 }
-
-Q_GUI_EXPORT HBITMAP qt_pixmapToWinHBITMAP(const QPixmap &p, int hbitmapFormat = 0);
-Q_GUI_EXPORT QPixmap qt_pixmapFromWinHBITMAP(HBITMAP bitmap, int hbitmapFormat = 0);
 
 void QAxHostWidget::paintEvent(QPaintEvent*)
 {

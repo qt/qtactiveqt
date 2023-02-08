@@ -28,6 +28,7 @@
 #include <olectl.h>
 #include <private/qcoreapplication_p.h>
 #include <qwindow.h>
+#include <private/qpixmap_win_p.h>
 #include <qpa/qplatformnativeinterface.h>
 #include <qabstractnativeeventfilter.h>
 
@@ -3101,8 +3102,6 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
     }
     return E_FAIL;
 }
-
-Q_GUI_EXPORT HBITMAP qt_pixmapToWinHBITMAP(const QPixmap &p, int hbitmapFormat = 0);
 
 //**** IViewObject
 /*

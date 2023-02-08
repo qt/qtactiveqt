@@ -15,6 +15,7 @@
 #include <qcursor.h>
 #include <qpixmap.h>
 #include <qpainter.h>
+#include <private/qpixmap_win_p.h>
 #include <qobject.h>
 #include <qdebug.h>
 #ifdef QAX_SERVER
@@ -93,9 +94,6 @@ static QFont IFontToQFont(IFont *f)
 
     return font;
 }
-
-Q_GUI_EXPORT HBITMAP qt_pixmapToWinHBITMAP(const QPixmap &p, int hbitmapFormat = 0);
-Q_GUI_EXPORT QPixmap qt_pixmapFromWinHBITMAP(HBITMAP bitmap, int hbitmapFormat = 0);
 
 static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
 {
