@@ -31,3 +31,7 @@ qt_internal_add_module(AxContainer
     ENABLE_AUTOGEN_TOOLS
         uic
 )
+
+set_source_files_properties(qaxbase.cpp # defines QT_CHECK_STATE
+                            qaxscriptwrapper.cpp # references qAxFactory()
+                            PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
