@@ -1,13 +1,11 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-# Generated from control.pro.
-
 #####################################################################
 ## AxServer Module:
 #####################################################################
 
-qt_internal_add_module(AxServer # special case
+qt_internal_add_module(AxServer
     STATIC
     QMAKE_MODULE_CONFIG idcidl force_import_plugins
     SOURCES
@@ -36,10 +34,6 @@ qt_internal_add_module(AxServer # special case
         Qt::Widgets
         shell32
 )
-
-#### Keys ignored in scope 1:.:.:control.pro:<TRUE>:
-# MODULE = "axserver"
-# MODULE_CONFIG = "idcidl" "force_import_plugins"
 
 ## Scopes:
 #####################################################################

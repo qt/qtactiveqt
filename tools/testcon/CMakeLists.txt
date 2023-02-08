@@ -1,15 +1,11 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-# Generated from testcon.pro.
-
 #####################################################################
 ## testcon Binary:
 #####################################################################
 
-qt_internal_add_app(testcon # special case
-#    OUTPUT_DIRECTORY "$$[QT_INSTALL_BINS]" # special case
-#    INSTALL_DIRECTORY "$$[QT_INSTALL_BINS]" # special case
+qt_internal_add_app(testcon
     SOURCES
         ambientproperties.cpp ambientproperties.h ambientproperties.ui
         changeproperties.cpp changeproperties.h changeproperties.ui
@@ -37,20 +33,9 @@ set(testcon_resource_files
     "images/filenew.png"
 )
 
-qt_internal_add_resource(testcon "testcon" # special case
+qt_internal_add_resource(testcon "testcon"
     PREFIX
         "/"
     FILES
         ${testcon_resource_files}
 )
-
-
-#### Keys ignored in scope 1:.:.:testcon.pro:<TRUE>:
-# RC_FILE = "testcon.rc"
-# TEMPLATE = "app"
-
-## Scopes:
-#####################################################################
-
-#### Keys ignored in scope 2:.:.:testcon.pro:NOT MINGW:
-# QMAKE_POST_LINK = "midl" "$$shell_quote($$shell_path $$PWD/testcon.idl)" "&&" "move" "testcon.tlb" "$(TARGETDIR)"
