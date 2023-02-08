@@ -1116,7 +1116,8 @@ QVariant QAxScriptManager::call(const QString &function, const QVariant &var1,
     if (!s) {
 #ifdef QT_CHECK_STATE
         qWarning("QAxScriptManager::call: No script provides function %s, or this function\n"
-            "\tis provided through an engine that does not support introspection", function.latin1());
+            "\tis provided through an engine that does not support introspection",
+            qPrintable(function));
 #endif
         return QVariant();
     }
@@ -1137,7 +1138,8 @@ QVariant QAxScriptManager::call(const QString &function, QList<QVariant> &argume
     if (!s) {
 #ifdef QT_CHECK_STATE
         qWarning("QAxScriptManager::call: No script provides function %s, or this function\n"
-            "\tis provided through an engine that does not support introspection", function.latin1());
+            "\tis provided through an engine that does not support introspection",
+            qPrintable(function));
 #endif
         return QVariant();
     }
