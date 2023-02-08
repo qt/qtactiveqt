@@ -35,6 +35,10 @@ qt_internal_add_module(AxServer
         shell32
 )
 
+set_source_files_properties(qaxservermain.cpp # define main()
+                            qaxmain.cpp
+                            PROPERTIES SKIP_UNITY_BUILD_INCLUSION ON)
+
 ## Scopes:
 #####################################################################
 
