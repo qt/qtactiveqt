@@ -1,13 +1,11 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-# Generated from dumpcpp.pro.
-
 #####################################################################
 ## dumpcpp Binary:
 #####################################################################
 
-qt_internal_add_manual_test(tst_dumpcpp_manual # special case
+qt_internal_add_manual_test(tst_dumpcpp_manual
     SOURCES
         ../shared/metaobjectdump.cpp ../shared/metaobjectdump.h
         ../shared/textdialog.cpp ../shared/textdialog.h
@@ -21,11 +19,4 @@ qt_internal_add_manual_test(tst_dumpcpp_manual # special case
         Qt::Widgets
 )
 
-#### Keys ignored in scope 1:.:.:dumpcpp.pro:<TRUE>:
-# TEMPLATE = "app"
-# TYPELIBS = "$$(SystemRoot)\\system32\\ieframe.dll"
-
-qt6_target_typelibs(tst_dumpcpp_manual LIBRARIES "ieframe.dll") # special case
-
-## Scopes:
-#####################################################################
+qt6_target_typelibs(tst_dumpcpp_manual LIBRARIES "ieframe.dll")
