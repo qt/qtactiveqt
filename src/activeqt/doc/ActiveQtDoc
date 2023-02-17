@@ -14,3 +14,7 @@
 #include "qaxtypes.h"
 #include "qaxwidget.h"
 #include "qaxutils_p.h"
+
+#ifndef WINAPI
+#define WINAPI
+#endif
