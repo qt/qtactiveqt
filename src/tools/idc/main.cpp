@@ -268,7 +268,7 @@ const char usage[] =
 "Usage: idc [options] [input_file]\n"
 "Interface Description Compiler " QT_VERSION_STR "\n\n"
 "Options:\n"
-"  -?, /h, -h, -help                 Displays this help.\n"
+"  /?, -?, /h, -h, /help, -help      Displays this help.\n"
 "  /v, -v                            Displays version information.\n"
 "  /version, -version <version>      Specify the interface version.\n"
 "  /idl, -idl <file>                 Specify the interface definition file.\n"
@@ -322,7 +322,9 @@ int runIdc(int argc, char **argv)
         } else if (p == QLatin1String("/v") || p == QLatin1String("-v")) {
             fprintf(stdout, "Qt Interface Definition Compiler version 1.0 using Qt %s\n", QT_VERSION_STR);
             return 0;
-        } else if (p == QLatin1String("/h") || p == QLatin1String("-h") || p == QLatin1String("-?") || p == QLatin1String("/?")) {
+        } else if (p == QLatin1String("/h") || p == QLatin1String("-h")
+                   || p == QLatin1String("/?") || p == QLatin1String("-?")
+                   || p == QLatin1String("/help") || p == QLatin1String("-help")) {
             fprintf(stdout, "%s\n", usage);
             return 0;
         } else if (p == QLatin1String("/regserver") || p == QLatin1String("-regserver")) {
