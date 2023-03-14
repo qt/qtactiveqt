@@ -12,6 +12,7 @@
 /*!
     \example activeqt/wrapper
     \title Wrapper Example (ActiveQt)
+    \ingroup activeqt-examples
 
     \brief The Wrapper example demonstrates how to export existing QWidget
     classes as ActiveX controls, and the use of QAxFactory together
