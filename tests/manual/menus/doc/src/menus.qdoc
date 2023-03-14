@@ -20,6 +20,7 @@
 /*!
     \example activeqt/menus
     \title Menus Example (ActiveQt)
+    \ingroup activeqt-examples
 
     \brief The Menus example demonstrates the use of QMenuBar and QStatusBar
     in a QMainWindow to implement an in-place active control.

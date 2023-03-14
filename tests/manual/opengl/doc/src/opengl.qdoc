@@ -36,6 +36,7 @@
 /*!
     \example activeqt/opengl
     \title OpenGL Example (ActiveQt)
+    \ingroup activeqt-examples
 
     \brief The OpenGL example demonstrates the use of the default factory
     and  QAxFactory::isServer(), and the implementation of an
