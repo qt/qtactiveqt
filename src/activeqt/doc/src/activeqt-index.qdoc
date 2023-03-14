@@ -12,6 +12,15 @@
 */
 
 /*!
+    \group activeqt-examples
+    \title ActiveQt Examples and Tutorials
+    \brief List of ActiveQt examples and tutorials.
+    \ingroup groups
+
+    This page lists ActiveQt examples and tutorials:
+*/
+
+/*!
     \page activeqt-index.html
     \ingroup qt-activex
     \keyword ActiveQt

@@ -49,6 +49,7 @@
 /*!
     \example activeqt/simple
     \title Simple Example (ActiveQt)
+    \ingroup activeqt-examples
 
     \brief The Simple example demonstrates the use
     of QAxBindable and QAxFactory.

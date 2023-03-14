@@ -4,6 +4,7 @@
 /*!
     \example activeqt/qutlook
     \title Qutlook Example (ActiveQt)
+    \ingroup activeqt-examples
 
     \brief The Qutlook example demonstrates the use of ActiveQt to automate
     Outlook. The example makes use of the \l dumpcpp tool to generate

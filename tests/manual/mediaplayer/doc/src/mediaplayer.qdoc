@@ -4,6 +4,7 @@
 /*!
     \example activeqt/mediaplayer
     \title Media Player Example (ActiveQt)
+    \ingroup activeqt-examples
 
     \brief The Media Player example uses the Microsoft Media Player
     ActiveX control to implement a functional media player application.
