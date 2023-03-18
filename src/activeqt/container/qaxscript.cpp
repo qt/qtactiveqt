@@ -1112,17 +1112,8 @@ QVariant QAxScriptManager::call(const QString &function, const QVariant &var1,
                                 const QVariant &var7,
                                 const QVariant &var8)
 {
-    QAxScript *s = script(function);
-    if (!s) {
-#ifdef QT_CHECK_STATE
-        qWarning("QAxScriptManager::call: No script provides function %s, or this function\n"
-            "\tis provided through an engine that does not support introspection",
-            qPrintable(function));
-#endif
-        return QVariant();
-    }
-
-    return s->call(function, var1, var2, var3, var4, var5, var6, var7, var8);
+    QList<QVariant> list{var1, var2, var3, var4, var5, var6, var7, var8};
+    return call(function, list);
 }
 
 /*!
@@ -1134,7 +1125,8 @@ QVariant QAxScriptManager::call(const QString &function, const QVariant &var1,
 */
 QVariant QAxScriptManager::call(const QString &function, QList<QVariant> &arguments)
 {
-    QAxScript *s = script(function);
+    QString signature = function;
+    QAxScript *s = scriptForFunction(signature);
     if (!s) {
 #ifdef QT_CHECK_STATE
         qWarning("QAxScriptManager::call: No script provides function %s, or this function\n"
@@ -1145,7 +1137,7 @@ QVariant QAxScriptManager::call(const QString &function, QList<QVariant> &argume
     }
 
     QVariantList args(arguments);
-    return s->call(function, args);
+    return s->call(signature, args);
 }
 
 /*!
@@ -1215,28 +1207,38 @@ QString QAxScriptManager::scriptFileFilter()
 */
 
 /*!
-    \fn QAxScript *QAxScriptManager::scriptForFunction(const QString &function) const
+    \fn QAxScript *QAxScriptManager::scriptForFunction(QString &function) const
     \internal
 
     Returns a pointer to the first QAxScript that knows
-    about \a function, or 0 if this function is unknown.
+    about \a function, or nullptr if this function is unknown. \a function
+    is changed to the callable signature.
 */
-QAxScript *QAxScriptManager::scriptForFunction(const QString &function) const
+QAxScript *QAxScriptManager::scriptForFunction(QString &function) const
 {
-    // check full prototypes if included
-    if (function.contains(QLatin1Char('('))) {
-        for (auto it = d->scriptDict.cbegin(), end = d->scriptDict.cend(); it != end; ++it) {
-            if (it.value()->functions(QAxScript::FunctionSignatures).contains(function))
-                return it.value();
-        }
-    }
+    const auto startPrototype = function.indexOf(u'(');
 
-    QString funcName = function;
-    funcName.truncate(funcName.indexOf(QLatin1Char('(')));
-    // second try, checking only names, not prototypes
-    for (auto it = d->scriptDict.cbegin(), end = d->scriptDict.cend(); it != end; ++it) {
-        if (it.value()->functions(QAxScript::FunctionNames).contains(funcName))
-            return it.value();
+    for (const auto &script : d->scriptDict) {
+        const QMetaObject *mo = script->scriptEngine()->metaObject();
+        for (int i = mo->methodOffset(); i < mo->methodCount(); ++i) {
+            const QMetaMethod slot(mo->method(i));
+            if (slot.methodType() != QMetaMethod::Slot || slot.access() != QMetaMethod::Public)
+                continue;
+            const QString slotname = QString::fromLatin1(slot.methodSignature());
+            if (slotname.contains(u'_'))
+                continue;
+
+            // finding script for prototype
+            if (startPrototype != -1) {
+                if (slotname == function)
+                    return script;
+            } else if (slotname.length() > function.length()
+                    && slotname.at(function.length()) == u'('
+                    && slotname.startsWith(function)) {
+                function = slotname;
+                return script;
+            }
+        }
     }
 
     return nullptr;

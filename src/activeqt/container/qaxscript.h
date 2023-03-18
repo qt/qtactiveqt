@@ -150,7 +150,7 @@ private:
     QAxScriptManagerPrivate *d;
 
     void updateScript(QAxScript*);
-    QAxScript *scriptForFunction(const QString &function) const;
+    QAxScript *scriptForFunction(QString &function) const;
 };
 
 

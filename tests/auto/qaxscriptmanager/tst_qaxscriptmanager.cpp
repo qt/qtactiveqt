@@ -172,9 +172,14 @@ void tst_QAxScriptManager::call()
         QVERIFY(axScript->scriptEngine()->hasIntrospection());
     }
 
+    // QAxScriptManager::call finds the script based on function name...
+    for (const auto &function : std::as_const(functions)) {
+        QVariant result = scriptManager.call(function);
+        QCOMPARE(result.metaType(), QMetaType::fromType<QString>());
+    }
+    // ...or fully qualified function signature
     for (const auto &function : std::as_const(signatures)) {
         QVariant result = scriptManager.call(function);
-        QEXPECT_FAIL("", "QAxScriptManager::call is broken", Continue);
         QCOMPARE(result.metaType(), QMetaType::fromType<QString>());
     }
 }
