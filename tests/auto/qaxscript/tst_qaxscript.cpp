@@ -13,9 +13,40 @@ class tst_QAxScript : public QObject
     Q_OBJECT
 
 private slots:
+    void call();
     void scriptReturnValue();
     void scriptOutParameters();
 };
+
+void tst_QAxScript::call()
+{
+    QAxScriptManager scriptManager;
+    const auto scriptCode_js = uR"JS(
+    function test1() {
+        return 'JScript';
+    }
+    )JS"_s;
+    const auto scriptCode_vb = uR"VB(
+    Function test2()
+        test2 = "VBScript"
+    End Function
+    )VB"_s;
+    QAxScript *jsscript = scriptManager.load(scriptCode_js, u"JS"_s, u"JScript"_s);
+    QVERIFY2(jsscript, "Unable to load script (CoInitializeEx() called?)");
+    QVERIFY(jsscript->scriptEngine()->hasIntrospection());
+    QAxScript *vbscript = scriptManager.load(scriptCode_vb, u"VB"_s, u"VBScript"_s);
+    QVERIFY2(vbscript, "Unable to load script (CoInitializeEx() called?)");
+    QVERIFY(vbscript->scriptEngine()->hasIntrospection());
+
+    QCOMPARE(jsscript->call("test1()"), "JScript");
+    QTest::ignoreMessage(QtWarningMsg, "QAxBase::dynamicCallHelper: test1(): No such method in  [unknown]");
+    QTest::ignoreMessage(QtWarningMsg, "\tCandidates are:");
+    QCOMPARE(vbscript->call("test1()"), QVariant());
+    QCOMPARE(vbscript->call("test2()"), "VBScript");
+    QTest::ignoreMessage(QtWarningMsg, "QAxBase::dynamicCallHelper: test2(): No such method in  [unknown]");
+    QTest::ignoreMessage(QtWarningMsg, "\tCandidates are:");
+    QCOMPARE(jsscript->call("test2()"), QVariant());
+}
 
 void tst_QAxScript::scriptReturnValue()
 {
