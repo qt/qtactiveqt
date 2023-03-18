@@ -3771,7 +3771,7 @@ bool QAxBase::dynamicCallHelper(const char *name, void *inout, QList<QVariant> &
         hres = Invoke(disp, dispid, IID_NULL, LOCALE_USER_DEFAULT, disptype, &params, nullptr, &excepinfo, &argerr);
     }
 
-    if (disptype == (DISPATCH_METHOD|DISPATCH_PROPERTYGET) && hres == S_OK && varc) {
+    if ((disptype & (DISPATCH_METHOD|DISPATCH_PROPERTYGET)) && hres == S_OK && varc) {
         for (qsizetype i = 0; i < varc; ++i)
             if ((arg[varc-i-1].vt & VT_BYREF) || outArgs[i]) // update out-parameters
                 vars[i] = VARIANTToQVariant(arg[varc-i-1], vars.at(i).typeName());

@@ -14,6 +14,7 @@ class tst_QAxScript : public QObject
 
 private slots:
     void scriptReturnValue();
+    void scriptOutParameters();
 };
 
 void tst_QAxScript::scriptReturnValue()
@@ -28,6 +29,41 @@ void tst_QAxScript::scriptReturnValue()
     QVERIFY2(script, "Unable to load script (CoInitializeEx() called?)");
     const QVariant result = script->call("foo()");
     QCOMPARE(result, QVariant(u"test"_s));
+}
+
+void tst_QAxScript::scriptOutParameters()
+{
+    QAxScriptManager scriptManager;
+    const auto scriptCode = uR"VB(
+    Function GetProductName(ByRef manufacturer, ByRef name, ByRef version)
+        manufacturer = "The Qt Company"
+        name = "ActiveQt"
+        version = 650
+        On Error Resume Next
+        GetProductName = 42
+    End Function
+    )VB"_s;
+
+    QAxScript *script = scriptManager.load(scriptCode, u"Test"_s, u"VBScript"_s);
+    QVERIFY2(script, "Unable to load script (CoInitializeEx() called?)");
+
+    QVariant returnValue;
+    QList<QVariant> results = {{}, {}, {}};
+
+    returnValue = script->scriptEngine()->dynamicCall("GetProductName(QVariant&,QVariant&,QVariant&)", results);
+    QCOMPARE(returnValue, 42);
+    QCOMPARE(results.size(), 3);
+    QCOMPARE(results.at(0), "The Qt Company");
+    QCOMPARE(results.at(1), "ActiveQt");
+    QCOMPARE(results.at(2), 650);
+
+    results = {{}, {}, {}};
+    returnValue = script->call("GetProductName(QVariant&,QVariant&,QVariant&)", results);
+    QCOMPARE(returnValue, 42);
+    QCOMPARE(results.size(), 3);
+    QCOMPARE(results.at(0), "The Qt Company");
+    QCOMPARE(results.at(1), "ActiveQt");
+    QCOMPARE(results.at(2), 650);
 }
 
 QTEST_MAIN(tst_QAxScript)

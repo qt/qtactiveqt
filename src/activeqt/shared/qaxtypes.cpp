@@ -238,7 +238,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
         return QVariantToVARIANT(var, *arg.pvarVal, typeName, false);
     }
 
-    if (out && proptype == QMetaType::User && typeName == "QVariant") {
+    if (out && proptype == QMetaType::QVariant) {
         VARIANT *pVariant = new VARIANT;
         QVariantToVARIANT(var, *pVariant, QByteArray(), false);
         arg.vt = VT_VARIANT|VT_BYREF;
