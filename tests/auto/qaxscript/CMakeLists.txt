@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 #####################################################################
-## qaxscript Test:
+## tst_QAxScript Test:
 #####################################################################
 
-qt_internal_add_test(qaxscript
+qt_internal_add_test(tst_qaxscript
     SOURCES
         tst_qaxscript.cpp
     LIBRARIES
