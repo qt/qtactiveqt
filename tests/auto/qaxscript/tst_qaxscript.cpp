@@ -6,6 +6,8 @@
 #include <QAxScriptManager>
 #include <QAxScript>
 
+using namespace Qt::StringLiterals;
+
 class tst_QAxScript : public QObject
 {
     Q_OBJECT
@@ -17,16 +19,15 @@ private slots:
 void tst_QAxScript::scriptReturnValue()
 {
     QAxScriptManager scriptManager;
-    const char scriptCode[] =
-        "function foo() {\n"
-        "    return 'test';\n"
-        "}\n"; // QTBUG-42289, fails when DISPATCH_PROPERTYGET is used.
-    QAxScript *script = scriptManager.load(QLatin1String(scriptCode),
-                                           QStringLiteral("Test"),
-                                           QStringLiteral("JScript"));
+    const auto scriptCode = uR"JS(
+    function foo() {
+        return 'test';
+    }
+    )JS"_s;  // QTBUG-42289, fails when DISPATCH_PROPERTYGET is used.
+    QAxScript *script = scriptManager.load(scriptCode, u"Test"_s, u"JScript"_s);
     QVERIFY2(script, "Unable to load script (CoInitializeEx() called?)");
     const QVariant result = script->call("foo()");
-    QCOMPARE(result, QVariant(QStringLiteral("test")));
+    QCOMPARE(result, QVariant(u"test"_s));
 }
 
 QTEST_MAIN(tst_QAxScript)
