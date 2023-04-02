@@ -537,12 +537,13 @@ bool generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
                        bool useControlName,
                        QString *errorString)
 {
-    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 11, "dumpcpp should generate the same version as moc");
+    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 12, "dumpcpp should generate the same version as moc");
 
     QByteArray qualifiedClassName;
     if (!nameSpace.isEmpty())
         qualifiedClassName = nameSpace + "::";
     qualifiedClassName += className;
+    const QByteArray nestedQualifier = className + "::";
 
     QString moCode = mocCode(mo, QLatin1String(qualifiedClassName), errorString);
     if (moCode.isEmpty()) {
@@ -567,7 +568,21 @@ bool generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
         if (type.endsWith(u'*'))
             type.chop(1);
         type = type.trimmed();
-        const auto namespaceForTypeEntry = namespaceForType.constFind(type.toUtf8());
+
+        // If ActiveQt thinks it's a nested type within the class, but it really is a type in the
+        // namespace, then we need to replace the nested type qualifier with the real namespace.
+        const bool isNestedType = type.startsWith(QString::fromUtf8(nestedQualifier));
+        auto namespaceForTypeEntry = namespaceForType.constEnd();
+        if (isNestedType) {
+            const QString rawType = type.mid(nestedQualifier.length());
+            namespaceForTypeEntry = namespaceForType.constFind(rawType.toUtf8());
+            if (namespaceForTypeEntry != namespaceForType.constEnd()) {
+                moCode.remove(startType, nestedQualifier.length());
+                type = rawType;
+            }
+        }
+        if (namespaceForTypeEntry == namespaceForType.constEnd())
+            namespaceForTypeEntry = namespaceForType.constFind(type.toUtf8());
         if (namespaceForTypeEntry != namespaceForType.constEnd()) {
             const auto ns = QString::fromUtf8(namespaceForTypeEntry.value());
             moCode.insert(startType, ns + QStringView(u"::"));
