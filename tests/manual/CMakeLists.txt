@@ -3,4 +3,5 @@
 
 add_subdirectory(axviewer)
 add_subdirectory(dumpcpp)
+add_subdirectory(hierarchy)
 add_subdirectory(testcontrol)
