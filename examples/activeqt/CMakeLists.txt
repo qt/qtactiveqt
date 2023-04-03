@@ -3,7 +3,6 @@
 
 if(MSVC)
     qt_internal_add_example(comapp)
-    qt_internal_add_example(hierarchy)
     qt_internal_add_example(menus)
     qt_internal_add_example(multiple)
     qt_internal_add_example(simple)

@@ -1,6 +1,5 @@
 TEMPLATE      = subdirs
 SUBDIRS      += comapp \
-                hierarchy \
                 menus \
                 multiple \
                 simple \
