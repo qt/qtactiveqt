@@ -3,7 +3,6 @@
 
 if(MSVC)
     qt_internal_add_example(comapp)
-    qt_internal_add_example(multiple)
     qt_internal_add_example(simple)
     qt_internal_add_example(wrapper)
     if(TARGET Qt6::OpenGLWidgets AND QT_FEATURE_opengl AND NOT QT_FEATURE_opengles2)
