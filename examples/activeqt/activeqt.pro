@@ -1,6 +1,5 @@
 TEMPLATE      = subdirs
 SUBDIRS      += comapp \
-                menus \
                 multiple \
                 simple \
                 wrapper
