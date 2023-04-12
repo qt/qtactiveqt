@@ -16,6 +16,8 @@ if (NOT WIN32)
     # special case begin
     set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
     find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals)
+    qt_internal_project_setup()
+
     qt_build_repo_begin()
     add_subdirectory(src/activeqt/doc)
     qt_build_repo_end()
@@ -27,6 +29,8 @@ find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Co
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS Qml Quick Gui Widgets
     PrintSupport OpenGL OpenGLWidgets
 )
+qt_internal_project_setup()
+
 if(NOT TARGET Qt::Gui OR NOT TARGET Qt::Widgets OR NOT TARGET Qt::PrintSupport)
     message(NOTICE "Skipping the build as the condition \"TARGET Qt::Gui\", \"TARGET Qt::Widget\" "
             "or \"TARGET Qt::Printsupport\" is not met.")
