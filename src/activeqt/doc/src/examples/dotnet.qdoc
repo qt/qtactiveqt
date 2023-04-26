@@ -178,10 +178,8 @@
     ActiveQt and demonstrated in the QAxServer examples (e.g., the
     \l{activeqt/simple}{Simple} example). The walkthrough will use
     the Qt classes implemented in those examples, so the first thing
-    to do is to make sure that those  examples have been built
-    correctly, e.g. by opening the
-    \l{qaxserver-demo-multiple.html}{demonstration pages} in Internet
-    Explorer to verify that the controls are functional.
+    to do is to make sure that those examples have been built
+    correctly.
 
     \section2 Starting a Project
 
