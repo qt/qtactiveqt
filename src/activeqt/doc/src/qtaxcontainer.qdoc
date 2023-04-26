@@ -136,8 +136,6 @@
     object and its subobjects; note that not all of the COM object's APIs
     might be available.
 
-    See the \l{activeqt/mediaplayer}{Media Player} example for more information.
-
     \section2 Calling Function Through a Script Engine
 
     A Qt application can host any ActiveScript engine installed on the system.
