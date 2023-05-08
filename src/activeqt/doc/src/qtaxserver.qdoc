@@ -395,8 +395,8 @@
     \li [in, out] struct QPoint (user defined)
     \endtable
 
-    Also supported are exported enums and flags (see Q_ENUMS() and
-    Q_FLAGS()). The in-parameter types are also supported as
+    Also supported are exported enums and flags (see Q_ENUM() and
+    Q_FLAG()). The in-parameter types are also supported as
     return values.
 
     Properties and signals/slots that have parameters using any other
