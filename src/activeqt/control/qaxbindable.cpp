@@ -40,9 +40,6 @@ QT_BEGIN_NAMESPACE
     control, reimplement createAggregate() to return a new object of a
     QAxAggregated subclass.
 
-    The ActiveQt \l{activeqt/opengl}{OpenGL} example shows how to use
-    QAxBindable to implement additional COM interfaces.
-
     \sa QAxAggregated, QAxFactory, {ActiveQt Framework}
 */
 

@@ -61,15 +61,12 @@
     developer of dealing with the conversion between managed and normal
     data objects.
 
-    The impatient reader, who right away wants to see a QPushButton
-    and a custom Qt widget (\l{activeqt/multiple}{QAxWidget2}) run in
-    a .NET GUI application is referred to the example directory of
-    ActiveQt. It contains the result of this walkthrough using both
-    C# and VB.NET, created with Visual Studio .NET (not 2003).
-    Load \c {examples/dotnet/walkthrough/csharp.csproj},
-    \c {examples/dotnet/walkthrough/vb.vbproj}
-    or \c {examples/dotnet/wrapper/wrapper.sln} into the IDE and run
-    the solution.
+    The impatient reader, who right away wants to see a QPushButton and a
+    custom Qt widget run in a .NET GUI application is referred to the example
+    directory of ActiveQt. It contains the result of this walkthrough using
+    both C# and VB.NET, created with Visual Studio .NET (not 2003). Load
+    \c {examples/dotnet/walkthrough/csharp.csproj}, \c {examples/dotnet/walkthrough/vb.vbproj},
+    or \c {examples/dotnet/wrapper/wrapper.sln} into the IDE and run the solution.
 
     \b{Remark:} You will notice that in the generated code the following line is
     commented out:
