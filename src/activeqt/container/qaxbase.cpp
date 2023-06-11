@@ -3452,7 +3452,7 @@ int QAxBase::internalInvoke(QMetaObject::Call call, int index, void **v)
 
     // get return value
     if (hres == S_OK && ret.vt != VT_EMPTY) {
-        QVariantToVoidStar(VARIANTToQVariant(ret, slot.typeName()), v[0], slot.typeName());
+        QVariantToVoidStar(VARIANTToQVariant(ret, slot.typeName(), slot.returnType()), v[0], slot.typeName());
         if (ret.vt != VT_DISPATCH)
             clearVARIANT(&ret);
         else
