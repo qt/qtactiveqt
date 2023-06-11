@@ -21,3 +21,4 @@ qt_internal_add_test(tst_dumpcpp
 )
 
 qt6_target_typelibs(tst_dumpcpp LIBRARIES "ieframe.dll")
+qt6_target_typelibs(tst_dumpcpp LIBRARIES "msxml6.dll")

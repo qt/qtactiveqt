@@ -51,6 +51,7 @@ private slots:
     void VARIANTToQVariant_IncreasesRefCount_WhenCalledWithQVariantTypeName();
 
     void ObserveThat_VARIANTToQVariant_ReturnsEmptyQVariant_WhenWrappingIDispatchInQAxObjectPtr();
+    void VARIANTToQVariant_CreatesQAxObject_WhenCalledWithMetaTypeId();
 
 private:
     template<typename T>
@@ -425,6 +426,20 @@ void tst_Conversion::ObserveThat_VARIANTToQVariant_ReturnsEmptyQVariant_WhenWrap
 
     const QVariant qVariant = VARIANTToQVariant(testFixture.m_comVariant, "QAxObject*");
     QVERIFY(qVariant.isNull());
+}
+
+void tst_Conversion::VARIANTToQVariant_CreatesQAxObject_WhenCalledWithMetaTypeId()
+{
+    const IDispatchFixture testFixture;
+    QCOMPARE(testFixture.m_iDispatchStub->m_refCount, 2u);
+
+    qRegisterMetaType<QAxObject *>("QAxObject*");
+    qRegisterMetaType<QAxObject>("QAxObject");
+
+    const QVariant qVariant = VARIANTToQVariant(testFixture.m_comVariant, "QAxObject*", QMetaType::fromType<QAxObject*>().id());
+
+    QAxObject *recovered = qVariant.value<QAxObject *>();
+    QVERIFY(recovered != nullptr);
 }
 
 template<typename T>
