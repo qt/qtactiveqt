@@ -8,7 +8,10 @@
 qt_internal_add_test(conversion
     SOURCES
         tst_conversion.cpp
+    INCLUDE_DIRECTORIES
+        ../../../src/activeqt/shared/
     LIBRARIES
         Qt::AxContainer
         Qt::Gui
+        Qt::AxBasePrivate
 )
