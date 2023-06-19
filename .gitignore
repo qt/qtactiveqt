@@ -36,6 +36,7 @@ ui_*.h
 tools/testcon/testcon.tlb
 qrc_*.cpp
 *_wrapper.bat
+CMakeUserPresets.json
 
 # Test generated files
 QObject.log
