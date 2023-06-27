@@ -658,6 +658,13 @@
     If the server runs, see the following section for information on
     debugging your server.
 
+    \section3 Crashes when unloading and reloading COM servers
+
+    If ActiveQt COM servers utilize Qt modules beyond those found in Qt Base, it
+    is necessary to activate the COM server as an out-of-process COM server.
+    Attempting to activate an in-process COM server that includes modules such
+    as Qt Quick may result in a crash after unloading the COM server.
+
     \section2 Debugging Runtime Errors
 
     To debug an in-process server in Visual Studio, set the server project
