@@ -23,7 +23,7 @@ public:
 
 private:
     Outlook::Application outlook;
-    Outlook::Items * contactItems;
+    Outlook::Items *folderItems = nullptr;
 
     mutable QHash<QModelIndex, QStringList> cache;
 };
@@ -36,10 +36,10 @@ AddressBookModel::AddressBookModel(AddressView *parent)
         Outlook::NameSpace session(outlook.Session());
         session.Logon();
         Outlook::MAPIFolder *folder = session.GetDefaultFolder(Outlook::olFolderContacts);
-        contactItems = new Outlook::Items(folder->Items());
-        connect(contactItems, SIGNAL(ItemAdd(IDispatch*)), parent, SLOT(updateOutlook()));
-        connect(contactItems, SIGNAL(ItemChange(IDispatch*)), parent, SLOT(updateOutlook()));
-        connect(contactItems, SIGNAL(ItemRemove()), parent, SLOT(updateOutlook()));
+        folderItems = new Outlook::Items(folder->Items());
+        connect(folderItems, SIGNAL(ItemAdd(IDispatch*)), parent, SLOT(updateOutlook()));
+        connect(folderItems, SIGNAL(ItemChange(IDispatch*)), parent, SLOT(updateOutlook()));
+        connect(folderItems, SIGNAL(ItemRemove()), parent, SLOT(updateOutlook()));
 
         delete folder;
     }
@@ -48,7 +48,7 @@ AddressBookModel::AddressBookModel(AddressView *parent)
 //! [1] //! [2]
 AddressBookModel::~AddressBookModel()
 {
-    delete contactItems;
+    delete folderItems;
 
     if (!outlook.isNull())
         Outlook::NameSpace(outlook.Session()).Logoff();
@@ -57,7 +57,7 @@ AddressBookModel::~AddressBookModel()
 //! [2] //! [3]
 int AddressBookModel::rowCount(const QModelIndex &) const
 {
-    return contactItems ? contactItems->Count() : 0;
+    return folderItems ? folderItems->Count() : 0;
 }
 
 int AddressBookModel::columnCount(const QModelIndex & /*parent*/) const
@@ -97,8 +97,11 @@ QVariant AddressBookModel::data(const QModelIndex &index, int role) const
     if (cache.contains(index)) {
         data = cache.value(index);
     } else {
-        Outlook::ContactItem contact(contactItems->Item(index.row() + 1));
-        data << contact.FirstName() << contact.LastName() << contact.HomeAddress() << contact.Email1Address();
+        Outlook::ContactItem contact(folderItems->Item(index.row() + 1));
+
+        if (contact.Class() == Outlook::OlObjectClass::olContact)
+            data << contact.FirstName() << contact.LastName() << contact.HomeAddress() << contact.Email1Address();
+
         cache.insert(index, data);
     }
 
@@ -111,7 +114,10 @@ QVariant AddressBookModel::data(const QModelIndex &index, int role) const
 //! [5] //! [6]
 void AddressBookModel::changeItem(const QModelIndex &index, const QString &firstName, const QString &lastName, const QString &address, const QString &email)
 {
-    Outlook::ContactItem item(contactItems->Item(index.row() + 1));
+    Outlook::ContactItem item(folderItems->Item(index.row() + 1));
+
+    if (item.Class() != Outlook::OlObjectClass::olContact)
+        return; // Not a contact
 
     item.SetFirstName(firstName);
     item.SetLastName(lastName);
