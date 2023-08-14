@@ -49,6 +49,7 @@
 /*!
     \example activeqt/simple
     \title Simple Example (ActiveQt)
+    \examplecategory {Desktop}
     \ingroup activeqt-examples
 
     \brief The Simple example demonstrates the use

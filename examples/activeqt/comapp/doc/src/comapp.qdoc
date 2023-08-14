@@ -4,6 +4,7 @@
 /*!
     \example activeqt/comapp
     \title COM App Example (ActiveQt)
+    \examplecategory {Desktop}
     \ingroup activeqt-examples
 
     \brief The COM App example shows how to use ActiveQt to develop a Qt
