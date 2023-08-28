@@ -30,7 +30,8 @@ QT_BEGIN_NAMESPACE
     \value SandboxingNone No specific sandboxing desired
     \value SandboxingProcess Run ActiveX control in a separate process
     \value SandboxingLowIntegrity Run ActiveX control in a separate low-integrity process
-    \value SandboxingAppContainer Run ActiveX control in a separate AppContainer-isolated process
+    \value SandboxingAppContainer [since 6.5] Run ActiveX control in a separate
+           AppContainer-isolated process
 
     Sandboxing requires that the ActiveX is either built as an EXE, or as a DLL with AppID "DllSurrogate" enabled.
 */
