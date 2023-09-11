@@ -2945,6 +2945,7 @@ void MetaObjectGenerator::buildMethods(const QMap<QByteArray, Method> &map,
 
 QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, const QByteArray &className)
 {
+    QSignalBlocker blockSignals(that ? that->qObject() : nullptr);
     if (that) {
         readClassInfo();
         if (typelib) {
