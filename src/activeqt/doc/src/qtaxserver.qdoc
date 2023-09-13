@@ -665,6 +665,17 @@
     Attempting to activate an in-process COM server that includes modules such
     as Qt Quick may result in a crash after unloading the COM server.
 
+    \section3 Crash or unexpected behavior during outgoing COM calls
+
+    Be aware that an out-of-process COM server will be processing its message
+    queue while it is performing an outgoing call to the client. This can lead to
+    unexpected behavior or crash if the client is at the same time calling the
+    server. In this situation, the incoming call will be executed in the server
+    before the outgoing call returns. In particular, if the client closes
+    an ActiveX control while the control is calling back into the client, this
+    can lead to crash. Such reentrancy problems can be mitigated using message
+    filters (IMessageFilter and CoRegisterMessageFilter).
+
     \section2 Debugging Runtime Errors
 
     To debug an in-process server in Visual Studio, set the server project
