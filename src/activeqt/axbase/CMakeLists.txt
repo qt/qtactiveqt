@@ -23,6 +23,7 @@ qt_internal_add_module(AxBasePrivate
         Qt::Gui
         Qt::GuiPrivate
         Qt::Widgets
+    NO_GENERATE_CPP_EXPORTS
 )
 
 ## Scopes:

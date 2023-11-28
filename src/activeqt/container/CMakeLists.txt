@@ -30,6 +30,7 @@ qt_internal_add_module(AxContainer
         Qt::Widgets
     ENABLE_AUTOGEN_TOOLS
         uic
+    NO_GENERATE_CPP_EXPORTS
 )
 
 set_source_files_properties(qaxbase.cpp # defines QT_CHECK_STATE
