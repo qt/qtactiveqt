@@ -80,8 +80,11 @@ C indentifier")
         set(out_source "${out_filebasepath}.cpp")
         list(APPEND out_sources "${out_header}" "${out_source}")
 
+        _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
+        set(dumpcpp_bin "${tool_wrapper}" "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::dumpcpp>")
+
         add_custom_command(OUTPUT "${out_header}" "${out_source}"
-            COMMAND ${QT_CMAKE_EXPORT_NAMESPACE}::dumpcpp
+            COMMAND ${dumpcpp_bin}
                 "${libpath}" -o "${out_filebasepath}"
                 ${extra_args}
             DEPENDS ${QT_CMAKE_EXPORT_NAMESPACE}::dumpcpp
