@@ -1,5 +1,5 @@
 // Copyright (C) 2015 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #ifndef QAXTYPES_H
 #define QAXTYPES_H
