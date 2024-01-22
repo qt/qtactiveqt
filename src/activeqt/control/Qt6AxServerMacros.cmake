@@ -52,36 +52,67 @@ function(qt6_target_idl target)
     set(output_idl "${CMAKE_CURRENT_BINARY_DIR}/${target}$<CONFIG>.idl")
     set(output_tlb "${CMAKE_CURRENT_BINARY_DIR}/${target}$<CONFIG>.tlb")
 
+    _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     set(tlb_command_list "")
-    _qt_internal_wrap_tool_command(tlb_command_list APPEND
-        "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>" "$<TARGET_FILE:${target}>"
-        /idl "${output_idl}" -version 1.0
+
+    # Wrap tool paths in $<COMMAND_CONFIG> to ensure we use the release tool when building debug
+    # targets in a multi-config build, because the debug tool is usually not built by default.
+    if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
+        set(cmb "$<COMMAND_CONFIG:")
+        set(cme ">")
+    else()
+        set(cmb "")
+        set(cme "")
+    endif()
+
+    set(idc_target "${QT_CMAKE_EXPORT_NAMESPACE}::idc")
+    set(idc_target_file "$<TARGET_FILE:${idc_target}>")
+    set(idc_target_file_command_config_wrapped "${cmb}${idc_target_file}${cme}")
+
+    list(APPEND tlb_command_list
+        COMMAND
+            "${tool_wrapper}"
+            "${idc_target_file_command_config_wrapped}"
+            "$<TARGET_FILE:${target}>"
+            /idl "${output_idl}" -version 1.0
     )
 
-    _qt_internal_wrap_tool_command(tlb_command_list APPEND
-        midl "${output_idl}" /nologo /tlb "${output_tlb}"
+    list(APPEND tlb_command_list
+        COMMAND
+            "${tool_wrapper}" midl "${output_idl}" /nologo /tlb "${output_tlb}"
     )
 
     set(rc_files "$<FILTER:$<TARGET_PROPERTY:${target},SOURCES>,INCLUDE,\\.rc$>")
     set(have_rc_files "$<NOT:$<BOOL:$<STREQUAL:${rc_files},>>>")
-    set(rc_cmd "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>$<SEMICOLON>\
-$<TARGET_FILE:${target}>$<SEMICOLON>/tlb$<SEMICOLON>${output_tlb}")
-    set(no_rc_cmd "echo \"No rc-file linked into project. The type library of the ${target} \
-target will be a separate file.\"")
-    _qt_internal_wrap_tool_command(tlb_command_list APPEND
-        "$<IF:${have_rc_files},${rc_cmd},${no_rc_cmd}>"
+
+    set(no_rc_cmd "echo$<SEMICOLON>No rc-file linked into project. The type library of the \
+${target} target will be a separate file.")
+
+    set(idc_args
+        "$<SEMICOLON>$<TARGET_FILE:${target}>$<SEMICOLON>/tlb$<SEMICOLON>${output_tlb}")
+
+    # Split command into two parts, so that COMMAND_CONFIG can be applied only to the idc tool path,
+    # but not the target and tlb files.
+    set(cmd_part1 "${cmb}$<IF:${have_rc_files},${idc_target_file},${no_rc_cmd}>${cme}")
+    set(cmd_part2 "$<${have_rc_files}:${idc_args}>")
+
+    list(APPEND tlb_command_list
+        COMMAND
+            "${tool_wrapper}" "${cmd_part1}" "${cmd_part2}"
     )
 
     if(NOT arg_NO_AX_SERVER_REGISTRATION AND NOT QT_NO_AX_SERVER_REGISTRATION)
-        _qt_internal_wrap_tool_command(tlb_command_list APPEND
-            "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::idc>"
-             "$<TARGET_FILE:${target}>" /regserver
+        list(APPEND tlb_command_list
+            COMMAND
+                "${tool_wrapper}"
+                "${idc_target_file_command_config_wrapped}"
+                "$<TARGET_FILE:${target}>" /regserver
         )
     endif()
     add_custom_command(TARGET ${target} POST_BUILD
         ${tlb_command_list}
         DEPENDS
-            ${QT_CMAKE_EXPORT_NAMESPACE}::idc
+            "${idc_target}"
         VERBATIM
         COMMAND_EXPAND_LISTS
     )
