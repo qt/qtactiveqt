@@ -19,6 +19,8 @@ using Microsoft::WRL::ComPtr;
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 class tst_Conversion : public QObject
 {
     Q_OBJECT
@@ -174,6 +176,11 @@ void tst_Conversion::conversion_data()
         << qvar << uint(VT_DATE | VT_BYREF) << typeName << ByReference;
     QTest::newRow("datetime-out")
         << qvar << uint(VT_DATE | VT_BYREF) << typeName << OutParameter;
+
+    // QTBUG-122762; do not create a 2-dimensional array from a string (sequence).
+    qvar = QVariant(QVariantList{QVariant(QString("test"_L1)), QVariant(42)});
+    QTest::newRow("list")
+            << qvar << uint(VT_VARIANT | VT_ARRAY | VT_BYREF) << typeName << OutParameter;
 }
 
 void tst_Conversion::conversion()
