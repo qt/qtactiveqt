@@ -16,6 +16,7 @@
 //
 
 #include <QtCore/QtGlobal>
+#include <QtAxBase/private/qbstr_p.h>
 #include <comdef.h>
 #include <type_traits>
 #include <oleauto.h>
@@ -30,75 +31,6 @@ ComPtr<T> makeComObject()
     *ptr.GetAddressOf() = new T;
     return ptr;
 }
-
-class ComBstr
-{
-public:
-    ComBstr() = default;
-
-    ComBstr(decltype(nullptr)) { }
-
-    ~ComBstr() { ::SysFreeString(m_str); }
-
-    explicit ComBstr(const wchar_t *str) noexcept
-    {
-        if (!str)
-            return;
-
-        m_str = ::SysAllocString(str);
-        Q_ASSERT(m_str);
-    }
-
-    ComBstr(const ComBstr &src) noexcept
-    {
-        if (!src.m_str)
-            return;
-
-        m_str = ::SysAllocStringByteLen(reinterpret_cast<char *>(src.m_str),
-                                        ::SysStringByteLen(m_str));
-        Q_ASSERT(m_str);
-    }
-
-    ComBstr(ComBstr &&src) noexcept : m_str{ src.m_str } { src.m_str = nullptr; }
-
-    ComBstr &operator=(const ComBstr &rhs) noexcept
-    {
-        if (&rhs == this)
-            return *this;
-
-        clear();
-
-        m_str = rhs.copy();
-
-        return *this;
-    }
-
-    ComBstr &operator=(ComBstr &&rhs) noexcept
-    {
-        if (&rhs == this)
-            return *this;
-
-        clear();
-
-        m_str = rhs.m_str;
-        rhs.m_str = nullptr;
-
-        return *this;
-    }
-
-    [[nodiscard]] BSTR copy() const
-    {
-        if (!m_str)
-            return nullptr;
-
-        return ::SysAllocStringByteLen(reinterpret_cast<char *>(m_str), ::SysStringByteLen(m_str));
-    }
-
-private:
-    void clear() { ::SysFreeString(m_str); }
-
-    BSTR m_str = nullptr;
-};
 
 template<typename T>
 constexpr VARTYPE ValueType()
@@ -268,7 +200,7 @@ private:
 
         constexpr auto VARIANT::*field = ValueField<T>();
         if constexpr (valueType == VT_BSTR)
-            this->*field = ComBstr{ value }.copy();
+            this->*field = QBStr{ value }.release();
         else
             this->*field = value;
 

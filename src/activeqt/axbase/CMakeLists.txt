@@ -11,6 +11,7 @@ qt_internal_add_module(AxBasePrivate
     SOURCES
         qaxtypefunctions.cpp qaxtypefunctions_p.h
         qaxutils.cpp qaxutils_p.h
+        qbstr_p.h
     LIBRARIES
         advapi32
         gdi32
