@@ -6,6 +6,12 @@ add_subdirectory(qaxobject)
 add_subdirectory(dumpcpp)
 add_subdirectory(cmake)
 add_subdirectory(qbstr)
+
+find_program(midl midl.exe)
+if (midl)
+    add_subdirectory(qaxobjectcom)
+endif()
+
 if(NOT GCC)
     add_subdirectory(qaxscript)
     add_subdirectory(qaxscriptmanager)

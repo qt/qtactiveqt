@@ -88,6 +88,7 @@ C indentifier")
                 "${libpath}" -o "${out_filebasepath}"
                 ${extra_args}
             DEPENDS ${QT_CMAKE_EXPORT_NAMESPACE}::dumpcpp
+            MAIN_DEPENDENCY ${libpath}
             WORKING_DIRECTORY "${output_directory}"
             COMMENT "Generate type lib sources ${out_header} ${out_source}..."
         )

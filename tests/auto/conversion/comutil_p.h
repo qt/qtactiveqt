@@ -140,6 +140,7 @@ public:
 
     ComVariant(const ComVariant &src) : ComVariant() { copy(&src); }
     ComVariant(const VARIANT &src) noexcept : ComVariant() { copy(&src); }
+    ComVariant(const QBStr &src) noexcept : ComVariant() { copy(src.bstr()); }
 
     template<typename T>
     ComVariant(const T &value) : ComVariant()
@@ -180,6 +181,19 @@ public:
 
         Q_ASSERT(hr == S_OK);
         Q_UNUSED(hr)
+    }
+
+    void copy(const BSTR &src)
+    {
+        vt = VT_EMPTY;
+        if (!src)
+            return;
+
+        vt = VT_BSTR;
+        bstrVal = ::SysAllocStringByteLen(reinterpret_cast<const char *>(src),
+                                          ::SysStringByteLen(src));
+
+        Q_ASSERT(bstrVal);
     }
 
     bool operator==(const ComVariant &rhs) const
