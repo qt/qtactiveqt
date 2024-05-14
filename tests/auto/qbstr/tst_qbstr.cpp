@@ -128,7 +128,7 @@ private slots:
         QVERIFY(!QBStr{});
     }
 
-    void operatorBool_returnsFalse_withValidString()
+    void operatorBool_returnsTrue_withValidString()
     {
         QVERIFY(QBStr{ "hello world" });
     }
