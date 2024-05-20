@@ -345,11 +345,11 @@ void tst_Conversion::VARIANTToQVariant_DoesNotIncreaseRefCount_WhenGivenAnIUnkno
 
     const ComVariant value = stub.Get();
 
-    QVERIFY(stub->m_refCount == 2u);
+    const ULONG expectedRefCount = refCount(stub);
 
     const QVariant qVariant = VARIANTToQVariant(value, {});
 
-    QVERIFY(stub->m_refCount == 2u);
+    QVERIFY(refCount(stub) == expectedRefCount);
 
     Q_UNUSED(qVariant);
 }
@@ -362,9 +362,12 @@ void tst_Conversion::QVariantToVARIANT_RecoversIUnknown_WhenQVariantHasIUnknown(
     const QVariant qvar = VARIANTToQVariant(value, {});
 
     ComVariant comVariant;
+
+    const ULONG expectedRefCount = refCount(stub) + 1; // Add one for the VARIANT
+
     QVERIFY(QVariantToVARIANT(qvar, comVariant));
 
-    QCOMPARE(stub->m_refCount, 3u);
+    QCOMPARE(refCount(stub), expectedRefCount);
 
     const ComPtr<IUnknown> recovered = comVariant.punkVal;
 
@@ -377,10 +380,11 @@ void tst_Conversion::VARIANTToQVariant_DoesNotIncreaseRefCount_WhenGivenAnIDispa
 
     const ComVariant value = stub.Get();
 
-    QCOMPARE(stub->m_refCount, 2u);
+    const ULONG expectedRefCount = refCount(stub);
+
     const QVariant qVariant = VARIANTToQVariant(value, "IDispatch*");
 
-    QCOMPARE(stub->m_refCount, 2u);
+    QCOMPARE(refCount(stub), expectedRefCount);
 
     Q_UNUSED(qVariant);
 }
@@ -395,12 +399,12 @@ struct IDispatchFixture
 void tst_Conversion::QVariantToVARIANT_RecoversIDispatch_WhenQVariantHasIDispatch()
 {
     const IDispatchFixture testFixture;
-    QCOMPARE(testFixture.m_iDispatchStub->m_refCount, 2u);
+    const auto expectedRefCount = refCount(testFixture.m_iDispatchStub) + 1;
 
     ComVariant comVariant;
     QVERIFY(QVariantToVARIANT(testFixture.m_qVariant, comVariant));
 
-    QCOMPARE(testFixture.m_iDispatchStub->m_refCount, 3u);
+    QCOMPARE(refCount(testFixture.m_iDispatchStub), expectedRefCount);
 
     const ComPtr<IUnknown> recovered = comVariant.pdispVal;
 
@@ -410,14 +414,14 @@ void tst_Conversion::QVariantToVARIANT_RecoversIDispatch_WhenQVariantHasIDispatc
 void tst_Conversion::VARIANTToQVariant_IncreasesRefCount_WhenCalledWithQVariantTypeName()
 {
     const IDispatchFixture testFixture;
-    QCOMPARE(testFixture.m_iDispatchStub->m_refCount, 2u);
+    const auto expectedRefCount = refCount(testFixture.m_iDispatchStub) + 1;
 
     QVariant qVariant = VARIANTToQVariant(testFixture.m_comVariant, "QVariant");
     qVariant = {};
 
     // Observe that IDispatch interface is leaked here, since
     // the QVariant destructor does not decrement the refcount
-    QCOMPARE(testFixture.m_iDispatchStub->m_refCount, 3u);
+    QCOMPARE(refCount(testFixture.m_iDispatchStub), expectedRefCount);
 
     // Workaround to ensure cleanup
     testFixture.m_iDispatchStub->Release();
@@ -426,7 +430,7 @@ void tst_Conversion::VARIANTToQVariant_IncreasesRefCount_WhenCalledWithQVariantT
 void tst_Conversion::ObserveThat_VARIANTToQVariant_ReturnsEmptyQVariant_WhenWrappingIDispatchInQAxObjectPtr()
 {
     const IDispatchFixture testFixture;
-    QCOMPARE(testFixture.m_iDispatchStub->m_refCount, 2u);
+    QCOMPARE(refCount(testFixture.m_iDispatchStub), 2u);
 
     qRegisterMetaType<QAxObject *>("QAxObject*");
     qRegisterMetaType<QAxObject>("QAxObject");
@@ -438,7 +442,7 @@ void tst_Conversion::ObserveThat_VARIANTToQVariant_ReturnsEmptyQVariant_WhenWrap
 void tst_Conversion::VARIANTToQVariant_CreatesQAxObject_WhenCalledWithMetaTypeId()
 {
     const IDispatchFixture testFixture;
-    QCOMPARE(testFixture.m_iDispatchStub->m_refCount, 2u);
+    QCOMPARE(refCount(testFixture.m_iDispatchStub), 2u);
 
     qRegisterMetaType<QAxObject *>("QAxObject*");
     qRegisterMetaType<QAxObject>("QAxObject");
