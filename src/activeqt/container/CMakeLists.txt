@@ -31,6 +31,7 @@ qt_internal_add_module(AxContainer
     ENABLE_AUTOGEN_TOOLS
         uic
     NO_GENERATE_CPP_EXPORTS
+    QT_LICENSE_ID QT_COMMERCIAL_OR_BSD3
 )
 
 set_source_files_properties(qaxbase.cpp # defines QT_CHECK_STATE
