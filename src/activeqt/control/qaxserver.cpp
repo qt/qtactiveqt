@@ -77,7 +77,7 @@ static CRITICAL_SECTION qAxModuleSection;
 
 static int initCount = 0;
 
-Q_LOGGING_CATEGORY(lcAxRegistration, "qt.activeqt.registration")
+Q_STATIC_LOGGING_CATEGORY(lcAxRegistration, "qt.activeqt.registration")
 
 QString qAxInit()
 {
