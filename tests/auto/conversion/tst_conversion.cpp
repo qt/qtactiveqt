@@ -371,7 +371,7 @@ void tst_Conversion::QVariantToVARIANT_RecoversIUnknown_WhenQVariantHasIUnknown(
 
     const ComPtr<IUnknown> recovered = comVariant.punkVal;
 
-    QCOMPARE(recovered, stub);
+    QVERIFY(recovered == stub);
 }
 
 void tst_Conversion::VARIANTToQVariant_DoesNotIncreaseRefCount_WhenGivenAnIDispatch()
@@ -408,7 +408,7 @@ void tst_Conversion::QVariantToVARIANT_RecoversIDispatch_WhenQVariantHasIDispatc
 
     const ComPtr<IUnknown> recovered = comVariant.pdispVal;
 
-    QCOMPARE(recovered, testFixture.m_iDispatchStub);
+    QVERIFY(recovered == testFixture.m_iDispatchStub);
 }
 
 void tst_Conversion::VARIANTToQVariant_IncreasesRefCount_WhenCalledWithQVariantTypeName()
