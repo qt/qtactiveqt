@@ -770,18 +770,10 @@ LRESULT QT_WIN_CALLBACK axs_FilterProc(int nCode, WPARAM wParam, LPARAM lParam)
 class QAxWinEventFilter : public QAbstractNativeEventFilter
 {
 public:
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
     bool nativeEventFilter(const QByteArray &, void *message, qintptr *) override;
-#else
-    bool nativeEventFilter(const QByteArray &, void *message, long *) override;
-#endif
 };
 
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
 bool QAxWinEventFilter::nativeEventFilter(const QByteArray &, void *message, qintptr *)
-#else
-bool QAxWinEventFilter::nativeEventFilter(const QByteArray &, void *message, long *)
-#endif
 {
     MSG *pMsg = static_cast<MSG *>(message);
     if (pMsg->message < WM_KEYFIRST || pMsg->message > WM_KEYLAST)
