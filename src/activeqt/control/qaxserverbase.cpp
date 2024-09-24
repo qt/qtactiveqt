@@ -56,8 +56,6 @@
 
 QT_BEGIN_NAMESPACE
 
-extern HHOOK qax_hhook;
-
 // in qaxserver.cpp
 extern ITypeLib *qAxTypeLibrary;
 extern unsigned long qAxLock();
@@ -73,11 +71,6 @@ unsigned long qaxserverbase_instance_count = 0;
 
 // in qaxserverdll.cpp
 extern bool qax_ownQApp;
-
-// Must match definition in qeventdispatcher_win.cpp
-enum {
-    WM_QT_SENDPOSTEDEVENTS = WM_USER + 1
-};
 
 struct QAxExceptInfo
 {
@@ -761,19 +754,6 @@ private:
     LONG ref = 1;
 };
 
-// callback for DLL server to hook into non-Qt eventloop
-LRESULT QT_WIN_CALLBACK axs_FilterProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-    auto msg = reinterpret_cast<MSG *>(lParam);
-
-    // qeventdispatcher_win will call sendPostedEvents() when receiving WM_QT_SENDPOSTEDEVENTS, so
-    // we don't need to do this here. Doing so can cause an endless loop.
-    if (qApp && !invokeCount && (!msg || msg->message != WM_QT_SENDPOSTEDEVENTS))
-        QCoreApplication::sendPostedEvents();
-
-    return CallNextHookEx(qax_hhook, nCode, wParam, lParam);
-}
-
 // filter for executable case to hook into Qt eventloop
 // for DLLs the client calls TranslateAccelerator
 class QAxWinEventFilter : public QAbstractNativeEventFilter
@@ -888,11 +868,6 @@ HRESULT QClassFactory::CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, voi
         QAbstractEventDispatcher::instance()->installNativeEventFilter(qax_winEventFilter());
     else
         QGuiApplicationPrivate::instance()->in_exec = true;
-
-    // hook into eventloop; this allows a server to create his own QApplication object
-    if (!qax_hhook && qax_ownQApp) {
-        qax_hhook = SetWindowsHookEx(WH_GETMESSAGE, axs_FilterProc, nullptr, GetCurrentThreadId());
-    }
 
     // If we created QApplication instance, ensure native event loop starts properly
     // by calling processEvents.
