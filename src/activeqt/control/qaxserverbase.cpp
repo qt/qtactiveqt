@@ -74,6 +74,11 @@ unsigned long qaxserverbase_instance_count = 0;
 // in qaxserverdll.cpp
 extern bool qax_ownQApp;
 
+// Must match definition in qeventdispatcher_win.cpp
+enum {
+    WM_QT_SENDPOSTEDEVENTS = WM_USER + 1
+};
+
 struct QAxExceptInfo
 {
     QAxExceptInfo(int c, const QString &s, const QString &d, const QString &x)
@@ -759,7 +764,11 @@ private:
 // callback for DLL server to hook into non-Qt eventloop
 LRESULT QT_WIN_CALLBACK axs_FilterProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-    if (qApp && !invokeCount)
+    auto msg = reinterpret_cast<MSG *>(lParam);
+
+    // qeventdispatcher_win will call sendPostedEvents() when receiving WM_QT_SENDPOSTEDEVENTS, so
+    // we don't need to do this here. Doing so can cause an endless loop.
+    if (qApp && !invokeCount && (!msg || msg->message != WM_QT_SENDPOSTEDEVENTS))
         QCoreApplication::sendPostedEvents();
 
     return CallNextHookEx(qax_hhook, nCode, wParam, lParam);
