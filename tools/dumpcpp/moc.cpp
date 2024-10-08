@@ -7,7 +7,6 @@
 #include <QMetaObject>
 #include <QMetaProperty>
 #include <QProcess>
-#include <QTemporaryFile>
 #include <QTextStream>
 
 #include <private/qtools_p.h>
@@ -154,7 +153,7 @@ static QString processOutput(QByteArray output)
     return QString::fromUtf8(output);
 }
 
-static QString runProcess(const QString  &binary, const QStringList &args,
+static QString runProcess(const QString  &binary, const QStringList &args, const QByteArray &input,
                           QString *errorString)
 {
     QProcess process;
@@ -163,6 +162,8 @@ static QString runProcess(const QString  &binary, const QStringList &args,
         *errorString = QLatin1String("Cannot start ") + binary + QLatin1String(": ") + process.errorString();
         return QString();
     }
+    process.write(input);
+    process.closeWriteChannel();
     if (!process.waitForFinished()) {
         *errorString = binary + QLatin1String(" timed out: ") + process.errorString();
         return QString();
@@ -207,11 +208,8 @@ static void removeLines(const QString &start, const QString &end,
     s->remove(startPos, endPos - startPos);
 }
 
-static QString cleanCode(QString code, const QString &className, const QString &headerFileName)
+static QString cleanCode(QString code, const QString &className)
 {
-    // remove include of temp file
-    code.remove(QLatin1String("#include \"") + headerFileName + QLatin1String("\"\n"));
-
     const char *removeFunctions[] = {"metaObject", "qt_metacall", "qt_static_metacall"};
 
     const QString funcStart = className + QLatin1String("::");
@@ -247,28 +245,18 @@ QString mocCode(const QMetaObject *mo, const QString &qualifiedClassName,
 
     const QString baseClass = QLatin1String(mo->superClass()->className());
 
-    const QString tempPattern = QDir::tempPath() + QLatin1Char('/')
-        + name.constLast().toLower() + QLatin1String("_XXXXXX.h");
-    QTemporaryFile header(tempPattern);
-    if (!header.open()) {
-        *errorString = QLatin1String("Cannot open temporary file: ") + header.errorString();
-        return QString();
-    }
     const QString headerCode = mocHeader(mo, name, baseClass);
-    header.write(headerCode.toUtf8());
-    const QString headerFileName = header.fileName();
-    header.close();
 
     const QString binary = QLatin1String("moc.exe");
 
-    QString result = runProcess(binary, {header.fileName()}, errorString);
+    QString result = runProcess(binary, {}, headerCode.toUtf8(), errorString);
     if (result.isEmpty()) {
         errorString->append(QLatin1String("\n\nOffending code:\n"));
         errorString->append(headerCode);
         return result;
     }
 
-    return cleanCode(result, name.join(QLatin1String("::")), headerFileName);
+    return cleanCode(result, name.join(QLatin1String("::")));
 }
 
 QT_END_NAMESPACE
