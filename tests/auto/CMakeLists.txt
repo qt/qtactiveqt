@@ -3,13 +3,13 @@
 
 add_subdirectory(conversion)
 add_subdirectory(qaxobject)
-add_subdirectory(dumpcpp)
+#add_subdirectory(dumpcpp)  - QTBUG-129724
 add_subdirectory(cmake)
 add_subdirectory(qbstr)
 
 find_program(midl midl.exe)
 if (midl)
-    add_subdirectory(qaxobjectcom)
+    #add_subdirectory(qaxobjectcom) - QTBUG-129724
 endif()
 
 if(NOT GCC)
