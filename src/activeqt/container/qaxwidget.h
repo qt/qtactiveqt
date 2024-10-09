@@ -88,6 +88,18 @@ template <> inline QAxWidget *qobject_cast<QAxWidget*>(QObject *o)
     return static_cast<QAxWidget *>(result);
 }
 
+#ifndef QT_NO_DATASTREAM
+inline QDataStream &operator>>(QDataStream &s, QAxWidget &w)
+{
+    return s >> static_cast<QAxBase &>(w);
+}
+
+inline QDataStream &operator<<(QDataStream &s, const QAxWidget &w)
+{
+    return s << static_cast<const QAxBase &>(w);
+}
+#endif
+
 QT_END_NAMESPACE
 
 #endif // QAXWIDGET_H
