@@ -3013,6 +3013,7 @@ int MetaObjectGenerator::aggregateParameterCount(const QMap<QByteArray, Method> 
 
 QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, const QByteArray &className)
 {
+    QSignalBlocker blockSignals(that ? that->qObject() : nullptr);
     if (that) {
         readClassInfo();
         if (typelib) {
