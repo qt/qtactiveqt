@@ -30,7 +30,6 @@ QT_BEGIN_NAMESPACE
 
 // Some global variables to store module information
 bool qAxIsServer = false;
-HANDLE qAxInstance = nullptr;
 ITypeLib *qAxTypeLibrary = nullptr;
 wchar_t qAxModuleFilename[MAX_PATH];
 bool qAxOutProcServer = false;
