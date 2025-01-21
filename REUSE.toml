@@ -26,14 +26,14 @@ SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
 SPDX-License-Identifier = "BSD-3-Clause"
 
 [[annotations]]
-path = ["examples/**", "**/doc/images/**"]
+path = ["examples/**"]
 comment = "this must be after the build system table because example and snippets take precedence over build system"
 precedence = "closest"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
 SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR BSD-3-Clause"
 
 [[annotations]]
-path = ["**/README*", "**.qdocinc", "**.qdocconf"]
+path = ["**/README*", "**.qdocinc", "**.qdocconf", "**/doc/images/**"]
 comment = "documentation"
 precedence = "closest"
 SPDX-FileCopyrightText = "Copyright (C) 2024 The Qt Company Ltd."
