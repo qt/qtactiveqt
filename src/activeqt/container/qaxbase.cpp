@@ -2985,7 +2985,10 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         QByteArray realType(it.value().realType);
         if (!realType.isEmpty() && realType != type)
             moExtra.realPrototype.insert(name, realType);
-        addMetaProperty(builder, name, type, it.value().flags);
+        if (it.value().flags & EnumOrFlag)
+            addMetaProperty(builder, name, "int", it.value().flags);
+        else
+            addMetaProperty(builder, name, type, it.value().flags);
     }
 
     // each enum in form name\0
