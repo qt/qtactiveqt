@@ -6,11 +6,9 @@
 
 #include <qt_windows.h>
 #include "testserverlib.h"
-#include <wrl/client.h>
 #include <QtCore/private/qcomobject_p.h>
+#include <QtCore/private/qcomptr_p.h>
 #include "../../conversion/comutil_p.h"
-
-using Microsoft::WRL::ComPtr;
 
 class __declspec(uuid("af732aba-95cf-4ee7-bd59-8f946b7f82e3"))
 TestServer : public QComObject<IComServer>

@@ -18,10 +18,8 @@
 #include <qtcore/qt_windows.h>
 #include <qtcore/private/qcomobject_p.h>
 #include <qtcore/qtglobal>
-#include <wrl/client.h>
+#include <QtCore/private/qcomptr_p.h>
 #include <atomic>
-
-using Microsoft::WRL::ComPtr;
 
 template <typename T>
 ULONG refCount(const ComPtr<T> &p)
