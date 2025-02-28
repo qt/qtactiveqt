@@ -11,11 +11,9 @@
 #include <QtCore/QVariant>
 #include <QtCore/QDateTime>
 #include <QtCore/QMetaType>
+#include <QtCore/private/qcomptr_p.h>
 
 #include <qt_windows.h>
-#include <wrl/client.h>
-
-using Microsoft::WRL::ComPtr;
 
 QT_BEGIN_NAMESPACE
 

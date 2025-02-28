@@ -7,6 +7,7 @@
 #include "testserver/testserver.h"
 #include "../conversion/comutil_p.h"
 #include <QtAxBase/private/qbstr_p.h>
+#include <QtCore/private/qcomptr_p.h>
 
 class tst_qaxobjectcom : public QObject
 {

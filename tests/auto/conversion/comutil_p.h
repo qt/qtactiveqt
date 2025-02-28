@@ -20,17 +20,6 @@
 #include <comdef.h>
 #include <type_traits>
 #include <oleauto.h>
-#include <wrl/client.h>
-
-using Microsoft::WRL::ComPtr;
-
-template<typename T>
-ComPtr<T> makeComObject()
-{
-    ComPtr<T> ptr;
-    *ptr.GetAddressOf() = new T;
-    return ptr;
-}
 
 template<typename T>
 constexpr VARTYPE ValueType()
