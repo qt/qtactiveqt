@@ -2384,14 +2384,15 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
         if (!funcdesc)
             break;
 
-        QByteArray type;
-        QByteArray prototype;
-        QByteArrayList parameters;
-
         // parse function description
         const QByteArrayList names = qaxTypeInfoNames(typeinfo, funcdesc->memid);
-        const int maxNamesOut = names.size();
+        if (names.isEmpty()) {
+            typeinfo->ReleaseFuncDesc(funcdesc);
+            continue;
+        }
+
         // function name
+        const auto maxNamesOut = names.size();
         const QByteArray &function = names.at(0);
         if ((maxNamesOut == 3 && function == "QueryInterface") ||
             (maxNamesOut == 1 && function == "AddRef") ||
@@ -2404,6 +2405,9 @@ void MetaObjectGenerator::readFuncsInfo(ITypeInfo *typeinfo, ushort nFuncs)
             continue;
         }
 
+        QByteArray type;
+        QByteArray prototype;
+        QByteArrayList parameters;
         prototype = createPrototype(/*in*/ funcdesc, typeinfo, names, /*out*/type, parameters);
 
         // get type of function
