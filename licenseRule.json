@@ -47,7 +47,7 @@
             "": {
                 "comment": "Default",
                 "file type": "tools and utils",
-                "spdx": ["LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0"]
+                "spdx": ["LicenseRef-Qt-Commercial"]
             },
             "(.*)(examples/|snippets/)": {
                 "comment": "Example takes precedent",
@@ -76,7 +76,7 @@
             "": {
                 "comment": "Default",
                 "file type": "module and plugin",
-                "spdx": ["LicenseRef-Qt-Commercial OR BSD-3-Clause"]
+                "spdx": ["LicenseRef-Qt-Commercial"]
             },
             "dist/": {
                 "comment": "Default",
@@ -86,17 +86,17 @@
             "src/": {
                 "comment": "Default",
                 "file type": "module and plugin",
-                "spdx": ["LicenseRef-Qt-Commercial OR BSD-3-Clause"]
+                "spdx": ["LicenseRef-Qt-Commercial"]
             },
             "src/tools/": {
                 "comment": "Default",
                 "file type": "tools and utils",
-                "spdx": ["LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0"]
+                "spdx": ["LicenseRef-Qt-Commercial"]
             },
             "tools/": {
                 "comment": "Default",
                 "file type": "tools and utils",
-                "spdx": ["LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0"]
+                "spdx": ["LicenseRef-Qt-Commercial"]
             },
             "tests/": {
                 "comment": "Default",
