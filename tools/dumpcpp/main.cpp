@@ -83,6 +83,9 @@ void writeHeader(QTextStream &out, const QString &nameSpace, const QString &outF
     out << "#include <qaxwidget.h>" << Qt::endl;
     out << "#include <qdatetime.h>" << Qt::endl;
     out << "#include <qpixmap.h>" << Qt::endl;
+    out << "#include <qpoint.h>" << Qt::endl;
+    out << "#include <qrect.h>" << Qt::endl;
+    out << "#include <qsize.h>" << Qt::endl;
     out << Qt::endl;
     out << "struct IDispatch;" << Qt::endl;
     out << Qt::endl;
@@ -210,6 +213,14 @@ static const QSet<QByteArray> cSharpTypes = {
     "ICloneable", "ICollection", "IDisposable", "IEnumerable",
     "IList", "ISerializable", "_Attribute"
 };
+
+// Return true if the passed string is one of the Qt type names that we re-defined in IDL files.
+static bool isQtTypeName(QByteArrayView s)
+{
+    return s == "struct QPoint"
+        || s == "struct QRect"
+        || s == "struct QSize";
+}
 
 void generateClassDecl(QTextStream &out, const QMetaObject *mo,
                        const QByteArray &className, const QByteArray &nameSpace,
@@ -788,6 +799,8 @@ bool generateTypeLibrary(QString typeLibFile, QString outname,
         if (nspIt != namespaces.constEnd() && !nspIt.value().isEmpty()) {
             declOut << "// forward declarations" << Qt::endl;
             for (const auto &className : nspIt.value()) {
+                if (isQtTypeName(className))
+                    continue;
                 if (className.contains(' ')) {
                     declOut << "    " << className << ';' << Qt::endl;
                     namespaceForType.insert(className.mid(className.indexOf(' ') + 1), libNameBa);
