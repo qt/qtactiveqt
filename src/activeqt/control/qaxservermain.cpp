@@ -177,7 +177,8 @@ struct Arg {
 
     ~Arg()
     {
-        for (int i = 0, last = argv.size() - 1; i < last; ++i)
+        // Note: QGuiApplication may shift the array when removing Qt arguments
+        for (int i = 0, last = argv.size() - 1; i < last && argv.at(i) != nullptr; ++i)
             free(argv.at(i));
     }
 
