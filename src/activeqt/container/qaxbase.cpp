@@ -1435,6 +1435,30 @@ private:
         Bindable                = 0x02000000
     };
 
+    static inline bool checkForValidFunctionParameters(const QByteArray &name, const QList<QByteArray> &parameters)
+    {
+        qsizetype leftBrace = name.indexOf('(');
+        if (leftBrace == -1)
+            return false;
+        qsizetype rightBrace = name.indexOf(')', leftBrace + 1);
+        if (rightBrace == -1)
+            return false;
+
+        if (rightBrace - leftBrace == 1)
+            return true;
+
+        const QList<QByteArray> parameterTypes =
+                name.mid(leftBrace + 1, rightBrace - 1 - leftBrace).split(',');
+        if (parameterTypes.length() != parameters.length())
+            return false;
+
+        for (const auto &parameterType : parameterTypes)
+            if (parameterType.isEmpty())
+                return false;
+
+        return true;
+    };
+
     static inline QByteArrayList paramList(const QByteArray &prototype)
     {
         QByteArray parameters = prototype.mid(prototype.indexOf('(') + 1);
@@ -2920,9 +2944,18 @@ void MetaObjectGenerator::addMetaMethod(QMetaObjectBuilder &builder,
                                         const QByteArray &returnType,
                                         int attributes)
 {
+    const QList<QByteArray> parameterList = parameters.split(',');
+
+    // name is of format "functioneName(parameterType1,parameterType2)". If a parameter type is
+    // unknown (due to a missing dependency for example) the list of these parameter types will
+    // contain an empty sting. This situation will throw off QMetaMethodBuilder so we skip these
+    // functions.
+    if (!checkForValidFunctionParameters(name, parameterList))
+        return;
+
     QMetaMethodBuilder methodBuilder = (builder.*creationFunc)(name);
     if (!parameters.isEmpty())
-        methodBuilder.setParameterNames(parameters.split(','));
+        methodBuilder.setParameterNames(parameterList);
     if (!returnType.isEmpty() && returnType != QByteArrayLiteral("void"))
         methodBuilder.setReturnType(returnType);
     methodBuilder.setAttributes(attributes);
