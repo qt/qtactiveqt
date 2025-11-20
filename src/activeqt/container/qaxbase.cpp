@@ -39,6 +39,7 @@
 
 #include "../shared/qaxtypes_p.h"
 #include <QtAxBase/private/qaxutils_p.h>
+#include <QtCore/private/qcomobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -213,7 +214,7 @@ static const char *const type_conversion[][2] =
            IConnectionPoints implemented in the COM object.
 */
 
-class QAxEventSink : public IDispatch, public IPropertyNotifySink
+class QAxEventSink : public QComObject<IDispatch, IPropertyNotifySink>
 {
     Q_DISABLE_COPY_MOVE(QAxEventSink)
 public:
@@ -282,35 +283,6 @@ public:
     {
         props.insert(propid, name);
         propsigs.insert(propid, signal);
-    }
-
-    // IUnknown
-    unsigned long __stdcall AddRef() override
-    {
-        return InterlockedIncrement(&ref);
-    }
-    unsigned long __stdcall Release() override
-    {
-        LONG refCount = InterlockedDecrement(&ref);
-        if (!refCount)
-            delete this;
-
-        return refCount;
-    }
-    HRESULT __stdcall QueryInterface(REFIID riid, void **ppvObject) override
-    {
-        *ppvObject = nullptr;
-        if (riid == IID_IUnknown)
-            *ppvObject = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
-        else if (riid == IID_IPropertyNotifySink)
-            *ppvObject = static_cast<IPropertyNotifySink *>(this);
-        else if (riid == IID_IDispatch || ciid == riid)
-            *ppvObject = static_cast<IDispatch *>(this);
-        else
-            return E_NOINTERFACE;
-
-        AddRef();
-        return S_OK;
     }
 
     // IDispatch
@@ -520,7 +492,6 @@ public:
     QMap<DISPID, QByteArray> props;
 
     QAxBase *combase = nullptr;
-    LONG ref = 1;
 };
 
 /*
@@ -4042,38 +4013,12 @@ QAxObject *QAxBase::querySubObject(const char *name, QList<QVariant> &vars)
     return object;
 }
 
-class QtPropertyBag : public IPropertyBag
+class QtPropertyBag : public QComObject<IPropertyBag>
 {
     Q_DISABLE_COPY_MOVE(QtPropertyBag)
 public:
     QtPropertyBag() = default;
     virtual ~QtPropertyBag() = default;
-
-    HRESULT __stdcall QueryInterface(REFIID iid, LPVOID *iface) override
-    {
-        *iface = nullptr;
-        if (iid == IID_IUnknown)
-            *iface = this;
-        else if (iid == IID_IPropertyBag)
-            *iface = this;
-        else
-            return E_NOINTERFACE;
-
-        AddRef();
-        return S_OK;
-    }
-    unsigned long __stdcall AddRef() override
-    {
-        return InterlockedIncrement(&ref);
-    }
-    unsigned long __stdcall Release() override
-    {
-        LONG refCount = InterlockedDecrement(&ref);
-        if (!refCount)
-            delete this;
-
-        return refCount;
-    }
 
     HRESULT __stdcall Read(LPCOLESTR name, VARIANT *var, IErrorLog *) override
     {
@@ -4097,9 +4042,6 @@ public:
     }
 
     QAxBase::PropertyBag map;
-
-private:
-    LONG ref = 0;
 };
 
 /*!

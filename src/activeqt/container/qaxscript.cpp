@@ -26,6 +26,7 @@
 #endif
 
 #include "../shared/qaxtypes_p.h"
+#include <QtCore/private/qcomobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -53,16 +54,12 @@ public:
 
 #ifndef QT_NO_QAXSCRIPT
 
-class QAxScriptSite : public IActiveScriptSite, public IActiveScriptSiteWindow
+class QAxScriptSite : public QComObject<IActiveScriptSite, IActiveScriptSiteWindow>
 {
     Q_DISABLE_COPY_MOVE(QAxScriptSite)
 public:
     QAxScriptSite(QAxScript *script);
     virtual ~QAxScriptSite() = default;
-
-    ULONG WINAPI AddRef() override;
-    ULONG WINAPI Release() override;
-    HRESULT WINAPI QueryInterface(REFIID iid, void **ppvObject) override;
 
     HRESULT WINAPI GetLCID(LCID *plcid) override;
     HRESULT WINAPI GetItemInfo(LPCOLESTR pstrName, DWORD dwReturnMask,
@@ -83,7 +80,6 @@ protected:
 
 private:
     QAxScript *script;
-    LONG ref = 1;
 };
 
 /*
@@ -91,45 +87,6 @@ private:
 */
 QAxScriptSite::QAxScriptSite(QAxScript *s) : script(s)
 {
-}
-
-/*
-    Implements IUnknown::AddRef
-*/
-ULONG WINAPI QAxScriptSite::AddRef()
-{
-    return InterlockedIncrement(&ref);
-}
-
-/*
-    Implements IUnknown::Release
-*/
-ULONG WINAPI QAxScriptSite::Release()
-{
-    LONG refCount = InterlockedDecrement(&ref);
-    if (!refCount)
-        delete this;
-
-    return refCount;
-}
-
-/*
-    Implements IUnknown::QueryInterface
-*/
-HRESULT WINAPI QAxScriptSite::QueryInterface(REFIID iid, void **ppvObject)
-{
-    *ppvObject = nullptr;
-    if (iid == IID_IUnknown)
-        *ppvObject = static_cast<IUnknown *>(static_cast<IActiveScriptSite *>(this));
-    else if (iid == IID_IActiveScriptSite)
-        *ppvObject = static_cast<IActiveScriptSite *>(this);
-    else if (iid == IID_IActiveScriptSiteWindow)
-        *ppvObject = static_cast<IActiveScriptSiteWindow *>(this);
-    else
-        return E_NOINTERFACE;
-
-    AddRef();
-    return S_OK;
 }
 
 /*
