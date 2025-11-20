@@ -815,37 +815,6 @@ QClassFactory::~QClassFactory()
     DeleteCriticalSection(&refCountSection);
 }
 
-// IUnknown
-unsigned long QClassFactory::AddRef()
-{
-    return InterlockedIncrement(&ref);
-}
-
-unsigned long QClassFactory::Release()
-{
-    LONG refCount = InterlockedDecrement(&ref);
-    if (!refCount)
-        delete this;
-
-    return refCount;
-}
-
-HRESULT QClassFactory::QueryInterface(REFIID iid, LPVOID *iface)
-{
-    *iface = nullptr;
-    if (iid == IID_IUnknown)
-        *iface = static_cast<IUnknown *>(this);
-    else if (iid == IID_IClassFactory)
-        *iface = static_cast<IClassFactory *>(this);
-    else if (iid == IID_IClassFactory2 && licensed)
-        *iface = static_cast<IClassFactory2 *>(this);
-    else
-        return E_NOINTERFACE;
-
-    AddRef();
-    return S_OK;
-}
-
 HRESULT QClassFactory::CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, void **ppObject)
 {
     if (pUnkOuter) {
@@ -914,6 +883,8 @@ HRESULT QClassFactory::LockServer(BOOL fLock)
 // IClassFactory2
 HRESULT QClassFactory::RequestLicKey(DWORD, BSTR *pKey)
 {
+    if (!licensed)
+        return E_NOTIMPL;
     if (!pKey)
         return E_POINTER;
     *pKey = nullptr;
@@ -928,6 +899,8 @@ HRESULT QClassFactory::RequestLicKey(DWORD, BSTR *pKey)
 
 HRESULT QClassFactory::GetLicInfo(LICINFO *pLicInfo)
 {
+    if (!licensed)
+        return E_NOTIMPL;
     if (!pLicInfo)
         return E_POINTER;
     pLicInfo->cbLicInfo = sizeof(LICINFO);
@@ -945,6 +918,9 @@ HRESULT QClassFactory::GetLicInfo(LICINFO *pLicInfo)
 
 HRESULT QClassFactory::CreateInstanceLic(IUnknown *pUnkOuter, IUnknown * /* pUnkReserved */, REFIID iid, BSTR bKey, PVOID *ppObject)
 {
+    if (!licensed)
+        return E_NOTIMPL;
+
     QString licenseKey = QString::fromWCharArray(bKey);
     if (!qAxFactory()->validateLicenseKey(className, licenseKey))
         return CLASS_E_NOTLICENSED;

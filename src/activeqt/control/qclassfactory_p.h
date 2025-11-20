@@ -17,23 +17,32 @@
 
 #include <qcoreapplication.h>
 #include <ocidl.h>
+#include <QtCore/private/qcomobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
+namespace QtPrivate {
+
+template <>
+struct QComObjectTraits<IClassFactory2>
+{
+    static constexpr bool isGuidOf(REFIID riid) noexcept
+    {
+        return QComObjectTraits<IClassFactory2, IClassFactory>::isGuidOf(riid);
+    }
+};
+
+} // namespace QtPrivate
+
 // COM Factory class, mapping COM requests to ActiveQt requests.
 // One instance of this class for each ActiveX the server can provide.
-class QClassFactory : public IClassFactory2
+class QClassFactory : public QComObject<IClassFactory2>
 {
     Q_DISABLE_COPY_MOVE(QClassFactory)
 public:
     QClassFactory(CLSID clsid);
 
     virtual ~QClassFactory();
-
-    // IUnknown
-    unsigned long WINAPI AddRef() override;
-    unsigned long WINAPI Release() override;
-    HRESULT WINAPI QueryInterface(REFIID iid, LPVOID *iface) override;
 
     HRESULT WINAPI CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, void **ppObject);
 
@@ -55,7 +64,6 @@ public:
 
 protected:
     CRITICAL_SECTION refCountSection;
-    LONG ref = 0;
     bool licensed = false;
     QString classKey;
 };
