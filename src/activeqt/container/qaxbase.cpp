@@ -949,8 +949,7 @@ void QAxBase::clear()
     }
     d->eventSink.clear();
     if (d->disp) {
-        d->disp->Release();
-        d->disp = nullptr;
+        d->disp.Reset();
     }
     if (d->ptr) {
         d->ptr.Reset();

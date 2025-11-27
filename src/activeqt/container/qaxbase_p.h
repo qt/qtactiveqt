@@ -55,11 +55,11 @@ public:
     IDispatch *dispatch() const
     {
         if (disp)
-            return disp;
+            return disp.Get();
 
         if (ptr)
-            ptr->QueryInterface(IID_IDispatch, reinterpret_cast<void **>(&disp));
-        return disp;
+            ptr->QueryInterface(IID_IDispatch, &disp);
+        return disp.Get();
     }
 
     bool checkHRESULT(long hres, tagEXCEPINFO *exc, const QString &name, uint argerr);
@@ -79,7 +79,7 @@ public:
     unsigned long classContext = CLSCTX_SERVER;
 
     ComPtr<IUnknown> ptr;
-    mutable IDispatch *disp = nullptr;
+    mutable ComPtr<IDispatch> disp;
 
     QMap<QByteArray, bool> propWritable;
 
