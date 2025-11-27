@@ -32,6 +32,8 @@
 #include <olectl.h>
 #include <docobj.h>
 
+#include <QtCore/private/qcomptr_p.h>
+
 // #define QAX_DEBUG
 
 #ifdef QAX_DEBUG
@@ -542,28 +544,24 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
         DWORD dwMiscStatus = 0;
         m_spOleObject->GetMiscStatus(DVASPECT_CONTENT, &dwMiscStatus);
 
-        IOleDocument *document = nullptr;
-        m_spOleObject->QueryInterface(IID_IOleDocument, reinterpret_cast<void**>(&document));
+        ComPtr<IOleDocument> document;
+        m_spOleObject->QueryInterface(IID_IOleDocument, &document);
         if (document) {
-            IPersistStorage *persistStorage = nullptr;
-            document->QueryInterface(IID_IPersistStorage, reinterpret_cast<void**>(&persistStorage));
+            ComPtr<IPersistStorage> persistStorage;
+            document->QueryInterface(IID_IPersistStorage, &persistStorage);
             if (persistStorage) {
             // try to activate as document server
-                IStorage *storage = nullptr;
-                ILockBytes * bytes = nullptr;
+                ComPtr<IStorage> storage;
+                ComPtr<ILockBytes> bytes;
                 ::CreateILockBytesOnHGlobal(nullptr, TRUE, &bytes);
-                ::StgCreateDocfileOnILockBytes(bytes, STGM_SHARE_EXCLUSIVE|STGM_CREATE|STGM_READWRITE, 0, &storage);
+                ::StgCreateDocfileOnILockBytes(bytes.Get(), STGM_SHARE_EXCLUSIVE|STGM_CREATE|STGM_READWRITE, 0, &storage);
 
-                persistStorage->InitNew(storage);
-                persistStorage->Release();
+                persistStorage->InitNew(storage.Get());
                 canHostDocument = true;
-                storage->Release();
-                bytes->Release();
 
                 m_spOleObject->SetClientSite(this);
                 OleRun(m_spOleObject);
             }
-            document->Release();
         }
 
         if (!canHostDocument) {
@@ -572,29 +570,27 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
                 m_spOleObject->SetClientSite(this);
 
             if (!initialized) {
-                IPersistStreamInit *spPSI = nullptr;
-                m_spOleObject->QueryInterface(IID_IPersistStreamInit, reinterpret_cast<void**>(&spPSI));
+                ComPtr<IPersistStreamInit> spPSI;
+                m_spOleObject->QueryInterface(IID_IPersistStreamInit, &spPSI);
                 if (spPSI) {
                     if (data.length()) {
-                        IStream *pStream = nullptr;
+                        ComPtr<IStream> pStream;
                         HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, data.length());
                         if (hGlobal) {
                             if (auto pStByte = GlobalLock(hGlobal))
                                 memcpy(pStByte, data.data(), data.length());
                             GlobalUnlock(hGlobal);
                             if (SUCCEEDED(CreateStreamOnHGlobal(hGlobal, TRUE, &pStream))) {
-                                spPSI->Load(pStream);
-                                pStream->Release();
+                                spPSI->Load(pStream.Get());
                             }
                             GlobalFree(hGlobal);
                         }
                     } else {
                         spPSI->InitNew();
                     }
-                    spPSI->Release();
                 } else if (data.length()) { //try initializing using a IPersistStorage
-                    IPersistStorage *spPS = nullptr;
-                    m_spOleObject->QueryInterface( IID_IPersistStorage, reinterpret_cast<void **>(&spPS));
+                    ComPtr<IPersistStorage> spPS;
+                    m_spOleObject->QueryInterface( IID_IPersistStorage, &spPS);
                     if (spPS) {
                         HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, size_t(data.length()));
                         if (hGlobal) {
@@ -602,19 +598,16 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
                                 memcpy(pbData, data.data(), size_t(data.length()));
                             GlobalUnlock(hGlobal);
                             // open an IStorage on the data and pass it to Load
-                            LPLOCKBYTES pLockBytes = nullptr;
+                            ComPtr<ILockBytes> pLockBytes;
                             if (SUCCEEDED(CreateILockBytesOnHGlobal(hGlobal, TRUE, &pLockBytes))) {
-                                LPSTORAGE pStorage = nullptr;
-                                if (SUCCEEDED(StgOpenStorageOnILockBytes(pLockBytes, nullptr,
+                                ComPtr<IStorage> pStorage;
+                                if (SUCCEEDED(StgOpenStorageOnILockBytes(pLockBytes.Get(), nullptr,
                                               STGM_READWRITE | STGM_SHARE_EXCLUSIVE, nullptr, 0, &pStorage))) {
-                                    spPS->Load(pStorage);
-                                    pStorage->Release();
+                                    spPS->Load(pStorage.Get());
                                 }
-                                pLockBytes->Release();
                             }
                             GlobalFree(hGlobal);
                         }
-                        spPS->Release();
                     }
                 }
             }
@@ -623,20 +616,16 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
                 m_spOleObject->SetClientSite(this);
         }
 
-        IViewObject *spViewObject = nullptr;
-        m_spOleObject->QueryInterface(IID_IViewObject, reinterpret_cast<void **>(&spViewObject));
+        ComPtr<IViewObject> spViewObject;
+        m_spOleObject->QueryInterface(IID_IViewObject, &spViewObject);
 
         m_spOleObject->Advise(this, &m_dwOleObject);
-        IAdviseSink *spAdviseSink = nullptr;
-        QueryInterface(IID_IAdviseSink, reinterpret_cast<void **>(&spAdviseSink));
+        ComPtr<IAdviseSink> spAdviseSink;
+        QueryInterface(IID_IAdviseSink, &spAdviseSink);
         if (spAdviseSink && spViewObject) {
             if (spViewObject)
-                spViewObject->SetAdvise(DVASPECT_CONTENT, 0, spAdviseSink);
+                spViewObject->SetAdvise(DVASPECT_CONTENT, 0, spAdviseSink.Get());
         }
-        if (spAdviseSink)
-            spAdviseSink->Release();
-        if (spViewObject)
-            spViewObject->Release();
 
         m_spOleObject->SetHostNames(OLESTR("AXWIN"), nullptr);
 
@@ -667,11 +656,10 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
 
         HWND controlWnd = {};
         {
-            IOleWindow *oleWindow = nullptr;
-            m_spOleObject->QueryInterface(IID_IOleWindow, reinterpret_cast<void **>(&oleWindow));
+            ComPtr<IOleWindow> oleWindow;
+            m_spOleObject->QueryInterface(IID_IOleWindow, &oleWindow);
             if (oleWindow) {
                 oleWindow->GetWindow(&controlWnd);
-                oleWindow->Release();
             }
         }
 
@@ -705,11 +693,10 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
             CoTaskMemFree(userType);
         }
     } else {
-        IObjectWithSite *spSite = nullptr;
-        widget->queryInterface(IID_IObjectWithSite, reinterpret_cast<void **>(&spSite));
+        ComPtr<IObjectWithSite> spSite;
+        widget->queryInterface(IID_IObjectWithSite, &spSite);
         if (spSite) {
             spSite->SetSite(static_cast<IUnknown *>(static_cast<IDispatch *>(this)));
-            spSite->Release();
         }
     }
 
@@ -1537,14 +1524,12 @@ HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
     m_spActiveView = nullptr;
 
     if (!pViewToActivate) {
-        IOleDocument *document = nullptr;
-        m_spOleObject->QueryInterface(IID_IOleDocument, reinterpret_cast<void **>(&document));
+        ComPtr<IOleDocument> document;
+        m_spOleObject->QueryInterface(IID_IOleDocument, &document);
         if (!document)
             return E_FAIL;
 
         document->CreateView(this, nullptr, 0, &pViewToActivate);
-
-        document->Release();
         if (!pViewToActivate)
             return E_OUTOFMEMORY;
     } else {
@@ -1793,9 +1778,9 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     if (!redirected(&dummyOffset))
         return;
 
-    IViewObject *view = nullptr;
+    ComPtr<IViewObject> view;
     if (axhost)
-        axhost->widget->queryInterface(IID_IViewObject, reinterpret_cast<void **>(&view));
+        axhost->widget->queryInterface(IID_IViewObject, &view);
     if (!view)
         return;
 
@@ -1814,7 +1799,6 @@ void QAxHostWidget::paintEvent(QPaintEvent*)
     bounds.bottom = pm.height();
 
     view->Draw(DVASPECT_CONTENT, -1, nullptr, nullptr, nullptr, hBmp_hdc, &bounds, nullptr, nullptr /*fptr*/, 0);
-    view->Release();
 
     QPainter painter(this);
     QPixmap pixmap = qt_pixmapFromWinHBITMAP(hBmp);

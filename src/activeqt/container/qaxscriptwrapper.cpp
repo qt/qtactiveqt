@@ -7,17 +7,18 @@
 
 #include <qt_windows.h>
 
+#include <QtCore/private/qcomptr_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QAxBase *qax_create_object_wrapper(QObject *object)
 {
-    IDispatch *dispatch = nullptr;
+    ComPtr<IDispatch> dispatch;
     QAxObject *wrapper = nullptr;
     qAxFactory()->createObjectWrapper(object, &dispatch);
     if (dispatch) {
-        wrapper = new QAxObject(dispatch, object);
+        wrapper = new QAxObject(dispatch.Get(), object);
         wrapper->setObjectName(object->objectName());
-        dispatch->Release();
     }
     return wrapper;
 }

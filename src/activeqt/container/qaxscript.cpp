@@ -27,6 +27,7 @@
 
 #include "../shared/qaxtypes_p.h"
 #include <QtCore/private/qcomobject_p.h>
+#include <QtCore/private/qcomptr_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -124,11 +125,10 @@ HRESULT WINAPI QAxScriptSite::GetItemInfo(LPCOLESTR pstrName, DWORD mask, IUnkno
     if (mask & SCRIPTINFO_IUNKNOWN)
         object->queryInterface(IID_IUnknown, reinterpret_cast<void **>(item));
     if (mask & SCRIPTINFO_ITYPEINFO) {
-        IProvideClassInfo *classInfo = nullptr;
-        object->queryInterface(IID_IProvideClassInfo, reinterpret_cast<void **>(&classInfo));
+        ComPtr<IProvideClassInfo> classInfo;
+        object->queryInterface(IID_IProvideClassInfo, &classInfo);
         if (classInfo) {
             classInfo->GetClassInfo(type);
-            classInfo->Release();
         }
     }
     return S_OK;
@@ -399,8 +399,8 @@ bool QAxScriptEngine::initialize(IUnknown **ptr)
     if (!engine)
         return false;
 
-    IActiveScriptParse *parser = nullptr;
-    engine->QueryInterface(IID_IActiveScriptParse, reinterpret_cast<void **>(&parser));
+    ComPtr<IActiveScriptParse> parser;
+    engine->QueryInterface(IID_IActiveScriptParse, &parser);
     if (!parser) {
         engine->Release();
         engine = nullptr;
@@ -413,7 +413,6 @@ bool QAxScriptEngine::initialize(IUnknown **ptr)
         return false;
     }
     if (parser->InitNew() != S_OK) {
-        parser->Release();
         engine->Release();
         engine = nullptr;
         return false;
@@ -428,9 +427,6 @@ bool QAxScriptEngine::initialize(IUnknown **ptr)
                                    0, 0);
 #endif
 
-    parser->Release();
-    parser = nullptr;
-
     script_code->updateObjects();
 
     if (engine->SetScriptState(SCRIPTSTATE_CONNECTED) != S_OK) {
@@ -438,11 +434,10 @@ bool QAxScriptEngine::initialize(IUnknown **ptr)
         return false;
     }
 
-    IDispatch *scriptDispatch = nullptr;
+    ComPtr<IDispatch> scriptDispatch;
     engine->GetScriptDispatch(nullptr, &scriptDispatch);
     if (scriptDispatch) {
         scriptDispatch->QueryInterface(IID_IUnknown, reinterpret_cast<void **>(ptr));
-        scriptDispatch->Release();
     }
 #endif
 
@@ -466,14 +461,13 @@ bool QAxScriptEngine::hasIntrospection() const
     if (!isValid())
         return false;
 
-    IDispatch *scriptDispatch = nullptr;
-    QAxBase::queryInterface(IID_IDispatch, reinterpret_cast<void **>(&scriptDispatch));
+    ComPtr<IDispatch> scriptDispatch;
+    QAxBase::queryInterface(IID_IDispatch, &scriptDispatch);
     if (!scriptDispatch)
         return false;
 
     UINT tic = 0;
     HRESULT hres = scriptDispatch->GetTypeInfoCount(&tic);
-    scriptDispatch->Release();
     return hres == S_OK && tic > 0;
 }
 

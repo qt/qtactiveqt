@@ -40,6 +40,7 @@
 #include <QtAxBase/private/qaxutils_p.h>
 #include <QtAxBase/private/qaxtypefunctions_p.h>
 #include <QtCore/private/qcomobject_p.h>
+#include <QtCore/private/qcomptr_p.h>
 
 #include "qclassfactory_p.h"
 
@@ -627,11 +628,10 @@ public:
             return E_POINTER;
 
         {
-            IDispatch *checkImpl = nullptr;
-            pUnk->QueryInterface(iid, reinterpret_cast<void **>(&checkImpl));
+            ComPtr<IDispatch> checkImpl;
+            pUnk->QueryInterface(iid, &checkImpl);
             if (!checkImpl)
                 return CONNECT_E_CANNOTCONNECT;
-            checkImpl->Release();
         }
 
         CONNECTDATA cd;
@@ -1344,11 +1344,10 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
                 RECT rcPos = that->rcPosRect();
                 that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite, 0, that->m_hWnd, &rcPos);
                 if (that->isUIActive) {
-                    IOleControlSite *spSite = nullptr;
-                    that->m_spClientSite->QueryInterface(IID_IOleControlSite, reinterpret_cast<void **>(&spSite));
+                    ComPtr<IOleControlSite> spSite;
+                    that->m_spClientSite->QueryInterface(IID_IOleControlSite, &spSite);
                     if (spSite) {
                         spSite->OnFocus(true);
-                        spSite->Release();
                     }
                     QWidget *candidate = that->qt.widget;
                     while (!(candidate->focusPolicy() & Qt::TabFocus)) {
@@ -1371,12 +1370,11 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
     case WM_KILLFOCUS:
         if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
             if (that->isInPlaceActive && that->isUIActive && that->m_spClientSite) {
-                IOleControlSite *spSite = nullptr;
-                that->m_spClientSite->QueryInterface(IID_IOleControlSite, reinterpret_cast<void **>(&spSite));
+                ComPtr<IOleControlSite> spSite;
+                that->m_spClientSite->QueryInterface(IID_IOleControlSite, &spSite);
                 if (spSite) {
                     if (!::IsChild(that->m_hWnd, ::GetFocus()))
                         spSite->OnFocus(false);
-                    spSite->Release();
                 }
             }
         }
@@ -1869,13 +1867,12 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
 
             eventId = signalCache.value(index, -1);
             if (eventId == -1) {
-                ITypeInfo *eventInfo = nullptr;
+                ComPtr<ITypeInfo> eventInfo;
                 qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->eventsID(class_name), &eventInfo);
                 if (eventInfo) {
                     QString uni_name = QLatin1String(name);
                     OLECHAR *olename = qaxQString2MutableOleChars(uni_name);
                     eventInfo->GetIDsOfNames(&olename, 1, &eventId);
-                    eventInfo->Release();
                 }
             }
 
@@ -1897,11 +1894,11 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
         return false;
 
     // For all connected event sinks...
-    IConnectionPoint *cpoint = nullptr;
+    ComPtr<IConnectionPoint> cpoint;
     GUID IID_QAxEvents = qAxFactory()->eventsID(class_name);
     FindConnectionPoint(IID_QAxEvents, &cpoint);
     if (cpoint) {
-        IEnumConnections *clist = nullptr;
+        ComPtr<IEnumConnections> clist;
         cpoint->EnumConnections(&clist);
         if (clist) {
             clist->Reset();
@@ -1955,8 +1952,8 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                 // call listeners (through IDispatch)
                 while (cc) {
                     if (c->pUnk) {
-                        IDispatch *disp = nullptr;
-                        c->pUnk->QueryInterface(IID_QAxEvents, reinterpret_cast<void **>(&disp));
+                        ComPtr<IDispatch> disp;
+                        c->pUnk->QueryInterface(IID_QAxEvents, &disp);
                         if (disp) {
                             disp->Invoke(eventId, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dispParams, pretval, nullptr, &argErr);
 
@@ -1971,7 +1968,6 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                                 if (pretval)
                                     QVariantToVoidStar(VARIANTToQVariant(retval, type), argv[0], type);
                             }
-                            disp->Release();
                         }
                         c->pUnk->Release(); // AddRef'ed by clist->Next implementation
                     }
@@ -1983,9 +1979,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
                     clearVARIANT(dispParams.rgvarg+p);
                 free(dispParams.rgvarg);
             }
-            clist->Release();
         }
-        cpoint->Release();
     }
 
     return true;
@@ -1999,10 +1993,10 @@ bool QAxServerBase::emitRequestPropertyChange(const char *property)
 {
     long dispId = -1;
 
-    IConnectionPoint *cpoint = nullptr;
+    ComPtr<IConnectionPoint> cpoint;
     FindConnectionPoint(IID_IPropertyNotifySink, &cpoint);
     if (cpoint) {
-        IEnumConnections *clist = nullptr;
+        ComPtr<IEnumConnections> clist;
         cpoint->EnumConnections(&clist);
         if (clist) {
             clist->Reset();
@@ -2017,23 +2011,18 @@ bool QAxServerBase::emitRequestPropertyChange(const char *property)
                 }
                 if (dispId != -1) while (cc) {
                     if (c->pUnk) {
-                        IPropertyNotifySink *sink = nullptr;
-                        c->pUnk->QueryInterface(IID_IPropertyNotifySink, reinterpret_cast<void **>(&sink));
+                        ComPtr<IPropertyNotifySink> sink;
+                        c->pUnk->QueryInterface(IID_IPropertyNotifySink, &sink);
                         bool disallows = sink && sink->OnRequestEdit(dispId) == S_FALSE;
-                        sink->Release();
                         c->pUnk->Release();
                         if (disallows) { // a client disallows the property to change
-                            clist->Release();
-                            cpoint->Release();
                             return false;
                         }
                     }
                     clist->Next(cc, reinterpret_cast<CONNECTDATA *>(&c), &cc);
                 }
             }
-            clist->Release();
         }
-        cpoint->Release();
     }
     dirtyflag = true;
     return true;
@@ -2047,10 +2036,10 @@ void QAxServerBase::emitPropertyChanged(const char *property)
 {
     long dispId = -1;
 
-    IConnectionPoint *cpoint = nullptr;
+    ComPtr<IConnectionPoint> cpoint;
     FindConnectionPoint(IID_IPropertyNotifySink, &cpoint);
     if (cpoint) {
-        IEnumConnections *clist = nullptr;
+        ComPtr<IEnumConnections> clist;
         cpoint->EnumConnections(&clist);
         if (clist) {
             clist->Reset();
@@ -2065,20 +2054,17 @@ void QAxServerBase::emitPropertyChanged(const char *property)
                 }
                 if (dispId != -1) while (cc) {
                     if (c->pUnk) {
-                        IPropertyNotifySink *sink = nullptr;
-                        c->pUnk->QueryInterface(IID_IPropertyNotifySink, reinterpret_cast<void **>(&sink));
+                        ComPtr<IPropertyNotifySink> sink;
+                        c->pUnk->QueryInterface(IID_IPropertyNotifySink, &sink);
                         if (sink) {
                             sink->OnChanged(dispId);
-                            sink->Release();
                         }
                         c->pUnk->Release();
                     }
                     clist->Next(cc, reinterpret_cast<CONNECTDATA *>(&c), &cc);
                 }
             }
-            clist->Release();
         }
-        cpoint->Release();
     }
     dirtyflag = true;
 }
@@ -2753,7 +2739,7 @@ HRESULT WINAPI QAxServerBase::Load(IStorage *pStg)
     if (InitNew(pStg) != S_OK)
         return CO_E_ALREADYINITIALIZED;
 
-    IStream *spStream = nullptr;
+    ComPtr<IStream> spStream;
     QString streamName = QLatin1String(qt.object->metaObject()->className());
     streamName.replace(QLatin1Char(':'), QLatin1Char('.'));
     /* Also invalid, but not relevant
@@ -2768,15 +2754,14 @@ HRESULT WINAPI QAxServerBase::Load(IStorage *pStg)
     if (!spStream)
         return E_FAIL;
 
-    Load(spStream);
-    spStream->Release();
+    Load(spStream.Get());
 
     return S_OK;
 }
 
 HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL /* fSameAsLoad */)
 {
-    IStream *spStream = nullptr;
+    ComPtr<IStream> spStream;
     QString streamName = QLatin1String(qt.object->metaObject()->className());
     streamName.replace(QLatin1Char(':'), QLatin1Char('.'));
     /* Also invalid, but not relevant
@@ -2789,9 +2774,8 @@ HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL /* fSameAsLoad */)
     if (!spStream)
         return E_FAIL;
 
-    Save(spStream, true);
+    Save(spStream.Get(), true);
 
-    spStream->Release();
     return S_OK;
 }
 
@@ -2919,13 +2903,12 @@ HRESULT WINAPI QAxServerBase::GetCurFile(LPOLESTR *currentFile)
         *currentFile = nullptr;
         return S_FALSE;
     }
-    IMalloc *malloc = nullptr;
+    ComPtr<IMalloc> malloc;
     CoGetMalloc(1, &malloc);
     if (!malloc)
         return E_OUTOFMEMORY;
 
     *currentFile = static_cast<wchar_t *>(malloc->Alloc(currentFileName.length() * 2));
-    malloc->Release();
     memcpy(*currentFile, currentFileName.unicode(), currentFileName.length() * 2);
 
     return S_OK;
@@ -3172,8 +3155,8 @@ HRESULT WINAPI QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
     if (!m_spClientSite || !theObject)
         return S_OK;
 
-    IDispatch *disp = nullptr;
-    m_spClientSite->QueryInterface(IID_IDispatch, reinterpret_cast<void **>(&disp));
+    ComPtr<IDispatch> disp;
+    m_spClientSite->QueryInterface(IID_IDispatch, &disp);
     if (!disp)
         return S_OK;
 
@@ -3181,8 +3164,6 @@ HRESULT WINAPI QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
     VariantInit(&var);
     DISPPARAMS params = { nullptr, nullptr, 0, 0 };
     disp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &var, nullptr, nullptr);
-    disp->Release();
-    disp = nullptr;
 
     switch(dispID) {
     case DISPID_AMBIENT_APPEARANCE:
@@ -3328,7 +3309,7 @@ HRESULT WINAPI QAxServerBase::UIDeactivate()
     if (m_spInPlaceSite->GetWindow(&hwndParent) == S_OK) {
         if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
         m_spInPlaceFrame = nullptr;
-        IOleInPlaceUIWindow *spInPlaceUIWindow = nullptr;
+        ComPtr<IOleInPlaceUIWindow> spInPlaceUIWindow;
         RECT rcPos, rcClip;
         OLEINPLACEFRAMEINFO frameInfo;
         frameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
@@ -3336,7 +3317,6 @@ HRESULT WINAPI QAxServerBase::UIDeactivate()
         m_spInPlaceSite->GetWindowContext(&m_spInPlaceFrame, &spInPlaceUIWindow, &rcPos, &rcClip, &frameInfo);
         if (spInPlaceUIWindow) {
             spInPlaceUIWindow->SetActiveObject(nullptr, nullptr);
-            spInPlaceUIWindow->Release();
         }
         if (m_spInPlaceFrame) {
             removeMenu();
@@ -3505,8 +3485,8 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
     if (!m_spClientSite)
         return S_FALSE;
 
-    IOleControlSite *controlSite = nullptr;
-    m_spClientSite->QueryInterface(IID_IOleControlSite, reinterpret_cast<void **>(&controlSite));
+    ComPtr<IOleControlSite> controlSite;
+    m_spClientSite->QueryInterface(IID_IOleControlSite, &controlSite);
     if (!controlSite)
         return S_FALSE;
     // set server type in the user-data of the window.
@@ -3523,7 +3503,6 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
     LONG oldData = SetWindowLong(pMsg->hwnd, GWL_USERDATA, serverType);
 #endif
     HRESULT hres = controlSite->TranslateAcceleratorW(pMsg, dwKeyMod);
-    controlSite->Release();
     // reset the user-data for the window.
 #ifdef GWLP_USERDATA
     SetWindowLongPtr(pMsg->hwnd, GWLP_USERDATA, oldData);
@@ -3704,7 +3683,7 @@ HRESULT QAxServerBase::internalActivate()
     OnAmbientPropertyChange(DISPID_AMBIENT_USERMODE);
 
     if (isWidget) {
-        IOleInPlaceUIWindow *spInPlaceUIWindow = nullptr;
+        ComPtr<IOleInPlaceUIWindow> spInPlaceUIWindow;
         HWND hwndParent;
         if (m_spInPlaceSite->GetWindow(&hwndParent) == S_OK) {
             // get location in the parent window, as well as some information about the parent
@@ -3742,8 +3721,7 @@ HRESULT QAxServerBase::internalActivate()
             if (FAILED(hr)) {
                 if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
                     m_spInPlaceFrame = nullptr;
-                if (spInPlaceUIWindow) spInPlaceUIWindow->Release();
-                    return hr;
+                return hr;
             }
 
             if (isInPlaceActive) {
@@ -3773,8 +3751,7 @@ HRESULT QAxServerBase::internalActivate()
                 spInPlaceUIWindow->SetBorderSpace(nullptr);
             }
         }
-        if (spInPlaceUIWindow) spInPlaceUIWindow->Release();
-            ShowWindow(m_hWnd, SW_NORMAL);
+        ShowWindow(m_hWnd, SW_NORMAL);
     }
 
     m_spClientSite->ShowObject();
@@ -4040,7 +4017,7 @@ HRESULT WINAPI QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmediu
 
     // Container wants to draw, but the size is not defined yet - ask container
     if (m_spInPlaceSite && !qt.widget->testAttribute(Qt::WA_Resized)) {
-        IOleInPlaceUIWindow *spInPlaceUIWindow = nullptr;
+        ComPtr<IOleInPlaceUIWindow> spInPlaceUIWindow;
         RECT rcPos, rcClip;
         OLEINPLACEFRAMEINFO frameInfo;
         frameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
@@ -4051,7 +4028,6 @@ HRESULT WINAPI QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmediu
         } else {
             qt.widget->adjustSize();
         }
-        if (spInPlaceUIWindow) spInPlaceUIWindow->Release(); // no need for it
     }
 
     int width = qt.widget->width();

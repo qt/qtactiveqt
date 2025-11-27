@@ -11,6 +11,8 @@
 
 #include <windows.h>
 
+#include <QtCore/private/qcomptr_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QAxObjectInterface::~QAxObjectInterface() = default;
@@ -305,16 +307,14 @@ bool QAxObject::doVerb(const QString &verb)
 {
     if (!verbs().contains(verb))
         return false;
-    IOleObject *ole = nullptr;
-    queryInterface(IID_IOleObject, reinterpret_cast<void **>(&ole));
+    ComPtr<IOleObject> ole;
+    queryInterface(IID_IOleObject, &ole);
     if (!ole)
         return false;
 
     LONG index = indexOfVerb(verb);
 
     HRESULT hres = ole->DoVerb(index, nullptr, nullptr, 0, nullptr, nullptr);
-
-    ole->Release();
 
     return hres == S_OK;
 }

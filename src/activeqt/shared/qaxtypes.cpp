@@ -22,6 +22,8 @@
 #   include <qaxobject.h>
 #endif
 
+#include <QtCore/private/qcomptr_p.h>
+
 QT_BEGIN_NAMESPACE
 
 #ifdef QAX_SERVER
@@ -52,16 +54,15 @@ static IFontDisp *QFontToIFont(const QFont &font)
     fdesc.lpstrName = QStringToBSTR(font.family());
     fdesc.sWeight = font.weight() * 10;
 
-    IFontDisp *f;
-    HRESULT res = OleCreateFontIndirect(&fdesc, IID_IFontDisp, reinterpret_cast<void**>(&f));
+    ComPtr<IFontDisp> f;
+    HRESULT res = OleCreateFontIndirect(&fdesc, IID_IFontDisp, &f);
     if (res != S_OK) {
-        if (f) f->Release();
-        f = nullptr;
+        f.Reset();
 #if defined(QT_CHECK_STATE)
         qWarning("QFontToIFont: Failed to create IFont");
 #endif
     }
-    return f;
+    return f.Detach();
 }
 
 static QFont IFontToQFont(IFont *f)
@@ -93,7 +94,7 @@ static QFont IFontToQFont(IFont *f)
 
 static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
 {
-    IPictureDisp *pic = nullptr;
+    ComPtr<IPictureDisp> pic;
 
     PICTDESC desc;
     desc.cbSizeofstruct = sizeof(PICTDESC);
@@ -107,15 +108,14 @@ static IPictureDisp *QPixmapToIPicture(const QPixmap &pixmap)
         Q_ASSERT(desc.bmp.hbitmap);
     }
 
-    HRESULT res = OleCreatePictureIndirect(&desc, IID_IPictureDisp, true, reinterpret_cast<void**>(&pic));
+    HRESULT res = OleCreatePictureIndirect(&desc, IID_IPictureDisp, true, &pic);
     if (res != S_OK) {
-        if (pic) pic->Release();
-        pic = nullptr;
+        pic.Reset();
 #if defined(QT_CHECK_STATE)
         qWarning("QPixmapToIPicture: Failed to create IPicture");
 #endif
     }
-    return pic;
+    return pic.Detach();
 }
 
 static QPixmap IPictureToQPixmap(IPicture *ipic)
@@ -561,7 +561,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             if (!pGetRecordInfoFromTypeInfo)
                 break;
 
-            ITypeInfo *typeInfo = 0;
+            ComPtr<ITypeInfo> typeInfo;
             IRecordInfo *recordInfo = 0;
             const int vType = qvar.metaType().id();
             CLSID clsid = vType == QMetaType::QRect
@@ -570,8 +570,7 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
             qAxTypeLibrary->GetTypeInfoOfGuid(clsid, &typeInfo);
             if (!typeInfo)
                 break;
-            pGetRecordInfoFromTypeInfo(typeInfo, &recordInfo);
-            typeInfo->Release();
+            pGetRecordInfoFromTypeInfo(typeInfo.Get(), &recordInfo);
             if (!recordInfo)
                 break;
 
@@ -704,14 +703,13 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
 #ifdef QAX_SERVER
 static QVariant axServer(IUnknown *unknown, const QByteArray &typeName)
 {
-    IAxServerBase *iface = nullptr;
+    ComPtr<IAxServerBase> iface;
     if (unknown && typeName != "IDispatch*" && typeName != "IUnknown*")
-        unknown->QueryInterface(IID_IAxServerBase, reinterpret_cast<void**>(&iface));
+        unknown->QueryInterface(IID_IAxServerBase, &iface);
     if (iface == nullptr)
         return {};
 
     auto *qObj = iface->qObject();
-    iface->Release();
     QByteArray pointerType = qObj ? QByteArray(qObj->metaObject()->className()) + '*' : typeName;
     QMetaType pointerMetaType = QMetaType::fromName(pointerType);
     if (pointerMetaType.id() == QMetaType::UnknownType)
@@ -913,22 +911,20 @@ QVariant VARIANTToQVariant(const VARIANT &arg, const QByteArray &typeName, int t
             else
                 disp = arg.pdispVal;
             if (type == QMetaType::QFont || nameTypeId == QMetaType::QFont) {
-                IFont *ifont = nullptr;
+                ComPtr<IFont> ifont;
                 if (disp)
-                    disp->QueryInterface(IID_IFont, reinterpret_cast<void**>(&ifont));
+                    disp->QueryInterface(IID_IFont, &ifont);
                 if (ifont) {
-                    var = QVariant::fromValue(IFontToQFont(ifont));
-                    ifont->Release();
+                    var = QVariant::fromValue(IFontToQFont(ifont.Get()));
                 } else {
                     var = QVariant::fromValue(QFont());
                 }
             } else if (type == QMetaType::QPixmap || nameTypeId == QMetaType::QPixmap) {
-                IPicture *ipic = nullptr;
+                ComPtr<IPicture> ipic;
                 if (disp)
-                    disp->QueryInterface(IID_IPicture, reinterpret_cast<void**>(&ipic));
+                    disp->QueryInterface(IID_IPicture, &ipic);
                 if (ipic) {
-                    var = QVariant::fromValue(IPictureToQPixmap(ipic));
-                    ipic->Release();
+                    var = QVariant::fromValue(IPictureToQPixmap(ipic.Get()));
                 } else {
                     var = QVariant::fromValue(QPixmap());
                 }
