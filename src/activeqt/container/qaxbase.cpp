@@ -246,7 +246,6 @@ public:
     void advise(IConnectionPoint *cp, IID iid)
     {
         cpoint = cp;
-        cpoint->AddRef();
         ciid = iid;
         cpoint->Advise(static_cast<IUnknown *>(static_cast<IDispatch *>(this)), &cookie);
     }
@@ -257,8 +256,7 @@ public:
         combase = nullptr;
         if (cpoint) {
             cpoint->Unadvise(cookie);
-            cpoint->Release();
-            cpoint = nullptr;
+            cpoint.Reset();
         }
     }
 
@@ -484,7 +482,7 @@ public:
         return static_cast<QAxObject *>(qobject)->receivers(name.constData()) > 0;
     }
 
-    IConnectionPoint *cpoint = nullptr;
+    ComPtr<IConnectionPoint> cpoint;
     IID ciid = IID_NULL;
     ULONG cookie = 0;
 
