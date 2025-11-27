@@ -21,6 +21,7 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/quuid.h>
 #include <QtCore/qt_windows.h>
+#include <QtCore/private/qcomptr_p.h>
 
 struct tagEXCEPINFO;
 
@@ -77,7 +78,7 @@ public:
     uint tryCache           :1;
     unsigned long classContext = CLSCTX_SERVER;
 
-    IUnknown *ptr = nullptr;
+    ComPtr<IUnknown> ptr;
     mutable IDispatch *disp = nullptr;
 
     QMap<QByteArray, bool> propWritable;

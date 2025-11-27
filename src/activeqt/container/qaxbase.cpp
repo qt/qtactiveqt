@@ -770,8 +770,7 @@ QAxBase::~QAxBase()
 */
 void QAxBase::internalRelease()
 {
-    if (d->ptr)
-        d->ptr->Release();
+    d->ptr.Reset();
 }
 
 /*!
@@ -786,7 +785,6 @@ void QAxBase::initializeFrom(QAxBase *that)
 
     d->ptr = that->d->ptr;
     if (d->ptr) {
-        d->ptr->AddRef();
         d->initialized = true;
     }
 }
@@ -955,8 +953,7 @@ void QAxBase::clear()
         d->disp = nullptr;
     }
     if (d->ptr) {
-        d->ptr->Release();
-        d->ptr = nullptr;
+        d->ptr.Reset();
         d->initialized = false;
     }
 
@@ -1087,7 +1084,6 @@ void QAxBase::axBaseInit(QAxBasePrivate *b, IUnknown *iface)
     d->q = this;
     d->ptr = iface;
     if (d->ptr) {
-        d->ptr->AddRef();
         d->initialized = true;
     }
 }
@@ -4165,7 +4161,7 @@ QVariant QAxBase::asVariant() const
         if (d->dispatch())
             qvar.setValue(d->dispatch());
         else if (d->ptr)
-            qvar.setValue(d->ptr);
+            qvar.setValue(d->ptr.Get());
     } else {
         cn.remove(0, cn.lastIndexOf(':') + 1);
         cn += '*';
@@ -4189,7 +4185,7 @@ void *qax_createObjectWrapper(int metaType, IUnknown *iface)
     void *object = QMetaType(metaType).create(nullptr);
     QAxBasePrivate *d = reinterpret_cast<const QAxObject *>(object)->d;
 
-    d->ptr = iface;
+    d->ptr.Attach(iface);
     d->initialized = true;
 
     // no release, since no addref

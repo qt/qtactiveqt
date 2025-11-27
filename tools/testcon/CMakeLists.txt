@@ -19,6 +19,7 @@ qt_internal_add_app(testcon
         Qt::AxContainer
         Qt::AxContainerPrivate
         Qt::AxServer
+        Qt::CorePrivate
         Qt::Gui
         Qt::PrintSupport
         Qt::Widgets
