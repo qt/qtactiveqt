@@ -1351,7 +1351,7 @@ class MetaObjectGenerator
 public:
     MetaObjectGenerator(QAxBase *ax, QAxBasePrivate *dptr);
     MetaObjectGenerator(ITypeLib *typelib, ITypeInfo *typeinfo);
-    ~MetaObjectGenerator();
+    ~MetaObjectGenerator() = default;
 
     QMetaObject *metaObject(const QMetaObject *parentObject, const QByteArray &className = QByteArray());
 
@@ -1586,7 +1586,7 @@ private:
     IDispatch *disp = nullptr;
     ComPtr<ITypeInfo> dispInfo;
     ComPtr<ITypeInfo> classInfo;
-    ITypeLib *typelib = nullptr;
+    ComPtr<ITypeLib> typelib;
     QByteArray current_typelib;
 
     QSettings iidnames;
@@ -1707,7 +1707,6 @@ MetaObjectGenerator::MetaObjectGenerator(ITypeLib *tlib, ITypeInfo *tinfo)
     init();
 
     if (typelib) {
-        typelib->AddRef();
         BSTR bstr;
         typelib->GetDocumentation(-1, &bstr, nullptr, nullptr, nullptr);
         current_typelib = QString::fromWCharArray(bstr).toLatin1();
@@ -1722,11 +1721,6 @@ void MetaObjectGenerator::init()
         disp = d->dispatch();
 
     iid_propNotifySink = IID_IPropertyNotifySink;
-}
-
-MetaObjectGenerator::~MetaObjectGenerator()
-{
-    if (typelib) typelib->Release();
 }
 
 bool qax_dispatchEqualsIDispatch = true;
@@ -2193,7 +2187,7 @@ void MetaObjectGenerator::readEnumInfo()
         typelib->GetTypeInfoType(i, &typekind);
         if (typekind == TKIND_ENUM) {
             // Get the values of the enum
-            const auto values = qax_readEnumValues(typelib, i);
+            const auto values = qax_readEnumValues(typelib.Get(), i);
             if (values.isEmpty())
                 continue;
 
