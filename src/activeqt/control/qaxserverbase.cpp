@@ -39,6 +39,7 @@
 #include "../shared/qaxtypes_p.h"
 #include <QtAxBase/private/qaxutils_p.h>
 #include <QtAxBase/private/qaxtypefunctions_p.h>
+#include <QtCore/private/qcomobject_p.h>
 
 #include "qclassfactory_p.h"
 
@@ -462,7 +463,7 @@ bool QAxFactory::createObjectWrapper(QObject *object, IDispatch **wrapper)
 /*
     Helper class to enumerate all supported event interfaces.
 */
-class QAxSignalVec : public IEnumConnectionPoints
+class QAxSignalVec : public QComObject<IEnumConnectionPoints>
 {
 public:
     QAxSignalVec &operator=(const QAxSignalVec &) = delete;
@@ -481,7 +482,6 @@ public:
         , current(old.current)
     {
         InitializeCriticalSection(&refCountSection);
-        ref = 0;
         for (const auto &point : std::as_const(cpoints))
             point->AddRef();
     }
@@ -493,33 +493,6 @@ public:
         DeleteCriticalSection(&refCountSection);
     }
 
-    unsigned long __stdcall AddRef() override
-    {
-        return InterlockedIncrement(&ref);
-    }
-    unsigned long __stdcall Release() override
-    {
-        LONG refCount = InterlockedDecrement(&ref);
-        if (!refCount)
-            delete this;
-
-        return refCount;
-    }
-    STDMETHOD(QueryInterface)(REFIID iid, void **iface) override
-    {
-        if (!iface)
-            return E_POINTER;
-        *iface = nullptr;
-        if (iid == IID_IUnknown)
-            *iface = this;
-        else if (iid == IID_IEnumConnectionPoints)
-            *iface = this;
-        else
-            return E_NOINTERFACE;
-
-        AddRef();
-        return S_OK;
-    }
     STDMETHOD(Next)(ULONG cConnections, IConnectionPoint **cpoint, ULONG *pcFetched) override
     {
         if (!cpoint)
@@ -563,7 +536,6 @@ public:
         if (!ppEnum)
             return E_POINTER;
         *ppEnum = new QAxSignalVec(*this);
-        (*ppEnum)->AddRef();
 
         return S_OK;
     }
@@ -573,8 +545,6 @@ public:
 
 private:
     CRITICAL_SECTION refCountSection;
-
-    LONG ref = 0;
 };
 
 /*
@@ -2601,7 +2571,6 @@ HRESULT WINAPI QAxServerBase::EnumConnectionPoints(IEnumConnectionPoints **epoin
     if (!epoints)
         return E_POINTER;
     *epoints = new QAxSignalVec(points);
-    (*epoints)->AddRef();
     return S_OK;
 }
 
