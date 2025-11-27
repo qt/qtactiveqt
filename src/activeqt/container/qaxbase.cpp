@@ -1590,7 +1590,7 @@ private:
 
     IDispatch *disp = nullptr;
     ComPtr<ITypeInfo> dispInfo;
-    ITypeInfo *classInfo = nullptr;
+    ComPtr<ITypeInfo> classInfo;
     ITypeLib *typelib = nullptr;
     QByteArray current_typelib;
 
@@ -1731,7 +1731,6 @@ void MetaObjectGenerator::init()
 
 MetaObjectGenerator::~MetaObjectGenerator()
 {
-    if (classInfo) classInfo->Release();
     if (typelib) typelib->Release();
 }
 
