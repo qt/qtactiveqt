@@ -1589,7 +1589,7 @@ private:
     QAxBasePrivate *d = nullptr;
 
     IDispatch *disp = nullptr;
-    ITypeInfo *dispInfo = nullptr;
+    ComPtr<ITypeInfo> dispInfo;
     ITypeInfo *classInfo = nullptr;
     ITypeLib *typelib = nullptr;
     QByteArray current_typelib;
@@ -1711,8 +1711,6 @@ MetaObjectGenerator::MetaObjectGenerator(ITypeLib *tlib, ITypeInfo *tinfo)
 {
     init();
 
-    if (dispInfo)
-        dispInfo->AddRef();
     if (typelib) {
         typelib->AddRef();
         BSTR bstr;
@@ -1733,7 +1731,6 @@ void MetaObjectGenerator::init()
 
 MetaObjectGenerator::~MetaObjectGenerator()
 {
-    if (dispInfo) dispInfo->Release();
     if (classInfo) classInfo->Release();
     if (typelib) typelib->Release();
 }
@@ -2142,8 +2139,7 @@ void MetaObjectGenerator::readClassInfo()
                     if (typekind & TKIND_DISPATCH) {
                         break;
                     } else {
-                        dispInfo->Release();
-                        dispInfo = nullptr;
+                        dispInfo.Reset();
                     }
                 }
             }
