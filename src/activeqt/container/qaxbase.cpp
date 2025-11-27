@@ -4104,7 +4104,6 @@ QAxBase::PropertyBag QAxBase::propertyBag() const
     d->ptr->QueryInterface(IID_IPersistPropertyBag, reinterpret_cast<void **>(&persist));
     if (persist) {
         QtPropertyBag *pbag = new QtPropertyBag();
-        pbag->AddRef();
         persist->Save(pbag, false, true);
         result = pbag->map;
         pbag->Release();
@@ -4146,7 +4145,6 @@ void QAxBase::setPropertyBag(const PropertyBag &bag)
     if (persist) {
         QtPropertyBag *pbag = new QtPropertyBag();
         pbag->map = bag;
-        pbag->AddRef();
         persist->Load(pbag, nullptr);
         pbag->Release();
         persist->Release();
