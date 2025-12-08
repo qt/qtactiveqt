@@ -535,7 +535,7 @@ bool generateClassImpl(QTextStream &out, const QMetaObject *mo, const QByteArray
                        bool useControlName,
                        QString *errorString)
 {
-    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 13, "dumpcpp should generate the same version as moc");
+    Q_STATIC_ASSERT_X(QMetaObjectPrivate::OutputRevision == 14, "dumpcpp should generate the same version as moc");
 
     QByteArray qualifiedClassName;
     if (!nameSpace.isEmpty())
