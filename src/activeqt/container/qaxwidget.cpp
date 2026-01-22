@@ -384,7 +384,7 @@ private:
 
     IOleObject *m_spOleObject = nullptr;
     ComPtr<IOleControl> m_spOleControl;
-    IOleInPlaceObjectWindowless *m_spInPlaceObject = nullptr;
+    ComPtr<IOleInPlaceObjectWindowless> m_spInPlaceObject;
     IOleInPlaceActiveObject *m_spInPlaceActiveObject = nullptr;
     IOleDocumentView *m_spActiveView = nullptr;
 
@@ -733,8 +733,7 @@ void QAxClientSite::releaseAll()
         m_spOleObject->Release();
     }
     m_spOleObject = nullptr;
-    if (m_spInPlaceObject) m_spInPlaceObject->Release();
-    m_spInPlaceObject = nullptr;
+    m_spInPlaceObject.Reset();
     if (m_spInPlaceActiveObject) m_spInPlaceActiveObject->Release();
     m_spInPlaceActiveObject = nullptr;
 
@@ -1051,13 +1050,13 @@ HRESULT WINAPI QAxClientSite::OnInPlaceActivate()
     OleLockRunning(m_spOleObject, true, false);
     if (!m_spInPlaceObject) {
 /* ### disabled for now
-        m_spOleObject->QueryInterface(IID_IOleInPlaceObjectWindowless, (void**) &m_spInPlaceObject);
+        m_spOleObject->QueryInterface(IID_IOleInPlaceObjectWindowless, &m_spInPlaceObject);
 */
         if (m_spInPlaceObject) {
             inPlaceObjectWindowless = true;
         } else {
             inPlaceObjectWindowless = false;
-            m_spOleObject->QueryInterface(IID_IOleInPlaceObject, reinterpret_cast<void **>(&m_spInPlaceObject));
+            m_spOleObject->QueryInterface(IID_IOleInPlaceObject, &m_spInPlaceObject);
         }
     }
 
@@ -1110,9 +1109,7 @@ HRESULT WINAPI QAxClientSite::OnUIDeactivate(BOOL)
 HRESULT WINAPI QAxClientSite::OnInPlaceDeactivate()
 {
     AX_DEBUG(QAxClientSite::OnInPlaceDeactivate);
-    if (m_spInPlaceObject)
-        m_spInPlaceObject->Release();
-    m_spInPlaceObject = nullptr;
+    m_spInPlaceObject.Reset();
     inPlaceObjectWindowless = false;
     OleLockRunning(m_spOleObject, false, false);
 
@@ -1673,10 +1670,8 @@ bool QAxHostWidget::nativeEvent(const QByteArray &eventType, void *message, qint
         && eventType == QByteArrayLiteral("windows_generic_MSG")) {
         Q_ASSERT(axhost->m_spInPlaceObject);
         MSG *msg = static_cast<MSG *>(message);
-        IOleInPlaceObjectWindowless *windowless = axhost->m_spInPlaceObject;
-        Q_ASSERT(windowless);
         LRESULT lres;
-        HRESULT hres = windowless->OnWindowMessage(msg->message, msg->wParam, msg->lParam, &lres);
+        HRESULT hres = axhost->m_spInPlaceObject->OnWindowMessage(msg->message, msg->wParam, msg->lParam, &lres);
         if (hres == S_OK)
             return true;
     }
