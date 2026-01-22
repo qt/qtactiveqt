@@ -383,7 +383,7 @@ private:
     QMenu *generatePopup(HMENU subMenu, QWidget *parent);
 
     IOleObject *m_spOleObject = nullptr;
-    IOleControl *m_spOleControl = nullptr;
+    ComPtr<IOleControl> m_spOleControl;
     IOleInPlaceObjectWindowless *m_spInPlaceObject = nullptr;
     IOleInPlaceActiveObject *m_spInPlaceActiveObject = nullptr;
     IOleDocumentView *m_spActiveView = nullptr;
@@ -675,7 +675,7 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
         }
 
         if (!m_spOleControl)
-            m_spOleObject->QueryInterface(IID_IOleControl, reinterpret_cast<void **>(&m_spOleControl));
+            m_spOleObject->QueryInterface(IID_IOleControl, &m_spOleControl);
         if (m_spOleControl) {
             m_spOleControl->OnAmbientPropertyChange(DISPID_AMBIENT_BACKCOLOR);
             m_spOleControl->OnAmbientPropertyChange(DISPID_AMBIENT_FORECOLOR);
@@ -726,9 +726,7 @@ QAxClientSite::~QAxClientSite()
 
 void QAxClientSite::releaseAll()
 {
-    if (m_spOleControl)
-        m_spOleControl->Release();
-    m_spOleControl = nullptr;
+    m_spOleControl.Reset();
     if (m_spOleObject) {
         m_spOleObject->Unadvise(m_dwOleObject);
         m_spOleObject->SetClientSite(nullptr);
