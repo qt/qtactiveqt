@@ -171,7 +171,7 @@ public:
 
     inline IOleInPlaceActiveObject *inPlaceObject() const
     {
-        return m_spInPlaceActiveObject;
+        return m_spInPlaceActiveObject.Get();
     }
 
     inline HRESULT doVerb(LONG index)
@@ -385,7 +385,7 @@ private:
     ComPtr<IOleObject> m_spOleObject;
     ComPtr<IOleControl> m_spOleControl;
     ComPtr<IOleInPlaceObjectWindowless> m_spInPlaceObject;
-    IOleInPlaceActiveObject *m_spInPlaceActiveObject = nullptr;
+    ComPtr<IOleInPlaceActiveObject> m_spInPlaceActiveObject;
     IOleDocumentView *m_spActiveView = nullptr;
 
     QAxAggregated *aggregatedObject = nullptr;
@@ -733,8 +733,7 @@ void QAxClientSite::releaseAll()
     }
     m_spOleObject.Reset();
     m_spInPlaceObject.Reset();
-    if (m_spInPlaceActiveObject) m_spInPlaceActiveObject->Release();
-    m_spInPlaceActiveObject = nullptr;
+    m_spInPlaceActiveObject.Reset();
 
     inPlaceObjectWindowless = false;
 }
@@ -1343,7 +1342,7 @@ HRESULT WINAPI QAxClientSite::SetMenu(HMENU hmenuShared, HOLEMENU holemenu, HWND
         menuItemMap.clear();
     }
 
-    OleSetMenuDescriptor(holemenu, widget ? hwndForWidget(widget) : nullptr, m_menuOwner, this, m_spInPlaceActiveObject);
+    OleSetMenuDescriptor(holemenu, widget ? hwndForWidget(widget) : nullptr, m_menuOwner, this, m_spInPlaceActiveObject.Get());
     return S_OK;
 }
 
@@ -1498,12 +1497,9 @@ HRESULT WINAPI QAxClientSite::SetActiveObject(IOleInPlaceActiveObject *pActiveOb
         if (!inPlaceModelessEnabled)
             m_spInPlaceActiveObject->EnableModeless(true);
         inPlaceModelessEnabled = true;
-        m_spInPlaceActiveObject->Release();
     }
 
     m_spInPlaceActiveObject = pActiveObject;
-    if (m_spInPlaceActiveObject)
-        m_spInPlaceActiveObject->AddRef();
 
     return S_OK;
 }
