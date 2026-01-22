@@ -32,8 +32,6 @@
 #include <olectl.h>
 #include <docobj.h>
 
-#include <QtCore/private/qcomptr_p.h>
-
 // #define QAX_DEBUG
 
 #ifdef QAX_DEBUG
@@ -2063,7 +2061,7 @@ bool QAxWidget::createHostWindow(bool initialized, const QByteArray &data)
 {
     Q_D(QAxWidget);
     if (!d->container) // Potentially called repeatedly from QAxBase::metaObject(), QAxWidget::initialize()
-        d->container = new QAxClientSite(this);
+        d->container = makeComObject<QAxClientSite>(this);
 
     d->container->activateObject(initialized, data);
 
@@ -2153,9 +2151,8 @@ void QAxWidgetPrivate::clear()
 
     if (container) {
         container->releaseAll();
-        container->Release();
     }
-    container = nullptr;
+    container.Reset();
 }
 
 /*!

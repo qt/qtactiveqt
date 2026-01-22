@@ -18,6 +18,7 @@
 #include <QtAxContainer/qaxwidget.h>
 #include <private/qwidget_p.h>
 #include <private/qaxbase_p.h>
+#include <QtCore/private/qcomptr_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -39,7 +40,7 @@ public:
     void emitPropertyChanged(const QString &name) override;
     void emitSignal(const QString &name, int argc, void *argv) override;
 
-    QAxClientSite *container = nullptr;
+    ComPtr<QAxClientSite> container;
 };
 
 QT_END_NAMESPACE
