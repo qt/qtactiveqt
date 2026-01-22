@@ -1509,15 +1509,19 @@ HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
 {
     AX_DEBUG(QAxClientSite::ActivateMe);
 
+    ComPtr<IOleDocumentView> createdView;
+
     if (!pViewToActivate) {
         ComPtr<IOleDocument> document;
         m_spOleObject->QueryInterface(IID_IOleDocument, &document);
         if (!document)
             return E_FAIL;
 
-        document->CreateView(this, nullptr, 0, &pViewToActivate);
+        document->CreateView(this, nullptr, 0, &createdView);
         if (!pViewToActivate)
             return E_OUTOFMEMORY;
+
+        pViewToActivate = createdView.Get();
     } else {
         pViewToActivate->SetInPlaceSite(this);
     }
