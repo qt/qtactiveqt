@@ -382,7 +382,7 @@ private:
 
     QMenu *generatePopup(HMENU subMenu, QWidget *parent);
 
-    IOleObject *m_spOleObject = nullptr;
+    ComPtr<IOleObject> m_spOleObject;
     ComPtr<IOleControl> m_spOleControl;
     ComPtr<IOleInPlaceObjectWindowless> m_spInPlaceObject;
     IOleInPlaceActiveObject *m_spInPlaceActiveObject = nullptr;
@@ -539,7 +539,7 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
 
     bool showHost = false;
     if (!m_spOleObject)
-        widget->queryInterface(IID_IOleObject, reinterpret_cast<void**>(&m_spOleObject));
+        widget->queryInterface(IID_IOleObject, &m_spOleObject);
     if (m_spOleObject) {
         DWORD dwMiscStatus = 0;
         m_spOleObject->GetMiscStatus(DVASPECT_CONTENT, &dwMiscStatus);
@@ -560,7 +560,7 @@ bool QAxClientSite::activateObject(bool initialized, const QByteArray &data)
                 canHostDocument = true;
 
                 m_spOleObject->SetClientSite(this);
-                OleRun(m_spOleObject);
+                OleRun(m_spOleObject.Get());
             }
         }
 
@@ -730,9 +730,8 @@ void QAxClientSite::releaseAll()
     if (m_spOleObject) {
         m_spOleObject->Unadvise(m_dwOleObject);
         m_spOleObject->SetClientSite(nullptr);
-        m_spOleObject->Release();
     }
-    m_spOleObject = nullptr;
+    m_spOleObject.Reset();
     m_spInPlaceObject.Reset();
     if (m_spInPlaceActiveObject) m_spInPlaceActiveObject->Release();
     m_spInPlaceActiveObject = nullptr;
@@ -1047,7 +1046,7 @@ HRESULT WINAPI QAxClientSite::CanInPlaceActivate()
 HRESULT WINAPI QAxClientSite::OnInPlaceActivate()
 {
     AX_DEBUG(QAxClientSite::OnInPlaceActivate);
-    OleLockRunning(m_spOleObject, true, false);
+    OleLockRunning(m_spOleObject.Get(), true, false);
     if (!m_spInPlaceObject) {
 /* ### disabled for now
         m_spOleObject->QueryInterface(IID_IOleInPlaceObjectWindowless, &m_spInPlaceObject);
@@ -1111,7 +1110,7 @@ HRESULT WINAPI QAxClientSite::OnInPlaceDeactivate()
     AX_DEBUG(QAxClientSite::OnInPlaceDeactivate);
     m_spInPlaceObject.Reset();
     inPlaceObjectWindowless = false;
-    OleLockRunning(m_spOleObject, false, false);
+    OleLockRunning(m_spOleObject.Get(), false, false);
 
     return S_OK;
 }
