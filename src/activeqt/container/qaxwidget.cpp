@@ -386,7 +386,7 @@ private:
     ComPtr<IOleControl> m_spOleControl;
     ComPtr<IOleInPlaceObjectWindowless> m_spInPlaceObject;
     ComPtr<IOleInPlaceActiveObject> m_spInPlaceActiveObject;
-    IOleDocumentView *m_spActiveView = nullptr;
+    ComPtr<IOleDocumentView> m_spActiveView;
 
     QAxAggregated *aggregatedObject = nullptr;
 
@@ -1509,10 +1509,6 @@ HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
 {
     AX_DEBUG(QAxClientSite::ActivateMe);
 
-    if (m_spActiveView)
-        m_spActiveView->Release();
-    m_spActiveView = nullptr;
-
     if (!pViewToActivate) {
         ComPtr<IOleDocument> document;
         m_spOleObject->QueryInterface(IID_IOleDocument, &document);
@@ -1527,7 +1523,6 @@ HRESULT WINAPI QAxClientSite::ActivateMe(IOleDocumentView *pViewToActivate)
     }
 
     m_spActiveView = pViewToActivate;
-    m_spActiveView->AddRef();
 
     m_spActiveView->UIActivate(TRUE);
 
