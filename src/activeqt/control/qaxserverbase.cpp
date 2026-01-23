@@ -378,7 +378,7 @@ private:
     ComPtr<IAdviseSink> m_spAdviseSink;
     QList<STATDATA> adviseSinks;
     ComPtr<IOleClientSite> m_spClientSite;
-    IOleInPlaceSite *m_spInPlaceSite = nullptr;
+    ComPtr<IOleInPlaceSite> m_spInPlaceSite;
     ComPtr<IOleInPlaceSiteWindowless> m_spInPlaceSiteWindowless;
     ComPtr<IOleInPlaceFrame> m_spInPlaceFrame;
     ITypeInfo *m_spTypeInfo = nullptr;
@@ -1020,8 +1020,7 @@ QAxServerBase::~QAxServerBase()
     m_spClientSite.Reset();
     m_spInPlaceFrame.Reset();
     m_spInPlaceSiteWindowless.Reset();
-    if (m_spInPlaceSite) m_spInPlaceSite->Release();
-    m_spInPlaceSite = nullptr;
+    m_spInPlaceSite.Reset();
     if (m_spTypeInfo) m_spTypeInfo->Release();
     m_spTypeInfo = nullptr;
     if (m_spStorage) m_spStorage->Release();
@@ -3611,8 +3610,7 @@ HRESULT WINAPI QAxServerBase::Close(DWORD dwSaveOption)
     }
 
     m_spInPlaceSiteWindowless.Reset();
-    if (m_spInPlaceSite) m_spInPlaceSite->Release();
-    m_spInPlaceSite = nullptr;
+    m_spInPlaceSite.Reset();
 
     if (m_spAdviseSink)
         m_spAdviseSink->OnClose();
@@ -3652,7 +3650,7 @@ HRESULT QAxServerBase::internalActivate()
     if (!m_spClientSite)
         return S_OK;
     if (!m_spInPlaceSite)
-        m_spClientSite->QueryInterface(IID_IOleInPlaceSite, reinterpret_cast<void **>(&m_spInPlaceSite));
+        m_spClientSite->QueryInterface(IID_IOleInPlaceSite, &m_spInPlaceSite);
     if (!m_spInPlaceSite)
         return E_FAIL;
 
@@ -3883,13 +3881,12 @@ HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
 {
     // release all client site interfaces
     m_spInPlaceSiteWindowless.Reset();
-    if (m_spInPlaceSite) m_spInPlaceSite->Release();
-    m_spInPlaceSite = nullptr;
+    m_spInPlaceSite.Reset();
     m_spInPlaceFrame.Reset();
 
     m_spClientSite = pClientSite;
     if (m_spClientSite) {
-        m_spClientSite->QueryInterface(IID_IOleInPlaceSite, reinterpret_cast<void **>(&m_spInPlaceSite));
+        m_spClientSite->QueryInterface(IID_IOleInPlaceSite, &m_spInPlaceSite);
         m_spClientSite->QueryInterface(IID_IOleInPlaceSiteWindowless, &m_spInPlaceSiteWindowless);
     }
 
