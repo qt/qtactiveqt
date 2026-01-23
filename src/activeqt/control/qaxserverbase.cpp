@@ -375,7 +375,7 @@ private:
     QHash<int,DISPID> signalCache;
 
     IUnknown *m_outerUnknown = nullptr;
-    IAdviseSink *m_spAdviseSink = nullptr;
+    ComPtr<IAdviseSink> m_spAdviseSink;
     QList<STATDATA> adviseSinks;
     IOleClientSite *m_spClientSite = nullptr;
     IOleInPlaceSite *m_spInPlaceSite = nullptr;
@@ -1013,8 +1013,7 @@ QAxServerBase::~QAxServerBase()
             delete aqt;
     }
 
-    if (m_spAdviseSink) m_spAdviseSink->Release();
-    m_spAdviseSink = nullptr;
+    m_spAdviseSink.Reset();
     for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
         adviseSinks.at(i).pAdvSink->Release();
     }
@@ -3083,10 +3082,7 @@ HRESULT WINAPI QAxServerBase::Unfreeze(DWORD /* dwFreeze */)
 */
 HRESULT WINAPI QAxServerBase::SetAdvise(DWORD /*aspects*/, DWORD /*advf*/, IAdviseSink *pAdvSink)
 {
-    if (m_spAdviseSink) m_spAdviseSink->Release();
-
     m_spAdviseSink = pAdvSink;
-    if (m_spAdviseSink) m_spAdviseSink->AddRef();
     return S_OK;
 }
 
@@ -3098,7 +3094,7 @@ HRESULT WINAPI QAxServerBase::GetAdvise(DWORD* /*aspects*/, DWORD* /*advf*/, IAd
     if (!ppAdvSink)
         return E_POINTER;
 
-    *ppAdvSink = m_spAdviseSink;
+    *ppAdvSink = m_spAdviseSink.Get();
     if (*ppAdvSink)
         (*ppAdvSink)->AddRef();
     return S_OK;
