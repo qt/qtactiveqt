@@ -165,7 +165,7 @@ public:
 // IAxServerBase
     IUnknown *clientSite() const override
     {
-        return m_spClientSite;
+        return m_spClientSite.Get();
     }
 
     void emitPropertyChanged(const char *) override;
@@ -377,7 +377,7 @@ private:
     IUnknown *m_outerUnknown = nullptr;
     ComPtr<IAdviseSink> m_spAdviseSink;
     QList<STATDATA> adviseSinks;
-    IOleClientSite *m_spClientSite = nullptr;
+    ComPtr<IOleClientSite> m_spClientSite;
     IOleInPlaceSite *m_spInPlaceSite = nullptr;
     IOleInPlaceSiteWindowless *m_spInPlaceSiteWindowless = nullptr;
     IOleInPlaceFrame *m_spInPlaceFrame = nullptr;
@@ -1017,8 +1017,7 @@ QAxServerBase::~QAxServerBase()
     for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
         adviseSinks.at(i).pAdvSink->Release();
     }
-    if (m_spClientSite) m_spClientSite->Release();
-    m_spClientSite = nullptr;
+    m_spClientSite.Reset();
     if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
     m_spInPlaceFrame = nullptr;
     if (m_spInPlaceSiteWindowless)
@@ -1341,7 +1340,7 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
         if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
             if (that->isInPlaceActive && that->m_spClientSite && !that->inDesignMode && that->canTakeFocus) {
                 RECT rcPos = that->rcPosRect();
-                that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite, 0, that->m_hWnd, &rcPos);
+                that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite.Get(), 0, that->m_hWnd, &rcPos);
                 if (that->isUIActive) {
                     ComPtr<IOleControlSite> spSite;
                     that->m_spClientSite->QueryInterface(IID_IOleControlSite, &spSite);
@@ -1382,7 +1381,7 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
     case WM_MOUSEACTIVATE:
         if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
             RECT rcPos = that->rcPosRect();
-            that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite, 0, that->m_hWnd, &rcPos);
+            that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite.Get(), 0, that->m_hWnd, &rcPos);
         }
         break;
 
@@ -3825,7 +3824,7 @@ HRESULT WINAPI QAxServerBase::GetClientSite(IOleClientSite** ppClientSite)
 {
     if (!ppClientSite)
         return E_POINTER;
-    *ppClientSite = m_spClientSite;
+    *ppClientSite = m_spClientSite.Get();
     if (*ppClientSite)
         (*ppClientSite)->AddRef();
     return S_OK;
@@ -3894,7 +3893,6 @@ HRESULT WINAPI QAxServerBase::IsUpToDate()
 HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
 {
     // release all client site interfaces
-    if (m_spClientSite) m_spClientSite->Release();
     if (m_spInPlaceSiteWindowless)
         m_spInPlaceSiteWindowless->Release();
     m_spInPlaceSiteWindowless = nullptr;
@@ -3905,7 +3903,6 @@ HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
 
     m_spClientSite = pClientSite;
     if (m_spClientSite) {
-        m_spClientSite->AddRef();
         m_spClientSite->QueryInterface(IID_IOleInPlaceSite, reinterpret_cast<void **>(&m_spInPlaceSite));
         m_spClientSite->QueryInterface(IID_IOleInPlaceSiteWindowless,
                                        reinterpret_cast<void **>(&m_spInPlaceSiteWindowless));
