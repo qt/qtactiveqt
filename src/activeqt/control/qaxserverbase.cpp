@@ -380,7 +380,7 @@ private:
     ComPtr<IOleClientSite> m_spClientSite;
     IOleInPlaceSite *m_spInPlaceSite = nullptr;
     IOleInPlaceSiteWindowless *m_spInPlaceSiteWindowless = nullptr;
-    IOleInPlaceFrame *m_spInPlaceFrame = nullptr;
+    ComPtr<IOleInPlaceFrame> m_spInPlaceFrame;
     ITypeInfo *m_spTypeInfo = nullptr;
     IStorage *m_spStorage = nullptr;
     QSize m_currentExtent; // device independent pixels.
@@ -1018,8 +1018,7 @@ QAxServerBase::~QAxServerBase()
         adviseSinks.at(i).pAdvSink->Release();
     }
     m_spClientSite.Reset();
-    if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
-    m_spInPlaceFrame = nullptr;
+    m_spInPlaceFrame.Reset();
     if (m_spInPlaceSiteWindowless)
         m_spInPlaceSiteWindowless->Release();
     m_spInPlaceSiteWindowless = nullptr;
@@ -3302,8 +3301,6 @@ HRESULT WINAPI QAxServerBase::UIDeactivate()
     // notify frame windows, if appropriate, that we're no longer ui-active.
     HWND hwndParent;
     if (m_spInPlaceSite->GetWindow(&hwndParent) == S_OK) {
-        if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
-        m_spInPlaceFrame = nullptr;
         ComPtr<IOleInPlaceUIWindow> spInPlaceUIWindow;
         RECT rcPos, rcClip;
         OLEINPLACEFRAMEINFO frameInfo;
@@ -3326,8 +3323,7 @@ HRESULT WINAPI QAxServerBase::UIDeactivate()
                 statusBar = nullptr;
             }
             m_spInPlaceFrame->SetActiveObject(nullptr, nullptr);
-            m_spInPlaceFrame->Release();
-            m_spInPlaceFrame = nullptr;
+            m_spInPlaceFrame.Reset();
         }
     }
     // we don't need to explicitly release the focus here since somebody
@@ -3682,8 +3678,6 @@ HRESULT QAxServerBase::internalActivate()
         HWND hwndParent;
         if (m_spInPlaceSite->GetWindow(&hwndParent) == S_OK) {
             // get location in the parent window, as well as some information about the parent
-            if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
-            m_spInPlaceFrame = nullptr;
             RECT rcPos, rcClip;
             OLEINPLACEFRAMEINFO frameInfo;
             frameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
@@ -3714,8 +3708,7 @@ HRESULT QAxServerBase::internalActivate()
             isUIActive = true;
             hr = m_spInPlaceSite->OnUIActivate();
             if (FAILED(hr)) {
-                if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
-                    m_spInPlaceFrame = nullptr;
+                m_spInPlaceFrame.Reset();
                 return hr;
             }
 
@@ -3898,8 +3891,7 @@ HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
     m_spInPlaceSiteWindowless = nullptr;
     if (m_spInPlaceSite) m_spInPlaceSite->Release();
     m_spInPlaceSite = nullptr;
-    if (m_spInPlaceFrame) m_spInPlaceFrame->Release();
-    m_spInPlaceFrame = nullptr;
+    m_spInPlaceFrame.Reset();
 
     m_spClientSite = pClientSite;
     if (m_spClientSite) {
