@@ -1644,10 +1644,8 @@ extern bool ignoreProps(const char *test);
 */
 void QAxServerBase::ensureMetaData()
 {
-    if (!m_spTypeInfo) {
+    if (!m_spTypeInfo)
         qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->interfaceID(class_name), &m_spTypeInfo);
-        m_spTypeInfo->AddRef();
-    }
 }
 
 /*!
