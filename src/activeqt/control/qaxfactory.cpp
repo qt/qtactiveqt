@@ -9,6 +9,7 @@
 #include <qsettings.h>
 #include <qwidget.h>
 #include <qt_windows.h>
+#include <QtCore/private/qcomptr_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -406,7 +407,7 @@ public:
     ActiveObject(QObject *parent, QAxFactory *factory);
     ~ActiveObject() override;
 
-    IDispatch *wrapper;
+    ComPtr<IDispatch> wrapper;
     DWORD cookie;
 };
 
@@ -417,15 +418,13 @@ ActiveObject::ActiveObject(QObject *parent, QAxFactory *factory)
 
     factory->createObjectWrapper(parent, &wrapper);
     if (wrapper)
-        RegisterActiveObject(wrapper, QUuid(factory->classID(key)), ACTIVEOBJECT_STRONG, &cookie);
+        RegisterActiveObject(wrapper.Get(), QUuid(factory->classID(key)), ACTIVEOBJECT_STRONG, &cookie);
 }
 
 ActiveObject::~ActiveObject()
 {
     if (cookie)
         RevokeActiveObject(cookie, nullptr);
-    if (wrapper)
-        wrapper->Release();
 }
 
 /*!
