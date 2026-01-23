@@ -383,7 +383,7 @@ private:
     ComPtr<IOleInPlaceSite> m_spInPlaceSite;
     ComPtr<IOleInPlaceSiteWindowless> m_spInPlaceSiteWindowless;
     ComPtr<IOleInPlaceFrame> m_spInPlaceFrame;
-    ITypeInfo *m_spTypeInfo = nullptr;
+    ComPtr<ITypeInfo> m_spTypeInfo;
     IStorage *m_spStorage = nullptr;
     QSize m_currentExtent; // device independent pixels.
 };
@@ -1023,8 +1023,6 @@ QAxServerBase::~QAxServerBase()
     m_spInPlaceFrame.Reset();
     m_spInPlaceSiteWindowless.Reset();
     m_spInPlaceSite.Reset();
-    if (m_spTypeInfo) m_spTypeInfo->Release();
-    m_spTypeInfo = nullptr;
     if (m_spStorage) m_spStorage->Release();
     m_spStorage = nullptr;
 
@@ -2124,7 +2122,7 @@ HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT /* itinfo */, LCID /*lcid*/, ITyp
 
     ensureMetaData();
 
-    *pptinfo = m_spTypeInfo;
+    *pptinfo = m_spTypeInfo.Get();
     (*pptinfo)->AddRef();
 
     return S_OK;
@@ -2182,7 +2180,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
         } else {
             if (!m_spTypeInfo)
                 return res;
-            name = qaxTypeInfoName(m_spTypeInfo, dispidMember);
+            name = qaxTypeInfoName(m_spTypeInfo.Get(), dispidMember);
             if (name.isEmpty())
                 return res;
         }
