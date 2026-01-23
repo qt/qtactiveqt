@@ -384,7 +384,7 @@ private:
     ComPtr<IOleInPlaceSiteWindowless> m_spInPlaceSiteWindowless;
     ComPtr<IOleInPlaceFrame> m_spInPlaceFrame;
     ComPtr<ITypeInfo> m_spTypeInfo;
-    IStorage *m_spStorage = nullptr;
+    ComPtr<IStorage> m_spStorage;
     QSize m_currentExtent; // device independent pixels.
 };
 
@@ -1023,8 +1023,6 @@ QAxServerBase::~QAxServerBase()
     m_spInPlaceFrame.Reset();
     m_spInPlaceSiteWindowless.Reset();
     m_spInPlaceSite.Reset();
-    if (m_spStorage) m_spStorage->Release();
-    m_spStorage = nullptr;
 
     DeleteCriticalSection(&refCountSection);
     DeleteCriticalSection(&createWindowSection);
@@ -2723,8 +2721,6 @@ HRESULT WINAPI QAxServerBase::InitNew(IStorage *pStg)
     initNewCalled = true;
 
     m_spStorage = pStg;
-    if (m_spStorage)
-        m_spStorage->AddRef();
     return S_OK;
 }
 
@@ -2775,19 +2771,15 @@ HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL /* fSameAsLoad */)
 
 HRESULT WINAPI QAxServerBase::SaveCompleted(IStorage *pStgNew)
 {
-    if (pStgNew) {
-        if (m_spStorage)
-            m_spStorage->Release();
+    if (pStgNew)
         m_spStorage = pStgNew;
-        m_spStorage->AddRef();
-    }
+
     return S_OK;
 }
 
 HRESULT WINAPI QAxServerBase::HandsOffStorage()
 {
-    if (m_spStorage) m_spStorage->Release();
-    m_spStorage = nullptr;
+    m_spStorage.Reset();
 
     return S_OK;
 }
