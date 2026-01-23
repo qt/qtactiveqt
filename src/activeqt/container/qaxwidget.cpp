@@ -32,6 +32,8 @@
 #include <olectl.h>
 #include <docobj.h>
 
+#include <QtCore/private/qcomobject_p.h>
+
 // #define QAX_DEBUG
 
 #ifdef QAX_DEBUG
@@ -132,22 +134,60 @@ private:
     QAxClientSite *axhost;
 };
 
+namespace QtPrivate {
+
+template <>
+struct QComObjectTraits<IDispatch>
+{
+    static constexpr bool isGuidOf(REFIID riid) noexcept
+    {
+        return QComObjectTraits<IDispatch, IUnknown>::isGuidOf(riid);
+    }
+};
+
+template <>
+struct QComObjectTraits<IOleInPlaceSite>
+{
+    static constexpr bool isGuidOf(REFIID riid) noexcept
+    {
+        return QComObjectTraits<IOleInPlaceSite, IOleWindow>::isGuidOf(riid);
+    }
+};
+
+template <>
+struct QComObjectTraits<IOleInPlaceFrame>
+{
+    static constexpr bool isGuidOf(REFIID riid) noexcept
+    {
+        return QComObjectTraits<IOleInPlaceFrame, IOleInPlaceUIWindow>::isGuidOf(riid);
+    }
+};
+
+#ifdef QAX_SUPPORT_WINDOWLESS
+template <>
+struct QComObjectTraits<IOleInPlaceSiteWindowless>
+{
+    static constexpr bool isGuidOf(REFIID riid) noexcept
+    {
+        return QComObjectTraits<IOleInPlaceSiteWindowless, IOleInPlaceSiteEx>::isGuidOf(riid);
+    }
+};
+#endif
+
+} // namespace QtPrivate
+
 /*  \class QAxClientSite
     \brief The QAxClientSite class implements the client site interfaces.
 
     \internal
 */
-class QAxClientSite : public IDispatch,
-                    public IOleClientSite,
-                    public IOleControlSite,
+class QAxClientSite : public QComObject<IDispatch, IOleClientSite, IOleControlSite,
 #ifdef QAX_SUPPORT_WINDOWLESS
-                    public IOleInPlaceSiteWindowless,
+    IOleInPlaceSiteWindowless,
 #else
-                    public IOleInPlaceSite,
+    IOleInPlaceSite,
 #endif
-                    public IOleInPlaceFrame,
-                    public IOleDocumentSite,
-                    public IAdviseSink
+    IOleInPlaceFrame, IOleDocumentSite, IAdviseSink>
 {
     Q_DISABLE_COPY_MOVE(QAxClientSite)
     friend class QAxHostWidget;
@@ -186,9 +226,7 @@ public:
     }
 
     // IUnknown
-    unsigned long WINAPI AddRef() override;
-    unsigned long WINAPI Release() override;
-    STDMETHOD(QueryInterface)(REFIID iid, void **iface) override;
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override;
 
     // IDispatch
     HRESULT __stdcall GetTypeInfoCount(unsigned int *) override
@@ -397,7 +435,6 @@ private:
     CONTROLINFO control_info;
 
     QSize sizehint;
-    LONG ref = 1;
     QAxWidget *widget;
     QAxHostWidget *host = nullptr;
     QPointer<QMenuBar> menuBar;
@@ -756,65 +793,23 @@ void QAxClientSite::deactivate()
 }
 
 //**** IUnknown
-unsigned long WINAPI QAxClientSite::AddRef()
+STDMETHODIMP QAxClientSite::QueryInterface(REFIID riid, void **ppvObject)
 {
-    return InterlockedIncrement(&ref);
-}
+    if (!ppvObject)
+        return E_POINTER;
 
-unsigned long WINAPI QAxClientSite::Release()
-{
-    LONG refCount = InterlockedDecrement(&ref);
-    if (!refCount)
-        delete this;
+    *ppvObject = nullptr;
 
-    return refCount;
-}
-
-HRESULT WINAPI QAxClientSite::QueryInterface(REFIID iid, void **iface)
-{
-    *iface = nullptr;
-
-    if (iid == IID_IUnknown) {
-        *iface = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
-    } else {
-        HRESULT res = S_OK;
-        if (aggregatedObject)
-            res = aggregatedObject->queryInterface(iid, iface);
-        if (*iface)
-            return res;
+    if (aggregatedObject) {
+        const HRESULT result = aggregatedObject->queryInterface(riid, ppvObject);
+        if (*ppvObject)
+            return result;
     }
 
-    if (!(*iface)) {
-        if (iid == IID_IDispatch)
-            *iface = static_cast<IDispatch *>(this);
-        else if (iid == IID_IOleClientSite)
-            *iface = static_cast<IOleClientSite *>(this);
-        else if (iid == IID_IOleControlSite)
-            *iface = static_cast<IOleControlSite *>(this);
-        else if (iid == IID_IOleWindow)
-            *iface = static_cast<IOleWindow *>(static_cast<IOleInPlaceSite *>(this));
-        else if (iid == IID_IOleInPlaceSite)
-            *iface = static_cast<IOleInPlaceSite *>(this);
-#ifdef QAX_SUPPORT_WINDOWLESS
-        else if (iid == IID_IOleInPlaceSiteEx)
-            *iface = static_cast<IOleInPlaceSiteEx *>(this);
-        else if (iid == IID_IOleInPlaceSiteWindowless)
-            *iface = static_cast<IOleInPlaceSiteWindowless *>(this);
-#endif
-        else if (iid == IID_IOleInPlaceFrame)
-            *iface = static_cast<IOleInPlaceFrame *>(this);
-        else if (iid == IID_IOleInPlaceUIWindow)
-            *iface = static_cast<IOleInPlaceUIWindow *>(this);
-        else if (iid == IID_IOleDocumentSite && canHostDocument)
-            *iface = static_cast<IOleDocumentSite *>(this);
-        else if (iid == IID_IAdviseSink)
-            *iface = static_cast<IAdviseSink *>(this);
-    }
-    if (!*iface)
+    if (riid == IID_IOleDocumentSite && !canHostDocument)
         return E_NOINTERFACE;
 
-    AddRef();
-    return S_OK;
+    return QComObject::QueryInterface(riid, ppvObject);
 }
 
 bool qax_runsInDesignMode = false;
