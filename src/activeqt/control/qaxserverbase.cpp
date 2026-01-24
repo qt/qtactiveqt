@@ -397,13 +397,10 @@ class QAxServerAggregate : public IUnknown
 public:
     QAxServerAggregate(const QString &className, IUnknown *outerUnknown)
     {
-        object = new QAxServerBase(className, outerUnknown);
+        object = makeComObject<QAxServerBase>(className, outerUnknown);
         object->registerActiveObject(this);
     }
-    virtual ~QAxServerAggregate()
-    {
-        delete object;
-    }
+    virtual ~QAxServerAggregate() = default;
 
 // IUnknown
     unsigned long WINAPI AddRef() override
@@ -431,7 +428,7 @@ public:
     }
 
 private:
-    QAxServerBase *object;
+    ComPtr<QAxServerBase> object;
     LONG ref = 0;
 };
 
