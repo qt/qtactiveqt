@@ -115,7 +115,7 @@ class QAxServerBase :
     public IDataObject
 {
 public:
-    using ConnectionPoints = QMap<QUuid,IConnectionPoint*>;
+    using ConnectionPoints = QMap<QUuid,ComPtr<IConnectionPoint>>;
 
     QAxServerBase(const QString &classname, IUnknown *outerUnknown);
     QAxServerBase(QObject *o);
@@ -461,20 +461,11 @@ public:
     QAxSignalVec(const QAxServerBase::ConnectionPoints &points)
         : cpoints(points.values())
     {
-        for (const auto &point : std::as_const(cpoints))
-            point->AddRef();
     }
     QAxSignalVec(const QAxSignalVec &old)
         : cpoints(old.cpoints)
         , current(old.current)
     {
-        for (const auto &point : std::as_const(cpoints))
-            point->AddRef();
-    }
-    virtual ~QAxSignalVec()
-    {
-        for (const auto &point : std::as_const(cpoints))
-            point->Release();
     }
 
     STDMETHOD(Next)(ULONG cConnections, IConnectionPoint **cpoint, ULONG *pcFetched) override
@@ -490,9 +481,10 @@ public:
         for (i = 0; i < cConnections; i++) {
             if (current==count)
                 break;
-            IConnectionPoint *cp = cpoints.at(current);
-            cp->AddRef();
-            cpoint[i] = cp;
+            auto &cp = cpoints.at(current);
+            cpoint[i] = cp.Get();
+            if (cp)
+                cp->AddRef();
             ++current;
         }
         if (pcFetched)
@@ -524,7 +516,7 @@ public:
         return S_OK;
     }
 
-    QList<IConnectionPoint*> cpoints;
+    QList<ComPtr<IConnectionPoint>> cpoints;
     int current = 0;
 };
 
@@ -950,7 +942,7 @@ void QAxServerBase::init()
 
     qAxLock();
 
-    points[IID_IPropertyNotifySink] = new QAxConnection(this, IID_IPropertyNotifySink);
+    points[IID_IPropertyNotifySink] = makeComObject<QAxConnection>(this, IID_IPropertyNotifySink);
 }
 
 /*! \internal
@@ -966,10 +958,6 @@ QAxServerBase::~QAxServerBase()
 #endif
 
     revokeActiveObject();
-    for (auto it = points.cbegin(), end = points.cend(); it != end; ++it) {
-        if (IConnectionPoint *point = it.value())
-            point->Release();
-    }
     delete aggregatedObject;
     aggregatedObject = nullptr;
     if (theObject) {
@@ -1120,7 +1108,7 @@ void QAxServerBase::internalConnect()
     QUuid eventsID = qAxFactory()->eventsID(class_name);
     if (!eventsID.isNull()) {
         if (!points[eventsID])
-            points[eventsID] = new QAxConnection(this, eventsID);
+            points[eventsID] = makeComObject<QAxConnection>(this, eventsID);
 
         // connect the generic slot to all signals of qt.object
         const QMetaObject *mo = qt.object->metaObject();
@@ -2523,8 +2511,8 @@ HRESULT WINAPI QAxServerBase::FindConnectionPoint(REFIID iid, IConnectionPoint *
     if (!cpoint)
         return E_POINTER;
 
-    IConnectionPoint *cp = points[iid];
-    *cpoint = cp;
+    auto &cp = points[iid];
+    *cpoint = cp.Get();
     if (cp) {
         cp->AddRef();
         return S_OK;
