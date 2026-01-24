@@ -44,7 +44,7 @@ class QClassFactory : public QComObject<IClassFactory2>
 public:
     QClassFactory(CLSID clsid);
 
-    virtual ~QClassFactory();
+    ~QClassFactory() override = default;
 
     HRESULT WINAPI CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, void **ppObject);
 
@@ -65,7 +65,6 @@ public:
     QString className;
 
 protected:
-    CRITICAL_SECTION refCountSection;
     bool licensed = false;
     QString classKey;
 };

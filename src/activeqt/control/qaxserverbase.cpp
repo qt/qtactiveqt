@@ -405,15 +405,9 @@ public:
     {
         object = new QAxServerBase(className, outerUnknown);
         object->registerActiveObject(this);
-
-        InitializeCriticalSection(&refCountSection);
-        InitializeCriticalSection(&createWindowSection);
     }
     virtual ~QAxServerAggregate()
     {
-        DeleteCriticalSection(&refCountSection);
-        DeleteCriticalSection(&createWindowSection);
-
         delete object;
     }
 
@@ -445,9 +439,6 @@ public:
 private:
     QAxServerBase *object;
     LONG ref = 0;
-
-    CRITICAL_SECTION refCountSection;
-    CRITICAL_SECTION createWindowSection;
 };
 
 bool QAxFactory::createObjectWrapper(QObject *object, IDispatch **wrapper)
@@ -476,7 +467,6 @@ public:
     QAxSignalVec(const QAxServerBase::ConnectionPoints &points)
         : cpoints(points.values())
     {
-        InitializeCriticalSection(&refCountSection);
         for (const auto &point : std::as_const(cpoints))
             point->AddRef();
     }
@@ -484,7 +474,6 @@ public:
         : cpoints(old.cpoints)
         , current(old.current)
     {
-        InitializeCriticalSection(&refCountSection);
         for (const auto &point : std::as_const(cpoints))
             point->AddRef();
     }
@@ -492,8 +481,6 @@ public:
     {
         for (const auto &point : std::as_const(cpoints))
             point->Release();
-
-        DeleteCriticalSection(&refCountSection);
     }
 
     STDMETHOD(Next)(ULONG cConnections, IConnectionPoint **cpoint, ULONG *pcFetched) override
@@ -545,9 +532,6 @@ public:
 
     QList<IConnectionPoint*> cpoints;
     int current = 0;
-
-private:
-    CRITICAL_SECTION refCountSection;
 };
 
 /*
@@ -566,12 +550,10 @@ public:
     QAxConnection(QAxServerBase *parent, const QUuid &uuid)
         : that(parent), iid(uuid)
     {
-        InitializeCriticalSection(&refCountSection);
     }
     QAxConnection(const QAxConnection &old)
         : current(old.current)
     {
-        InitializeCriticalSection(&refCountSection);
         ref = 0;
         connections = old.connections;
         that = old.that;
@@ -579,10 +561,7 @@ public:
         for (const CONNECTDATA &connection : std::as_const(connections))
             connection.pUnk->AddRef();
     }
-    virtual ~QAxConnection()
-    {
-        DeleteCriticalSection(&refCountSection);
-    }
+    virtual ~QAxConnection() = default;
 
     unsigned long __stdcall AddRef() override
     {
@@ -721,7 +700,6 @@ private:
     Connections connections;
     int current = 0;
 
-    CRITICAL_SECTION refCountSection;
     LONG ref = 1;
 };
 
@@ -764,8 +742,6 @@ Q_GLOBAL_STATIC(QAxWinEventFilter, qax_winEventFilter);
 // One instance of this class for each ActiveX the server can provide.
 QClassFactory::QClassFactory(CLSID clsid)
 {
-    InitializeCriticalSection(&refCountSection);
-
     // COM only knows the CLSID, but QAxFactory is class name based...
     const QStringList keys = qAxFactory()->featureList();
     for (const QString &key : keys) {
@@ -780,11 +756,6 @@ QClassFactory::QClassFactory(CLSID clsid)
         classKey = QLatin1String(mo->classInfo(mo->indexOfClassInfo("LicenseKey")).value());
         licensed = !classKey.isEmpty();
     }
-}
-
-QClassFactory::~QClassFactory()
-{
-    DeleteCriticalSection(&refCountSection);
 }
 
 HRESULT QClassFactory::CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, void **ppObject)
