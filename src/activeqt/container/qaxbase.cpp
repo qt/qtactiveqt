@@ -944,9 +944,8 @@ void QAxBase::disableClassInfo()
 void QAxBase::clear()
 {
     for (auto it = d->eventSink.cbegin(), end = d->eventSink.cend(); it != end; ++it) {
-        if (QAxEventSink *eventSink = it.value()) {
+        if (auto &eventSink = it.value(); eventSink) {
             eventSink->unadvise();
-            eventSink->Release();
         }
     }
     d->eventSink.clear();
@@ -2220,11 +2219,11 @@ void MetaObjectGenerator::readEnumInfo()
 
 void MetaObjectGenerator::addChangedSignal(const QByteArray &function, const QByteArray &type, int memid)
 {
-    QAxEventSink *eventSink = nullptr;
+    ComPtr<QAxEventSink> eventSink;
     if (d) {
         eventSink = d->eventSink.value(iid_propNotifySink);
         if (!eventSink && d->useEventSink) {
-            eventSink = new QAxEventSink(that);
+            eventSink = makeComObject<QAxEventSink>(that);
             d->eventSink.insert(iid_propNotifySink, eventSink);
         }
     }
@@ -2648,13 +2647,13 @@ void MetaObjectGenerator::readEventInterface(ITypeInfo *eventinfo, IConnectionPo
         return;
     }
 
-    QAxEventSink *eventSink = nullptr;
+    ComPtr<QAxEventSink> eventSink;
     if (d) {
         IID conniid;
         cpoint->GetConnectionInterface(&conniid);
         eventSink = d->eventSink.value(QUuid(conniid));
         if (!eventSink) {
-            eventSink = new QAxEventSink(that);
+            eventSink = makeComObject<QAxEventSink>(that);
             d->eventSink.insert(QUuid(conniid), eventSink);
             eventSink->advise(cpoint, conniid);
         }
@@ -2745,7 +2744,7 @@ void MetaObjectGenerator::readEventInfo()
                 // get information about type
                 if (conniid == IID_IPropertyNotifySink) {
                     // test whether property notify sink has been created already, and advise on it
-                    QAxEventSink *eventSink = d->eventSink.value(iid_propNotifySink);
+                    ComPtr<QAxEventSink> eventSink = d->eventSink.value(iid_propNotifySink);
                     if (eventSink)
                         eventSink->advise(cpoint.Get(), conniid);
                     continue;
@@ -2786,7 +2785,7 @@ void MetaObjectGenerator::readEventInfo()
                         if (cpoint) {
                             if (eventattr->guid == IID_IPropertyNotifySink) {
                                 // test whether property notify sink has been created already, and advise on it
-                                QAxEventSink *eventSink = d->eventSink.value(iid_propNotifySink);
+                                ComPtr<QAxEventSink> eventSink = d->eventSink.value(iid_propNotifySink);
                                 if (eventSink)
                                     eventSink->advise(cpoint.Get(), eventattr->guid);
                                 continue;
@@ -2969,7 +2968,7 @@ QMetaObject *MetaObjectGenerator::metaObject(const QMetaObject *parentObject, co
         mo_cache.insert(cacheKey, d->metaobj);
         d->cachedMetaObject = true;
         for (auto it = d->eventSink.cbegin(), end = d->eventSink.cend(); it != end; ++it) {
-            if (QAxEventSink *sink = it.value()) {
+            if (auto &sink = it.value(); sink) {
                 QUuid ciid = sink->connectionInterface();
 
                 moExtra.m_connectionInterfaces.append(ciid);
@@ -3094,8 +3093,10 @@ void QAxBase::connectNotify()
             }
         }
 
-        // always into the cache to avoid recoursion
-        QAxEventSink *eventSink = eventinfo ? new QAxEventSink(this) : nullptr;
+        // always into the cache to avoid recursion
+        ComPtr<QAxEventSink> eventSink;
+        if (eventinfo)
+            eventSink = makeComObject<QAxEventSink>(this);
         d->eventSink.insert(connuuid, eventSink);
 
         if (!eventinfo)

@@ -36,7 +36,7 @@ class QAxBasePrivate
 {
     Q_DISABLE_COPY_MOVE(QAxBasePrivate)
 public:
-    using UuidEventSinkHash = QHash<QUuid, QAxEventSink*>;
+    using UuidEventSinkHash = QHash<QUuid, ComPtr<QAxEventSink>>;
 
     explicit QAxBasePrivate();
     ~QAxBasePrivate();
