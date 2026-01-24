@@ -19,7 +19,6 @@ bool qax_ownQApp = false;
 // in qaxserver.cpp
 extern wchar_t qAxModuleFilename[MAX_PATH];
 extern bool qAxIsServer;
-extern ITypeLib *qAxTypeLibrary;
 extern unsigned long qAxLockCount();
 extern QString qAxInit();
 extern void qAxCleanup();

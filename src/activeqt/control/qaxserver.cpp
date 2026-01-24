@@ -25,6 +25,7 @@
 
 #include <qt_windows.h>
 #include <olectl.h>
+#include <QtCore/private/qcomptr_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -32,7 +33,7 @@ QT_BEGIN_NAMESPACE
 
 // Some global variables to store module information
 bool qAxIsServer = false;
-ITypeLib *qAxTypeLibrary = nullptr;
+ComPtr<ITypeLib> qAxTypeLibrary;
 wchar_t qAxModuleFilename[MAX_PATH];
 bool qAxOutProcServer = false;
 
@@ -122,10 +123,7 @@ void qAxCleanup()
     delete qax_factory;
     qax_factory = nullptr;
 
-    if (qAxTypeLibrary) {
-        qAxTypeLibrary->Release();
-        qAxTypeLibrary = nullptr;
-    }
+    qAxTypeLibrary.Reset();
 
     DeleteCriticalSection(&qAxModuleSection);
 }
@@ -405,7 +403,7 @@ HRESULT UpdateRegistry(bool bRegister, bool perUser)
 
     if (bRegister) {
         if (!perUser) {
-            HRESULT hr = RegisterTypeLib(qAxTypeLibrary, qaxQString2MutableOleChars(libFile), nullptr);
+            HRESULT hr = RegisterTypeLib(qAxTypeLibrary.Get(), qaxQString2MutableOleChars(libFile), nullptr);
             if (FAILED(hr)) {
                 qWarning("Failing to register %s due to insufficient permission.", qPrintable(module));
                 return hr;
@@ -413,7 +411,7 @@ HRESULT UpdateRegistry(bool bRegister, bool perUser)
         } else {
 #ifndef Q_CC_MINGW
             // MinGW does not have RegisterTypeLibForUser() implemented so we cannot fallback in this case
-            RegisterTypeLibForUser(qAxTypeLibrary, qaxQString2MutableOleChars(libFile), nullptr);
+            RegisterTypeLibForUser(qAxTypeLibrary.Get(), qaxQString2MutableOleChars(libFile), nullptr);
 #endif
         }
     } else {

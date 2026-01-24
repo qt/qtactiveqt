@@ -61,7 +61,7 @@
 QT_BEGIN_NAMESPACE
 
 // in qaxserver.cpp
-extern ITypeLib *qAxTypeLibrary;
+extern ComPtr<ITypeLib> qAxTypeLibrary;
 extern unsigned long qAxLock();
 extern unsigned long qAxUnlock();
 extern bool qAxOutProcServer;
