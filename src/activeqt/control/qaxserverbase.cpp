@@ -391,7 +391,7 @@ static inline QAxServerBase *axServerBaseFromWindow(HWND hWnd)
 #endif
 }
 
-class QAxServerAggregate : public IUnknown
+class QAxServerAggregate : public QComObject<IUnknown>
 {
     Q_DISABLE_COPY_MOVE(QAxServerAggregate)
 public:
@@ -402,34 +402,18 @@ public:
     }
     virtual ~QAxServerAggregate() = default;
 
-// IUnknown
-    unsigned long WINAPI AddRef() override
+    // IUnknown
+    STDMETHODIMP QueryInterface(REFIID riid, void **ppvObject) override
     {
-        return InterlockedIncrement(&ref);
-    }
-    unsigned long WINAPI Release() override
-    {
-        LONG refCount = InterlockedDecrement(&ref);
-        if (!refCount)
-            delete this;
+        HRESULT result = QComObject::QueryInterface(riid, ppvObject);
+        if (*ppvObject)
+            return result;
 
-        return refCount;
-    }
-    HRESULT WINAPI QueryInterface(REFIID iid, void **iface) override
-    {
-        *iface = nullptr;
-
-        if (iid == IID_IUnknown) {
-            *iface = static_cast<IUnknown *>(this);
-            AddRef();
-            return S_OK;
-        }
-        return object->InternalQueryInterface(iid, iface);
+        return object->InternalQueryInterface(riid, ppvObject);
     }
 
 private:
     ComPtr<QAxServerBase> object;
-    LONG ref = 0;
 };
 
 bool QAxFactory::createObjectWrapper(QObject *object, IDispatch **wrapper)
@@ -771,10 +755,8 @@ HRESULT QClassFactory::CreateInstanceHelper(IUnknown *pUnkOuter, REFIID iid, voi
     HRESULT res;
     // Create the ActiveX wrapper - aggregate if requested
     if (pUnkOuter) {
-        QAxServerAggregate *aggregate = new QAxServerAggregate(className, pUnkOuter);
+        ComPtr<QAxServerAggregate> aggregate = makeComObject<QAxServerAggregate>(className, pUnkOuter);
         res = aggregate->QueryInterface(iid, ppObject);
-        if (FAILED(res))
-            delete aggregate;
     } else {
         QAxServerBase *activeqt = new QAxServerBase(className, pUnkOuter);
         res = activeqt->QueryInterface(iid, ppObject);
