@@ -504,8 +504,7 @@ public:
 /*
     Helper class to store and enumerate all connected event listeners.
 */
-class QAxConnection : public IConnectionPoint,
-                      public IEnumConnections
+class QAxConnection : public QComObject<IConnectionPoint, IEnumConnections>
 {
 public:
     QAxConnection &operator=(const QAxConnection &) = delete;
@@ -521,7 +520,6 @@ public:
     QAxConnection(const QAxConnection &old)
         : current(old.current)
     {
-        ref = 0;
         connections = old.connections;
         that = old.that;
         iid = old.iid;
@@ -530,35 +528,6 @@ public:
     }
     virtual ~QAxConnection() = default;
 
-    unsigned long __stdcall AddRef() override
-    {
-        return InterlockedIncrement(&ref);
-    }
-    unsigned long __stdcall Release() override
-    {
-        LONG refCount = InterlockedDecrement(&ref);
-        if (!refCount)
-            delete this;
-
-        return refCount;
-    }
-    STDMETHOD(QueryInterface)(REFIID iid, void **iface) override
-    {
-        if (!iface)
-            return E_POINTER;
-        *iface = nullptr;
-        if (iid == IID_IUnknown)
-            *iface = static_cast<IConnectionPoint *>(this);
-        else if (iid == IID_IConnectionPoint)
-            *iface = this;
-        else if (iid == IID_IEnumConnections)
-            *iface = this;
-        else
-            return E_NOINTERFACE;
-
-        AddRef();
-        return S_OK;
-    }
     STDMETHOD(GetConnectionInterface)(IID *pIID) override
     {
         if (!pIID)
@@ -656,7 +625,6 @@ public:
         if (!ppEnum)
             return E_POINTER;
         *ppEnum = new QAxConnection(*this);
-        (*ppEnum)->AddRef();
 
         return S_OK;
     }
@@ -666,8 +634,6 @@ private:
     QUuid iid;
     Connections connections;
     int current = 0;
-
-    LONG ref = 1;
 };
 
 // filter for executable case to hook into Qt eventloop
