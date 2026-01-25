@@ -507,6 +507,7 @@ public:
 class QAxConnection : public QComObject<IConnectionPoint, IEnumConnections>
 {
 public:
+    QAxConnection(QAxConnection &) = delete;
     QAxConnection &operator=(const QAxConnection &) = delete;
     QAxConnection(QAxConnection &&) = delete;
     QAxConnection &operator=(QAxConnection &&) = delete;
@@ -516,15 +517,6 @@ public:
     QAxConnection(QAxServerBase *parent, const QUuid &uuid)
         : that(parent), iid(uuid)
     {
-    }
-    QAxConnection(const QAxConnection &old)
-        : current(old.current)
-    {
-        connections = old.connections;
-        that = old.that;
-        iid = old.iid;
-        for (const CONNECTDATA &connection : std::as_const(connections))
-            connection.pUnk->AddRef();
     }
     virtual ~QAxConnection() = default;
 
@@ -624,7 +616,13 @@ public:
     {
         if (!ppEnum)
             return E_POINTER;
-        *ppEnum = new QAxConnection(*this);
+
+        ComPtr<QAxConnection> copy = makeComObject<QAxConnection>(that, iid);
+        copy->connections = connections;
+        for (const CONNECTDATA& connection : std::as_const(connections))
+            connection.pUnk->AddRef();
+
+        *ppEnum = copy.Detach();
 
         return S_OK;
     }
