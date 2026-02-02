@@ -22,7 +22,7 @@
 # COMPAT: Adds compatibility flag to the dumpcpp call, that generates namespace with
 #   dynamicCall-compatible API. (OPTIONAL)
 #
-# This function is currently in Technical Preview.
+# This function is currently in Technology Preview.
 # Its signature and behavior might change.
 function(qt6_target_typelibs target)
     cmake_parse_arguments(arg "COMPAT" "OUTPUT_DIRECTORY" "LIBRARIES" ${ARGN})
