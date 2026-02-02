@@ -5,7 +5,7 @@
 # executable.
 # Arguments: See qt6_target_idl
 #
-# This function is currently in Technical Preview.
+# This function is currently in Technology Preview.
 # Its signature and behavior might change.
 function(qt6_add_axserver_executable target)
     cmake_parse_arguments(arg "NO_AX_SERVER_REGISTRATION" "" "" ${ARGN})
@@ -24,7 +24,7 @@ endfunction()
 # dll.
 # Arguments: See qt6_target_idl
 #
-# This function is currently in Technical Preview.
+# This function is currently in Technology Preview.
 # Its signature and behavior might change.
 function(qt6_add_axserver_library target)
     cmake_parse_arguments(arg "NO_AX_SERVER_REGISTRATION" "" "" ${ARGN})
@@ -44,7 +44,7 @@ endfunction()
 #      Note: You may also use the QT_NO_AX_SERVER_REGISTRATION variable to globally skip
 #      the ActiveX server registrations.
 #
-# This function is currently in Technical Preview.
+# This function is currently in Technology Preview.
 # Its signature and behavior might change.
 function(qt6_target_idl target)
     cmake_parse_arguments(arg "NO_AX_SERVER_REGISTRATION" "" "" ${ARGN})
