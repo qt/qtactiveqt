@@ -544,7 +544,7 @@ public:
         }
 
         CONNECTDATA cd;
-        cd.dwCookie = connections.size() + 1;
+        cd.dwCookie = nextCookie++;
         cd.pUnk = pUnk;
         cd.pUnk->AddRef();
         connections.append(cd);
@@ -619,6 +619,7 @@ public:
 
         ComPtr<QAxConnection> copy = makeComObject<QAxConnection>(that, iid);
         copy->connections = connections;
+        copy->nextCookie = nextCookie;
         for (const CONNECTDATA& connection : std::as_const(connections))
             connection.pUnk->AddRef();
 
@@ -632,6 +633,7 @@ private:
     QUuid iid;
     Connections connections;
     int current = 0;
+    DWORD nextCookie = 1;
 };
 
 // filter for executable case to hook into Qt eventloop
