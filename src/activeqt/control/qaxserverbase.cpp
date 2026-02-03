@@ -619,6 +619,7 @@ public:
 
         ComPtr<QAxConnection> copy = makeComObject<QAxConnection>(that, iid);
         copy->connections = connections;
+        copy->current = current;
         copy->nextCookie = nextCookie;
         for (const CONNECTDATA& connection : std::as_const(connections))
             connection.pUnk->AddRef();
