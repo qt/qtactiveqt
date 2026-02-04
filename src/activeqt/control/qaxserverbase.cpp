@@ -380,6 +380,8 @@ private:
     ComPtr<ITypeInfo> m_spTypeInfo;
     ComPtr<IStorage> m_spStorage;
     QSize m_currentExtent; // device independent pixels.
+
+    DWORD m_nextAdviseConnection = 0;
 };
 
 static inline QAxServerBase *axServerBaseFromWindow(HWND hWnd)
@@ -3471,7 +3473,10 @@ HRESULT WINAPI QAxServerBase::GetMiscStatus(DWORD dwAspect, DWORD *pdwStatus)
 */
 HRESULT WINAPI QAxServerBase::Advise(IAdviseSink* pAdvSink, DWORD* pdwConnection)
 {
-    *pdwConnection = DWORD(adviseSinks.size()) + 1;
+    if (!pAdvSink || !pdwConnection)
+        return E_POINTER;
+
+    *pdwConnection = ++m_nextAdviseConnection;
     STATDATA data = { {0, nullptr, DVASPECT_CONTENT, -1, TYMED_NULL} , 0, pAdvSink, *pdwConnection };
     adviseSinks.append(data);
     pAdvSink->AddRef();
