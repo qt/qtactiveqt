@@ -7,7 +7,8 @@ CODEBASE="http://qt.nokia.com/demos/simpleax.cab">
 [Object not available! Did you forget to build and register the server?]
 </object>
 \endcode
-//! [0] //! [1]
+//! [0]
+//! [1]
 \code
 
 <FORM>
