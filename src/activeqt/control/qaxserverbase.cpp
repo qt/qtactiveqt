@@ -546,7 +546,7 @@ public:
         }
 
         CONNECTDATA cd;
-        cd.dwCookie = nextCookie++;
+        cd.dwCookie = ++nextCookie;
         cd.pUnk = pUnk;
         cd.pUnk->AddRef();
         connections.append(cd);
@@ -636,7 +636,7 @@ private:
     QUuid iid;
     Connections connections;
     int current = 0;
-    DWORD nextCookie = 1;
+    DWORD nextCookie = 0;
 };
 
 // filter for executable case to hook into Qt eventloop
