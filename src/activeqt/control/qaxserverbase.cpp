@@ -174,8 +174,7 @@ public:
     void reportError(int code, const QString &src, const QString &desc,
                      const QString &context) override
     {
-        delete exception;
-        exception = new QAxExceptInfo(code, src, desc, context);
+        exception = std::make_unique<QAxExceptInfo>(code, src, desc, context);
     }
 
 // IDispatch
@@ -354,7 +353,7 @@ private:
     QPointer<QMenuBar> menuBar;
     QPointer<QStatusBar> statusBar;
     QPointer<QMenu> currentPopup;
-    QAxExceptInfo *exception = nullptr;
+    std::unique_ptr<QAxExceptInfo> exception;
 
     CRITICAL_SECTION refCountSection;
     CRITICAL_SECTION createWindowSection;
@@ -2416,8 +2415,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 pexcepinfo->dwHelpContext = contextID;
             }
         }
-        delete exception;
-        exception = nullptr;
+        exception.reset();
         return DISP_E_EXCEPTION;
     }
     if (isWidget) {
