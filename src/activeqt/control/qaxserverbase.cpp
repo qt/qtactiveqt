@@ -1182,8 +1182,8 @@ LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM 
         break;
 
     case WM_SHOWWINDOW:
-        if (wParam) {
-            if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+            if (wParam) {
                 that->internalCreate();
                 if (!that->stayTopLevel) {
                     // Set this property on window to pass the native handle to platform plugin,
