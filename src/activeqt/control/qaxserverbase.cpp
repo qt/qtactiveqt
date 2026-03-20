@@ -42,6 +42,7 @@
 #include <QtCore/private/qcomobject_p.h>
 
 #include "qclassfactory_p.h"
+#include "qaxsignalvec_p.h"
 
 #if defined Q_CC_GNU
 #   include <w32api.h>
@@ -131,78 +132,6 @@ bool QAxFactory::createObjectWrapper(QObject *object, IDispatch **wrapper)
     return false;
 }
 
-
-/*
-    Helper class to enumerate all supported event interfaces.
-*/
-class QAxSignalVec : public QComObject<IEnumConnectionPoints>
-{
-public:
-    QAxSignalVec &operator=(const QAxSignalVec &) = delete;
-    QAxSignalVec &operator=(QAxSignalVec &&) = delete;
-    QAxSignalVec(QAxSignalVec &&) = delete;
-
-    QAxSignalVec(const QAxServerBase::ConnectionPoints &points)
-        : cpoints(points.values())
-    {
-    }
-    QAxSignalVec(const QAxSignalVec &old)
-        : cpoints(old.cpoints)
-        , current(old.current)
-    {
-    }
-
-    STDMETHOD(Next)(ULONG cConnections, IConnectionPoint **cpoint, ULONG *pcFetched) override
-    {
-        if (!cpoint)
-            return E_POINTER;
-
-        if (!pcFetched && cConnections > 1)
-            return E_POINTER;
-
-        const qsizetype count = cpoints.size();
-        unsigned long i;
-        for (i = 0; i < cConnections; i++) {
-            if (current==count)
-                break;
-            auto &cp = cpoints.at(current);
-            cpoint[i] = cp.Get();
-            if (cp)
-                cp->AddRef();
-            ++current;
-        }
-        if (pcFetched)
-            *pcFetched = i;
-        return i == cConnections ? S_OK : S_FALSE;
-    }
-    STDMETHOD(Skip)(ULONG cConnections) override
-    {
-        const qsizetype count = cpoints.size();
-        while (cConnections) {
-            if (current == count)
-                return S_FALSE;
-            ++current;
-            --cConnections;
-        }
-        return S_OK;
-    }
-    STDMETHOD(Reset)() override
-    {
-        current = 0;
-        return S_OK;
-    }
-    STDMETHOD(Clone)(IEnumConnectionPoints **ppEnum) override
-    {
-        if (!ppEnum)
-            return E_POINTER;
-        *ppEnum = new QAxSignalVec(*this);
-
-        return S_OK;
-    }
-
-    QList<ComPtr<IConnectionPoint>> cpoints;
-    int current = 0;
-};
 
 /*
     Helper class to store and enumerate all connected event listeners.

@@ -19,6 +19,7 @@ qt_internal_add_module(AxServer
         qaxserverbase.cpp qaxserverbase_p.h
         qaxserverdll.cpp
         qaxservermain.cpp
+        qaxsignalvec.cpp qaxsignalvec_p.h
         qclassfactory_p.h
     DEFINES
         QAX_SERVER
