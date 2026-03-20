@@ -750,7 +750,7 @@ HRESULT QAxServerBase::InternalQueryInterface(REFIID iid, void **iface)
     return S_OK;
 }
 
-IUnknown *QAxServerBase::clientSite() const
+IUnknown *QAxServerBase::ClientSite() const
 {
     return m_spClientSite.Get();
 }
@@ -1265,7 +1265,7 @@ void QAxServerBase::removeMenu()
 extern bool ignoreSlots(const char *test);
 extern bool ignoreProps(const char *test);
 
-QObject *QAxServerBase::qObject() const
+QObject *QAxServerBase::GetQObject() const
 {
     return theObject;
 }
@@ -1308,7 +1308,7 @@ bool QAxServerBase::isPropertyExposed(int index)
     return result;
 }
 
-void QAxServerBase::reportError(int code, const QString &src, const QString &desc,
+void QAxServerBase::ReportError(int code, const QString &src, const QString &desc,
                                 const QString &context)
 {
     exception = std::make_unique<QAxExceptInfo>(code, src, desc, context);
@@ -1615,7 +1615,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
     Call IPropertyNotifySink of connected clients.
     \a dispId specifies the ID of the property that changed.
 */
-bool QAxServerBase::emitRequestPropertyChange(const char *property)
+bool QAxServerBase::EmitRequestPropertyChange(const char *property)
 {
     long dispId = -1;
 
@@ -1658,7 +1658,7 @@ bool QAxServerBase::emitRequestPropertyChange(const char *property)
     Call IPropertyNotifySink of connected clients.
     \a dispId specifies the ID of the property that changed.
 */
-void QAxServerBase::emitPropertyChanged(const char *property)
+void QAxServerBase::EmitPropertyChanged(const char *property)
 {
     long dispId = -1;
 

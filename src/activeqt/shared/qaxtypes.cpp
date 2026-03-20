@@ -710,7 +710,7 @@ static QVariant axServer(IUnknown *unknown, const QByteArray &typeName)
     if (iface == nullptr)
         return {};
 
-    auto *qObj = iface->qObject();
+    auto *qObj = iface->GetQObject();
     QByteArray pointerType = qObj ? QByteArray(qObj->metaObject()->className()) + '*' : typeName;
     QMetaType pointerMetaType = QMetaType::fromName(pointerType);
     if (pointerMetaType.id() == QMetaType::UnknownType)

@@ -33,11 +33,11 @@ class QString;
 
 struct IAxServerBase : public IUnknown
 {
-    STDMETHOD_(IUnknown *, clientSite)() const = 0;
-    STDMETHOD_(void, emitPropertyChanged)(const char *property) = 0;
-    STDMETHOD_(bool, emitRequestPropertyChange)(const char *property) = 0;
-    STDMETHOD_(QObject *, qObject)() const = 0;
-    STDMETHOD_(void, reportError)(int code, const QString &src, const QString &desc, const QString &context) = 0;
+    STDMETHOD_(IUnknown *, ClientSite)() const = 0;
+    STDMETHOD_(void, EmitPropertyChanged)(const char *property) = 0;
+    STDMETHOD_(bool, EmitRequestPropertyChange)(const char *property) = 0;
+    STDMETHOD_(QObject *, GetQObject)() const = 0;
+    STDMETHOD_(void, ReportError)(int code, const QString &src, const QString &desc, const QString &context) = 0;
 };
 
 QT_WARNING_POP

@@ -96,15 +96,15 @@ public:
     HRESULT InternalQueryInterface(REFIID iid, void **iface);
 
     // IAxServerBase
-    IUnknown *clientSite() const override;
+    IUnknown *ClientSite() const override;
 
-    void emitPropertyChanged(const char *) override;
-    bool emitRequestPropertyChange(const char *) override;
-    QObject *qObject() const override;
+    void EmitPropertyChanged(const char *) override;
+    bool EmitRequestPropertyChange(const char *) override;
+    QObject *GetQObject() const override;
     void ensureMetaData();
     bool isPropertyExposed(int index);
 
-    void reportError(int code, const QString &src, const QString &desc,
+    void ReportError(int code, const QString &src, const QString &desc,
                      const QString &context) override;
 
     // IDispatch

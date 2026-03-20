@@ -71,7 +71,7 @@ bool QAxBindable::requestPropertyChange(const char *property)
     if (!activex)
         return true;
 
-    return activex->emitRequestPropertyChange(property);
+    return activex->EmitRequestPropertyChange(property);
 }
 
 /*!
@@ -88,7 +88,7 @@ void QAxBindable::propertyChanged(const char *property)
     if (!activex)
         return;
 
-    activex->emitPropertyChanged(property);
+    activex->EmitPropertyChanged(property);
 }
 
 /*!
@@ -103,7 +103,7 @@ IUnknown *QAxBindable::clientSite() const
     if (!activex)
         return nullptr;
 
-    return activex->clientSite();
+    return activex->ClientSite();
 }
 
 /*!
@@ -134,7 +134,7 @@ void QAxBindable::reportError(int code, const QString &src, const QString &desc,
     if (!activex)
         return;
 
-    activex->reportError(code, src, desc, context);
+    activex->ReportError(code, src, desc, context);
 }
 
 /*!
