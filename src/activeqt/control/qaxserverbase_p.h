@@ -73,37 +73,18 @@ public:
     QAxServerBase(const QString &classname, IUnknown *outerUnknown);
     QAxServerBase(QObject *o);
 
-    void init();
-
     ~QAxServerBase() override;
 
-    // Window creation
-    HWND create(HWND hWndParent, RECT &rcPos);
-    HMENU createPopup(QMenu *popup, HMENU oldMenu = nullptr);
-    void createMenu(QMenuBar *menuBar);
-    void removeMenu();
-
-    static LRESULT QT_WIN_CALLBACK ActiveXProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-    // Object registration with OLE
-    void registerActiveObject(IUnknown *object);
-    void revokeActiveObject();
-
     // IUnknown
+    IFACEMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override;
     IFACEMETHOD_(ULONG, AddRef)() override;
     IFACEMETHOD_(ULONG, Release)() override;
-    IFACEMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override;
-    HRESULT InternalQueryInterface(REFIID iid, void **iface);
 
     // IAxServerBase
     IFACEMETHOD_(IUnknown *, ClientSite)() const override;
-
     IFACEMETHOD_(void, EmitPropertyChanged)(const char *property) override;
     IFACEMETHOD_(bool, EmitRequestPropertyChange)(const char *property) override;
     IFACEMETHOD_(QObject *, GetQObject)() const override;
-    void ensureMetaData();
-    bool isPropertyExposed(int index);
-
     IFACEMETHOD_(void, ReportError)(int code, const QString &src, const QString &desc,
                                     const QString &context) override;
 
@@ -116,35 +97,35 @@ public:
                         DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
                         UINT *puArgErr) override;
 
-    // IProvideClassInfo
-    IFACEMETHOD(GetClassInfo)(ITypeInfo **ppTI) override;
-
-    // IProvideClassInfo2
-    IFACEMETHOD(GetGUID)(DWORD dwGuidKind, GUID *pGUID) override;
-
     // IOleObject
-    IFACEMETHOD(Advise)(IAdviseSink *pAdvSink, DWORD *pdwConnection) override;
+    IFACEMETHOD(SetClientSite)(IOleClientSite *pClientSite) override;
+    IFACEMETHOD(GetClientSite)(IOleClientSite **ppClientSite) override;
+    IFACEMETHOD(SetHostNames)(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj) override;
     IFACEMETHOD(Close)(DWORD dwSaveOption) override;
+    IFACEMETHOD(SetMoniker)(DWORD dwWhichMoniker, IMoniker *pmk) override;
+    IFACEMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker **ppmk) override;
+    IFACEMETHOD(InitFromData)(IDataObject *pDataObject, BOOL fCreation, DWORD dwReserved) override;
+    IFACEMETHOD(GetClipboardData)(DWORD dwReserved, IDataObject **ppDataObject) override;
     IFACEMETHOD(DoVerb)(LONG iVerb, LPMSG lpmsg, IOleClientSite *pActiveSite, LONG lindex,
                         HWND hwndParent, LPCRECT lprcPosRect) override;
-    IFACEMETHOD(EnumAdvise)(IEnumSTATDATA **ppenumAdvise) override;
     IFACEMETHOD(EnumVerbs)(IEnumOLEVERB **ppEnumOleVerb) override;
-    IFACEMETHOD(GetClientSite)(IOleClientSite **ppClientSite) override;
-    IFACEMETHOD(GetClipboardData)(DWORD dwReserved, IDataObject **ppDataObject) override;
-    IFACEMETHOD(GetExtent)(DWORD dwDrawAspect, SIZEL *psizel) override;
-    IFACEMETHOD(GetMiscStatus)(DWORD dwAspect, DWORD *pdwStatus) override;
-    IFACEMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker **ppmk) override;
+    IFACEMETHOD(Update)() override;
+    IFACEMETHOD(IsUpToDate)() override;
     IFACEMETHOD(GetUserClassID)(CLSID *pClsid) override;
     IFACEMETHOD(GetUserType)(DWORD dwFormOfType, LPOLESTR *pszUserType) override;
-    IFACEMETHOD(InitFromData)(IDataObject *pDataObject, BOOL fCreation, DWORD dwReserved) override;
-    IFACEMETHOD(IsUpToDate)() override;
-    IFACEMETHOD(SetClientSite)(IOleClientSite *pClientSite) override;
-    IFACEMETHOD(SetColorScheme)(LOGPALETTE *pLogpal) override;
     IFACEMETHOD(SetExtent)(DWORD dwDrawAspect, SIZEL *psizel) override;
-    IFACEMETHOD(SetHostNames)(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj) override;
-    IFACEMETHOD(SetMoniker)(DWORD dwWhichMoniker, IMoniker *pmk) override;
+    IFACEMETHOD(GetExtent)(DWORD dwDrawAspect, SIZEL *psizel) override;
+    IFACEMETHOD(Advise)(IAdviseSink *pAdvSink, DWORD *pdwConnection) override;
     IFACEMETHOD(Unadvise)(DWORD dwConnection) override;
-    IFACEMETHOD(Update)() override;
+    IFACEMETHOD(EnumAdvise)(IEnumSTATDATA **ppenumAdvise) override;
+    IFACEMETHOD(GetMiscStatus)(DWORD dwAspect, DWORD *pdwStatus) override;
+    IFACEMETHOD(SetColorScheme)(LOGPALETTE *pLogpal) override;
+
+    // IOleControl
+    IFACEMETHOD(GetControlInfo)(CONTROLINFO *pCI) override;
+    IFACEMETHOD(OnMnemonic)(MSG *pMsg) override;
+    IFACEMETHOD(OnAmbientPropertyChange)(DISPID dispID) override;
+    IFACEMETHOD(FreezeEvents)(BOOL bFreeze) override;
 
     // IViewObject
     IFACEMETHOD(Draw)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
@@ -161,12 +142,6 @@ public:
     // IViewObject2
     IFACEMETHOD(GetExtent)(DWORD dwDrawAspect, LONG lindex, DVTARGETDEVICE *ptd,
                            LPSIZEL lpsizel) override;
-
-    // IOleControl
-    IFACEMETHOD(FreezeEvents)(BOOL bFreeze) override;
-    IFACEMETHOD(GetControlInfo)(CONTROLINFO *pCI) override;
-    IFACEMETHOD(OnAmbientPropertyChange)(DISPID dispID) override;
-    IFACEMETHOD(OnMnemonic)(MSG *pMsg) override;
 
     // IOleWindow
     IFACEMETHOD(GetWindow)(HWND *phwnd) override;
@@ -186,6 +161,12 @@ public:
                               BOOL fFrameWindow) override;
     IFACEMETHOD(EnableModeless)(BOOL fEnable) override;
 
+    // IProvideClassInfo
+    IFACEMETHOD(GetClassInfo)(ITypeInfo **ppTI) override;
+
+    // IProvideClassInfo2
+    IFACEMETHOD(GetGUID)(DWORD dwGuidKind, GUID *pGUID) override;
+
     // IConnectionPointContainer
     IFACEMETHOD(EnumConnectionPoints)(IEnumConnectionPoints **ppEnum) override;
     IFACEMETHOD(FindConnectionPoint)(REFIID riid, IConnectionPoint **ppCP) override;
@@ -193,16 +174,14 @@ public:
     // IPersist
     IFACEMETHOD(GetClassID)(CLSID *pClassID) override;
 
-    // IPersistStreamInit
-    IFACEMETHOD(InitNew)() override;
+    // IPersistStream
     IFACEMETHOD(IsDirty)() override;
     IFACEMETHOD(Load)(LPSTREAM pStm) override;
     IFACEMETHOD(Save)(LPSTREAM pStm, BOOL fClearDirty) override;
     IFACEMETHOD(GetSizeMax)(ULARGE_INTEGER *pCbSize) override;
 
-    // IPersistPropertyBag
-    IFACEMETHOD(Load)(IPropertyBag *pPropBag, IErrorLog *pErrorLog) override;
-    IFACEMETHOD(Save)(IPropertyBag *pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties) override;
+    // IPersistStreamInit
+    IFACEMETHOD(InitNew)() override;
 
     // IPersistStorage
     IFACEMETHOD(InitNew)(IStorage *pStg) override;
@@ -211,11 +190,15 @@ public:
     IFACEMETHOD(SaveCompleted)(IStorage *pStgNew) override;
     IFACEMETHOD(HandsOffStorage)() override;
 
+    // IPersistPropertyBag
+    IFACEMETHOD(Load)(IPropertyBag *pPropBag, IErrorLog *pErrorLog) override;
+    IFACEMETHOD(Save)(IPropertyBag *pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties) override;
+
     // IPersistFile
-    IFACEMETHOD(SaveCompleted)(LPCOLESTR pszFileName) override;
-    IFACEMETHOD(GetCurFile)(LPOLESTR *ppszFileName) override;
     IFACEMETHOD(Load)(LPCOLESTR pszFileName, DWORD dwMode) override;
     IFACEMETHOD(Save)(LPCOLESTR pszFileName, BOOL fRemember) override;
+    IFACEMETHOD(SaveCompleted)(LPCOLESTR pszFileName) override;
+    IFACEMETHOD(GetCurFile)(LPOLESTR *ppszFileName) override;
 
     // IDataObject
     IFACEMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium) override;
@@ -228,6 +211,25 @@ public:
                          DWORD *pdwConnection) override;
     IFACEMETHOD(DUnadvise)(DWORD dwConnection) override;
     IFACEMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise) override;
+
+    void init();
+
+    // Window creation
+    HWND create(HWND hWndParent, RECT &rcPos);
+    HMENU createPopup(QMenu *popup, HMENU oldMenu = nullptr);
+    void createMenu(QMenuBar *menuBar);
+    void removeMenu();
+
+    static LRESULT QT_WIN_CALLBACK ActiveXProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    // Object registration with OLE
+    void registerActiveObject(IUnknown *object);
+    void revokeActiveObject();
+
+    HRESULT InternalQueryInterface(REFIID iid, void **iface);
+
+    void ensureMetaData();
+    bool isPropertyExposed(int index);
 
     // QObject
     int qt_metacall(QMetaObject::Call, int index, void **argv) override;

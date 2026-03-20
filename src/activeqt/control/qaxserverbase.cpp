@@ -529,6 +529,38 @@ HRESULT GetClassObject(REFIID clsid, REFIID iid, void **ppUnk)
     return res;
 }
 
+static inline QByteArray paramType(const QByteArray &ptype, bool *out)
+{
+    *out = ptype.endsWith('&') || ptype.endsWith("**");
+    if (*out) {
+        QByteArray res(ptype);
+        res.truncate(res.length() - 1);
+        return res;
+    }
+
+    return ptype;
+}
+
+static inline LPOLESTR QStringToOLESTR(const QString &qstring)
+{
+    LPOLESTR olestr = static_cast<wchar_t *>(CoTaskMemAlloc(size_t(qstring.length()) * 2 + 2));
+    memcpy(olestr, reinterpret_cast<const ushort *>(qstring.unicode()), size_t(qstring.length() * 2));
+    olestr[qstring.length()] = 0;
+    return olestr;
+}
+
+/*
+class HackMenuData : public QMenuData
+{
+    friend class QAxServerBase;
+};
+*/
+
+class HackWidget : public QWidget
+{
+    friend class QAxServerBase;
+};
+
 
 /*! \internal
     Constructs a QAxServerBase object wrapping the QWidget \a
@@ -560,38 +592,6 @@ QAxServerBase::QAxServerBase(QObject *o)
     }
     internalBind();
     internalConnect();
-}
-
-/*! \internal
-    Initializes data members.
-*/
-void QAxServerBase::init()
-{
-    qt.object = nullptr;
-    isWidget            = false;
-    ownObject           = false;
-    initNewCalled       = false;
-    dirtyflag           = false;
-    hasStockEvents      = false;
-    stayTopLevel        = false;
-    isInPlaceActive     = false;
-    isUIActive          = false;
-    wasUIActive         = false;
-    inDesignMode        = false;
-    canTakeFocus        = false;
-
-    InitializeCriticalSection(&refCountSection);
-    InitializeCriticalSection(&createWindowSection);
-
-#ifdef QT_DEBUG
-    EnterCriticalSection(&refCountSection);
-    ++qaxserverbase_instance_count;
-    LeaveCriticalSection(&refCountSection);
-#endif
-
-    qAxLock();
-
-    points[IID_IPropertyNotifySink] = makeComObject<QAxConnection>(this, IID_IPropertyNotifySink);
 }
 
 /*! \internal
@@ -632,26 +632,13 @@ QAxServerBase::~QAxServerBase()
     qAxUnlock();
 }
 
-/*  \internal
-    Registering with OLE
-*/
-void QAxServerBase::registerActiveObject(IUnknown *object)
+//**** IUnknown
+IFACEMETHODIMP QAxServerBase::QueryInterface(REFIID riid, void **ppvObject)
 {
-    if (ole_ref || !qt.object || !qAxOutProcServer)
-        return;
+    if (m_outerUnknown)
+        return m_outerUnknown->QueryInterface(riid, ppvObject);
 
-    const QMetaObject *mo = qt.object->metaObject();
-    if (!qstricmp(mo->classInfo(mo->indexOfClassInfo("RegisterObject")).value(), "yes"))
-        RegisterActiveObject(object, qAxFactory()->classID(class_name), ACTIVEOBJECT_WEAK, &ole_ref);
-}
-
-void QAxServerBase::revokeActiveObject()
-{
-    if (!ole_ref)
-        return;
-
-    RevokeActiveObject(ole_ref, nullptr);
-    ole_ref = 0;
+    return InternalQueryInterface(riid, ppvObject);
 }
 
 IFACEMETHODIMP_(ULONG) QAxServerBase::AddRef()
@@ -661,6 +648,7 @@ IFACEMETHODIMP_(ULONG) QAxServerBase::AddRef()
 
     return InterlockedIncrement(&ref);
 }
+
 IFACEMETHODIMP_(ULONG) QAxServerBase::Release()
 {
     if (m_outerUnknown)
@@ -673,856 +661,22 @@ IFACEMETHODIMP_(ULONG) QAxServerBase::Release()
     return refCount;
 }
 
-/* \internal
-    QueryInterface implementation.
-*/
-IFACEMETHODIMP QAxServerBase::QueryInterface(REFIID riid, void **ppvObject)
-{
-    if (m_outerUnknown)
-        return m_outerUnknown->QueryInterface(riid, ppvObject);
-
-    return InternalQueryInterface(riid, ppvObject);
-}
-
-HRESULT QAxServerBase::InternalQueryInterface(REFIID iid, void **iface)
-{
-    *iface = nullptr;
-
-    if (iid == IID_IUnknown) {
-        *iface = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
-    } else {
-        HRESULT res = S_OK;
-        if (aggregatedObject)
-            res = aggregatedObject->queryInterface(iid, iface);
-        if (*iface)
-            return res;
-    }
-
-    if (!(*iface)) {
-        if (iid == qAxFactory()->interfaceID(class_name))
-            *iface = static_cast<IDispatch *>(this);
-        if (iid == IID_IDispatch)
-            *iface = static_cast<IDispatch *>(this);
-        else if (iid == IID_IAxServerBase)
-            *iface = static_cast<IAxServerBase *>(this);
-        else if (iid == IID_IOleObject)
-            *iface = static_cast<IOleObject *>(this);
-        else if (iid == IID_IConnectionPointContainer)
-            *iface = static_cast<IConnectionPointContainer *>(this);
-        else if (iid == IID_IProvideClassInfo)
-            *iface = static_cast<IProvideClassInfo *>(this);
-        else if (iid == IID_IProvideClassInfo2)
-            *iface = static_cast<IProvideClassInfo2 *>(this);
-        else if (iid == IID_IPersist)
-            *iface = static_cast<IPersist *>(static_cast<IPersistStream *>(this));
-        else if (iid == IID_IPersistStream)
-            *iface = static_cast<IPersistStream *>(this);
-        else if (iid == IID_IPersistStreamInit)
-            *iface = static_cast<IPersistStreamInit *>(this);
-        else if (iid == IID_IPersistStorage)
-            *iface = static_cast<IPersistStorage *>(this);
-        else if (iid == IID_IPersistPropertyBag)
-            *iface = static_cast<IPersistPropertyBag *>(this);
-        else if (iid == IID_IPersistFile &&
-            qAxFactory()->metaObject(class_name)->indexOfClassInfo("MIME") != -1)
-            *iface = static_cast<IPersistFile *>(this);
-        else if (iid == IID_IViewObject)
-            *iface = static_cast<IViewObject *>(this);
-        else if (iid == IID_IViewObject2)
-            *iface = static_cast<IViewObject2 *>(this);
-        else if (isWidget) {
-            if (iid == IID_IOleControl)
-                *iface = static_cast<IOleControl *>(this);
-            else if (iid == IID_IOleWindow)
-                *iface = static_cast<IOleWindow *>(static_cast<IOleInPlaceObject *>(this));
-            else if (iid == IID_IOleInPlaceObject)
-                *iface = static_cast<IOleInPlaceObject *>(this);
-            else if (iid == IID_IOleInPlaceActiveObject)
-                *iface = static_cast<IOleInPlaceActiveObject *>(this);
-            else if (iid == IID_IDataObject)
-                *iface = static_cast<IDataObject *>(this);
-        }
-    }
-    if (!*iface)
-        return E_NOINTERFACE;
-
-    AddRef();
-    return S_OK;
-}
-
+//**** IAxServerBase
 IFACEMETHODIMP_(IUnknown *) QAxServerBase::ClientSite() const
 {
     return m_spClientSite.Get();
 }
 
 /*! \internal
-    Detects and initilaizes implementation of QAxBindable in objects.
+    Call IPropertyNotifySink of connected clients.
+    \a dispId specifies the ID of the property that changed.
 */
-void QAxServerBase::internalBind()
+IFACEMETHODIMP_(void) QAxServerBase::EmitPropertyChanged(const char *property)
 {
-    QAxBindable *axb = static_cast<QAxBindable *>(qt.object->qt_metacast("QAxBindable"));
-    if (axb) {
-        // no addref; this is aggregated
-        axb->activex = this;
-        if (!aggregatedObject)
-            aggregatedObject = axb->createAggregate();
-        if (aggregatedObject) {
-            aggregatedObject->controlling_unknown = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
-            aggregatedObject->the_object = qt.object;
-        }
-    }
-}
+    long dispId = -1;
 
-/*! \internal
-    Connects object signals to event dispatcher.
-*/
-void QAxServerBase::internalConnect()
-{
-    QUuid eventsID = qAxFactory()->eventsID(class_name);
-    if (!eventsID.isNull()) {
-        if (!points[eventsID])
-            points[eventsID] = makeComObject<QAxConnection>(this, eventsID);
-
-        // connect the generic slot to all signals of qt.object
-        const QMetaObject *mo = qt.object->metaObject();
-        for (int isignal = mo->methodCount()-1; isignal >= 0; --isignal) {
-            if (mo->method(isignal).methodType() == QMetaMethod::Signal)
-                QMetaObject::connect(qt.object, isignal, this, isignal);
-        }
-    }
-}
-
-/*! \internal
-    Creates the QWidget for the classname passed to the c'tor.
-
-    All signals of the widget class are connected to the internal event mapper.
-    If the widget implements QAxBindable, stock events are also connected.
-*/
-bool QAxServerBase::internalCreate()
-{
-    if (qt.object)
-        return true;
-
-    qt.object = qAxFactory()->createObject(class_name);
-    Q_ASSERT(qt.object);
-    if (!qt.object)
-        return false;
-
-    theObject = qt.object;
-    ownObject = true;
-    isWidget = qt.object->isWidgetType();
-    hasStockEvents = qAxFactory()->hasStockEvents(class_name);
-    stayTopLevel = qAxFactory()->stayTopLevel(class_name);
-
-    internalBind();
-    if (isWidget) {
-        if (!stayTopLevel) {
-            QEvent e(QEvent::EmbeddingControl);
-            QCoreApplication::sendEvent(qt.widget, &e);
-        }
-        qt.widget->setAttribute(Qt::WA_QuitOnClose, false);
-        qt.widget->move(0, 0);
-
-        // initialize to sizeHint, but don't set resized flag so that container has a chance to override
-        bool wasResized = qt.widget->testAttribute(Qt::WA_Resized);
-        updateGeometry();
-        if (!wasResized && qt.widget->testAttribute(Qt::WA_Resized)
-            && qt.widget->sizePolicy() != QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed)) {
-            qt.widget->setAttribute(Qt::WA_Resized, false);
-        }
-    }
-
-    internalConnect();
-    // install an event filter for stock events
-    if (isWidget) {
-        qt.object->installEventFilter(this);
-        const QWidgetList children = qt.object->findChildren<QWidget*>();
-        for (QWidget *child : children)
-            child->installEventFilter(this);
-    }
-    return true;
-}
-
-/*
-class HackMenuData : public QMenuData
-{
-    friend class QAxServerBase;
-};
-*/
-
-class HackWidget : public QWidget
-{
-    friend class QAxServerBase;
-};
-/*
-    Message handler. \a hWnd is always the ActiveX widget hosting the Qt widget.
-    \a uMsg is handled as follows
-    \list
-    \li WM_CREATE The ActiveX control is created
-    \li WM_DESTROY The QWidget is destroyed
-    \li WM_SHOWWINDOW The QWidget is parented into the ActiveX window
-    \li WM_PAINT The QWidget is updated
-    \li WM_SIZE The QWidget is resized to the new size
-    \li WM_SETFOCUS and
-    \li WM_KILLFOCUS The client site is notified about the focus transfer
-    \li WM_MOUSEACTIVATE The ActiveX is activated
-    \endlist
-
-    The semantics of \a wParam and \a lParam depend on the value of \a uMsg.
-*/
-LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    if (uMsg == WM_CREATE) {
-        CREATESTRUCT *cs = reinterpret_cast<CREATESTRUCT *>(lParam);
-        QAxServerBase *that = static_cast<QAxServerBase *>(cs->lpCreateParams);
-
-#ifdef GWLP_USERDATA
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, LONG_PTR(that));
-#else
-        SetWindowLong(hWnd, GWL_USERDATA, LONG(that));
-#endif
-
-        that->m_hWnd = hWnd;
-
-        return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
-    }
-
-    switch (uMsg) {
-    case WM_NCDESTROY:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd))
-            that->m_hWnd = nullptr;
-        break;
-
-    case WM_QUERYENDSESSION:
-    case WM_DESTROY:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            if (that->qt.widget) {
-                that->qt.widget->hide();
-                if (QWindow *widgetWindow = that->qt.widget->windowHandle()) {
-                    if (HWND h = reinterpret_cast<HWND>(widgetWindow->winId()))
-                        ::SetParent(h, nullptr);
-                }
-            }
-        }
-        break;
-
-    case WM_SHOWWINDOW:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            if (wParam) {
-                that->internalCreate();
-                if (!that->stayTopLevel) {
-                    // Set this property on window to pass the native handle to platform plugin,
-                    // so that it can create the window with proper flags instead of thinking
-                    // it is toplevel.
-                    that->qt.widget->setProperty("_q_embedded_native_parent_handle", WId(that->m_hWnd));
-
-                    if (QWindow *widgetWindow = that->qt.widget->windowHandle()) {
-                        // If embedded widget is native, such as QGLWidget, it may have already created
-                        // a window before now, probably as an undesired toplevel. In that case set the
-                        // proper parent window and set the window frameless to position it correctly.
-                        if (that->qt.widget->testAttribute(Qt::WA_WState_Created)
-                            && !that->qt.widget->isVisible()) {
-                            HWND h = static_cast<HWND>(QGuiApplication::platformNativeInterface()->
-                                                       nativeResourceForWindow("handle", widgetWindow));
-                            if (h) {
-                                ::SetParent(h, that->m_hWnd);
-                                // Since the window is already created, we need to set the
-                                // property directly to ensure it does not believe it is
-                                // toplevel.
-                                widgetWindow->setProperty("_q_embedded_native_parent_handle",
-                                                          WId(that->m_hWnd));
-                            }
-                            Qt::WindowFlags flags = widgetWindow->flags();
-                            widgetWindow->setFlags(flags | Qt::FramelessWindowHint);
-                        }
-                    }
-                    that->qt.widget->raise();
-                    that->qt.widget->move(0, 0);
-                }
-                that->qt.widget->show();
-            } else if (that->qt.widget) {
-                that->qt.widget->hide();
-            }
-        }
-        break;
-
-    case WM_ERASEBKGND:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd))
-            that->updateMask();
-        break;
-
-    case WM_SIZE:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd))
-            that->resize(qaxFromNativeSize(that->qt.widget, QSize(LOWORD(lParam), HIWORD(lParam))));
-        break;
-
-    case WM_SETFOCUS:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            if (that->isInPlaceActive && that->m_spClientSite && !that->inDesignMode && that->canTakeFocus) {
-                RECT rcPos = that->rcPosRect();
-                that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite.Get(), 0, that->m_hWnd, &rcPos);
-                if (that->isUIActive) {
-                    ComPtr<IOleControlSite> spSite;
-                    that->m_spClientSite->QueryInterface(IID_IOleControlSite, &spSite);
-                    if (spSite) {
-                        spSite->OnFocus(true);
-                    }
-                    QWidget *candidate = that->qt.widget;
-                    while (!(candidate->focusPolicy() & Qt::TabFocus)) {
-                        candidate = candidate->nextInFocusChain();
-                        if (candidate == that->qt.widget) {
-                            candidate = nullptr;
-                            break;
-                        }
-                    }
-                    if (candidate) {
-                        candidate->setFocus();
-                        if (::GetKeyState(VK_SHIFT) < 0)
-                            static_cast<HackWidget *>(that->qt.widget)->focusNextPrevChild(false);
-                    }
-                }
-            }
-        }
-        break;
-
-    case WM_KILLFOCUS:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            if (that->isInPlaceActive && that->isUIActive && that->m_spClientSite) {
-                ComPtr<IOleControlSite> spSite;
-                that->m_spClientSite->QueryInterface(IID_IOleControlSite, &spSite);
-                if (spSite) {
-                    if (!::IsChild(that->m_hWnd, ::GetFocus()))
-                        spSite->OnFocus(false);
-                }
-            }
-        }
-        break;
-
-    case WM_MOUSEACTIVATE:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            RECT rcPos = that->rcPosRect();
-            that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite.Get(), 0, that->m_hWnd, &rcPos);
-        }
-        break;
-
-    case WM_INITMENUPOPUP:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            if (that->qt.widget) {
-                that->currentPopup = that->menuMap[reinterpret_cast<HMENU>(wParam)];
-                if (!that->currentPopup)
-                    break;
-                const QMetaObject *mo = that->currentPopup->metaObject();
-                int index = mo->indexOfSignal("aboutToShow()");
-                if (index < 0)
-                    break;
-
-                that->currentPopup->qt_metacall(QMetaObject::InvokeMetaMethod, index, nullptr);
-                that->createPopup(that->currentPopup, reinterpret_cast<HMENU>(wParam));
-                return 0;
-            }
-        }
-        break;
-
-    case WM_MENUSELECT:
-    case WM_COMMAND:
-        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
-            if (that->qt.widget) {
-                QMenuBar *menuBar = that->menuBar;
-                if (!menuBar)
-                    break;
-
-                QObject *menuObject = nullptr;
-                bool menuClosed = false;
-
-                if (uMsg == WM_COMMAND) {
-                    menuObject = that->actionMap.value(UINT(wParam));
-                } else if (!lParam) {
-                    menuClosed = true;
-                    menuObject = that->currentPopup;
-                } else {
-                    menuObject = that->actionMap.value(LOWORD(wParam));
-                }
-
-                if (menuObject) {
-                    const QMetaObject *mo = menuObject->metaObject();
-                    int index = -1;
-
-                    if (uMsg == WM_COMMAND)
-                        index = mo->indexOfSignal("activated()");
-                    else if (menuClosed)
-                        index = mo->indexOfSignal("aboutToHide()");
-                    else
-                        index = mo->indexOfSignal("hovered()");
-
-                    if (index < 0)
-                        break;
-
-                    menuObject->qt_metacall(QMetaObject::InvokeMetaMethod, index, nullptr);
-                    if (menuClosed || uMsg == WM_COMMAND)
-                        that->currentPopup = nullptr;
-                    return 0;
-                }
-            }
-        }
-        break;
-
-    case WM_DISPLAYCHANGE:
-        qaxClearCachedSystemLogicalDpi();
-        break;
-
-    default:
-        break;
-    }
-
-    return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
-}
-
-/*! \internal
-    Creates the window hosting the QWidget.
-*/
-HWND QAxServerBase::create(HWND hWndParent, RECT& rcPos)
-{
-    Q_ASSERT(isWidget && qt.widget);
-
-    static ATOM atom = 0;
-    HINSTANCE hInst = reinterpret_cast<HINSTANCE>(QCoreApplicationPrivate::mainInstanceHandle);
-    EnterCriticalSection(&createWindowSection);
-    QString cn(QLatin1String("QAxControl"));
-    cn += QString::number(quintptr(ActiveXProc));
-    if (!atom) {
-        WNDCLASS wcTemp;
-        wcTemp.style = CS_DBLCLKS;
-        wcTemp.cbClsExtra = 0;
-        wcTemp.cbWndExtra = 0;
-        wcTemp.hbrBackground = nullptr;
-        wcTemp.hCursor = nullptr;
-        wcTemp.hIcon = nullptr;
-        wcTemp.hInstance = hInst;
-        wcTemp.lpszClassName = reinterpret_cast<const wchar_t *>(cn.utf16());
-        wcTemp.lpszMenuName = nullptr;
-        wcTemp.lpfnWndProc = ActiveXProc;
-
-        atom = RegisterClass(&wcTemp);
-    }
-    LeaveCriticalSection(&createWindowSection);
-    if (!atom) {
-        const DWORD errorCode = GetLastError();
-        if (errorCode != ERROR_CLASS_ALREADY_EXISTS) {
-            qErrnoWarning(int(errorCode), "%s: RegisterClass() failed", __FUNCTION__);
-            return nullptr;
-        }
-    }
-
-    Q_ASSERT(!m_hWnd);
-    // will fail if parent window belongs to a higher integrity level process
-    HWND hWnd = ::CreateWindow(reinterpret_cast<const wchar_t *>(cn.utf16()), nullptr,
-                               WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-                               rcPos.left, rcPos.top, rcPos.right - rcPos.left,
-                               rcPos.bottom - rcPos.top, hWndParent, nullptr, hInst, this);
-    // m_hWnd is assigned in reponse to WM_CREATE
-    if (!hWnd) {
-        DWORD err = GetLastError();
-        if (err == ERROR_ACCESS_DENIED) {
-            // retry without parent window
-            // the window will now need to be re-parented in the container process
-            hWnd = ::CreateWindow(reinterpret_cast<const wchar_t *>(cn.utf16()), nullptr,
-                                  WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-                                  rcPos.left, rcPos.top, rcPos.right - rcPos.left,
-                                  rcPos.bottom - rcPos.top, nullptr, nullptr, hInst, this);
-        }
-    }
-
-    if (!hWnd) {
-        qErrnoWarning("%s: CreateWindow() failed", __FUNCTION__);
-        return nullptr;
-    }
-
-    Q_ASSERT(m_hWnd == hWnd);
-
-    updateMask();
-    EnableWindow(m_hWnd, qt.widget->isEnabled());
-
-    return hWnd;
-}
-
-/* \internal
-    Recoursively creates Win32 submenus.
-*/
-HMENU QAxServerBase::createPopup(QMenu *popup, HMENU oldMenu)
-{
-    HMENU popupMenu = oldMenu ? oldMenu : CreatePopupMenu();
-    menuMap.insert(popupMenu, popup);
-
-    if (oldMenu) while (GetMenuItemCount(oldMenu)) {
-        DeleteMenu(oldMenu, 0, MF_BYPOSITION);
-    }
-
-    const auto actions = popup->actions();
-    for (QAction *action : actions) {
-        uint flags = action->isEnabled() ? MF_ENABLED : MF_GRAYED;
-        if (action->isSeparator())
-            flags |= MF_SEPARATOR;
-        else if (action->menu())
-            flags |= MF_POPUP;
-        else
-            flags |= MF_STRING;
-        if (action->isChecked())
-            flags |= MF_CHECKED;
-
-        ushort itemId;
-        if (flags & MF_POPUP) {
-            itemId = static_cast<ushort>(
-                reinterpret_cast<quintptr>(createPopup(action->menu()))
-            );
-        } else {
-            itemId = static_cast<ushort>(reinterpret_cast<quintptr>(action));
-            actionMap.remove(itemId);
-            actionMap.insert(itemId, action);
-        }
-        AppendMenu(popupMenu, flags, itemId, reinterpret_cast<const wchar_t *>(action->text().utf16()));
-    }
-    if (oldMenu)
-        DrawMenuBar(hwndMenuOwner);
-    return popupMenu;
-}
-
-/*! \internal
-    Creates a Win32 menubar.
-*/
-void QAxServerBase::createMenu(QMenuBar *menuBar)
-{
-    hmenuShared = ::CreateMenu();
-
-    int edit = 0;
-    int object = 0;
-    int help = 0;
-
-    const auto actions = menuBar->actions();
-    for (QAction *action : actions) {
-        uint flags = action->isEnabled() ? MF_ENABLED : MF_GRAYED;
-        if (action->isSeparator())
-            flags |= MF_SEPARATOR;
-        else if (action->menu())
-            flags |= MF_POPUP;
-        else
-            flags |= MF_STRING;
-
-        if (action->text() == QCoreApplication::translate(qt.widget->metaObject()->className(), "&Edit"))
-            edit++;
-        else if (action->text() == QCoreApplication::translate(qt.widget->metaObject()->className(), "&Help"))
-            help++;
-        else
-            object++;
-
-        ushort itemId;
-        if (flags & MF_POPUP) {
-            itemId = static_cast<ushort>(
-                reinterpret_cast<quintptr>(createPopup(action->menu()))
-            );
-        } else {
-            itemId = static_cast<ushort>(reinterpret_cast<quintptr>(action));
-            actionMap.insert(itemId, action);
-        }
-        AppendMenu(hmenuShared, flags, itemId, reinterpret_cast<const wchar_t *>(action->text().utf16()));
-    }
-
-    OLEMENUGROUPWIDTHS menuWidths = { { 0,edit,0,object,0,help } };
-    HRESULT hres = m_spInPlaceFrame->InsertMenus(hmenuShared, &menuWidths);
-    if (FAILED(hres)) {
-        ::DestroyMenu(hmenuShared);
-        hmenuShared = nullptr;
-        return;
-    }
-
-    m_spInPlaceFrame->GetWindow(&hwndMenuOwner);
-
-    holemenu = OleCreateMenuDescriptor(hmenuShared, &menuWidths);
-    hres = m_spInPlaceFrame->SetMenu(hmenuShared, holemenu, m_hWnd);
-    if (FAILED(hres)) {
-        ::DestroyMenu(hmenuShared);
-        hmenuShared = nullptr;
-        OleDestroyMenuDescriptor(holemenu);
-    }
-}
-
-/*! \internal
-    Remove the Win32 menubar.
-*/
-void QAxServerBase::removeMenu()
-{
-    if (hmenuShared)
-        m_spInPlaceFrame->RemoveMenus(hmenuShared);
-    holemenu = nullptr;
-    m_spInPlaceFrame->SetMenu(nullptr, nullptr, m_hWnd);
-    if (hmenuShared) {
-        DestroyMenu(hmenuShared);
-        hmenuShared = nullptr;
-        menuMap.clear();
-    }
-    hwndMenuOwner = nullptr;
-}
-
-extern bool ignoreSlots(const char *test);
-extern bool ignoreProps(const char *test);
-
-IFACEMETHODIMP_(QObject *) QAxServerBase::GetQObject() const
-{
-    return theObject;
-}
-
-/*! \internal
-    Makes sure the type info is loaded
-*/
-void QAxServerBase::ensureMetaData()
-{
-    if (!m_spTypeInfo)
-        qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->interfaceID(class_name), &m_spTypeInfo);
-}
-
-/*!
-    \internal
-    Returns true if the property \a index is exposed to COM and should
-    be saved/loaded.
-*/
-bool QAxServerBase::isPropertyExposed(int index)
-{
-    if (!theObject)
-        return false;
-
-    bool result = false;
-    const QMetaObject *mo = theObject->metaObject();
-
-    int qtProps = 0;
-    if (theObject->isWidgetType())
-        qtProps = QWidget::staticMetaObject.propertyCount();
-    QMetaProperty property = mo->property(index);
-    if (index <= qtProps && ignoreProps(property.name()))
-        return result;
-
-    BSTR bstrNames = QStringToBSTR(QLatin1String(property.name()));
-    DISPID dispId;
-    GetIDsOfNames(IID_NULL, &bstrNames, 1, LOCALE_USER_DEFAULT, &dispId);
-    result = dispId != DISPID_UNKNOWN;
-    SysFreeString(bstrNames);
-
-    return result;
-}
-
-IFACEMETHODIMP_(void) QAxServerBase::ReportError(int code, const QString &src,
-                                                 const QString &desc, const QString &context)
-{
-    exception = std::make_unique<QAxExceptInfo>(code, src, desc, context);
-}
-
-/*!
-    \internal
-    Updates the view, or asks the client site to do so.
-*/
-void QAxServerBase::update()
-{
-    if (isInPlaceActive) {
-        if (m_hWnd)
-            ::InvalidateRect(m_hWnd, nullptr, true);
-        else if (m_spInPlaceSiteWindowless)
-            m_spInPlaceSiteWindowless->InvalidateRect(nullptr, true);
-    } else if (m_spAdviseSink) {
-        m_spAdviseSink->OnViewChange(DVASPECT_CONTENT, -1);
-        for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
-            adviseSinks.at(i).pAdvSink->OnViewChange(DVASPECT_CONTENT, -1);
-        }
-    }
-}
-
-/*! \internal
-    Resizes the control, faking a QResizeEvent if required
-*/
-void QAxServerBase::resize(const QSize &size)
-{
-    if (!isWidget || !qt.widget || !size.isValid() || size == QSize(0, 0))
-        return;
-
-    QSize oldSize = qt.widget->size();
-    qt.widget->resize(size);
-    QSize newSize = qt.widget->size();
-    // make sure we get a resize event even if not embedded as a control
-    if (!m_hWnd && !qt.widget->isVisible() && newSize != oldSize) {
-        QResizeEvent resizeEvent(newSize, oldSize);
-#ifndef QT_SHARED // import from static library
-        extern bool qt_sendSpontaneousEvent(QObject*,QEvent*);
-#endif
-        qt_sendSpontaneousEvent(qt.widget, &resizeEvent);
-    }
-    m_currentExtent = qt.widget->size();
-}
-
-/*!
-    \internal
-
-    Updates the internal size values.
-*/
-void QAxServerBase::updateGeometry()
-{
-    if (!isWidget || !qt.widget)
-        return;
-
-    const QSize sizeHint = qt.widget->sizeHint();
-    const QSize size = qt.widget->size();
-    if (sizeHint.isValid()) { // if provided, adjust to sizeHint
-        QSize newSize = size;
-        if (!qt.widget->testAttribute(Qt::WA_Resized)) {
-            newSize = sizeHint;
-        } else { // according to sizePolicy rules if already resized
-            QSizePolicy sizePolicy = qt.widget->sizePolicy();
-            if (sizeHint.width() > size.width() && !(sizePolicy.horizontalPolicy() & QSizePolicy::ShrinkFlag))
-                newSize.setWidth(sizeHint.width());
-            if (sizeHint.width() < size.width() && !(sizePolicy.horizontalPolicy() & QSizePolicy::GrowFlag))
-                newSize.setWidth(sizeHint.width());
-            if (sizeHint.height() > size.height() && !(sizePolicy.verticalPolicy() & QSizePolicy::ShrinkFlag))
-                newSize.setHeight(sizeHint.height());
-            if (sizeHint.height() < size.height() && !(sizePolicy.verticalPolicy() & QSizePolicy::GrowFlag))
-                newSize.setHeight(sizeHint.height());
-        }
-        resize(newSize);
-
-    // set an initial size suitable for embedded controls
-    } else if (!qt.widget->testAttribute(Qt::WA_Resized)) {
-        resize(QSize(100, 100));
-        qt.widget->setAttribute(Qt::WA_Resized, false);
-    }
-}
-
-/*!
-    \internal
-
-    Updates the mask of the widget parent.
-*/
-void QAxServerBase::updateMask()
-{
-    if (!isWidget || !qt.widget || qt.widget->mask().isEmpty())
-        return;
-
-    QRegion rgn = qt.widget->mask();
-    HRGN hrgn = qaxHrgnFromQRegion(rgn, qt.widget);
-
-    // Since SetWindowRegion takes ownership
-    HRGN wr = CreateRectRgn(0,0,0,0);
-    CombineRgn(wr, hrgn, nullptr, RGN_COPY);
-    SetWindowRgn(m_hWnd, wr, true);
-    DeleteObject(hrgn);
-}
-
-static inline QByteArray paramType(const QByteArray &ptype, bool *out)
-{
-    *out = ptype.endsWith('&') || ptype.endsWith("**");
-    if (*out) {
-        QByteArray res(ptype);
-        res.truncate(res.length() - 1);
-        return res;
-    }
-
-    return ptype;
-}
-
-/*! \internal
-    Catches all signals emitted by the Qt widget and fires the respective COM event.
-
-    \a isignal is the Qt Meta Object index of the received signal, and \a _o the
-    signal parameters.
-*/
-int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
-{
-    Q_UNUSED(call);
-    Q_ASSERT(call == QMetaObject::InvokeMetaMethod);
-
-    if (index == STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX) {
-        if (sender() && m_spInPlaceFrame) {
-            if (qobject_cast<QStatusBar*>(sender()) != statusBar)
-                return true;
-
-            if (statusBar->isHidden()) {
-                QString message = *static_cast<const QString *>(argv[1]);
-                m_spInPlaceFrame->SetStatusText(QStringToBSTR(message));
-            }
-        }
-        return true;
-    }
-
-    if (freezeEvents || inDesignMode)
-        return true;
-
-    ensureMetaData();
-
-    // get the signal information.
-    const QMetaObject *mo = qt.object->metaObject();
-    QMetaMethod signal;
-    DISPID eventId = index;
-    qsizetype pcount = 0;
-    QByteArray type;
-    QByteArrayList ptypes;
-
-    switch(index) {
-    case DISPID_KEYDOWN:
-    case DISPID_KEYUP:
-        pcount = 2;
-        ptypes << "int&" << "int";
-        break;
-    case DISPID_KEYPRESS:
-        pcount = 1;
-        ptypes << "int&";
-        break;
-    case DISPID_MOUSEDOWN:
-    case DISPID_MOUSEMOVE:
-    case DISPID_MOUSEUP:
-        pcount = 4;
-        ptypes << "int" << "int" << "int" << "int";
-        break;
-    case DISPID_CLICK:
-        pcount = 0;
-        break;
-    case DISPID_DBLCLICK:
-        pcount = 0;
-        break;
-    default:
-        {
-            signal = mo->method(index);
-            Q_ASSERT(signal.methodType() == QMetaMethod::Signal);
-            type = signal.typeName();
-            QByteArray signature(signal.methodSignature());
-            QByteArray name(signature);
-            name.truncate(name.indexOf('('));
-
-            eventId = signalCache.value(index, -1);
-            if (eventId == -1) {
-                ComPtr<ITypeInfo> eventInfo;
-                qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->eventsID(class_name), &eventInfo);
-                if (eventInfo) {
-                    QString uni_name = QLatin1String(name);
-                    OLECHAR *olename = qaxQString2MutableOleChars(uni_name);
-                    eventInfo->GetIDsOfNames(&olename, 1, &eventId);
-                }
-            }
-
-            signature.remove(0, name.length() + 1);
-            signature.truncate(signature.length() - 1);
-
-            if (!signature.isEmpty())
-                ptypes = signature.split(',');
-
-            pcount = ptypes.size();
-        }
-        break;
-    }
-    if (pcount && !argv) {
-        qWarning("QAxServerBase::qt_metacall: Missing %d arguments", int(pcount));
-        return false;
-    }
-    if (eventId == -1)
-        return false;
-
-    // For all connected event sinks...
     ComPtr<IConnectionPoint> cpoint;
-    GUID IID_QAxEvents = qAxFactory()->eventsID(class_name);
-    FindConnectionPoint(IID_QAxEvents, &cpoint);
+    FindConnectionPoint(IID_IPropertyNotifySink, &cpoint);
     if (cpoint) {
         ComPtr<IEnumConnections> clist;
         cpoint->EnumConnections(&clist);
@@ -1532,83 +686,26 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
             CONNECTDATA c[1];
             clist->Next(cc, reinterpret_cast<CONNECTDATA *>(&c), &cc);
             if (cc) {
-                // setup parameters
-                unsigned int argErr = 0;
-                DISPPARAMS dispParams;
-                dispParams.cArgs = UINT(pcount);
-                dispParams.cNamedArgs = 0;
-                dispParams.rgdispidNamedArgs = nullptr;
-                dispParams.rgvarg = nullptr;
-
-                if (pcount) // Use malloc/free for eval package compatibility
-                    dispParams.rgvarg = static_cast<VARIANTARG *>(malloc(size_t(pcount) * sizeof(VARIANTARG)));
-                qsizetype p = 0;
-                for (p = 0; p < pcount; ++p) {
-                    VARIANT *arg = dispParams.rgvarg + (pcount - p - 1);
-                    VariantInit(arg);
-
-                    bool out;
-                    QByteArray ptype = paramType(ptypes.at(p), &out);
-                    QVariant variant;
-                    if (mo->indexOfEnumerator(ptype) != -1) {
-                        // convert enum values to int
-                        variant = QVariant(*reinterpret_cast<int *>(argv[p+1]));
-                    } else {
-                        const QMetaType metaType = QMetaType::fromName(ptype);
-                        if (metaType.id() == QMetaType::User) {
-                            if (ptype.endsWith('*')) {
-                                variant = QVariant(metaType, reinterpret_cast<void **>(argv[p+1]));
-                            } else {
-                                variant = QVariant(metaType, argv[p+1]);
-                            }
-                        } else {
-                            variant = QVariant(metaType, argv[p + 1]);
-                        }
-                    }
-
-                    QVariantToVARIANT(variant, *arg, ptype, out);
+                if (dispId == -1) {
+                    BSTR bstr = QStringToBSTR(QLatin1String(property));
+                    GetIDsOfNames(IID_NULL, &bstr, 1, LOCALE_USER_DEFAULT, &dispId);
+                    SysFreeString(bstr);
                 }
-
-                VARIANT retval;
-                VariantInit(&retval);
-                VARIANT *pretval = nullptr;
-                if (!type.isEmpty() && type != "void")
-                    pretval = &retval;
-
-                // call listeners (through IDispatch)
-                while (cc) {
+                if (dispId != -1) while (cc) {
                     if (c->pUnk) {
-                        ComPtr<IDispatch> disp;
-                        c->pUnk->QueryInterface(IID_QAxEvents, &disp);
-                        if (disp) {
-                            disp->Invoke(eventId, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dispParams, pretval, nullptr, &argErr);
-
-                            // update out-parameters and return value
-                            if (index > 0) {
-                                for (p = 0; p < pcount; ++p) {
-                                    bool out;
-                                    QByteArray ptype = paramType(ptypes.at(p), &out);
-                                    if (out)
-                                        QVariantToVoidStar(VARIANTToQVariant(dispParams.rgvarg[pcount - p - 1], ptype), argv[p+1], ptype);
-                                }
-                                if (pretval)
-                                    QVariantToVoidStar(VARIANTToQVariant(retval, type), argv[0], type);
-                            }
+                        ComPtr<IPropertyNotifySink> sink;
+                        c->pUnk->QueryInterface(IID_IPropertyNotifySink, &sink);
+                        if (sink) {
+                            sink->OnChanged(dispId);
                         }
-                        c->pUnk->Release(); // AddRef'ed by clist->Next implementation
+                        c->pUnk->Release();
                     }
                     clist->Next(cc, reinterpret_cast<CONNECTDATA *>(&c), &cc);
                 }
-
-                // clean up
-                for (p = 0; p < pcount; ++p)
-                    clearVARIANT(dispParams.rgvarg+p);
-                free(dispParams.rgvarg);
             }
         }
     }
-
-    return true;
+    dirtyflag = true;
 }
 
 /*! \internal
@@ -1654,78 +751,15 @@ IFACEMETHODIMP_(bool) QAxServerBase::EmitRequestPropertyChange(const char *prope
     return true;
 }
 
-/*! \internal
-    Call IPropertyNotifySink of connected clients.
-    \a dispId specifies the ID of the property that changed.
-*/
-IFACEMETHODIMP_(void) QAxServerBase::EmitPropertyChanged(const char *property)
+IFACEMETHODIMP_(QObject *) QAxServerBase::GetQObject() const
 {
-    long dispId = -1;
-
-    ComPtr<IConnectionPoint> cpoint;
-    FindConnectionPoint(IID_IPropertyNotifySink, &cpoint);
-    if (cpoint) {
-        ComPtr<IEnumConnections> clist;
-        cpoint->EnumConnections(&clist);
-        if (clist) {
-            clist->Reset();
-            ULONG cc = 1;
-            CONNECTDATA c[1];
-            clist->Next(cc, reinterpret_cast<CONNECTDATA *>(&c), &cc);
-            if (cc) {
-                if (dispId == -1) {
-                    BSTR bstr = QStringToBSTR(QLatin1String(property));
-                    GetIDsOfNames(IID_NULL, &bstr, 1, LOCALE_USER_DEFAULT, &dispId);
-                    SysFreeString(bstr);
-                }
-                if (dispId != -1) while (cc) {
-                    if (c->pUnk) {
-                        ComPtr<IPropertyNotifySink> sink;
-                        c->pUnk->QueryInterface(IID_IPropertyNotifySink, &sink);
-                        if (sink) {
-                            sink->OnChanged(dispId);
-                        }
-                        c->pUnk->Release();
-                    }
-                    clist->Next(cc, reinterpret_cast<CONNECTDATA *>(&c), &cc);
-                }
-            }
-        }
-    }
-    dirtyflag = true;
+    return theObject;
 }
 
-//**** IProvideClassInfo
-/*
-    Provide the ITypeInfo implementation for the COM class.
-*/
-IFACEMETHODIMP QAxServerBase::GetClassInfo(ITypeInfo **ppTI)
+IFACEMETHODIMP_(void) QAxServerBase::ReportError(int code, const QString &src,
+                                                 const QString &desc, const QString &context)
 {
-    if (!ppTI)
-        return E_POINTER;
-
-    *ppTI = nullptr;
-    if (!qAxTypeLibrary)
-        return DISP_E_BADINDEX;
-
-    return qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->classID(class_name), ppTI);
-}
-
-//**** IProvideClassInfo2
-/*
-    Provide the ID of the event interface.
-*/
-IFACEMETHODIMP QAxServerBase::GetGUID(DWORD dwGuidKind, GUID *pGUID)
-{
-    if (!pGUID)
-        return E_POINTER;
-
-    if (dwGuidKind == GUIDKIND_DEFAULT_SOURCE_DISP_IID) {
-        *pGUID = qAxFactory()->eventsID(class_name);
-        return S_OK;
-    }
-    *pGUID = GUID_NULL;
-    return E_FAIL;
+    exception = std::make_unique<QAxExceptInfo>(code, src, desc, context);
 }
 
 //**** IDispatch
@@ -2170,6 +1204,895 @@ IFACEMETHODIMP QAxServerBase::Invoke(DISPID dispIdMember, REFIID riid, LCID /* l
     return res;
 }
 
+//**** IOleObject
+/*
+    Stores the client site.
+*/
+IFACEMETHODIMP QAxServerBase::SetClientSite(IOleClientSite *pClientSite)
+{
+    // release all client site interfaces
+    m_spInPlaceSiteWindowless.Reset();
+    m_spInPlaceSite.Reset();
+    m_spInPlaceFrame.Reset();
+
+    m_spClientSite = pClientSite;
+    if (m_spClientSite) {
+        m_spClientSite->QueryInterface(IID_IOleInPlaceSite, &m_spInPlaceSite);
+        m_spClientSite->QueryInterface(IID_IOleInPlaceSiteWindowless, &m_spInPlaceSiteWindowless);
+    }
+
+    return S_OK;
+}
+
+/*
+    Returns the current client site..
+*/
+IFACEMETHODIMP QAxServerBase::GetClientSite(IOleClientSite **ppClientSite)
+{
+    if (!ppClientSite)
+        return E_POINTER;
+    *ppClientSite = m_spClientSite.Get();
+    if (*ppClientSite)
+        (*ppClientSite)->AddRef();
+    return S_OK;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::SetHostNames(LPCOLESTR /* szContainerApp */,
+                                           LPCOLESTR /* szContainerObj */)
+{
+    return S_OK;
+}
+
+/*
+    Closes the control.
+*/
+IFACEMETHODIMP QAxServerBase::Close(DWORD dwSaveOption)
+{
+    if (dwSaveOption != OLECLOSE_NOSAVE && m_spClientSite)
+        m_spClientSite->SaveObject();
+    if (isInPlaceActive) {
+        HRESULT hr = InPlaceDeactivate();
+        if (FAILED(hr))
+            return hr;
+    }
+    if (m_hWnd) {
+        if (IsWindow(m_hWnd))
+            DestroyWindow(m_hWnd);
+        m_hWnd = nullptr;
+        if (m_spClientSite)
+            m_spClientSite->OnShowWindow(false);
+    }
+
+    m_spInPlaceSiteWindowless.Reset();
+    m_spInPlaceSite.Reset();
+
+    if (m_spAdviseSink)
+        m_spAdviseSink->OnClose();
+    for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
+        adviseSinks.at(i).pAdvSink->OnClose();
+    }
+
+    return S_OK;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::SetMoniker(DWORD /* dwWhichMoniker */, IMoniker * /* pmk */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::GetMoniker(DWORD /* dwAssign */, DWORD /* dwWhichMoniker */,
+                                         IMoniker ** /* ppmk */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::InitFromData(IDataObject * /* pDataObject */, BOOL /* fCreation */,
+                                           DWORD /* dwReserved */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::GetClipboardData(DWORD /* dwReserved */,
+                                               IDataObject ** /* ppDataObject */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Executes the "verb" \a iVerb.
+*/
+IFACEMETHODIMP QAxServerBase::DoVerb(LONG iVerb, LPMSG /* lpmsg */,
+                                     IOleClientSite * /* pActiveSite */, LONG /* lindex */,
+                                     HWND /* hwndParent */, LPCRECT /* lprcPosRect */)
+{
+    HRESULT hr = E_NOTIMPL;
+    switch (iVerb)
+    {
+    case OLEIVERB_SHOW:
+        hr = internalActivate();
+        if (SUCCEEDED(hr))
+            hr = S_OK;
+        break;
+
+    case OLEIVERB_PRIMARY:
+    case OLEIVERB_INPLACEACTIVATE:
+        hr = internalActivate();
+        if (SUCCEEDED(hr)) {
+            hr = S_OK;
+            update();
+        }
+        break;
+
+    case OLEIVERB_UIACTIVATE:
+        if (!isUIActive) {
+            hr = internalActivate();
+            if (SUCCEEDED(hr))
+                hr = S_OK;
+        }
+        break;
+
+    case OLEIVERB_HIDE:
+        UIDeactivate();
+        if (m_hWnd)
+            ::ShowWindow(m_hWnd, SW_HIDE);
+        hr = S_OK;
+        return hr;
+
+    default:
+        break;
+    }
+    return hr;
+}
+
+/*
+    Returns an enumerator for the verbs registered for this class.
+*/
+IFACEMETHODIMP QAxServerBase::EnumVerbs(IEnumOLEVERB **ppEnumOleVerb)
+{
+    if (!ppEnumOleVerb)
+        return E_POINTER;
+    return OleRegEnumVerbs(qAxFactory()->classID(class_name), ppEnumOleVerb);
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::Update()
+{
+    return S_OK;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::IsUpToDate()
+{
+    return S_OK;
+}
+
+/*
+    Returns the CLSID of this class.
+*/
+IFACEMETHODIMP QAxServerBase::GetUserClassID(CLSID *pClsid)
+{
+    if (!pClsid)
+        return E_POINTER;
+    *pClsid = qAxFactory()->classID(class_name);
+    return S_OK;
+}
+
+/*
+    \reimp
+
+    See documentation of IOleObject::GetUserType.
+*/
+IFACEMETHODIMP QAxServerBase::GetUserType(DWORD dwFormOfType, LPOLESTR *pszUserType)
+{
+    if (!pszUserType)
+        return E_POINTER;
+
+    switch (dwFormOfType) {
+    case USERCLASSTYPE_FULL:
+        *pszUserType = QStringToOLESTR(class_name);
+        break;
+    case USERCLASSTYPE_SHORT:
+        if (!qt.widget || !isWidget || qt.widget->windowTitle().isEmpty())
+            *pszUserType = QStringToOLESTR(class_name);
+        else
+            *pszUserType = QStringToOLESTR(qt.widget->windowTitle());
+        break;
+    case USERCLASSTYPE_APPNAME:
+        *pszUserType = QStringToOLESTR(qApp->objectName());
+        break;
+    }
+
+    return S_OK;
+}
+
+/*
+    Tries to set the size of the control.
+*/
+IFACEMETHODIMP QAxServerBase::SetExtent(DWORD dwDrawAspect, SIZEL *psizel)
+{
+    if (dwDrawAspect != DVASPECT_CONTENT)
+        return DV_E_DVASPECT;
+    if (!psizel)
+        return E_POINTER;
+
+    if (!isWidget || !qt.widget) // nothing to do
+        return S_OK;
+
+    QSize proposedSize(qaxMapLogHiMetricsToPix(*psizel, qt.widget));
+
+    // can the widget be resized at all?
+    if (qt.widget->minimumSize() == qt.widget->maximumSize() && qt.widget->minimumSize() != proposedSize)
+        return E_FAIL;
+    //Save the extent, bound to the widget restrictions.
+    m_currentExtent.rwidth() = qBound(qt.widget->minimumWidth(), proposedSize.width(), qt.widget->maximumWidth());
+    m_currentExtent.rheight() = qBound(qt.widget->minimumHeight(), proposedSize.height(), qt.widget->maximumHeight());
+
+    resize(proposedSize);
+    return S_OK;
+}
+
+/*
+    Returns the current extent.
+*/
+IFACEMETHODIMP QAxServerBase::GetExtent(DWORD dwDrawAspect, SIZEL *psizel)
+{
+    if (dwDrawAspect != DVASPECT_CONTENT || !isWidget || !qt.widget)
+        return E_FAIL;
+    if (!psizel)
+        return E_POINTER;
+
+    *psizel = qaxMapPixToLogHiMetrics(m_currentExtent, qt.widget);
+    return S_OK;
+}
+
+/*
+    Stores the provided advise sink.
+*/
+IFACEMETHODIMP QAxServerBase::Advise(IAdviseSink *pAdvSink, DWORD *pdwConnection)
+{
+    if (!pAdvSink || !pdwConnection)
+        return E_POINTER;
+
+    *pdwConnection = ++m_nextAdviseConnection;
+    STATDATA data = { {0, nullptr, DVASPECT_CONTENT, -1, TYMED_NULL} , 0, pAdvSink, *pdwConnection };
+    adviseSinks.append(data);
+    pAdvSink->AddRef();
+    return S_OK;
+}
+
+/*
+    Disconnects an advise sink.
+*/
+IFACEMETHODIMP QAxServerBase::Unadvise(DWORD dwConnection)
+{
+    for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
+        STATDATA entry = adviseSinks.at(i);
+        if (entry.dwConnection == dwConnection) {
+            entry.pAdvSink->Release();
+            adviseSinks.removeAt(i);
+            return S_OK;
+        }
+    }
+    return OLE_E_NOCONNECTION;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::EnumAdvise(IEnumSTATDATA ** /* ppenumAdvise */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Returns the status flags registered for this control.
+*/
+IFACEMETHODIMP QAxServerBase::GetMiscStatus(DWORD dwAspect, DWORD *pdwStatus)
+{
+    return OleRegGetMiscStatus(qAxFactory()->classID(class_name), dwAspect, pdwStatus);
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::SetColorScheme(LOGPALETTE * /* pLogpal */)
+{
+    return E_NOTIMPL;
+}
+
+//**** IOleControl
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::GetControlInfo(CONTROLINFO * /* pCI */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::OnMnemonic(MSG * /* pMsg */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Update the ambient properties of the Qt widget.
+*/
+IFACEMETHODIMP QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
+{
+    if (!m_spClientSite || !theObject)
+        return S_OK;
+
+    ComPtr<IDispatch> disp;
+    m_spClientSite->QueryInterface(IID_IDispatch, &disp);
+    if (!disp)
+        return S_OK;
+
+    VARIANT var;
+    VariantInit(&var);
+    DISPPARAMS params = { nullptr, nullptr, 0, 0 };
+    disp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &var, nullptr, nullptr);
+
+    switch(dispID) {
+    case DISPID_AMBIENT_APPEARANCE:
+        break;
+    case DISPID_AMBIENT_AUTOCLIP:
+        break;
+    case DISPID_AMBIENT_BACKCOLOR:
+    case DISPID_AMBIENT_FORECOLOR:
+        if (isWidget) {
+            unsigned rgb;
+            if (var.vt == VT_UI4)
+                rgb = var.ulVal;
+            else if (var.vt == VT_I4)
+                rgb = unsigned(var.lVal);
+            else
+                break;
+            QPalette pal = qt.widget->palette();
+            pal.setColor(dispID == DISPID_AMBIENT_BACKCOLOR ? QPalette::Window : QPalette::WindowText,
+                         OLEColorToQColor(rgb));
+            qt.widget->setPalette(pal);
+        }
+        break;
+    case DISPID_AMBIENT_DISPLAYASDEFAULT:
+        break;
+    case DISPID_AMBIENT_DISPLAYNAME:
+        if (var.vt != VT_BSTR || !isWidget)
+            break;
+        qt.widget->setWindowTitle(QString::fromWCharArray(var.bstrVal));
+        break;
+    case DISPID_AMBIENT_FONT:
+        if (var.vt != VT_DISPATCH || !isWidget)
+            break;
+        {
+            QVariant qvar = VARIANTToQVariant(var, "QFont", QMetaType::QFont);
+            QFont qfont = qvariant_cast<QFont>(qvar);
+            qt.widget->setFont(qfont);
+        }
+        break;
+    case DISPID_AMBIENT_LOCALEID:
+        break;
+    case DISPID_AMBIENT_MESSAGEREFLECT:
+        if (var.vt != VT_BOOL)
+            break;
+        if (var.boolVal)
+            qt.widget->installEventFilter(this);
+        else
+            qt.widget->removeEventFilter(this);
+        break;
+    case DISPID_AMBIENT_PALETTE:
+        break;
+    case DISPID_AMBIENT_SCALEUNITS:
+        break;
+    case DISPID_AMBIENT_SHOWGRABHANDLES:
+        break;
+    case DISPID_AMBIENT_SHOWHATCHING:
+        break;
+    case DISPID_AMBIENT_SUPPORTSMNEMONICS:
+        break;
+    case DISPID_AMBIENT_TEXTALIGN:
+        break;
+    case DISPID_AMBIENT_UIDEAD:
+        if (var.vt != VT_BOOL || !isWidget)
+            break;
+        qt.widget->setEnabled(!var.boolVal);
+        break;
+    case DISPID_AMBIENT_USERMODE:
+        if (var.vt != VT_BOOL)
+            break;
+        inDesignMode = !var.boolVal;
+        break;
+    case DISPID_AMBIENT_RIGHTTOLEFT:
+        if (var.vt != VT_BOOL)
+            break;
+        QGuiApplication::setLayoutDirection(var.boolVal ? Qt::RightToLeft : Qt::LeftToRight);
+        break;
+    }
+
+    return S_OK;
+}
+
+/*
+    Turns event firing on and off.
+*/
+IFACEMETHODIMP QAxServerBase::FreezeEvents(BOOL bFreeze)
+{
+    // member of CComControl
+    if (bFreeze)
+        freezeEvents++;
+    else
+        freezeEvents--;
+
+    return S_OK;
+}
+
+//**** IViewObject
+/*
+    Draws the widget into the provided device context.
+*/
+IFACEMETHODIMP QAxServerBase::Draw(DWORD dwDrawAspect, LONG /* lindex */, void * /* pvAspect */,
+                                   DVTARGETDEVICE *ptd, HDC hdcTargetDev, HDC hdcDraw,
+                                   LPCRECTL lprcBounds, LPCRECTL /* lprcWBounds */,
+                                   BOOL(STDMETHODCALLTYPE * /* pfnContinue */)(ULONG_PTR),
+                                   ULONG_PTR /* dwContinue */)
+{
+    if (!lprcBounds)
+        return E_INVALIDARG;
+
+    internalCreate();
+    if (!isWidget || !qt.widget)
+        return OLE_E_BLANK;
+
+    switch (dwDrawAspect) {
+    case DVASPECT_CONTENT:
+    case DVASPECT_OPAQUE:
+    case DVASPECT_TRANSPARENT:
+        break;
+    default:
+        return DV_E_DVASPECT;
+    }
+    if (!ptd)
+        hdcTargetDev = nullptr;
+
+    bool bDeleteDC = false;
+    if (!hdcTargetDev) {
+        hdcTargetDev = ::CreateDC(L"DISPLAY", nullptr, nullptr, nullptr);
+        bDeleteDC = (hdcTargetDev != hdcDraw);
+    }
+
+    RECTL rc = *lprcBounds;
+    bool bMetaFile = GetDeviceCaps(hdcDraw, TECHNOLOGY) == DT_METAFILE;
+    if (!bMetaFile)
+        ::LPtoDP(hdcTargetDev, reinterpret_cast<LPPOINT>(&rc), 2);
+
+    const QPixmap pm = qt.widget->grab();
+    HBITMAP hbm = qt_pixmapToWinHBITMAP(pm);
+    HDC hdc = CreateCompatibleDC(nullptr);
+    SelectObject(hdc, hbm);
+    ::StretchBlt(hdcDraw, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hdc, 0, 0,pm.width(), pm.height(), SRCCOPY);
+    DeleteDC(hdc);
+    DeleteObject(hbm);
+
+    if (bDeleteDC)
+        DeleteDC(hdcTargetDev);
+
+    return S_OK;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::GetColorSet(DWORD /* dwDrawAspect */, LONG /* lindex */,
+                                          void * /* pvAspect */, DVTARGETDEVICE * /* ptd */,
+                                          HDC /* hicTargetDev */, LOGPALETTE ** /* ppColorSet */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::Freeze(DWORD /* dwDrawAspect */, LONG /* lindex */,
+                                     void * /* pvAspect */, DWORD * /* pdwFreeze */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::Unfreeze(DWORD /* dwFreeze */)
+{
+    return E_NOTIMPL;
+}
+
+/*
+    Stores the provided advise sink.
+*/
+IFACEMETHODIMP QAxServerBase::SetAdvise(DWORD /* aspects */, DWORD /* advf */,
+                                        IAdviseSink *pAdvSink)
+{
+    m_spAdviseSink = pAdvSink;
+    return S_OK;
+}
+
+/*
+    Returns the advise sink.
+*/
+IFACEMETHODIMP QAxServerBase::GetAdvise(DWORD * /* pAspects */, DWORD * /* pAdvf */,
+                                        IAdviseSink **ppAdvSink)
+{
+    if (!ppAdvSink)
+        return E_POINTER;
+
+    *ppAdvSink = m_spAdviseSink.Get();
+    if (*ppAdvSink)
+        (*ppAdvSink)->AddRef();
+    return S_OK;
+}
+
+//**** IViewObject2
+/*
+    Returns the current size ONLY if the widget has already been sized.
+*/
+IFACEMETHODIMP QAxServerBase::GetExtent(DWORD dwDrawAspect, LONG /* lindex */,
+                                        DVTARGETDEVICE * /* ptd */, LPSIZEL lpsizel)
+{
+    if (!isWidget || !qt.widget || !qt.widget->testAttribute(Qt::WA_Resized))
+        return OLE_E_BLANK;
+
+    return GetExtent(dwDrawAspect, lpsizel);
+}
+
+//**** IOleWindow
+/*
+    Returns the HWND of the control.
+*/
+IFACEMETHODIMP QAxServerBase::GetWindow(HWND *phwnd)
+{
+    if (!phwnd)
+        return E_POINTER;
+    *phwnd = m_hWnd;
+    return S_OK;
+}
+
+/*
+    Enters What's This mode.
+*/
+IFACEMETHODIMP QAxServerBase::ContextSensitiveHelp(BOOL fEnterMode)
+{
+    if (fEnterMode)
+        QWhatsThis::enterWhatsThisMode();
+    else
+        QWhatsThis::leaveWhatsThisMode();
+    return S_OK;
+}
+
+//**** IOleInPlaceObject
+/*
+    Deactivates the control in place.
+*/
+IFACEMETHODIMP QAxServerBase::InPlaceDeactivate()
+{
+    if (!isInPlaceActive)
+        return S_OK;
+    UIDeactivate();
+
+    isInPlaceActive = false;
+
+    // if we have a window, tell it to go away.
+    if (m_hWnd) {
+        if (::IsWindow(m_hWnd))
+            ::DestroyWindow(m_hWnd);
+        m_hWnd = nullptr;
+    }
+
+    if (m_spInPlaceSite)
+        m_spInPlaceSite->OnInPlaceDeactivate();
+
+    return S_OK;
+}
+
+/*
+    Deactivates the control's user interface.
+*/
+IFACEMETHODIMP QAxServerBase::UIDeactivate()
+{
+    // if we're not UIActive, not much to do.
+    if (!isUIActive || !m_spInPlaceSite)
+        return S_OK;
+
+    isUIActive = false;
+
+    // notify frame windows, if appropriate, that we're no longer ui-active.
+    HWND hwndParent;
+    if (m_spInPlaceSite->GetWindow(&hwndParent) == S_OK) {
+        ComPtr<IOleInPlaceUIWindow> spInPlaceUIWindow;
+        RECT rcPos, rcClip;
+        OLEINPLACEFRAMEINFO frameInfo;
+        frameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
+
+        m_spInPlaceSite->GetWindowContext(&m_spInPlaceFrame, &spInPlaceUIWindow, &rcPos, &rcClip, &frameInfo);
+        if (spInPlaceUIWindow) {
+            spInPlaceUIWindow->SetActiveObject(nullptr, nullptr);
+        }
+        if (m_spInPlaceFrame) {
+            removeMenu();
+            if (menuBar) {
+                menuBar->removeEventFilter(this);
+                menuBar = nullptr;
+            }
+            if (statusBar) {
+                statusBar->removeEventFilter(this);
+                const int index = statusBar->metaObject()->indexOfSignal("messageChanged(QString)");
+        QMetaObject::disconnect(statusBar, index, this, STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX);
+                statusBar = nullptr;
+            }
+            m_spInPlaceFrame->SetActiveObject(nullptr, nullptr);
+            m_spInPlaceFrame.Reset();
+        }
+    }
+    // we don't need to explicitly release the focus here since somebody
+    // else grabbing the focus is usually why we are getting called at all
+    m_spInPlaceSite->OnUIDeactivate(false);
+
+    return S_OK;
+}
+
+/*
+    Positions the control, and applies requested clipping.
+*/
+IFACEMETHODIMP QAxServerBase::SetObjectRects(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
+{
+    if (lprcPosRect == nullptr || lprcClipRect == nullptr)
+        return E_POINTER;
+
+    if (m_hWnd) {
+        // the container wants us to clip, so figure out if we really need to
+        RECT rcIXect;
+        BOOL b = IntersectRect(&rcIXect, lprcPosRect, lprcClipRect);
+        HRGN tempRgn = nullptr;
+        if (b && !EqualRect(&rcIXect, lprcPosRect)) {
+            OffsetRect(&rcIXect, -(lprcPosRect->left), -(lprcPosRect->top));
+            tempRgn = CreateRectRgnIndirect(&rcIXect);
+        }
+
+        ::SetWindowRgn(m_hWnd, tempRgn, true);
+        ::SetWindowPos(m_hWnd, nullptr, lprcPosRect->left, lprcPosRect->top,
+            lprcPosRect->right - lprcPosRect->left, lprcPosRect->bottom - lprcPosRect->top,
+            SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+
+    //Save the new extent.
+    const QRect qr = qaxFromNativeRect(*lprcPosRect, qt.widget);
+    m_currentExtent.rwidth() = qBound(qt.widget->minimumWidth(), qr.width(), qt.widget->maximumWidth());
+    m_currentExtent.rheight() = qBound(qt.widget->minimumHeight(), qr.height(), qt.widget->maximumHeight());
+
+    return S_OK;
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::ReactivateAndUndo()
+{
+    return E_NOTIMPL;
+}
+
+//**** IOleInPlaceActiveObject
+IFACEMETHODIMP QAxServerBase::TranslateAccelerator(LPMSG lpmsg)
+{
+    if (lpmsg->message != WM_KEYDOWN || !isWidget)
+        return S_FALSE;
+
+    DWORD dwKeyMod = 0;
+    if (::GetKeyState(VK_SHIFT) < 0)
+        dwKeyMod |= 1;  // KEYMOD_SHIFT
+    if (::GetKeyState(VK_CONTROL) < 0)
+        dwKeyMod |= 2;  // KEYMOD_CONTROL
+    if (::GetKeyState(VK_MENU) < 0)
+        dwKeyMod |= 4;  // KEYMOD_ALT
+
+    switch (LOWORD(lpmsg->wParam)) {
+    case VK_TAB:
+        if (isUIActive) {
+            bool shift = ::GetKeyState(VK_SHIFT) < 0;
+            bool giveUp = true;
+            QWidget *curFocus = qt.widget->focusWidget();
+            if (curFocus) {
+                if (shift) {
+                    if (!curFocus->isWindow()) {
+                        QWidget *nextFocus = curFocus->nextInFocusChain();
+                        QWidget *topLevel = nullptr;
+                        while (nextFocus != curFocus) {
+                            if (nextFocus->focusPolicy() & Qt::TabFocus) {
+                                topLevel = nullptr;
+                            } else if (nextFocus->isWindow()) {
+                                topLevel = nextFocus;
+                            }
+                            nextFocus = nextFocus->nextInFocusChain();
+                        }
+
+                        if (!topLevel) {
+                            giveUp = false;
+                            static_cast<HackWidget *>(curFocus)->focusNextPrevChild(false);
+                            curFocus->window()->setAttribute(Qt::WA_KeyboardFocusChange);
+                        }
+                    }
+                } else {
+                    QWidget *nextFocus = curFocus;
+                    while (true) {
+                        nextFocus = nextFocus->nextInFocusChain();
+                        if (nextFocus->isWindow())
+                            break;
+                        if (nextFocus->focusPolicy() & Qt::TabFocus) {
+                            giveUp = false;
+                            static_cast<HackWidget *>(curFocus)->focusNextPrevChild(true);
+                            curFocus->window()->setAttribute(Qt::WA_KeyboardFocusChange);
+                            break;
+                        }
+                    }
+                }
+            }
+            if (giveUp) {
+                HWND hwnd = ::GetParent(m_hWnd);
+                ::SetFocus(hwnd);
+            } else {
+                return S_OK;
+            }
+
+        }
+        break;
+
+    case VK_LEFT:
+    case VK_RIGHT:
+    case VK_UP:
+    case VK_DOWN:
+        if (isUIActive)
+            return S_FALSE;
+        break;
+
+    default:
+        if (isUIActive && qt.widget->focusWidget()) {
+            int state = Qt::NoButton;
+            if (dwKeyMod & 1)
+                state |= Qt::ShiftModifier;
+            if (dwKeyMod & 2)
+                state |= Qt::ControlModifier;
+            if (dwKeyMod & 4)
+                state |= Qt::AltModifier;
+
+            int key = int(lpmsg->wParam);
+            // FIXME 4.10.2011: No longer exists in Lighthouse.
+            // if (!(key >= 'A' && key <= 'Z') && !(key >= '0' && key <= '9'))
+            //    key = qt_translateKeyCode(lpmsg->wParam);
+
+            QKeyEvent override(QEvent::ShortcutOverride, key, static_cast<Qt::KeyboardModifiers>(state));
+            override.ignore();
+            QCoreApplication::sendEvent(qt.widget->focusWidget(), &override);
+            if (override.isAccepted())
+                return S_FALSE;
+        }
+        break;
+    }
+
+    if (!m_spClientSite)
+        return S_FALSE;
+
+    ComPtr<IOleControlSite> controlSite;
+    m_spClientSite->QueryInterface(IID_IOleControlSite, &controlSite);
+    if (!controlSite)
+        return S_FALSE;
+    // set server type in the user-data of the window.
+#ifdef GWLP_USERDATA
+    LONG_PTR serverType = QAX_INPROC_SERVER;
+#else
+    LONG serverType = QAX_INPROC_SERVER;
+#endif
+    if (qAxOutProcServer)
+        serverType = QAX_OUTPROC_SERVER;
+#ifdef GWLP_USERDATA
+    LONG_PTR oldData = SetWindowLongPtr(lpmsg->hwnd, GWLP_USERDATA, serverType);
+#else
+    LONG oldData = SetWindowLong(lpmsg->hwnd, GWL_USERDATA, serverType);
+#endif
+    HRESULT hres = controlSite->TranslateAcceleratorW(lpmsg, dwKeyMod);
+    // reset the user-data for the window.
+#ifdef GWLP_USERDATA
+    SetWindowLongPtr(lpmsg->hwnd, GWLP_USERDATA, oldData);
+#else
+    SetWindowLong(lpmsg->hwnd, GWL_USERDATA, oldData);
+#endif
+    return hres;
+}
+
+IFACEMETHODIMP QAxServerBase::OnFrameWindowActivate(BOOL fActivate)
+{
+    if (fActivate) {
+        if (wasUIActive)
+            ::SetFocus(m_hWnd);
+    } else {
+        wasUIActive = isUIActive;
+    }
+    return S_OK;
+}
+
+IFACEMETHODIMP QAxServerBase::OnDocWindowActivate(BOOL /* fActivate */)
+{
+    return S_OK;
+}
+
+IFACEMETHODIMP QAxServerBase::ResizeBorder(LPCRECT /* prcBorder */,
+                                           IOleInPlaceUIWindow * /* pUIWindow */,
+                                           BOOL /* fFrameWindow */)
+{
+    return S_OK;
+}
+
+IFACEMETHODIMP QAxServerBase::EnableModeless(BOOL fEnable)
+{
+    if (!isWidget)
+        return S_OK;
+
+    // FIXME: 4.10.2011 Does this work with the parent's HWND?
+    EnableWindow(hwndForWidget(qt.widget), fEnable);
+    return S_OK;
+}
+
+//**** IProvideClassInfo
+/*
+    Provide the ITypeInfo implementation for the COM class.
+*/
+IFACEMETHODIMP QAxServerBase::GetClassInfo(ITypeInfo **ppTI)
+{
+    if (!ppTI)
+        return E_POINTER;
+
+    *ppTI = nullptr;
+    if (!qAxTypeLibrary)
+        return DISP_E_BADINDEX;
+
+    return qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->classID(class_name), ppTI);
+}
+
+//**** IProvideClassInfo2
+/*
+    Provide the ID of the event interface.
+*/
+IFACEMETHODIMP QAxServerBase::GetGUID(DWORD dwGuidKind, GUID *pGUID)
+{
+    if (!pGUID)
+        return E_POINTER;
+
+    if (dwGuidKind == GUIDKIND_DEFAULT_SOURCE_DISP_IID) {
+        *pGUID = qAxFactory()->eventsID(class_name);
+        return S_OK;
+    }
+    *pGUID = GUID_NULL;
+    return E_FAIL;
+}
+
 //**** IConnectionPointContainer
 /*
     Provide the IEnumConnectionPoints implemented in the QAxSignalVec class.
@@ -2347,8 +2270,21 @@ IFACEMETHODIMP QAxServerBase::GetSizeMax(ULARGE_INTEGER *pCbSize)
     return S_OK;
 }
 
-//**** IPersistStorage
+//**** IPersistStreamInit
+/*
+    Initialize the properties of the Qt widget.
+*/
+IFACEMETHODIMP QAxServerBase::InitNew()
+{
+    if (initNewCalled)
+        return CO_E_ALREADYINITIALIZED;
 
+    dirtyflag = false;
+    initNewCalled = true;
+    return S_OK;
+}
+
+//**** IPersistStorage
 IFACEMETHODIMP QAxServerBase::InitNew(IStorage *pStg)
 {
     if (initNewCalled)
@@ -2423,19 +2359,6 @@ IFACEMETHODIMP QAxServerBase::HandsOffStorage()
 
 //**** IPersistPropertyBag
 /*
-    Initialize the properties of the Qt widget.
-*/
-IFACEMETHODIMP QAxServerBase::InitNew()
-{
-    if (initNewCalled)
-        return CO_E_ALREADYINITIALIZED;
-
-    dirtyflag = false;
-    initNewCalled = true;
-    return S_OK;
-}
-
-/*
     Set the properties of the Qt widget to the values provided in the \a bag.
 */
 IFACEMETHODIMP QAxServerBase::Load(IPropertyBag *pPropBag, IErrorLog * /* pErrorLog */)
@@ -2509,35 +2432,6 @@ IFACEMETHODIMP QAxServerBase::Save(IPropertyBag *pPropBag, BOOL fClearDirty,
 //**** IPersistFile
 /*
 */
-IFACEMETHODIMP QAxServerBase::SaveCompleted(LPCOLESTR pszFileName)
-{
-    if (qt.object->metaObject()->indexOfClassInfo("MIME") == -1)
-        return E_NOTIMPL;
-
-    currentFileName = QString::fromWCharArray(pszFileName);
-    return S_OK;
-}
-
-IFACEMETHODIMP QAxServerBase::GetCurFile(LPOLESTR *ppszFileName)
-{
-    if (qt.object->metaObject()->indexOfClassInfo("MIME") == -1)
-        return E_NOTIMPL;
-
-    if (currentFileName.isEmpty()) {
-        *ppszFileName = nullptr;
-        return S_FALSE;
-    }
-    ComPtr<IMalloc> malloc;
-    CoGetMalloc(1, &malloc);
-    if (!malloc)
-        return E_OUTOFMEMORY;
-
-    *ppszFileName = static_cast<wchar_t *>(malloc->Alloc(currentFileName.length() * 2));
-    memcpy(*ppszFileName, currentFileName.unicode(), currentFileName.length() * 2);
-
-    return S_OK;
-}
-
 IFACEMETHODIMP QAxServerBase::Load(LPCOLESTR pszFileName, DWORD /* dwMode */)
 {
     const QMetaObject *mo = qt.object->metaObject();
@@ -2626,375 +2520,99 @@ IFACEMETHODIMP QAxServerBase::Save(LPCOLESTR pszFileName, BOOL fRemember)
     return E_FAIL;
 }
 
-//**** IViewObject
-/*
-    Draws the widget into the provided device context.
-*/
-IFACEMETHODIMP QAxServerBase::Draw(DWORD dwDrawAspect, LONG /* lindex */, void * /* pvAspect */,
-                                   DVTARGETDEVICE *ptd, HDC hdcTargetDev, HDC hdcDraw,
-                                   LPCRECTL lprcBounds, LPCRECTL /* lprcWBounds */,
-                                   BOOL(STDMETHODCALLTYPE * /* pfnContinue */)(ULONG_PTR),
-                                   ULONG_PTR /* dwContinue */)
+IFACEMETHODIMP QAxServerBase::SaveCompleted(LPCOLESTR pszFileName)
 {
-    if (!lprcBounds)
-        return E_INVALIDARG;
+    if (qt.object->metaObject()->indexOfClassInfo("MIME") == -1)
+        return E_NOTIMPL;
+
+    currentFileName = QString::fromWCharArray(pszFileName);
+    return S_OK;
+}
+
+IFACEMETHODIMP QAxServerBase::GetCurFile(LPOLESTR *ppszFileName)
+{
+    if (qt.object->metaObject()->indexOfClassInfo("MIME") == -1)
+        return E_NOTIMPL;
+
+    if (currentFileName.isEmpty()) {
+        *ppszFileName = nullptr;
+        return S_FALSE;
+    }
+    ComPtr<IMalloc> malloc;
+    CoGetMalloc(1, &malloc);
+    if (!malloc)
+        return E_OUTOFMEMORY;
+
+    *ppszFileName = static_cast<wchar_t *>(malloc->Alloc(currentFileName.length() * 2));
+    memcpy(*ppszFileName, currentFileName.unicode(), currentFileName.length() * 2);
+
+    return S_OK;
+}
+
+//**** IDataObject
+/*
+    Calls IViewObject::Draw after setting up the parameters.
+*/
+IFACEMETHODIMP QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
+{
+    if (!pmedium)
+        return E_POINTER;
+    if ((pformatetcIn->tymed & TYMED_MFPICT) == 0)
+        return DATA_E_FORMATETC;
 
     internalCreate();
     if (!isWidget || !qt.widget)
-        return OLE_E_BLANK;
+        return E_UNEXPECTED;
 
-    switch (dwDrawAspect) {
-    case DVASPECT_CONTENT:
-    case DVASPECT_OPAQUE:
-    case DVASPECT_TRANSPARENT:
-        break;
-    default:
-        return DV_E_DVASPECT;
-    }
-    if (!ptd)
-        hdcTargetDev = nullptr;
-
-    bool bDeleteDC = false;
-    if (!hdcTargetDev) {
-        hdcTargetDev = ::CreateDC(L"DISPLAY", nullptr, nullptr, nullptr);
-        bDeleteDC = (hdcTargetDev != hdcDraw);
-    }
-
-    RECTL rc = *lprcBounds;
-    bool bMetaFile = GetDeviceCaps(hdcDraw, TECHNOLOGY) == DT_METAFILE;
-    if (!bMetaFile)
-        ::LPtoDP(hdcTargetDev, reinterpret_cast<LPPOINT>(&rc), 2);
-
-    const QPixmap pm = qt.widget->grab();
-    HBITMAP hbm = qt_pixmapToWinHBITMAP(pm);
-    HDC hdc = CreateCompatibleDC(nullptr);
-    SelectObject(hdc, hbm);
-    ::StretchBlt(hdcDraw, rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, hdc, 0, 0,pm.width(), pm.height(), SRCCOPY);
-    DeleteDC(hdc);
-    DeleteObject(hbm);
-
-    if (bDeleteDC)
-        DeleteDC(hdcTargetDev);
-
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::GetColorSet(DWORD /* dwDrawAspect */, LONG /* lindex */,
-                                          void * /* pvAspect */, DVTARGETDEVICE * /* ptd */,
-                                          HDC /* hicTargetDev */, LOGPALETTE ** /* ppColorSet */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::Freeze(DWORD /* dwDrawAspect */, LONG /* lindex */,
-                                     void * /* pvAspect */, DWORD * /* pdwFreeze */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::Unfreeze(DWORD /* dwFreeze */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Stores the provided advise sink.
-*/
-IFACEMETHODIMP QAxServerBase::SetAdvise(DWORD /* aspects */, DWORD /* advf */,
-                                        IAdviseSink *pAdvSink)
-{
-    m_spAdviseSink = pAdvSink;
-    return S_OK;
-}
-
-/*
-    Returns the advise sink.
-*/
-IFACEMETHODIMP QAxServerBase::GetAdvise(DWORD * /* pAspects */, DWORD * /* pAdvf */,
-                                        IAdviseSink **ppAdvSink)
-{
-    if (!ppAdvSink)
-        return E_POINTER;
-
-    *ppAdvSink = m_spAdviseSink.Get();
-    if (*ppAdvSink)
-        (*ppAdvSink)->AddRef();
-    return S_OK;
-}
-
-//**** IViewObject2
-/*
-    Returns the current size ONLY if the widget has already been sized.
-*/
-IFACEMETHODIMP QAxServerBase::GetExtent(DWORD dwDrawAspect, LONG /* lindex */,
-                                        DVTARGETDEVICE * /* ptd */, LPSIZEL lpsizel)
-{
-    if (!isWidget || !qt.widget || !qt.widget->testAttribute(Qt::WA_Resized))
-        return OLE_E_BLANK;
-
-    return GetExtent(dwDrawAspect, lpsizel);
-}
-
-//**** IOleControl
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::GetControlInfo(CONTROLINFO * /* pCI */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Turns event firing on and off.
-*/
-IFACEMETHODIMP QAxServerBase::FreezeEvents(BOOL bFreeze)
-{
-    // member of CComControl
-    if (bFreeze)
-        freezeEvents++;
-    else
-        freezeEvents--;
-
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::OnMnemonic(MSG * /* pMsg */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Update the ambient properties of the Qt widget.
-*/
-IFACEMETHODIMP QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
-{
-    if (!m_spClientSite || !theObject)
-        return S_OK;
-
-    ComPtr<IDispatch> disp;
-    m_spClientSite->QueryInterface(IID_IDispatch, &disp);
-    if (!disp)
-        return S_OK;
-
-    VARIANT var;
-    VariantInit(&var);
-    DISPPARAMS params = { nullptr, nullptr, 0, 0 };
-    disp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET, &params, &var, nullptr, nullptr);
-
-    switch(dispID) {
-    case DISPID_AMBIENT_APPEARANCE:
-        break;
-    case DISPID_AMBIENT_AUTOCLIP:
-        break;
-    case DISPID_AMBIENT_BACKCOLOR:
-    case DISPID_AMBIENT_FORECOLOR:
-        if (isWidget) {
-            unsigned rgb;
-            if (var.vt == VT_UI4)
-                rgb = var.ulVal;
-            else if (var.vt == VT_I4)
-                rgb = unsigned(var.lVal);
-            else
-                break;
-            QPalette pal = qt.widget->palette();
-            pal.setColor(dispID == DISPID_AMBIENT_BACKCOLOR ? QPalette::Window : QPalette::WindowText,
-                         OLEColorToQColor(rgb));
-            qt.widget->setPalette(pal);
-        }
-        break;
-    case DISPID_AMBIENT_DISPLAYASDEFAULT:
-        break;
-    case DISPID_AMBIENT_DISPLAYNAME:
-        if (var.vt != VT_BSTR || !isWidget)
-            break;
-        qt.widget->setWindowTitle(QString::fromWCharArray(var.bstrVal));
-        break;
-    case DISPID_AMBIENT_FONT:
-        if (var.vt != VT_DISPATCH || !isWidget)
-            break;
-        {
-            QVariant qvar = VARIANTToQVariant(var, "QFont", QMetaType::QFont);
-            QFont qfont = qvariant_cast<QFont>(qvar);
-            qt.widget->setFont(qfont);
-        }
-        break;
-    case DISPID_AMBIENT_LOCALEID:
-        break;
-    case DISPID_AMBIENT_MESSAGEREFLECT:
-        if (var.vt != VT_BOOL)
-            break;
-        if (var.boolVal)
-            qt.widget->installEventFilter(this);
-        else
-            qt.widget->removeEventFilter(this);
-        break;
-    case DISPID_AMBIENT_PALETTE:
-        break;
-    case DISPID_AMBIENT_SCALEUNITS:
-        break;
-    case DISPID_AMBIENT_SHOWGRABHANDLES:
-        break;
-    case DISPID_AMBIENT_SHOWHATCHING:
-        break;
-    case DISPID_AMBIENT_SUPPORTSMNEMONICS:
-        break;
-    case DISPID_AMBIENT_TEXTALIGN:
-        break;
-    case DISPID_AMBIENT_UIDEAD:
-        if (var.vt != VT_BOOL || !isWidget)
-            break;
-        qt.widget->setEnabled(!var.boolVal);
-        break;
-    case DISPID_AMBIENT_USERMODE:
-        if (var.vt != VT_BOOL)
-            break;
-        inDesignMode = !var.boolVal;
-        break;
-    case DISPID_AMBIENT_RIGHTTOLEFT:
-        if (var.vt != VT_BOOL)
-            break;
-        QGuiApplication::setLayoutDirection(var.boolVal ? Qt::RightToLeft : Qt::LeftToRight);
-        break;
-    }
-
-    return S_OK;
-}
-
-//**** IOleWindow
-/*
-    Returns the HWND of the control.
-*/
-IFACEMETHODIMP QAxServerBase::GetWindow(HWND *phwnd)
-{
-    if (!phwnd)
-        return E_POINTER;
-    *phwnd = m_hWnd;
-    return S_OK;
-}
-
-/*
-    Enters What's This mode.
-*/
-IFACEMETHODIMP QAxServerBase::ContextSensitiveHelp(BOOL fEnterMode)
-{
-    if (fEnterMode)
-        QWhatsThis::enterWhatsThisMode();
-    else
-        QWhatsThis::leaveWhatsThisMode();
-    return S_OK;
-}
-
-//**** IOleInPlaceObject
-/*
-    Deactivates the control in place.
-*/
-IFACEMETHODIMP QAxServerBase::InPlaceDeactivate()
-{
-    if (!isInPlaceActive)
-        return S_OK;
-    UIDeactivate();
-
-    isInPlaceActive = false;
-
-    // if we have a window, tell it to go away.
-    if (m_hWnd) {
-        if (::IsWindow(m_hWnd))
-            ::DestroyWindow(m_hWnd);
-        m_hWnd = nullptr;
-    }
-
-    if (m_spInPlaceSite)
-        m_spInPlaceSite->OnInPlaceDeactivate();
-
-    return S_OK;
-}
-
-/*
-    Deactivates the control's user interface.
-*/
-IFACEMETHODIMP QAxServerBase::UIDeactivate()
-{
-    // if we're not UIActive, not much to do.
-    if (!isUIActive || !m_spInPlaceSite)
-        return S_OK;
-
-    isUIActive = false;
-
-    // notify frame windows, if appropriate, that we're no longer ui-active.
-    HWND hwndParent;
-    if (m_spInPlaceSite->GetWindow(&hwndParent) == S_OK) {
+    // Container wants to draw, but the size is not defined yet - ask container
+    if (m_spInPlaceSite && !qt.widget->testAttribute(Qt::WA_Resized)) {
         ComPtr<IOleInPlaceUIWindow> spInPlaceUIWindow;
         RECT rcPos, rcClip;
         OLEINPLACEFRAMEINFO frameInfo;
         frameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
 
-        m_spInPlaceSite->GetWindowContext(&m_spInPlaceFrame, &spInPlaceUIWindow, &rcPos, &rcClip, &frameInfo);
-        if (spInPlaceUIWindow) {
-            spInPlaceUIWindow->SetActiveObject(nullptr, nullptr);
-        }
-        if (m_spInPlaceFrame) {
-            removeMenu();
-            if (menuBar) {
-                menuBar->removeEventFilter(this);
-                menuBar = nullptr;
-            }
-            if (statusBar) {
-                statusBar->removeEventFilter(this);
-                const int index = statusBar->metaObject()->indexOfSignal("messageChanged(QString)");
-        QMetaObject::disconnect(statusBar, index, this, STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX);
-                statusBar = nullptr;
-            }
-            m_spInPlaceFrame->SetActiveObject(nullptr, nullptr);
-            m_spInPlaceFrame.Reset();
+        HRESULT hres = m_spInPlaceSite->GetWindowContext(&m_spInPlaceFrame, &spInPlaceUIWindow, &rcPos, &rcClip, &frameInfo);
+        if (hres == S_OK) {
+            resize(qaxFromNativeSize(qt.widget, qaxSizeOfRect(rcPos)));
+        } else {
+            qt.widget->adjustSize();
         }
     }
-    // we don't need to explicitly release the focus here since somebody
-    // else grabbing the focus is usually why we are getting called at all
-    m_spInPlaceSite->OnUIDeactivate(false);
 
-    return S_OK;
-}
+    int width = qt.widget->width();
+    int height = qt.widget->height();
+    RECTL rectl = {0, 0, width, height};
 
-/*
-    Positions the control, and applies requested clipping.
-*/
-IFACEMETHODIMP QAxServerBase::SetObjectRects(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
-{
-    if (lprcPosRect == nullptr || lprcClipRect == nullptr)
-        return E_POINTER;
+    HDC hdc = CreateMetaFile(nullptr);
+    SaveDC(hdc);
+    SetWindowOrgEx(hdc, 0, 0, nullptr);
+    SetWindowExtEx(hdc, rectl.right, rectl.bottom, nullptr);
 
-    if (m_hWnd) {
-        // the container wants us to clip, so figure out if we really need to
-        RECT rcIXect;
-        BOOL b = IntersectRect(&rcIXect, lprcPosRect, lprcClipRect);
-        HRGN tempRgn = nullptr;
-        if (b && !EqualRect(&rcIXect, lprcPosRect)) {
-            OffsetRect(&rcIXect, -(lprcPosRect->left), -(lprcPosRect->top));
-            tempRgn = CreateRectRgnIndirect(&rcIXect);
-        }
+    Draw(pformatetcIn->dwAspect, pformatetcIn->lindex, nullptr, pformatetcIn->ptd, nullptr, hdc, &rectl, &rectl, nullptr, 0);
 
-        ::SetWindowRgn(m_hWnd, tempRgn, true);
-        ::SetWindowPos(m_hWnd, nullptr, lprcPosRect->left, lprcPosRect->top,
-            lprcPosRect->right - lprcPosRect->left, lprcPosRect->bottom - lprcPosRect->top,
-            SWP_NOZORDER | SWP_NOACTIVATE);
+    RestoreDC(hdc, -1);
+    HMETAFILE hMF = CloseMetaFile(hdc);
+    if (!hMF)
+        return E_UNEXPECTED;
+
+    HGLOBAL hMem = GlobalAlloc(GMEM_SHARE | GMEM_MOVEABLE, sizeof(METAFILEPICT));
+    if (!hMem) {
+        DeleteMetaFile(hMF);
+        return ResultFromScode(STG_E_MEDIUMFULL);
     }
 
-    //Save the new extent.
-    const QRect qr = qaxFromNativeRect(*lprcPosRect, qt.widget);
-    m_currentExtent.rwidth() = qBound(qt.widget->minimumWidth(), qr.width(), qt.widget->maximumWidth());
-    m_currentExtent.rheight() = qBound(qt.widget->minimumHeight(), qr.height(), qt.widget->maximumHeight());
+    LPMETAFILEPICT pMF = static_cast<LPMETAFILEPICT>(GlobalLock(hMem));
+    pMF->hMF = hMF;
+    pMF->mm = MM_ANISOTROPIC;
+    const SIZEL sizeL = qaxMapPixToLogHiMetrics(QSize(width, height), qt.widget);
+    pMF->xExt = sizeL.cx;
+    pMF->yExt = sizeL.cy;
+    GlobalUnlock(hMem);
+
+    memset(pmedium, 0, sizeof(STGMEDIUM));
+    pmedium->tymed = TYMED_MFPICT;
+    pmedium->hGlobal = hMem;
+    pmedium->pUnkForRelease = nullptr;
 
     return S_OK;
 }
@@ -3002,266 +2620,1026 @@ IFACEMETHODIMP QAxServerBase::SetObjectRects(LPCRECT lprcPosRect, LPCRECT lprcCl
 /*
     Not implemented.
 */
-IFACEMETHODIMP QAxServerBase::ReactivateAndUndo()
+IFACEMETHODIMP QAxServerBase::GetDataHere(FORMATETC * /* pformatetc */, STGMEDIUM * /* pmedium */)
 {
     return E_NOTIMPL;
 }
 
-//**** IOleInPlaceActiveObject
-
-Q_GUI_EXPORT int qt_translateKeyCode(int);
-
-IFACEMETHODIMP QAxServerBase::TranslateAccelerator(LPMSG lpmsg)
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::QueryGetData(FORMATETC * /* pformatetc */)
 {
-    if (lpmsg->message != WM_KEYDOWN || !isWidget)
-        return S_FALSE;
-
-    DWORD dwKeyMod = 0;
-    if (::GetKeyState(VK_SHIFT) < 0)
-        dwKeyMod |= 1;  // KEYMOD_SHIFT
-    if (::GetKeyState(VK_CONTROL) < 0)
-        dwKeyMod |= 2;  // KEYMOD_CONTROL
-    if (::GetKeyState(VK_MENU) < 0)
-        dwKeyMod |= 4;  // KEYMOD_ALT
-
-    switch (LOWORD(lpmsg->wParam)) {
-    case VK_TAB:
-        if (isUIActive) {
-            bool shift = ::GetKeyState(VK_SHIFT) < 0;
-            bool giveUp = true;
-            QWidget *curFocus = qt.widget->focusWidget();
-            if (curFocus) {
-                if (shift) {
-                    if (!curFocus->isWindow()) {
-                        QWidget *nextFocus = curFocus->nextInFocusChain();
-                        QWidget *topLevel = nullptr;
-                        while (nextFocus != curFocus) {
-                            if (nextFocus->focusPolicy() & Qt::TabFocus) {
-                                topLevel = nullptr;
-                            } else if (nextFocus->isWindow()) {
-                                topLevel = nextFocus;
-                            }
-                            nextFocus = nextFocus->nextInFocusChain();
-                        }
-
-                        if (!topLevel) {
-                            giveUp = false;
-                            static_cast<HackWidget *>(curFocus)->focusNextPrevChild(false);
-                            curFocus->window()->setAttribute(Qt::WA_KeyboardFocusChange);
-                        }
-                    }
-                } else {
-                    QWidget *nextFocus = curFocus;
-                    while (true) {
-                        nextFocus = nextFocus->nextInFocusChain();
-                        if (nextFocus->isWindow())
-                            break;
-                        if (nextFocus->focusPolicy() & Qt::TabFocus) {
-                            giveUp = false;
-                            static_cast<HackWidget *>(curFocus)->focusNextPrevChild(true);
-                            curFocus->window()->setAttribute(Qt::WA_KeyboardFocusChange);
-                            break;
-                        }
-                    }
-                }
-            }
-            if (giveUp) {
-                HWND hwnd = ::GetParent(m_hWnd);
-                ::SetFocus(hwnd);
-            } else {
-                return S_OK;
-            }
-
-        }
-        break;
-
-    case VK_LEFT:
-    case VK_RIGHT:
-    case VK_UP:
-    case VK_DOWN:
-        if (isUIActive)
-            return S_FALSE;
-        break;
-
-    default:
-        if (isUIActive && qt.widget->focusWidget()) {
-            int state = Qt::NoButton;
-            if (dwKeyMod & 1)
-                state |= Qt::ShiftModifier;
-            if (dwKeyMod & 2)
-                state |= Qt::ControlModifier;
-            if (dwKeyMod & 4)
-                state |= Qt::AltModifier;
-
-            int key = int(lpmsg->wParam);
-            // FIXME 4.10.2011: No longer exists in Lighthouse.
-            // if (!(key >= 'A' && key <= 'Z') && !(key >= '0' && key <= '9'))
-            //    key = qt_translateKeyCode(lpmsg->wParam);
-
-            QKeyEvent override(QEvent::ShortcutOverride, key, static_cast<Qt::KeyboardModifiers>(state));
-            override.ignore();
-            QCoreApplication::sendEvent(qt.widget->focusWidget(), &override);
-            if (override.isAccepted())
-                return S_FALSE;
-        }
-        break;
-    }
-
-    if (!m_spClientSite)
-        return S_FALSE;
-
-    ComPtr<IOleControlSite> controlSite;
-    m_spClientSite->QueryInterface(IID_IOleControlSite, &controlSite);
-    if (!controlSite)
-        return S_FALSE;
-    // set server type in the user-data of the window.
-#ifdef GWLP_USERDATA
-    LONG_PTR serverType = QAX_INPROC_SERVER;
-#else
-    LONG serverType = QAX_INPROC_SERVER;
-#endif
-    if (qAxOutProcServer)
-        serverType = QAX_OUTPROC_SERVER;
-#ifdef GWLP_USERDATA
-    LONG_PTR oldData = SetWindowLongPtr(lpmsg->hwnd, GWLP_USERDATA, serverType);
-#else
-    LONG oldData = SetWindowLong(lpmsg->hwnd, GWL_USERDATA, serverType);
-#endif
-    HRESULT hres = controlSite->TranslateAcceleratorW(lpmsg, dwKeyMod);
-    // reset the user-data for the window.
-#ifdef GWLP_USERDATA
-    SetWindowLongPtr(lpmsg->hwnd, GWLP_USERDATA, oldData);
-#else
-    SetWindowLong(lpmsg->hwnd, GWL_USERDATA, oldData);
-#endif
-    return hres;
-}
-
-IFACEMETHODIMP QAxServerBase::OnFrameWindowActivate(BOOL fActivate)
-{
-    if (fActivate) {
-        if (wasUIActive)
-            ::SetFocus(m_hWnd);
-    } else {
-        wasUIActive = isUIActive;
-    }
-    return S_OK;
-}
-
-IFACEMETHODIMP QAxServerBase::OnDocWindowActivate(BOOL /* fActivate */)
-{
-    return S_OK;
-}
-
-IFACEMETHODIMP QAxServerBase::ResizeBorder(LPCRECT /* prcBorder */,
-                                           IOleInPlaceUIWindow * /* pUIWindow */,
-                                           BOOL /* fFrameWindow */)
-{
-    return S_OK;
-}
-
-IFACEMETHODIMP QAxServerBase::EnableModeless(BOOL fEnable)
-{
-    if (!isWidget)
-        return S_OK;
-
-    // FIXME: 4.10.2011 Does this work with the parent's HWND?
-    EnableWindow(hwndForWidget(qt.widget), fEnable);
-    return S_OK;
-}
-
-//**** IOleObject
-
-static inline LPOLESTR QStringToOLESTR(const QString &qstring)
-{
-    LPOLESTR olestr = static_cast<wchar_t *>(CoTaskMemAlloc(size_t(qstring.length()) * 2 + 2));
-    memcpy(olestr, reinterpret_cast<const ushort *>(qstring.unicode()), size_t(qstring.length() * 2));
-    olestr[qstring.length()] = 0;
-    return olestr;
+    return E_NOTIMPL;
 }
 
 /*
-    \reimp
-
-    See documentation of IOleObject::GetUserType.
+    Not implemented.
 */
-IFACEMETHODIMP QAxServerBase::GetUserType(DWORD dwFormOfType, LPOLESTR *pszUserType)
+IFACEMETHODIMP QAxServerBase::GetCanonicalFormatEtc(FORMATETC * /* pformatectIn */,
+                                                    FORMATETC * /* pformatetcOut */)
 {
-    if (!pszUserType)
-        return E_POINTER;
-
-    switch (dwFormOfType) {
-    case USERCLASSTYPE_FULL:
-        *pszUserType = QStringToOLESTR(class_name);
-        break;
-    case USERCLASSTYPE_SHORT:
-        if (!qt.widget || !isWidget || qt.widget->windowTitle().isEmpty())
-            *pszUserType = QStringToOLESTR(class_name);
-        else
-            *pszUserType = QStringToOLESTR(qt.widget->windowTitle());
-        break;
-    case USERCLASSTYPE_APPNAME:
-        *pszUserType = QStringToOLESTR(qApp->objectName());
-        break;
-    }
-
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 /*
-    Returns the status flags registered for this control.
+    Not implemented.
 */
-IFACEMETHODIMP QAxServerBase::GetMiscStatus(DWORD dwAspect, DWORD *pdwStatus)
+IFACEMETHODIMP QAxServerBase::SetData(FORMATETC * /* pformatetc */, STGMEDIUM * /* pmedium */,
+                                      BOOL /* fRelease */)
 {
-    return OleRegGetMiscStatus(qAxFactory()->classID(class_name), dwAspect, pdwStatus);
+    return E_NOTIMPL;
 }
 
 /*
-    Stores the provided advise sink.
+    Not implemented.
 */
-IFACEMETHODIMP QAxServerBase::Advise(IAdviseSink *pAdvSink, DWORD *pdwConnection)
+IFACEMETHODIMP QAxServerBase::EnumFormatEtc(DWORD /* dwDirection */,
+                                            IEnumFORMATETC ** /* ppenumFormatEtc */)
 {
-    if (!pAdvSink || !pdwConnection)
-        return E_POINTER;
+    return E_NOTIMPL;
+}
 
-    *pdwConnection = ++m_nextAdviseConnection;
-    STATDATA data = { {0, nullptr, DVASPECT_CONTENT, -1, TYMED_NULL} , 0, pAdvSink, *pdwConnection };
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink,
+                                      DWORD *pdwConnection)
+{
+    if (pformatetc->dwAspect != DVASPECT_CONTENT)
+        return E_FAIL;
+
+    *pdwConnection = adviseSinks.size() + 1;
+    STATDATA data = {
+        {pformatetc->cfFormat,pformatetc->ptd,pformatetc->dwAspect,pformatetc->lindex,pformatetc->tymed},
+        advf, pAdvSink, *pdwConnection
+    };
     adviseSinks.append(data);
     pAdvSink->AddRef();
     return S_OK;
 }
 
 /*
-    Closes the control.
+    Not implemented.
 */
-IFACEMETHODIMP QAxServerBase::Close(DWORD dwSaveOption)
+IFACEMETHODIMP QAxServerBase::DUnadvise(DWORD dwConnection)
 {
-    if (dwSaveOption != OLECLOSE_NOSAVE && m_spClientSite)
-        m_spClientSite->SaveObject();
-    if (isInPlaceActive) {
-        HRESULT hr = InPlaceDeactivate();
-        if (FAILED(hr))
-            return hr;
-    }
-    if (m_hWnd) {
-        if (IsWindow(m_hWnd))
-            DestroyWindow(m_hWnd);
-        m_hWnd = nullptr;
-        if (m_spClientSite)
-            m_spClientSite->OnShowWindow(false);
+    return Unadvise(dwConnection);
+}
+
+/*
+    Not implemented.
+*/
+IFACEMETHODIMP QAxServerBase::EnumDAdvise(IEnumSTATDATA ** /* ppenumAdvise */)
+{
+    return E_NOTIMPL;
+}
+
+/*! \internal
+    Initializes data members.
+*/
+void QAxServerBase::init()
+{
+    qt.object = nullptr;
+    isWidget            = false;
+    ownObject           = false;
+    initNewCalled       = false;
+    dirtyflag           = false;
+    hasStockEvents      = false;
+    stayTopLevel        = false;
+    isInPlaceActive     = false;
+    isUIActive          = false;
+    wasUIActive         = false;
+    inDesignMode        = false;
+    canTakeFocus        = false;
+
+    InitializeCriticalSection(&refCountSection);
+    InitializeCriticalSection(&createWindowSection);
+
+#ifdef QT_DEBUG
+    EnterCriticalSection(&refCountSection);
+    ++qaxserverbase_instance_count;
+    LeaveCriticalSection(&refCountSection);
+#endif
+
+    qAxLock();
+
+    points[IID_IPropertyNotifySink] = makeComObject<QAxConnection>(this, IID_IPropertyNotifySink);
+}
+
+/*  \internal
+    Registering with OLE
+*/
+void QAxServerBase::registerActiveObject(IUnknown *object)
+{
+    if (ole_ref || !qt.object || !qAxOutProcServer)
+        return;
+
+    const QMetaObject *mo = qt.object->metaObject();
+    if (!qstricmp(mo->classInfo(mo->indexOfClassInfo("RegisterObject")).value(), "yes"))
+        RegisterActiveObject(object, qAxFactory()->classID(class_name), ACTIVEOBJECT_WEAK, &ole_ref);
+}
+
+void QAxServerBase::revokeActiveObject()
+{
+    if (!ole_ref)
+        return;
+
+    RevokeActiveObject(ole_ref, nullptr);
+    ole_ref = 0;
+}
+
+/* \internal
+    QueryInterface implementation.
+*/
+HRESULT QAxServerBase::InternalQueryInterface(REFIID iid, void **iface)
+{
+    *iface = nullptr;
+
+    if (iid == IID_IUnknown) {
+        *iface = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
+    } else {
+        HRESULT res = S_OK;
+        if (aggregatedObject)
+            res = aggregatedObject->queryInterface(iid, iface);
+        if (*iface)
+            return res;
     }
 
-    m_spInPlaceSiteWindowless.Reset();
-    m_spInPlaceSite.Reset();
-
-    if (m_spAdviseSink)
-        m_spAdviseSink->OnClose();
-    for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
-        adviseSinks.at(i).pAdvSink->OnClose();
+    if (!(*iface)) {
+        if (iid == qAxFactory()->interfaceID(class_name))
+            *iface = static_cast<IDispatch *>(this);
+        if (iid == IID_IDispatch)
+            *iface = static_cast<IDispatch *>(this);
+        else if (iid == IID_IAxServerBase)
+            *iface = static_cast<IAxServerBase *>(this);
+        else if (iid == IID_IOleObject)
+            *iface = static_cast<IOleObject *>(this);
+        else if (iid == IID_IConnectionPointContainer)
+            *iface = static_cast<IConnectionPointContainer *>(this);
+        else if (iid == IID_IProvideClassInfo)
+            *iface = static_cast<IProvideClassInfo *>(this);
+        else if (iid == IID_IProvideClassInfo2)
+            *iface = static_cast<IProvideClassInfo2 *>(this);
+        else if (iid == IID_IPersist)
+            *iface = static_cast<IPersist *>(static_cast<IPersistStream *>(this));
+        else if (iid == IID_IPersistStream)
+            *iface = static_cast<IPersistStream *>(this);
+        else if (iid == IID_IPersistStreamInit)
+            *iface = static_cast<IPersistStreamInit *>(this);
+        else if (iid == IID_IPersistStorage)
+            *iface = static_cast<IPersistStorage *>(this);
+        else if (iid == IID_IPersistPropertyBag)
+            *iface = static_cast<IPersistPropertyBag *>(this);
+        else if (iid == IID_IPersistFile &&
+            qAxFactory()->metaObject(class_name)->indexOfClassInfo("MIME") != -1)
+            *iface = static_cast<IPersistFile *>(this);
+        else if (iid == IID_IViewObject)
+            *iface = static_cast<IViewObject *>(this);
+        else if (iid == IID_IViewObject2)
+            *iface = static_cast<IViewObject2 *>(this);
+        else if (isWidget) {
+            if (iid == IID_IOleControl)
+                *iface = static_cast<IOleControl *>(this);
+            else if (iid == IID_IOleWindow)
+                *iface = static_cast<IOleWindow *>(static_cast<IOleInPlaceObject *>(this));
+            else if (iid == IID_IOleInPlaceObject)
+                *iface = static_cast<IOleInPlaceObject *>(this);
+            else if (iid == IID_IOleInPlaceActiveObject)
+                *iface = static_cast<IOleInPlaceActiveObject *>(this);
+            else if (iid == IID_IDataObject)
+                *iface = static_cast<IDataObject *>(this);
+        }
     }
+    if (!*iface)
+        return E_NOINTERFACE;
 
+    AddRef();
     return S_OK;
 }
+
+/*! \internal
+    Detects and initilaizes implementation of QAxBindable in objects.
+*/
+void QAxServerBase::internalBind()
+{
+    QAxBindable *axb = static_cast<QAxBindable *>(qt.object->qt_metacast("QAxBindable"));
+    if (axb) {
+        // no addref; this is aggregated
+        axb->activex = this;
+        if (!aggregatedObject)
+            aggregatedObject = axb->createAggregate();
+        if (aggregatedObject) {
+            aggregatedObject->controlling_unknown = static_cast<IUnknown *>(static_cast<IDispatch *>(this));
+            aggregatedObject->the_object = qt.object;
+        }
+    }
+}
+
+/*! \internal
+    Connects object signals to event dispatcher.
+*/
+void QAxServerBase::internalConnect()
+{
+    QUuid eventsID = qAxFactory()->eventsID(class_name);
+    if (!eventsID.isNull()) {
+        if (!points[eventsID])
+            points[eventsID] = makeComObject<QAxConnection>(this, eventsID);
+
+        // connect the generic slot to all signals of qt.object
+        const QMetaObject *mo = qt.object->metaObject();
+        for (int isignal = mo->methodCount()-1; isignal >= 0; --isignal) {
+            if (mo->method(isignal).methodType() == QMetaMethod::Signal)
+                QMetaObject::connect(qt.object, isignal, this, isignal);
+        }
+    }
+}
+
+/*! \internal
+    Creates the QWidget for the classname passed to the c'tor.
+
+    All signals of the widget class are connected to the internal event mapper.
+    If the widget implements QAxBindable, stock events are also connected.
+*/
+bool QAxServerBase::internalCreate()
+{
+    if (qt.object)
+        return true;
+
+    qt.object = qAxFactory()->createObject(class_name);
+    Q_ASSERT(qt.object);
+    if (!qt.object)
+        return false;
+
+    theObject = qt.object;
+    ownObject = true;
+    isWidget = qt.object->isWidgetType();
+    hasStockEvents = qAxFactory()->hasStockEvents(class_name);
+    stayTopLevel = qAxFactory()->stayTopLevel(class_name);
+
+    internalBind();
+    if (isWidget) {
+        if (!stayTopLevel) {
+            QEvent e(QEvent::EmbeddingControl);
+            QCoreApplication::sendEvent(qt.widget, &e);
+        }
+        qt.widget->setAttribute(Qt::WA_QuitOnClose, false);
+        qt.widget->move(0, 0);
+
+        // initialize to sizeHint, but don't set resized flag so that container has a chance to override
+        bool wasResized = qt.widget->testAttribute(Qt::WA_Resized);
+        updateGeometry();
+        if (!wasResized && qt.widget->testAttribute(Qt::WA_Resized)
+            && qt.widget->sizePolicy() != QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed)) {
+            qt.widget->setAttribute(Qt::WA_Resized, false);
+        }
+    }
+
+    internalConnect();
+    // install an event filter for stock events
+    if (isWidget) {
+        qt.object->installEventFilter(this);
+        const QWidgetList children = qt.object->findChildren<QWidget*>();
+        for (QWidget *child : children)
+            child->installEventFilter(this);
+    }
+    return true;
+}
+/*
+    Message handler. \a hWnd is always the ActiveX widget hosting the Qt widget.
+    \a uMsg is handled as follows
+    \list
+    \li WM_CREATE The ActiveX control is created
+    \li WM_DESTROY The QWidget is destroyed
+    \li WM_SHOWWINDOW The QWidget is parented into the ActiveX window
+    \li WM_PAINT The QWidget is updated
+    \li WM_SIZE The QWidget is resized to the new size
+    \li WM_SETFOCUS and
+    \li WM_KILLFOCUS The client site is notified about the focus transfer
+    \li WM_MOUSEACTIVATE The ActiveX is activated
+    \endlist
+
+    The semantics of \a wParam and \a lParam depend on the value of \a uMsg.
+*/
+LRESULT QT_WIN_CALLBACK QAxServerBase::ActiveXProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_CREATE) {
+        CREATESTRUCT *cs = reinterpret_cast<CREATESTRUCT *>(lParam);
+        QAxServerBase *that = static_cast<QAxServerBase *>(cs->lpCreateParams);
+
+#ifdef GWLP_USERDATA
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, LONG_PTR(that));
+#else
+        SetWindowLong(hWnd, GWL_USERDATA, LONG(that));
+#endif
+
+        that->m_hWnd = hWnd;
+
+        return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+    }
+
+    switch (uMsg) {
+    case WM_NCDESTROY:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd))
+            that->m_hWnd = nullptr;
+        break;
+
+    case WM_QUERYENDSESSION:
+    case WM_DESTROY:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+            if (that->qt.widget) {
+                that->qt.widget->hide();
+                if (QWindow *widgetWindow = that->qt.widget->windowHandle()) {
+                    if (HWND h = reinterpret_cast<HWND>(widgetWindow->winId()))
+                        ::SetParent(h, nullptr);
+                }
+            }
+        }
+        break;
+
+    case WM_SHOWWINDOW:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+            if (wParam) {
+                that->internalCreate();
+                if (!that->stayTopLevel) {
+                    // Set this property on window to pass the native handle to platform plugin,
+                    // so that it can create the window with proper flags instead of thinking
+                    // it is toplevel.
+                    that->qt.widget->setProperty("_q_embedded_native_parent_handle", WId(that->m_hWnd));
+
+                    if (QWindow *widgetWindow = that->qt.widget->windowHandle()) {
+                        // If embedded widget is native, such as QGLWidget, it may have already created
+                        // a window before now, probably as an undesired toplevel. In that case set the
+                        // proper parent window and set the window frameless to position it correctly.
+                        if (that->qt.widget->testAttribute(Qt::WA_WState_Created)
+                            && !that->qt.widget->isVisible()) {
+                            HWND h = static_cast<HWND>(QGuiApplication::platformNativeInterface()->
+                                                       nativeResourceForWindow("handle", widgetWindow));
+                            if (h) {
+                                ::SetParent(h, that->m_hWnd);
+                                // Since the window is already created, we need to set the
+                                // property directly to ensure it does not believe it is
+                                // toplevel.
+                                widgetWindow->setProperty("_q_embedded_native_parent_handle",
+                                                          WId(that->m_hWnd));
+                            }
+                            Qt::WindowFlags flags = widgetWindow->flags();
+                            widgetWindow->setFlags(flags | Qt::FramelessWindowHint);
+                        }
+                    }
+                    that->qt.widget->raise();
+                    that->qt.widget->move(0, 0);
+                }
+                that->qt.widget->show();
+            } else if (that->qt.widget) {
+                that->qt.widget->hide();
+            }
+        }
+        break;
+
+    case WM_ERASEBKGND:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd))
+            that->updateMask();
+        break;
+
+    case WM_SIZE:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd))
+            that->resize(qaxFromNativeSize(that->qt.widget, QSize(LOWORD(lParam), HIWORD(lParam))));
+        break;
+
+    case WM_SETFOCUS:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+            if (that->isInPlaceActive && that->m_spClientSite && !that->inDesignMode && that->canTakeFocus) {
+                RECT rcPos = that->rcPosRect();
+                that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite.Get(), 0, that->m_hWnd, &rcPos);
+                if (that->isUIActive) {
+                    ComPtr<IOleControlSite> spSite;
+                    that->m_spClientSite->QueryInterface(IID_IOleControlSite, &spSite);
+                    if (spSite) {
+                        spSite->OnFocus(true);
+                    }
+                    QWidget *candidate = that->qt.widget;
+                    while (!(candidate->focusPolicy() & Qt::TabFocus)) {
+                        candidate = candidate->nextInFocusChain();
+                        if (candidate == that->qt.widget) {
+                            candidate = nullptr;
+                            break;
+                        }
+                    }
+                    if (candidate) {
+                        candidate->setFocus();
+                        if (::GetKeyState(VK_SHIFT) < 0)
+                            static_cast<HackWidget *>(that->qt.widget)->focusNextPrevChild(false);
+                    }
+                }
+            }
+        }
+        break;
+
+    case WM_KILLFOCUS:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+            if (that->isInPlaceActive && that->isUIActive && that->m_spClientSite) {
+                ComPtr<IOleControlSite> spSite;
+                that->m_spClientSite->QueryInterface(IID_IOleControlSite, &spSite);
+                if (spSite) {
+                    if (!::IsChild(that->m_hWnd, ::GetFocus()))
+                        spSite->OnFocus(false);
+                }
+            }
+        }
+        break;
+
+    case WM_MOUSEACTIVATE:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+            RECT rcPos = that->rcPosRect();
+            that->DoVerb(OLEIVERB_UIACTIVATE, nullptr, that->m_spClientSite.Get(), 0, that->m_hWnd, &rcPos);
+        }
+        break;
+
+    case WM_INITMENUPOPUP:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+            if (that->qt.widget) {
+                that->currentPopup = that->menuMap[reinterpret_cast<HMENU>(wParam)];
+                if (!that->currentPopup)
+                    break;
+                const QMetaObject *mo = that->currentPopup->metaObject();
+                int index = mo->indexOfSignal("aboutToShow()");
+                if (index < 0)
+                    break;
+
+                that->currentPopup->qt_metacall(QMetaObject::InvokeMetaMethod, index, nullptr);
+                that->createPopup(that->currentPopup, reinterpret_cast<HMENU>(wParam));
+                return 0;
+            }
+        }
+        break;
+
+    case WM_MENUSELECT:
+    case WM_COMMAND:
+        if (QAxServerBase *that = axServerBaseFromWindow(hWnd)) {
+            if (that->qt.widget) {
+                QMenuBar *menuBar = that->menuBar;
+                if (!menuBar)
+                    break;
+
+                QObject *menuObject = nullptr;
+                bool menuClosed = false;
+
+                if (uMsg == WM_COMMAND) {
+                    menuObject = that->actionMap.value(UINT(wParam));
+                } else if (!lParam) {
+                    menuClosed = true;
+                    menuObject = that->currentPopup;
+                } else {
+                    menuObject = that->actionMap.value(LOWORD(wParam));
+                }
+
+                if (menuObject) {
+                    const QMetaObject *mo = menuObject->metaObject();
+                    int index = -1;
+
+                    if (uMsg == WM_COMMAND)
+                        index = mo->indexOfSignal("activated()");
+                    else if (menuClosed)
+                        index = mo->indexOfSignal("aboutToHide()");
+                    else
+                        index = mo->indexOfSignal("hovered()");
+
+                    if (index < 0)
+                        break;
+
+                    menuObject->qt_metacall(QMetaObject::InvokeMetaMethod, index, nullptr);
+                    if (menuClosed || uMsg == WM_COMMAND)
+                        that->currentPopup = nullptr;
+                    return 0;
+                }
+            }
+        }
+        break;
+
+    case WM_DISPLAYCHANGE:
+        qaxClearCachedSystemLogicalDpi();
+        break;
+
+    default:
+        break;
+    }
+
+    return ::DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+/*! \internal
+    Creates the window hosting the QWidget.
+*/
+HWND QAxServerBase::create(HWND hWndParent, RECT& rcPos)
+{
+    Q_ASSERT(isWidget && qt.widget);
+
+    static ATOM atom = 0;
+    HINSTANCE hInst = reinterpret_cast<HINSTANCE>(QCoreApplicationPrivate::mainInstanceHandle);
+    EnterCriticalSection(&createWindowSection);
+    QString cn(QLatin1String("QAxControl"));
+    cn += QString::number(quintptr(ActiveXProc));
+    if (!atom) {
+        WNDCLASS wcTemp;
+        wcTemp.style = CS_DBLCLKS;
+        wcTemp.cbClsExtra = 0;
+        wcTemp.cbWndExtra = 0;
+        wcTemp.hbrBackground = nullptr;
+        wcTemp.hCursor = nullptr;
+        wcTemp.hIcon = nullptr;
+        wcTemp.hInstance = hInst;
+        wcTemp.lpszClassName = reinterpret_cast<const wchar_t *>(cn.utf16());
+        wcTemp.lpszMenuName = nullptr;
+        wcTemp.lpfnWndProc = ActiveXProc;
+
+        atom = RegisterClass(&wcTemp);
+    }
+    LeaveCriticalSection(&createWindowSection);
+    if (!atom) {
+        const DWORD errorCode = GetLastError();
+        if (errorCode != ERROR_CLASS_ALREADY_EXISTS) {
+            qErrnoWarning(int(errorCode), "%s: RegisterClass() failed", __FUNCTION__);
+            return nullptr;
+        }
+    }
+
+    Q_ASSERT(!m_hWnd);
+    // will fail if parent window belongs to a higher integrity level process
+    HWND hWnd = ::CreateWindow(reinterpret_cast<const wchar_t *>(cn.utf16()), nullptr,
+                               WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+                               rcPos.left, rcPos.top, rcPos.right - rcPos.left,
+                               rcPos.bottom - rcPos.top, hWndParent, nullptr, hInst, this);
+    // m_hWnd is assigned in reponse to WM_CREATE
+    if (!hWnd) {
+        DWORD err = GetLastError();
+        if (err == ERROR_ACCESS_DENIED) {
+            // retry without parent window
+            // the window will now need to be re-parented in the container process
+            hWnd = ::CreateWindow(reinterpret_cast<const wchar_t *>(cn.utf16()), nullptr,
+                                  WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+                                  rcPos.left, rcPos.top, rcPos.right - rcPos.left,
+                                  rcPos.bottom - rcPos.top, nullptr, nullptr, hInst, this);
+        }
+    }
+
+    if (!hWnd) {
+        qErrnoWarning("%s: CreateWindow() failed", __FUNCTION__);
+        return nullptr;
+    }
+
+    Q_ASSERT(m_hWnd == hWnd);
+
+    updateMask();
+    EnableWindow(m_hWnd, qt.widget->isEnabled());
+
+    return hWnd;
+}
+
+/* \internal
+    Recoursively creates Win32 submenus.
+*/
+HMENU QAxServerBase::createPopup(QMenu *popup, HMENU oldMenu)
+{
+    HMENU popupMenu = oldMenu ? oldMenu : CreatePopupMenu();
+    menuMap.insert(popupMenu, popup);
+
+    if (oldMenu) while (GetMenuItemCount(oldMenu)) {
+        DeleteMenu(oldMenu, 0, MF_BYPOSITION);
+    }
+
+    const auto actions = popup->actions();
+    for (QAction *action : actions) {
+        uint flags = action->isEnabled() ? MF_ENABLED : MF_GRAYED;
+        if (action->isSeparator())
+            flags |= MF_SEPARATOR;
+        else if (action->menu())
+            flags |= MF_POPUP;
+        else
+            flags |= MF_STRING;
+        if (action->isChecked())
+            flags |= MF_CHECKED;
+
+        ushort itemId;
+        if (flags & MF_POPUP) {
+            itemId = static_cast<ushort>(
+                reinterpret_cast<quintptr>(createPopup(action->menu()))
+            );
+        } else {
+            itemId = static_cast<ushort>(reinterpret_cast<quintptr>(action));
+            actionMap.remove(itemId);
+            actionMap.insert(itemId, action);
+        }
+        AppendMenu(popupMenu, flags, itemId, reinterpret_cast<const wchar_t *>(action->text().utf16()));
+    }
+    if (oldMenu)
+        DrawMenuBar(hwndMenuOwner);
+    return popupMenu;
+}
+
+/*! \internal
+    Creates a Win32 menubar.
+*/
+void QAxServerBase::createMenu(QMenuBar *menuBar)
+{
+    hmenuShared = ::CreateMenu();
+
+    int edit = 0;
+    int object = 0;
+    int help = 0;
+
+    const auto actions = menuBar->actions();
+    for (QAction *action : actions) {
+        uint flags = action->isEnabled() ? MF_ENABLED : MF_GRAYED;
+        if (action->isSeparator())
+            flags |= MF_SEPARATOR;
+        else if (action->menu())
+            flags |= MF_POPUP;
+        else
+            flags |= MF_STRING;
+
+        if (action->text() == QCoreApplication::translate(qt.widget->metaObject()->className(), "&Edit"))
+            edit++;
+        else if (action->text() == QCoreApplication::translate(qt.widget->metaObject()->className(), "&Help"))
+            help++;
+        else
+            object++;
+
+        ushort itemId;
+        if (flags & MF_POPUP) {
+            itemId = static_cast<ushort>(
+                reinterpret_cast<quintptr>(createPopup(action->menu()))
+            );
+        } else {
+            itemId = static_cast<ushort>(reinterpret_cast<quintptr>(action));
+            actionMap.insert(itemId, action);
+        }
+        AppendMenu(hmenuShared, flags, itemId, reinterpret_cast<const wchar_t *>(action->text().utf16()));
+    }
+
+    OLEMENUGROUPWIDTHS menuWidths = { { 0,edit,0,object,0,help } };
+    HRESULT hres = m_spInPlaceFrame->InsertMenus(hmenuShared, &menuWidths);
+    if (FAILED(hres)) {
+        ::DestroyMenu(hmenuShared);
+        hmenuShared = nullptr;
+        return;
+    }
+
+    m_spInPlaceFrame->GetWindow(&hwndMenuOwner);
+
+    holemenu = OleCreateMenuDescriptor(hmenuShared, &menuWidths);
+    hres = m_spInPlaceFrame->SetMenu(hmenuShared, holemenu, m_hWnd);
+    if (FAILED(hres)) {
+        ::DestroyMenu(hmenuShared);
+        hmenuShared = nullptr;
+        OleDestroyMenuDescriptor(holemenu);
+    }
+}
+
+/*! \internal
+    Remove the Win32 menubar.
+*/
+void QAxServerBase::removeMenu()
+{
+    if (hmenuShared)
+        m_spInPlaceFrame->RemoveMenus(hmenuShared);
+    holemenu = nullptr;
+    m_spInPlaceFrame->SetMenu(nullptr, nullptr, m_hWnd);
+    if (hmenuShared) {
+        DestroyMenu(hmenuShared);
+        hmenuShared = nullptr;
+        menuMap.clear();
+    }
+    hwndMenuOwner = nullptr;
+}
+
+extern bool ignoreSlots(const char *test);
+extern bool ignoreProps(const char *test);
+
+/*! \internal
+    Makes sure the type info is loaded
+*/
+void QAxServerBase::ensureMetaData()
+{
+    if (!m_spTypeInfo)
+        qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->interfaceID(class_name), &m_spTypeInfo);
+}
+
+/*!
+    \internal
+    Returns true if the property \a index is exposed to COM and should
+    be saved/loaded.
+*/
+bool QAxServerBase::isPropertyExposed(int index)
+{
+    if (!theObject)
+        return false;
+
+    bool result = false;
+    const QMetaObject *mo = theObject->metaObject();
+
+    int qtProps = 0;
+    if (theObject->isWidgetType())
+        qtProps = QWidget::staticMetaObject.propertyCount();
+    QMetaProperty property = mo->property(index);
+    if (index <= qtProps && ignoreProps(property.name()))
+        return result;
+
+    BSTR bstrNames = QStringToBSTR(QLatin1String(property.name()));
+    DISPID dispId;
+    GetIDsOfNames(IID_NULL, &bstrNames, 1, LOCALE_USER_DEFAULT, &dispId);
+    result = dispId != DISPID_UNKNOWN;
+    SysFreeString(bstrNames);
+
+    return result;
+}
+
+/*!
+    \internal
+    Updates the view, or asks the client site to do so.
+*/
+void QAxServerBase::update()
+{
+    if (isInPlaceActive) {
+        if (m_hWnd)
+            ::InvalidateRect(m_hWnd, nullptr, true);
+        else if (m_spInPlaceSiteWindowless)
+            m_spInPlaceSiteWindowless->InvalidateRect(nullptr, true);
+    } else if (m_spAdviseSink) {
+        m_spAdviseSink->OnViewChange(DVASPECT_CONTENT, -1);
+        for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
+            adviseSinks.at(i).pAdvSink->OnViewChange(DVASPECT_CONTENT, -1);
+        }
+    }
+}
+
+/*! \internal
+    Resizes the control, faking a QResizeEvent if required
+*/
+void QAxServerBase::resize(const QSize &size)
+{
+    if (!isWidget || !qt.widget || !size.isValid() || size == QSize(0, 0))
+        return;
+
+    QSize oldSize = qt.widget->size();
+    qt.widget->resize(size);
+    QSize newSize = qt.widget->size();
+    // make sure we get a resize event even if not embedded as a control
+    if (!m_hWnd && !qt.widget->isVisible() && newSize != oldSize) {
+        QResizeEvent resizeEvent(newSize, oldSize);
+#ifndef QT_SHARED // import from static library
+        extern bool qt_sendSpontaneousEvent(QObject*,QEvent*);
+#endif
+        qt_sendSpontaneousEvent(qt.widget, &resizeEvent);
+    }
+    m_currentExtent = qt.widget->size();
+}
+
+/*!
+    \internal
+
+    Updates the internal size values.
+*/
+void QAxServerBase::updateGeometry()
+{
+    if (!isWidget || !qt.widget)
+        return;
+
+    const QSize sizeHint = qt.widget->sizeHint();
+    const QSize size = qt.widget->size();
+    if (sizeHint.isValid()) { // if provided, adjust to sizeHint
+        QSize newSize = size;
+        if (!qt.widget->testAttribute(Qt::WA_Resized)) {
+            newSize = sizeHint;
+        } else { // according to sizePolicy rules if already resized
+            QSizePolicy sizePolicy = qt.widget->sizePolicy();
+            if (sizeHint.width() > size.width() && !(sizePolicy.horizontalPolicy() & QSizePolicy::ShrinkFlag))
+                newSize.setWidth(sizeHint.width());
+            if (sizeHint.width() < size.width() && !(sizePolicy.horizontalPolicy() & QSizePolicy::GrowFlag))
+                newSize.setWidth(sizeHint.width());
+            if (sizeHint.height() > size.height() && !(sizePolicy.verticalPolicy() & QSizePolicy::ShrinkFlag))
+                newSize.setHeight(sizeHint.height());
+            if (sizeHint.height() < size.height() && !(sizePolicy.verticalPolicy() & QSizePolicy::GrowFlag))
+                newSize.setHeight(sizeHint.height());
+        }
+        resize(newSize);
+
+    // set an initial size suitable for embedded controls
+    } else if (!qt.widget->testAttribute(Qt::WA_Resized)) {
+        resize(QSize(100, 100));
+        qt.widget->setAttribute(Qt::WA_Resized, false);
+    }
+}
+
+/*!
+    \internal
+
+    Updates the mask of the widget parent.
+*/
+void QAxServerBase::updateMask()
+{
+    if (!isWidget || !qt.widget || qt.widget->mask().isEmpty())
+        return;
+
+    QRegion rgn = qt.widget->mask();
+    HRGN hrgn = qaxHrgnFromQRegion(rgn, qt.widget);
+
+    // Since SetWindowRegion takes ownership
+    HRGN wr = CreateRectRgn(0,0,0,0);
+    CombineRgn(wr, hrgn, nullptr, RGN_COPY);
+    SetWindowRgn(m_hWnd, wr, true);
+    DeleteObject(hrgn);
+}
+
+/*! \internal
+    Catches all signals emitted by the Qt widget and fires the respective COM event.
+
+    \a isignal is the Qt Meta Object index of the received signal, and \a _o the
+    signal parameters.
+*/
+int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
+{
+    Q_UNUSED(call);
+    Q_ASSERT(call == QMetaObject::InvokeMetaMethod);
+
+    if (index == STATUSBAR_MESSAGE_CHANGED_SLOT_INDEX) {
+        if (sender() && m_spInPlaceFrame) {
+            if (qobject_cast<QStatusBar*>(sender()) != statusBar)
+                return true;
+
+            if (statusBar->isHidden()) {
+                QString message = *static_cast<const QString *>(argv[1]);
+                m_spInPlaceFrame->SetStatusText(QStringToBSTR(message));
+            }
+        }
+        return true;
+    }
+
+    if (freezeEvents || inDesignMode)
+        return true;
+
+    ensureMetaData();
+
+    // get the signal information.
+    const QMetaObject *mo = qt.object->metaObject();
+    QMetaMethod signal;
+    DISPID eventId = index;
+    qsizetype pcount = 0;
+    QByteArray type;
+    QByteArrayList ptypes;
+
+    switch(index) {
+    case DISPID_KEYDOWN:
+    case DISPID_KEYUP:
+        pcount = 2;
+        ptypes << "int&" << "int";
+        break;
+    case DISPID_KEYPRESS:
+        pcount = 1;
+        ptypes << "int&";
+        break;
+    case DISPID_MOUSEDOWN:
+    case DISPID_MOUSEMOVE:
+    case DISPID_MOUSEUP:
+        pcount = 4;
+        ptypes << "int" << "int" << "int" << "int";
+        break;
+    case DISPID_CLICK:
+        pcount = 0;
+        break;
+    case DISPID_DBLCLICK:
+        pcount = 0;
+        break;
+    default:
+        {
+            signal = mo->method(index);
+            Q_ASSERT(signal.methodType() == QMetaMethod::Signal);
+            type = signal.typeName();
+            QByteArray signature(signal.methodSignature());
+            QByteArray name(signature);
+            name.truncate(name.indexOf('('));
+
+            eventId = signalCache.value(index, -1);
+            if (eventId == -1) {
+                ComPtr<ITypeInfo> eventInfo;
+                qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->eventsID(class_name), &eventInfo);
+                if (eventInfo) {
+                    QString uni_name = QLatin1String(name);
+                    OLECHAR *olename = qaxQString2MutableOleChars(uni_name);
+                    eventInfo->GetIDsOfNames(&olename, 1, &eventId);
+                }
+            }
+
+            signature.remove(0, name.length() + 1);
+            signature.truncate(signature.length() - 1);
+
+            if (!signature.isEmpty())
+                ptypes = signature.split(',');
+
+            pcount = ptypes.size();
+        }
+        break;
+    }
+    if (pcount && !argv) {
+        qWarning("QAxServerBase::qt_metacall: Missing %d arguments", int(pcount));
+        return false;
+    }
+    if (eventId == -1)
+        return false;
+
+    // For all connected event sinks...
+    ComPtr<IConnectionPoint> cpoint;
+    GUID IID_QAxEvents = qAxFactory()->eventsID(class_name);
+    FindConnectionPoint(IID_QAxEvents, &cpoint);
+    if (cpoint) {
+        ComPtr<IEnumConnections> clist;
+        cpoint->EnumConnections(&clist);
+        if (clist) {
+            clist->Reset();
+            ULONG cc = 1;
+            CONNECTDATA c[1];
+            clist->Next(cc, reinterpret_cast<CONNECTDATA *>(&c), &cc);
+            if (cc) {
+                // setup parameters
+                unsigned int argErr = 0;
+                DISPPARAMS dispParams;
+                dispParams.cArgs = UINT(pcount);
+                dispParams.cNamedArgs = 0;
+                dispParams.rgdispidNamedArgs = nullptr;
+                dispParams.rgvarg = nullptr;
+
+                if (pcount) // Use malloc/free for eval package compatibility
+                    dispParams.rgvarg = static_cast<VARIANTARG *>(malloc(size_t(pcount) * sizeof(VARIANTARG)));
+                qsizetype p = 0;
+                for (p = 0; p < pcount; ++p) {
+                    VARIANT *arg = dispParams.rgvarg + (pcount - p - 1);
+                    VariantInit(arg);
+
+                    bool out;
+                    QByteArray ptype = paramType(ptypes.at(p), &out);
+                    QVariant variant;
+                    if (mo->indexOfEnumerator(ptype) != -1) {
+                        // convert enum values to int
+                        variant = QVariant(*reinterpret_cast<int *>(argv[p+1]));
+                    } else {
+                        const QMetaType metaType = QMetaType::fromName(ptype);
+                        if (metaType.id() == QMetaType::User) {
+                            if (ptype.endsWith('*')) {
+                                variant = QVariant(metaType, reinterpret_cast<void **>(argv[p+1]));
+                            } else {
+                                variant = QVariant(metaType, argv[p+1]);
+                            }
+                        } else {
+                            variant = QVariant(metaType, argv[p + 1]);
+                        }
+                    }
+
+                    QVariantToVARIANT(variant, *arg, ptype, out);
+                }
+
+                VARIANT retval;
+                VariantInit(&retval);
+                VARIANT *pretval = nullptr;
+                if (!type.isEmpty() && type != "void")
+                    pretval = &retval;
+
+                // call listeners (through IDispatch)
+                while (cc) {
+                    if (c->pUnk) {
+                        ComPtr<IDispatch> disp;
+                        c->pUnk->QueryInterface(IID_QAxEvents, &disp);
+                        if (disp) {
+                            disp->Invoke(eventId, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dispParams, pretval, nullptr, &argErr);
+
+                            // update out-parameters and return value
+                            if (index > 0) {
+                                for (p = 0; p < pcount; ++p) {
+                                    bool out;
+                                    QByteArray ptype = paramType(ptypes.at(p), &out);
+                                    if (out)
+                                        QVariantToVoidStar(VARIANTToQVariant(dispParams.rgvarg[pcount - p - 1], ptype), argv[p+1], ptype);
+                                }
+                                if (pretval)
+                                    QVariantToVoidStar(VARIANTToQVariant(retval, type), argv[0], type);
+                            }
+                        }
+                        c->pUnk->Release(); // AddRef'ed by clist->Next implementation
+                    }
+                    clist->Next(cc, reinterpret_cast<CONNECTDATA *>(&c), &cc);
+                }
+
+                // clean up
+                for (p = 0; p < pcount; ++p)
+                    clearVARIANT(dispParams.rgvarg+p);
+                free(dispParams.rgvarg);
+            }
+        }
+    }
+
+    return true;
+}
+
+Q_GUI_EXPORT int qt_translateKeyCode(int);
 
 bool qax_disable_inplaceframe = true;
 
@@ -3383,170 +3761,6 @@ HRESULT QAxServerBase::internalActivate()
     return S_OK;
 }
 
-/*
-    Executes the "verb" \a iVerb.
-*/
-IFACEMETHODIMP QAxServerBase::DoVerb(LONG iVerb, LPMSG /* lpmsg */,
-                                     IOleClientSite * /* pActiveSite */, LONG /* lindex */,
-                                     HWND /* hwndParent */, LPCRECT /* lprcPosRect */)
-{
-    HRESULT hr = E_NOTIMPL;
-    switch (iVerb)
-    {
-    case OLEIVERB_SHOW:
-        hr = internalActivate();
-        if (SUCCEEDED(hr))
-            hr = S_OK;
-        break;
-
-    case OLEIVERB_PRIMARY:
-    case OLEIVERB_INPLACEACTIVATE:
-        hr = internalActivate();
-        if (SUCCEEDED(hr)) {
-            hr = S_OK;
-            update();
-        }
-        break;
-
-    case OLEIVERB_UIACTIVATE:
-        if (!isUIActive) {
-            hr = internalActivate();
-            if (SUCCEEDED(hr))
-                hr = S_OK;
-        }
-        break;
-
-    case OLEIVERB_HIDE:
-        UIDeactivate();
-        if (m_hWnd)
-            ::ShowWindow(m_hWnd, SW_HIDE);
-        hr = S_OK;
-        return hr;
-
-    default:
-        break;
-    }
-    return hr;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::EnumAdvise(IEnumSTATDATA ** /* ppenumAdvise */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Returns an enumerator for the verbs registered for this class.
-*/
-IFACEMETHODIMP QAxServerBase::EnumVerbs(IEnumOLEVERB **ppEnumOleVerb)
-{
-    if (!ppEnumOleVerb)
-        return E_POINTER;
-    return OleRegEnumVerbs(qAxFactory()->classID(class_name), ppEnumOleVerb);
-}
-
-/*
-    Returns the current client site..
-*/
-IFACEMETHODIMP QAxServerBase::GetClientSite(IOleClientSite **ppClientSite)
-{
-    if (!ppClientSite)
-        return E_POINTER;
-    *ppClientSite = m_spClientSite.Get();
-    if (*ppClientSite)
-        (*ppClientSite)->AddRef();
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::GetClipboardData(DWORD /* dwReserved */,
-                                               IDataObject ** /* ppDataObject */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Returns the current extent.
-*/
-IFACEMETHODIMP QAxServerBase::GetExtent(DWORD dwDrawAspect, SIZEL *psizel)
-{
-    if (dwDrawAspect != DVASPECT_CONTENT || !isWidget || !qt.widget)
-        return E_FAIL;
-    if (!psizel)
-        return E_POINTER;
-
-    *psizel = qaxMapPixToLogHiMetrics(m_currentExtent, qt.widget);
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::GetMoniker(DWORD /* dwAssign */, DWORD /* dwWhichMoniker */,
-                                         IMoniker ** /* ppmk */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Returns the CLSID of this class.
-*/
-IFACEMETHODIMP QAxServerBase::GetUserClassID(CLSID *pClsid)
-{
-    if (!pClsid)
-        return E_POINTER;
-    *pClsid = qAxFactory()->classID(class_name);
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::InitFromData(IDataObject * /* pDataObject */, BOOL /* fCreation */,
-                                           DWORD /* dwReserved */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::IsUpToDate()
-{
-    return S_OK;
-}
-
-/*
-    Stores the client site.
-*/
-IFACEMETHODIMP QAxServerBase::SetClientSite(IOleClientSite *pClientSite)
-{
-    // release all client site interfaces
-    m_spInPlaceSiteWindowless.Reset();
-    m_spInPlaceSite.Reset();
-    m_spInPlaceFrame.Reset();
-
-    m_spClientSite = pClientSite;
-    if (m_spClientSite) {
-        m_spClientSite->QueryInterface(IID_IOleInPlaceSite, &m_spInPlaceSite);
-        m_spClientSite->QueryInterface(IID_IOleInPlaceSiteWindowless, &m_spInPlaceSiteWindowless);
-    }
-
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::SetColorScheme(LOGPALETTE * /* pLogpal */)
-{
-    return E_NOTIMPL;
-}
-
 
 #ifdef QT_SHARED // avoid conflict with symbol in static lib
 bool qt_sendSpontaneousEvent(QObject *o, QEvent *e)
@@ -3554,219 +3768,6 @@ bool qt_sendSpontaneousEvent(QObject *o, QEvent *e)
     return QCoreApplication::sendSpontaneousEvent(o, e);
 }
 #endif
-
-/*
-    Tries to set the size of the control.
-*/
-IFACEMETHODIMP QAxServerBase::SetExtent(DWORD dwDrawAspect, SIZEL *psizel)
-{
-    if (dwDrawAspect != DVASPECT_CONTENT)
-        return DV_E_DVASPECT;
-    if (!psizel)
-        return E_POINTER;
-
-    if (!isWidget || !qt.widget) // nothing to do
-        return S_OK;
-
-    QSize proposedSize(qaxMapLogHiMetricsToPix(*psizel, qt.widget));
-
-    // can the widget be resized at all?
-    if (qt.widget->minimumSize() == qt.widget->maximumSize() && qt.widget->minimumSize() != proposedSize)
-        return E_FAIL;
-    //Save the extent, bound to the widget restrictions.
-    m_currentExtent.rwidth() = qBound(qt.widget->minimumWidth(), proposedSize.width(), qt.widget->maximumWidth());
-    m_currentExtent.rheight() = qBound(qt.widget->minimumHeight(), proposedSize.height(), qt.widget->maximumHeight());
-
-    resize(proposedSize);
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::SetHostNames(LPCOLESTR /* szContainerApp */,
-                                           LPCOLESTR /* szContainerObj */)
-{
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::SetMoniker(DWORD /* dwWhichMoniker */, IMoniker * /* pmk */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Disconnects an advise sink.
-*/
-IFACEMETHODIMP QAxServerBase::Unadvise(DWORD dwConnection)
-{
-    for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
-        STATDATA entry = adviseSinks.at(i);
-        if (entry.dwConnection == dwConnection) {
-            entry.pAdvSink->Release();
-            adviseSinks.removeAt(i);
-            return S_OK;
-        }
-    }
-    return OLE_E_NOCONNECTION;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::Update()
-{
-    return S_OK;
-}
-
-//**** IDataObject
-/*
-    Calls IViewObject::Draw after setting up the parameters.
-*/
-IFACEMETHODIMP QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
-{
-    if (!pmedium)
-        return E_POINTER;
-    if ((pformatetcIn->tymed & TYMED_MFPICT) == 0)
-        return DATA_E_FORMATETC;
-
-    internalCreate();
-    if (!isWidget || !qt.widget)
-        return E_UNEXPECTED;
-
-    // Container wants to draw, but the size is not defined yet - ask container
-    if (m_spInPlaceSite && !qt.widget->testAttribute(Qt::WA_Resized)) {
-        ComPtr<IOleInPlaceUIWindow> spInPlaceUIWindow;
-        RECT rcPos, rcClip;
-        OLEINPLACEFRAMEINFO frameInfo;
-        frameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
-
-        HRESULT hres = m_spInPlaceSite->GetWindowContext(&m_spInPlaceFrame, &spInPlaceUIWindow, &rcPos, &rcClip, &frameInfo);
-        if (hres == S_OK) {
-            resize(qaxFromNativeSize(qt.widget, qaxSizeOfRect(rcPos)));
-        } else {
-            qt.widget->adjustSize();
-        }
-    }
-
-    int width = qt.widget->width();
-    int height = qt.widget->height();
-    RECTL rectl = {0, 0, width, height};
-
-    HDC hdc = CreateMetaFile(nullptr);
-    SaveDC(hdc);
-    SetWindowOrgEx(hdc, 0, 0, nullptr);
-    SetWindowExtEx(hdc, rectl.right, rectl.bottom, nullptr);
-
-    Draw(pformatetcIn->dwAspect, pformatetcIn->lindex, nullptr, pformatetcIn->ptd, nullptr, hdc, &rectl, &rectl, nullptr, 0);
-
-    RestoreDC(hdc, -1);
-    HMETAFILE hMF = CloseMetaFile(hdc);
-    if (!hMF)
-        return E_UNEXPECTED;
-
-    HGLOBAL hMem = GlobalAlloc(GMEM_SHARE | GMEM_MOVEABLE, sizeof(METAFILEPICT));
-    if (!hMem) {
-        DeleteMetaFile(hMF);
-        return ResultFromScode(STG_E_MEDIUMFULL);
-    }
-
-    LPMETAFILEPICT pMF = static_cast<LPMETAFILEPICT>(GlobalLock(hMem));
-    pMF->hMF = hMF;
-    pMF->mm = MM_ANISOTROPIC;
-    const SIZEL sizeL = qaxMapPixToLogHiMetrics(QSize(width, height), qt.widget);
-    pMF->xExt = sizeL.cx;
-    pMF->yExt = sizeL.cy;
-    GlobalUnlock(hMem);
-
-    memset(pmedium, 0, sizeof(STGMEDIUM));
-    pmedium->tymed = TYMED_MFPICT;
-    pmedium->hGlobal = hMem;
-    pmedium->pUnkForRelease = nullptr;
-
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink,
-                                      DWORD *pdwConnection)
-{
-    if (pformatetc->dwAspect != DVASPECT_CONTENT)
-        return E_FAIL;
-
-    *pdwConnection = adviseSinks.size() + 1;
-    STATDATA data = {
-        {pformatetc->cfFormat,pformatetc->ptd,pformatetc->dwAspect,pformatetc->lindex,pformatetc->tymed},
-        advf, pAdvSink, *pdwConnection
-    };
-    adviseSinks.append(data);
-    pAdvSink->AddRef();
-    return S_OK;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::DUnadvise(DWORD dwConnection)
-{
-    return Unadvise(dwConnection);
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::EnumDAdvise(IEnumSTATDATA ** /* ppenumAdvise */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::GetDataHere(FORMATETC * /* pformatetc */, STGMEDIUM * /* pmedium */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::QueryGetData(FORMATETC * /* pformatetc */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::GetCanonicalFormatEtc(FORMATETC * /* pformatectIn */,
-                                                    FORMATETC * /* pformatetcOut */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::SetData(FORMATETC * /* pformatetc */, STGMEDIUM * /* pmedium */,
-                                      BOOL /* fRelease */)
-{
-    return E_NOTIMPL;
-}
-
-/*
-    Not implemented.
-*/
-IFACEMETHODIMP QAxServerBase::EnumFormatEtc(DWORD /* dwDirection */,
-                                            IEnumFORMATETC ** /* ppenumFormatEtc */)
-{
-    return E_NOTIMPL;
-}
 
 
 
