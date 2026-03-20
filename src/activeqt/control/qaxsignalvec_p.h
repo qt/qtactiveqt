@@ -40,13 +40,15 @@ public:
     QAxSignalVec(const QAxServerBase::ConnectionPoints &points);
     QAxSignalVec(const QAxSignalVec &old);
 
-    IFACEMETHOD(Next)(ULONG cConnections, IConnectionPoint **cpoint, ULONG *pcFetched) override;
+    // IEnumConnectionPoints
+    IFACEMETHOD(Next)(ULONG cConnections, LPCONNECTIONPOINT *ppCP, ULONG *pcFetched) override;
     IFACEMETHOD(Skip)(ULONG cConnections) override;
     IFACEMETHOD(Reset)() override;
     IFACEMETHOD(Clone)(IEnumConnectionPoints **ppEnum) override;
 
-    QList<ComPtr<IConnectionPoint>> cpoints;
-    int current = 0;
+private:
+    QList<ComPtr<IConnectionPoint>> m_points;
+    int m_currentPointIndex{ 0 };
 };
 
 QT_END_NAMESPACE

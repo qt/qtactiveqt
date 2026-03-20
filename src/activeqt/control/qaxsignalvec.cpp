@@ -8,55 +8,63 @@
 QT_BEGIN_NAMESPACE
 
 QAxSignalVec::QAxSignalVec(const QAxServerBase::ConnectionPoints &points)
-    : cpoints(points.values())
+    : m_points(points.values())
 {
 }
 
 QAxSignalVec::QAxSignalVec(const QAxSignalVec &old)
-    : cpoints(old.cpoints)
-    , current(old.current)
+    : m_points(old.m_points), m_currentPointIndex(old.m_currentPointIndex)
 {
 }
 
-IFACEMETHODIMP QAxSignalVec::Next(ULONG cConnections, IConnectionPoint **cpoint, ULONG *pcFetched)
+IFACEMETHODIMP QAxSignalVec::Next(ULONG cConnections, LPCONNECTIONPOINT *ppCP, ULONG *pcFetched)
 {
-    if (!cpoint)
+    if (!ppCP)
         return E_POINTER;
-
     if (!pcFetched && cConnections > 1)
         return E_POINTER;
 
-    const qsizetype count = cpoints.size();
-    unsigned long i;
-    for (i = 0; i < cConnections; i++) {
-        if (current==count)
+    const qsizetype pointCount = m_points.size();
+
+    ULONG pointIndex = 0;
+    for (; pointIndex < cConnections; ++pointIndex) {
+        if (m_currentPointIndex == pointCount)
             break;
-        auto &cp = cpoints.at(current);
-        cpoint[i] = cp.Get();
-        if (cp)
-            cp->AddRef();
-        ++current;
+
+        auto &point = m_points.at(m_currentPointIndex);
+        ppCP[pointIndex] = point.Get();
+
+        if (point)
+            point->AddRef();
+
+        ++m_currentPointIndex;
     }
+
     if (pcFetched)
-        *pcFetched = i;
-    return i == cConnections ? S_OK : S_FALSE;
+        *pcFetched = pointIndex;
+
+    return pointIndex == cConnections ? S_OK : S_FALSE;
 }
 
 IFACEMETHODIMP QAxSignalVec::Skip(ULONG cConnections)
 {
-    const qsizetype count = cpoints.size();
-    while (cConnections) {
-        if (current == count)
+    const qsizetype pointCount = m_points.size();
+
+    while (cConnections > 0) {
+        if (m_currentPointIndex == pointCount)
             return S_FALSE;
-        ++current;
+
+        ++m_currentPointIndex;
         --cConnections;
     }
+
     return S_OK;
 }
 
 IFACEMETHODIMP QAxSignalVec::Reset()
 {
-    current = 0;
+    m_currentPointIndex = 0;
+
     return S_OK;
 }
 
@@ -64,6 +72,7 @@ IFACEMETHODIMP QAxSignalVec::Clone(IEnumConnectionPoints **ppEnum)
 {
     if (!ppEnum)
         return E_POINTER;
+
     *ppEnum = new QAxSignalVec(*this);
 
     return S_OK;
