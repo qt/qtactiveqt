@@ -654,14 +654,14 @@ void QAxServerBase::revokeActiveObject()
     ole_ref = 0;
 }
 
-unsigned long QAxServerBase::AddRef()
+IFACEMETHODIMP_(ULONG) QAxServerBase::AddRef()
 {
     if (m_outerUnknown)
         return m_outerUnknown->AddRef();
 
     return InterlockedIncrement(&ref);
 }
-unsigned long QAxServerBase::Release()
+IFACEMETHODIMP_(ULONG) QAxServerBase::Release()
 {
     if (m_outerUnknown)
         return m_outerUnknown->Release();
@@ -676,12 +676,12 @@ unsigned long QAxServerBase::Release()
 /* \internal
     QueryInterface implementation.
 */
-HRESULT WINAPI QAxServerBase::QueryInterface(REFIID iid, void **iface)
+IFACEMETHODIMP QAxServerBase::QueryInterface(REFIID riid, void **ppvObject)
 {
     if (m_outerUnknown)
-        return m_outerUnknown->QueryInterface(iid, iface);
+        return m_outerUnknown->QueryInterface(riid, ppvObject);
 
-    return InternalQueryInterface(iid, iface);
+    return InternalQueryInterface(riid, ppvObject);
 }
 
 HRESULT QAxServerBase::InternalQueryInterface(REFIID iid, void **iface)
@@ -750,7 +750,7 @@ HRESULT QAxServerBase::InternalQueryInterface(REFIID iid, void **iface)
     return S_OK;
 }
 
-IUnknown *QAxServerBase::ClientSite() const
+IFACEMETHODIMP_(IUnknown *) QAxServerBase::ClientSite() const
 {
     return m_spClientSite.Get();
 }
@@ -1265,7 +1265,7 @@ void QAxServerBase::removeMenu()
 extern bool ignoreSlots(const char *test);
 extern bool ignoreProps(const char *test);
 
-QObject *QAxServerBase::GetQObject() const
+IFACEMETHODIMP_(QObject *) QAxServerBase::GetQObject() const
 {
     return theObject;
 }
@@ -1308,8 +1308,8 @@ bool QAxServerBase::isPropertyExposed(int index)
     return result;
 }
 
-void QAxServerBase::ReportError(int code, const QString &src, const QString &desc,
-                                const QString &context)
+IFACEMETHODIMP_(void) QAxServerBase::ReportError(int code, const QString &src,
+                                                 const QString &desc, const QString &context)
 {
     exception = std::make_unique<QAxExceptInfo>(code, src, desc, context);
 }
@@ -1615,7 +1615,7 @@ int QAxServerBase::qt_metacall(QMetaObject::Call call, int index, void **argv)
     Call IPropertyNotifySink of connected clients.
     \a dispId specifies the ID of the property that changed.
 */
-bool QAxServerBase::EmitRequestPropertyChange(const char *property)
+IFACEMETHODIMP_(bool) QAxServerBase::EmitRequestPropertyChange(const char *property)
 {
     long dispId = -1;
 
@@ -1658,7 +1658,7 @@ bool QAxServerBase::EmitRequestPropertyChange(const char *property)
     Call IPropertyNotifySink of connected clients.
     \a dispId specifies the ID of the property that changed.
 */
-void QAxServerBase::EmitPropertyChanged(const char *property)
+IFACEMETHODIMP_(void) QAxServerBase::EmitPropertyChanged(const char *property)
 {
     long dispId = -1;
 
@@ -1699,23 +1699,23 @@ void QAxServerBase::EmitPropertyChanged(const char *property)
 /*
     Provide the ITypeInfo implementation for the COM class.
 */
-HRESULT WINAPI QAxServerBase::GetClassInfo(ITypeInfo** pptinfo)
+IFACEMETHODIMP QAxServerBase::GetClassInfo(ITypeInfo **ppTI)
 {
-    if (!pptinfo)
+    if (!ppTI)
         return E_POINTER;
 
-    *pptinfo = nullptr;
+    *ppTI = nullptr;
     if (!qAxTypeLibrary)
         return DISP_E_BADINDEX;
 
-    return qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->classID(class_name), pptinfo);
+    return qAxTypeLibrary->GetTypeInfoOfGuid(qAxFactory()->classID(class_name), ppTI);
 }
 
 //**** IProvideClassInfo2
 /*
     Provide the ID of the event interface.
 */
-HRESULT WINAPI QAxServerBase::GetGUID(DWORD dwGuidKind, GUID* pGUID)
+IFACEMETHODIMP QAxServerBase::GetGUID(DWORD dwGuidKind, GUID *pGUID)
 {
     if (!pGUID)
         return E_POINTER;
@@ -1732,7 +1732,7 @@ HRESULT WINAPI QAxServerBase::GetGUID(DWORD dwGuidKind, GUID* pGUID)
 /*
     Returns the number of class infos for this IDispatch.
 */
-HRESULT WINAPI QAxServerBase::GetTypeInfoCount(UINT* pctinfo)
+IFACEMETHODIMP QAxServerBase::GetTypeInfoCount(UINT *pctinfo)
 {
     if (!pctinfo)
         return E_POINTER;
@@ -1744,9 +1744,9 @@ HRESULT WINAPI QAxServerBase::GetTypeInfoCount(UINT* pctinfo)
 /*
     Provides the ITypeInfo for this IDispatch implementation.
 */
-HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT /* itinfo */, LCID /*lcid*/, ITypeInfo** pptinfo)
+IFACEMETHODIMP QAxServerBase::GetTypeInfo(UINT /* iTInfo */, LCID /* lcid */, ITypeInfo **ppTInfo)
 {
-    if (!pptinfo)
+    if (!ppTInfo)
         return E_POINTER;
 
     if (!qAxTypeLibrary)
@@ -1754,8 +1754,8 @@ HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT /* itinfo */, LCID /*lcid*/, ITyp
 
     ensureMetaData();
 
-    *pptinfo = m_spTypeInfo.Get();
-    (*pptinfo)->AddRef();
+    *ppTInfo = m_spTypeInfo.Get();
+    (*ppTInfo)->AddRef();
 
     return S_OK;
 }
@@ -1763,10 +1763,10 @@ HRESULT WINAPI QAxServerBase::GetTypeInfo(UINT /* itinfo */, LCID /*lcid*/, ITyp
 /*
     Provides the names of the methods implemented in this IDispatch implementation.
 */
-HRESULT WINAPI QAxServerBase::GetIDsOfNames(REFIID /* riid */, LPOLESTR* rgszNames, UINT cNames,
-                                            LCID /*lcid*/, DISPID* rgdispid)
+IFACEMETHODIMP QAxServerBase::GetIDsOfNames(REFIID /* riid */, LPOLESTR *rgszNames, UINT cNames,
+                                            LCID /* lcid */, DISPID *rgDispId)
 {
-    if (!rgszNames || !rgdispid)
+    if (!rgszNames || !rgDispId)
         return E_POINTER;
 
     if (!qAxTypeLibrary)
@@ -1776,15 +1776,15 @@ HRESULT WINAPI QAxServerBase::GetIDsOfNames(REFIID /* riid */, LPOLESTR* rgszNam
     if (!m_spTypeInfo)
         return DISP_E_UNKNOWNNAME;
 
-    return m_spTypeInfo->GetIDsOfNames(rgszNames, cNames, rgdispid);
+    return m_spTypeInfo->GetIDsOfNames(rgszNames, cNames, rgDispId);
 }
 
 /*
     Map the COM call to the Qt slot/property for \a dispidMember.
 */
-HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
-                  LCID /*lcid*/, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pvarResult,
-                  EXCEPINFO* pexcepinfo, UINT* puArgErr)
+IFACEMETHODIMP QAxServerBase::Invoke(DISPID dispIdMember, REFIID riid, LCID /* lcid */, WORD wFlags,
+                                     DISPPARAMS *pDispParams, VARIANT *pVarResult,
+                                     EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     if (riid != IID_NULL)
         return DISP_E_UNKNOWNINTERFACE;
@@ -1795,14 +1795,14 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 
     bool uniqueIndex = wFlags == DISPATCH_PROPERTYGET || wFlags == DISPATCH_PROPERTYPUT || wFlags == DISPATCH_METHOD;
 
-    int index = uniqueIndex ? indexCache.value(dispidMember, -1) : -1;
+    int index = uniqueIndex ? indexCache.value(dispIdMember, -1) : -1;
     QByteArray name;
     if (index == -1) {
         ensureMetaData();
 
         // This property or method is invoked when an ActiveX client specifies
         // the object name without a property or method. We only support property.
-        if (dispidMember == DISPID_VALUE && (wFlags == DISPATCH_PROPERTYGET || wFlags == DISPATCH_PROPERTYPUT)) {
+        if (dispIdMember == DISPID_VALUE && (wFlags == DISPATCH_PROPERTYGET || wFlags == DISPATCH_PROPERTYPUT)) {
             const QMetaObject *mo = qt.object->metaObject();
             index = mo->indexOfClassInfo("DefaultProperty");
             if (index != -1) {
@@ -1812,7 +1812,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
         } else {
             if (!m_spTypeInfo)
                 return res;
-            name = qaxTypeInfoName(m_spTypeInfo.Get(), dispidMember);
+            name = qaxTypeInfoName(m_spTypeInfo.Get(), dispIdMember);
             if (name.isEmpty())
                 return res;
         }
@@ -1824,9 +1824,9 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
         oldSizeHint = qt.widget->sizeHint();
 
     if (wFlags == (DISPATCH_PROPERTYGET|DISPATCH_METHOD)
-        && !pvarResult && (pDispParams->cArgs || pDispParams->cNamedArgs)) {
+        && !pVarResult && (pDispParams->cArgs || pDispParams->cNamedArgs)) {
         // some client language might allow "value = object.bar = 'newvalue'", and
-        // call us with a get|method but without pvarResult set? QTBUG-106024
+        // call us with a get|method but without pVarResult set? QTBUG-106024
         wFlags |= DISPATCH_PROPERTYPUT;
     }
 
@@ -1845,7 +1845,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 property = mo->property(index);
 
             if (property.isReadable()) {
-                if (!pvarResult)
+                if (!pVarResult)
                     return DISP_E_PARAMNOTOPTIONAL;
                 if (pDispParams->cArgs ||
                      pDispParams->cNamedArgs)
@@ -1854,7 +1854,7 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                 QVariant var = qt.object->property(property.name());
                 if (!var.isValid())
                     res =  DISP_E_MEMBERNOTFOUND;
-                else if (!QVariantToVARIANT(var, *pvarResult))
+                else if (!QVariantToVARIANT(var, *pVarResult))
                     res = DISP_E_TYPEMISMATCH;
                 else
                     res = S_OK;
@@ -2034,10 +2034,10 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                             ok = false;
                     }
                 }
-                if (!type.isEmpty() && type != "void" && pvarResult) {
+                if (!type.isEmpty() && type != "void" && pVarResult) {
                     if (argv[0] == argv_pointer && type != "QVariant")
                         varp[0] = QVariant(QMetaType::fromName(type), argv_pointer);
-                    ok = QVariantToVARIANT(varp[0], *pvarResult, type);
+                    ok = QVariantToVARIANT(varp[0], *pVarResult, type);
                 }
             }
             if (argv && argv != static_argv) {
@@ -2130,17 +2130,17 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
     }
 
     if (index != -1 && uniqueIndex)
-        indexCache.insert(dispidMember, index);
+        indexCache.insert(dispIdMember, index);
 
     if (exception) {
-        if (pexcepinfo) {
-            memset(pexcepinfo, 0, sizeof(EXCEPINFO));
+        if (pExcepInfo) {
+            memset(pExcepInfo, 0, sizeof(EXCEPINFO));
 
-            pexcepinfo->wCode = WORD(exception->code);
+            pExcepInfo->wCode = WORD(exception->code);
             if (!exception->src.isNull())
-                pexcepinfo->bstrSource = QStringToBSTR(exception->src);
+                pExcepInfo->bstrSource = QStringToBSTR(exception->src);
             if (!exception->desc.isNull())
-                pexcepinfo->bstrDescription = QStringToBSTR(exception->desc);
+                pExcepInfo->bstrDescription = QStringToBSTR(exception->desc);
             if (!exception->context.isNull()) {
                 QString context = exception->context;
                 unsigned contextID = 0;
@@ -2149,8 +2149,8 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
                     contextID = context.mid(br + 1, context.size() - br - 2).toUInt();
                     context.truncate(br-1);
                 }
-                pexcepinfo->bstrHelpFile = QStringToBSTR(context);
-                pexcepinfo->dwHelpContext = contextID;
+                pExcepInfo->bstrHelpFile = QStringToBSTR(context);
+                pExcepInfo->dwHelpContext = contextID;
             }
         }
         exception.reset();
@@ -2174,24 +2174,24 @@ HRESULT WINAPI QAxServerBase::Invoke(DISPID dispidMember, REFIID riid,
 /*
     Provide the IEnumConnectionPoints implemented in the QAxSignalVec class.
 */
-HRESULT WINAPI QAxServerBase::EnumConnectionPoints(IEnumConnectionPoints **epoints)
+IFACEMETHODIMP QAxServerBase::EnumConnectionPoints(IEnumConnectionPoints **ppEnum)
 {
-    if (!epoints)
+    if (!ppEnum)
         return E_POINTER;
-    *epoints = new QAxSignalVec(points);
+    *ppEnum = new QAxSignalVec(points);
     return S_OK;
 }
 
 /*
     Provide the IConnectionPoint implemented in the QAxConnection for \a iid.
 */
-HRESULT WINAPI QAxServerBase::FindConnectionPoint(REFIID iid, IConnectionPoint **cpoint)
+IFACEMETHODIMP QAxServerBase::FindConnectionPoint(REFIID riid, IConnectionPoint **ppCP)
 {
-    if (!cpoint)
+    if (!ppCP)
         return E_POINTER;
 
-    auto &cp = points[iid];
-    *cpoint = cp.Get();
+    auto &cp = points[riid];
+    *ppCP = cp.Get();
     if (cp) {
         cp->AddRef();
         return S_OK;
@@ -2200,9 +2200,9 @@ HRESULT WINAPI QAxServerBase::FindConnectionPoint(REFIID iid, IConnectionPoint *
 }
 
 //**** IPersist
-HRESULT WINAPI QAxServerBase::GetClassID(GUID *clsid)
+IFACEMETHODIMP QAxServerBase::GetClassID(GUID *pClassID)
 {
-    *clsid = qAxFactory()->classID(class_name);
+    *pClassID = qAxFactory()->classID(class_name);
     return S_OK;
 }
 
@@ -2212,12 +2212,12 @@ HRESULT WINAPI QAxServerBase::GetClassID(GUID *clsid)
 
     See documentation of IPersistStorage::IsDirty.
 */
-HRESULT WINAPI QAxServerBase::IsDirty()
+IFACEMETHODIMP QAxServerBase::IsDirty()
 {
     return dirtyflag ? S_OK : S_FALSE;
 }
 
-HRESULT WINAPI QAxServerBase::Load(IStream *pStm)
+IFACEMETHODIMP QAxServerBase::Load(LPSTREAM pStm)
 {
     STATSTG stat;
     HRESULT hres = pStm->Stat(&stat, STATFLAG_DEFAULT);
@@ -2285,7 +2285,7 @@ HRESULT WINAPI QAxServerBase::Load(IStream *pStm)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::Save(IStream *pStm, BOOL clearDirty)
+IFACEMETHODIMP QAxServerBase::Save(LPSTREAM pStm, BOOL fClearDirty)
 {
     const QMetaObject *mo = qt.object->metaObject();
 
@@ -2332,24 +2332,24 @@ HRESULT WINAPI QAxServerBase::Save(IStream *pStm, BOOL clearDirty)
     pStm->Write(data, ULONG(qtarray.size()), &written);
     pStm->Commit(STGC_ONLYIFCURRENT);
 
-    if (clearDirty)
+    if (fClearDirty)
         dirtyflag = false;
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::GetSizeMax(ULARGE_INTEGER *pcbSize)
+IFACEMETHODIMP QAxServerBase::GetSizeMax(ULARGE_INTEGER *pCbSize)
 {
     const QMetaObject *mo = qt.object->metaObject();
 
-    pcbSize->HighPart = 0;
-    pcbSize->LowPart = DWORD(mo->propertyCount()) * 50;
+    pCbSize->HighPart = 0;
+    pCbSize->LowPart = DWORD(mo->propertyCount()) * 50;
 
     return S_OK;
 }
 
 //**** IPersistStorage
 
-HRESULT WINAPI QAxServerBase::InitNew(IStorage *pStg)
+IFACEMETHODIMP QAxServerBase::InitNew(IStorage *pStg)
 {
     if (initNewCalled)
         return CO_E_ALREADYINITIALIZED;
@@ -2361,7 +2361,7 @@ HRESULT WINAPI QAxServerBase::InitNew(IStorage *pStg)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::Load(IStorage *pStg)
+IFACEMETHODIMP QAxServerBase::Load(IStorage *pStg)
 {
     if (InitNew(pStg) != S_OK)
         return CO_E_ALREADYINITIALIZED;
@@ -2386,7 +2386,7 @@ HRESULT WINAPI QAxServerBase::Load(IStorage *pStg)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL /* fSameAsLoad */)
+IFACEMETHODIMP QAxServerBase::Save(IStorage *pStgSave, BOOL /* fSameAsLoad */)
 {
     ComPtr<IStream> spStream;
     QString streamName = QLatin1String(qt.object->metaObject()->className());
@@ -2397,7 +2397,7 @@ HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL /* fSameAsLoad */)
     */
     streamName += QLatin1String("_Stream4.2");
 
-    pStg->CreateStream(reinterpret_cast<const wchar_t *>(streamName.utf16()), STGM_CREATE | STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &spStream);
+    pStgSave->CreateStream(reinterpret_cast<const wchar_t *>(streamName.utf16()), STGM_CREATE | STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &spStream);
     if (!spStream)
         return E_FAIL;
 
@@ -2406,7 +2406,7 @@ HRESULT WINAPI QAxServerBase::Save(IStorage *pStg, BOOL /* fSameAsLoad */)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::SaveCompleted(IStorage *pStgNew)
+IFACEMETHODIMP QAxServerBase::SaveCompleted(IStorage *pStgNew)
 {
     if (pStgNew)
         m_spStorage = pStgNew;
@@ -2414,7 +2414,7 @@ HRESULT WINAPI QAxServerBase::SaveCompleted(IStorage *pStgNew)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::HandsOffStorage()
+IFACEMETHODIMP QAxServerBase::HandsOffStorage()
 {
     m_spStorage.Reset();
 
@@ -2425,7 +2425,7 @@ HRESULT WINAPI QAxServerBase::HandsOffStorage()
 /*
     Initialize the properties of the Qt widget.
 */
-HRESULT WINAPI QAxServerBase::InitNew()
+IFACEMETHODIMP QAxServerBase::InitNew()
 {
     if (initNewCalled)
         return CO_E_ALREADYINITIALIZED;
@@ -2438,9 +2438,9 @@ HRESULT WINAPI QAxServerBase::InitNew()
 /*
     Set the properties of the Qt widget to the values provided in the \a bag.
 */
-HRESULT WINAPI QAxServerBase::Load(IPropertyBag *bag, IErrorLog * /*log*/)
+IFACEMETHODIMP QAxServerBase::Load(IPropertyBag *pPropBag, IErrorLog * /* pErrorLog */)
 {
-    if (!bag)
+    if (!pPropBag)
         return E_POINTER;
 
     if (InitNew() != S_OK)
@@ -2456,7 +2456,7 @@ HRESULT WINAPI QAxServerBase::Load(IPropertyBag *bag, IErrorLog * /*log*/)
         BSTR bstr = QStringToBSTR(QLatin1String(pname));
         VARIANT var;
         var.vt = VT_EMPTY;
-        HRESULT res = bag->Read(bstr, &var, nullptr);
+        HRESULT res = pPropBag->Read(bstr, &var, nullptr);
         if (property.isWritable() && var.vt != VT_EMPTY) {
             if (res != S_OK
                 || !qt.object->setProperty(pname, VARIANTToQVariant(var, property.typeName(),
@@ -2476,12 +2476,13 @@ HRESULT WINAPI QAxServerBase::Load(IPropertyBag *bag, IErrorLog * /*log*/)
 /*
     Save the properties of the Qt widget into the \a bag.
 */
-HRESULT WINAPI QAxServerBase::Save(IPropertyBag *bag, BOOL clearDirty, BOOL /*saveAll*/)
+IFACEMETHODIMP QAxServerBase::Save(IPropertyBag *pPropBag, BOOL fClearDirty,
+                                   BOOL /* fSaveAllProperties */)
 {
-    if (!bag)
+    if (!pPropBag)
         return E_POINTER;
 
-    if (clearDirty)
+    if (fClearDirty)
         dirtyflag = false;
     bool error = false;
     const QMetaObject *mo = qt.object->metaObject();
@@ -2498,7 +2499,7 @@ HRESULT WINAPI QAxServerBase::Save(IPropertyBag *bag, BOOL clearDirty, BOOL /*sa
             error = true;
         VARIANT var;
         QVariantToVARIANT(qvar, var);
-        bag->Write(bstr, &var);
+        pPropBag->Write(bstr, &var);
         SysFreeString(bstr);
     }
     Q_UNUSED(error);
@@ -2508,22 +2509,22 @@ HRESULT WINAPI QAxServerBase::Save(IPropertyBag *bag, BOOL clearDirty, BOOL /*sa
 //**** IPersistFile
 /*
 */
-HRESULT WINAPI QAxServerBase::SaveCompleted(LPCOLESTR fileName)
+IFACEMETHODIMP QAxServerBase::SaveCompleted(LPCOLESTR pszFileName)
 {
     if (qt.object->metaObject()->indexOfClassInfo("MIME") == -1)
         return E_NOTIMPL;
 
-    currentFileName = QString::fromWCharArray(fileName);
+    currentFileName = QString::fromWCharArray(pszFileName);
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::GetCurFile(LPOLESTR *currentFile)
+IFACEMETHODIMP QAxServerBase::GetCurFile(LPOLESTR *ppszFileName)
 {
     if (qt.object->metaObject()->indexOfClassInfo("MIME") == -1)
         return E_NOTIMPL;
 
     if (currentFileName.isEmpty()) {
-        *currentFile = nullptr;
+        *ppszFileName = nullptr;
         return S_FALSE;
     }
     ComPtr<IMalloc> malloc;
@@ -2531,13 +2532,13 @@ HRESULT WINAPI QAxServerBase::GetCurFile(LPOLESTR *currentFile)
     if (!malloc)
         return E_OUTOFMEMORY;
 
-    *currentFile = static_cast<wchar_t *>(malloc->Alloc(currentFileName.length() * 2));
-    memcpy(*currentFile, currentFileName.unicode(), currentFileName.length() * 2);
+    *ppszFileName = static_cast<wchar_t *>(malloc->Alloc(currentFileName.length() * 2));
+    memcpy(*ppszFileName, currentFileName.unicode(), currentFileName.length() * 2);
 
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD /* mode */)
+IFACEMETHODIMP QAxServerBase::Load(LPCOLESTR pszFileName, DWORD /* dwMode */)
 {
     const QMetaObject *mo = qt.object->metaObject();
     int mimeIndex = mo->indexOfClassInfo("MIME");
@@ -2550,7 +2551,7 @@ HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD /* mode */)
         return E_NOTIMPL;
     }
 
-    QString loadFileName = QString::fromWCharArray(fileName);
+    QString loadFileName = QString::fromWCharArray(pszFileName);
     QString fileExtension = loadFileName.mid(loadFileName.lastIndexOf(QLatin1Char('.')) + 1);
     QFile file(loadFileName);
 
@@ -2582,7 +2583,7 @@ HRESULT WINAPI QAxServerBase::Load(LPCOLESTR fileName, DWORD /* mode */)
     return E_FAIL;
 }
 
-HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
+IFACEMETHODIMP QAxServerBase::Save(LPCOLESTR pszFileName, BOOL fRemember)
 {
     const QMetaObject *mo = qt.object->metaObject();
     int mimeIndex = mo->indexOfClassInfo("MIME");
@@ -2595,7 +2596,7 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
         return E_NOTIMPL;
     }
 
-    QString saveFileName = QString::fromWCharArray(fileName);
+    QString saveFileName = QString::fromWCharArray(pszFileName);
     QString fileExtension = saveFileName.mid(saveFileName.lastIndexOf(QLatin1Char('.')) + 1);
     QFile file(saveFileName);
 
@@ -2629,9 +2630,11 @@ HRESULT WINAPI QAxServerBase::Save(LPCOLESTR fileName, BOOL fRemember)
 /*
     Draws the widget into the provided device context.
 */
-HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* pvAspect */, DVTARGETDEVICE *ptd,
-                HDC hicTargetDev, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL /*lprcWBounds*/,
-                BOOL(__stdcall* /*pfnContinue*/)(ULONG_PTR), ULONG_PTR /*dwContinue*/)
+IFACEMETHODIMP QAxServerBase::Draw(DWORD dwDrawAspect, LONG /* lindex */, void * /* pvAspect */,
+                                   DVTARGETDEVICE *ptd, HDC hdcTargetDev, HDC hdcDraw,
+                                   LPCRECTL lprcBounds, LPCRECTL /* lprcWBounds */,
+                                   BOOL(STDMETHODCALLTYPE * /* pfnContinue */)(ULONG_PTR),
+                                   ULONG_PTR /* dwContinue */)
 {
     if (!lprcBounds)
         return E_INVALIDARG;
@@ -2640,7 +2643,7 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* 
     if (!isWidget || !qt.widget)
         return OLE_E_BLANK;
 
-    switch (dwAspect) {
+    switch (dwDrawAspect) {
     case DVASPECT_CONTENT:
     case DVASPECT_OPAQUE:
     case DVASPECT_TRANSPARENT:
@@ -2649,18 +2652,18 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* 
         return DV_E_DVASPECT;
     }
     if (!ptd)
-        hicTargetDev = nullptr;
+        hdcTargetDev = nullptr;
 
     bool bDeleteDC = false;
-    if (!hicTargetDev) {
-        hicTargetDev = ::CreateDC(L"DISPLAY", nullptr, nullptr, nullptr);
-        bDeleteDC = (hicTargetDev != hdcDraw);
+    if (!hdcTargetDev) {
+        hdcTargetDev = ::CreateDC(L"DISPLAY", nullptr, nullptr, nullptr);
+        bDeleteDC = (hdcTargetDev != hdcDraw);
     }
 
     RECTL rc = *lprcBounds;
     bool bMetaFile = GetDeviceCaps(hdcDraw, TECHNOLOGY) == DT_METAFILE;
     if (!bMetaFile)
-        ::LPtoDP(hicTargetDev, reinterpret_cast<LPPOINT>(&rc), 2);
+        ::LPtoDP(hdcTargetDev, reinterpret_cast<LPPOINT>(&rc), 2);
 
     const QPixmap pm = qt.widget->grab();
     HBITMAP hbm = qt_pixmapToWinHBITMAP(pm);
@@ -2671,7 +2674,7 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* 
     DeleteObject(hbm);
 
     if (bDeleteDC)
-        DeleteDC(hicTargetDev);
+        DeleteDC(hdcTargetDev);
 
     return S_OK;
 }
@@ -2679,8 +2682,9 @@ HRESULT WINAPI QAxServerBase::Draw(DWORD dwAspect, LONG /* lindex */, void * /* 
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::GetColorSet(DWORD /* dwDrawAspect */, LONG /* lindex */, void * /* pvAspect */, DVTARGETDEVICE * /* ptd */,
-        HDC /* hicTargetDev */, LOGPALETTE ** /* ppColorSet */)
+IFACEMETHODIMP QAxServerBase::GetColorSet(DWORD /* dwDrawAspect */, LONG /* lindex */,
+                                          void * /* pvAspect */, DVTARGETDEVICE * /* ptd */,
+                                          HDC /* hicTargetDev */, LOGPALETTE ** /* ppColorSet */)
 {
     return E_NOTIMPL;
 }
@@ -2688,7 +2692,8 @@ HRESULT WINAPI QAxServerBase::GetColorSet(DWORD /* dwDrawAspect */, LONG /* lind
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::Freeze(DWORD /* dwAspect */, LONG  /* lindex */, void * /* pvAspect */, DWORD * /* pdwFreeze */)
+IFACEMETHODIMP QAxServerBase::Freeze(DWORD /* dwDrawAspect */, LONG /* lindex */,
+                                     void * /* pvAspect */, DWORD * /* pdwFreeze */)
 {
     return E_NOTIMPL;
 }
@@ -2696,7 +2701,7 @@ HRESULT WINAPI QAxServerBase::Freeze(DWORD /* dwAspect */, LONG  /* lindex */, v
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::Unfreeze(DWORD /* dwFreeze */)
+IFACEMETHODIMP QAxServerBase::Unfreeze(DWORD /* dwFreeze */)
 {
     return E_NOTIMPL;
 }
@@ -2704,7 +2709,8 @@ HRESULT WINAPI QAxServerBase::Unfreeze(DWORD /* dwFreeze */)
 /*
     Stores the provided advise sink.
 */
-HRESULT WINAPI QAxServerBase::SetAdvise(DWORD /*aspects*/, DWORD /*advf*/, IAdviseSink *pAdvSink)
+IFACEMETHODIMP QAxServerBase::SetAdvise(DWORD /* aspects */, DWORD /* advf */,
+                                        IAdviseSink *pAdvSink)
 {
     m_spAdviseSink = pAdvSink;
     return S_OK;
@@ -2713,7 +2719,8 @@ HRESULT WINAPI QAxServerBase::SetAdvise(DWORD /*aspects*/, DWORD /*advf*/, IAdvi
 /*
     Returns the advise sink.
 */
-HRESULT WINAPI QAxServerBase::GetAdvise(DWORD* /*aspects*/, DWORD* /*advf*/, IAdviseSink **ppAdvSink)
+IFACEMETHODIMP QAxServerBase::GetAdvise(DWORD * /* pAspects */, DWORD * /* pAdvf */,
+                                        IAdviseSink **ppAdvSink)
 {
     if (!ppAdvSink)
         return E_POINTER;
@@ -2728,19 +2735,20 @@ HRESULT WINAPI QAxServerBase::GetAdvise(DWORD* /*aspects*/, DWORD* /*advf*/, IAd
 /*
     Returns the current size ONLY if the widget has already been sized.
 */
-HRESULT WINAPI QAxServerBase::GetExtent(DWORD dwAspect, LONG /*lindex*/, DVTARGETDEVICE* /*ptd*/, LPSIZEL lpsizel)
+IFACEMETHODIMP QAxServerBase::GetExtent(DWORD dwDrawAspect, LONG /* lindex */,
+                                        DVTARGETDEVICE * /* ptd */, LPSIZEL lpsizel)
 {
     if (!isWidget || !qt.widget || !qt.widget->testAttribute(Qt::WA_Resized))
         return OLE_E_BLANK;
 
-    return GetExtent(dwAspect, lpsizel);
+    return GetExtent(dwDrawAspect, lpsizel);
 }
 
 //**** IOleControl
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::GetControlInfo(LPCONTROLINFO)
+IFACEMETHODIMP QAxServerBase::GetControlInfo(CONTROLINFO * /* pCI */)
 {
     return E_NOTIMPL;
 }
@@ -2748,7 +2756,7 @@ HRESULT WINAPI QAxServerBase::GetControlInfo(LPCONTROLINFO)
 /*
     Turns event firing on and off.
 */
-HRESULT WINAPI QAxServerBase::FreezeEvents(BOOL bFreeze)
+IFACEMETHODIMP QAxServerBase::FreezeEvents(BOOL bFreeze)
 {
     // member of CComControl
     if (bFreeze)
@@ -2762,7 +2770,7 @@ HRESULT WINAPI QAxServerBase::FreezeEvents(BOOL bFreeze)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::OnMnemonic(LPMSG)
+IFACEMETHODIMP QAxServerBase::OnMnemonic(MSG * /* pMsg */)
 {
     return E_NOTIMPL;
 }
@@ -2770,7 +2778,7 @@ HRESULT WINAPI QAxServerBase::OnMnemonic(LPMSG)
 /*
     Update the ambient properties of the Qt widget.
 */
-HRESULT WINAPI QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
+IFACEMETHODIMP QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
 {
     if (!m_spClientSite || !theObject)
         return S_OK;
@@ -2868,18 +2876,18 @@ HRESULT WINAPI QAxServerBase::OnAmbientPropertyChange(DISPID dispID)
 /*
     Returns the HWND of the control.
 */
-HRESULT WINAPI QAxServerBase::GetWindow(HWND *pHwnd)
+IFACEMETHODIMP QAxServerBase::GetWindow(HWND *phwnd)
 {
-    if (!pHwnd)
+    if (!phwnd)
         return E_POINTER;
-    *pHwnd = m_hWnd;
+    *phwnd = m_hWnd;
     return S_OK;
 }
 
 /*
     Enters What's This mode.
 */
-HRESULT WINAPI QAxServerBase::ContextSensitiveHelp(BOOL fEnterMode)
+IFACEMETHODIMP QAxServerBase::ContextSensitiveHelp(BOOL fEnterMode)
 {
     if (fEnterMode)
         QWhatsThis::enterWhatsThisMode();
@@ -2892,7 +2900,7 @@ HRESULT WINAPI QAxServerBase::ContextSensitiveHelp(BOOL fEnterMode)
 /*
     Deactivates the control in place.
 */
-HRESULT WINAPI QAxServerBase::InPlaceDeactivate()
+IFACEMETHODIMP QAxServerBase::InPlaceDeactivate()
 {
     if (!isInPlaceActive)
         return S_OK;
@@ -2916,7 +2924,7 @@ HRESULT WINAPI QAxServerBase::InPlaceDeactivate()
 /*
     Deactivates the control's user interface.
 */
-HRESULT WINAPI QAxServerBase::UIDeactivate()
+IFACEMETHODIMP QAxServerBase::UIDeactivate()
 {
     // if we're not UIActive, not much to do.
     if (!isUIActive || !m_spInPlaceSite)
@@ -2962,29 +2970,29 @@ HRESULT WINAPI QAxServerBase::UIDeactivate()
 /*
     Positions the control, and applies requested clipping.
 */
-HRESULT WINAPI QAxServerBase::SetObjectRects(LPCRECT prcPos, LPCRECT prcClip)
+IFACEMETHODIMP QAxServerBase::SetObjectRects(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
 {
-    if (prcPos == nullptr || prcClip == nullptr)
+    if (lprcPosRect == nullptr || lprcClipRect == nullptr)
         return E_POINTER;
 
     if (m_hWnd) {
         // the container wants us to clip, so figure out if we really need to
         RECT rcIXect;
-        BOOL b = IntersectRect(&rcIXect, prcPos, prcClip);
+        BOOL b = IntersectRect(&rcIXect, lprcPosRect, lprcClipRect);
         HRGN tempRgn = nullptr;
-        if (b && !EqualRect(&rcIXect, prcPos)) {
-            OffsetRect(&rcIXect, -(prcPos->left), -(prcPos->top));
+        if (b && !EqualRect(&rcIXect, lprcPosRect)) {
+            OffsetRect(&rcIXect, -(lprcPosRect->left), -(lprcPosRect->top));
             tempRgn = CreateRectRgnIndirect(&rcIXect);
         }
 
         ::SetWindowRgn(m_hWnd, tempRgn, true);
-        ::SetWindowPos(m_hWnd, nullptr, prcPos->left, prcPos->top,
-            prcPos->right - prcPos->left, prcPos->bottom - prcPos->top,
+        ::SetWindowPos(m_hWnd, nullptr, lprcPosRect->left, lprcPosRect->top,
+            lprcPosRect->right - lprcPosRect->left, lprcPosRect->bottom - lprcPosRect->top,
             SWP_NOZORDER | SWP_NOACTIVATE);
     }
 
     //Save the new extent.
-    const QRect qr = qaxFromNativeRect(*prcPos, qt.widget);
+    const QRect qr = qaxFromNativeRect(*lprcPosRect, qt.widget);
     m_currentExtent.rwidth() = qBound(qt.widget->minimumWidth(), qr.width(), qt.widget->maximumWidth());
     m_currentExtent.rheight() = qBound(qt.widget->minimumHeight(), qr.height(), qt.widget->maximumHeight());
 
@@ -2994,7 +3002,7 @@ HRESULT WINAPI QAxServerBase::SetObjectRects(LPCRECT prcPos, LPCRECT prcClip)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::ReactivateAndUndo()
+IFACEMETHODIMP QAxServerBase::ReactivateAndUndo()
 {
     return E_NOTIMPL;
 }
@@ -3003,9 +3011,9 @@ HRESULT WINAPI QAxServerBase::ReactivateAndUndo()
 
 Q_GUI_EXPORT int qt_translateKeyCode(int);
 
-HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
+IFACEMETHODIMP QAxServerBase::TranslateAccelerator(LPMSG lpmsg)
 {
-    if (pMsg->message != WM_KEYDOWN || !isWidget)
+    if (lpmsg->message != WM_KEYDOWN || !isWidget)
         return S_FALSE;
 
     DWORD dwKeyMod = 0;
@@ -3016,7 +3024,7 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
     if (::GetKeyState(VK_MENU) < 0)
         dwKeyMod |= 4;  // KEYMOD_ALT
 
-    switch (LOWORD(pMsg->wParam)) {
+    switch (LOWORD(lpmsg->wParam)) {
     case VK_TAB:
         if (isUIActive) {
             bool shift = ::GetKeyState(VK_SHIFT) < 0;
@@ -3085,10 +3093,10 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
             if (dwKeyMod & 4)
                 state |= Qt::AltModifier;
 
-            int key = int(pMsg->wParam);
+            int key = int(lpmsg->wParam);
             // FIXME 4.10.2011: No longer exists in Lighthouse.
             // if (!(key >= 'A' && key <= 'Z') && !(key >= '0' && key <= '9'))
-            //    key = qt_translateKeyCode(pMsg->wParam);
+            //    key = qt_translateKeyCode(lpmsg->wParam);
 
             QKeyEvent override(QEvent::ShortcutOverride, key, static_cast<Qt::KeyboardModifiers>(state));
             override.ignore();
@@ -3115,21 +3123,21 @@ HRESULT WINAPI QAxServerBase::TranslateAcceleratorW(MSG *pMsg)
     if (qAxOutProcServer)
         serverType = QAX_OUTPROC_SERVER;
 #ifdef GWLP_USERDATA
-    LONG_PTR oldData = SetWindowLongPtr(pMsg->hwnd, GWLP_USERDATA, serverType);
+    LONG_PTR oldData = SetWindowLongPtr(lpmsg->hwnd, GWLP_USERDATA, serverType);
 #else
-    LONG oldData = SetWindowLong(pMsg->hwnd, GWL_USERDATA, serverType);
+    LONG oldData = SetWindowLong(lpmsg->hwnd, GWL_USERDATA, serverType);
 #endif
-    HRESULT hres = controlSite->TranslateAcceleratorW(pMsg, dwKeyMod);
+    HRESULT hres = controlSite->TranslateAcceleratorW(lpmsg, dwKeyMod);
     // reset the user-data for the window.
 #ifdef GWLP_USERDATA
-    SetWindowLongPtr(pMsg->hwnd, GWLP_USERDATA, oldData);
+    SetWindowLongPtr(lpmsg->hwnd, GWLP_USERDATA, oldData);
 #else
-    SetWindowLong(pMsg->hwnd, GWL_USERDATA, oldData);
+    SetWindowLong(lpmsg->hwnd, GWL_USERDATA, oldData);
 #endif
     return hres;
 }
 
-HRESULT WINAPI QAxServerBase::OnFrameWindowActivate(BOOL fActivate)
+IFACEMETHODIMP QAxServerBase::OnFrameWindowActivate(BOOL fActivate)
 {
     if (fActivate) {
         if (wasUIActive)
@@ -3140,17 +3148,19 @@ HRESULT WINAPI QAxServerBase::OnFrameWindowActivate(BOOL fActivate)
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::OnDocWindowActivate(BOOL /* fActivate */)
+IFACEMETHODIMP QAxServerBase::OnDocWindowActivate(BOOL /* fActivate */)
 {
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::ResizeBorder(LPCRECT /* prcBorder */, IOleInPlaceUIWindow * /* pUIWindow */, BOOL /* fFrameWindow */)
+IFACEMETHODIMP QAxServerBase::ResizeBorder(LPCRECT /* prcBorder */,
+                                           IOleInPlaceUIWindow * /* pUIWindow */,
+                                           BOOL /* fFrameWindow */)
 {
     return S_OK;
 }
 
-HRESULT WINAPI QAxServerBase::EnableModeless(BOOL fEnable)
+IFACEMETHODIMP QAxServerBase::EnableModeless(BOOL fEnable)
 {
     if (!isWidget)
         return S_OK;
@@ -3175,7 +3185,7 @@ static inline LPOLESTR QStringToOLESTR(const QString &qstring)
 
     See documentation of IOleObject::GetUserType.
 */
-HRESULT WINAPI QAxServerBase::GetUserType(DWORD dwFormOfType, LPOLESTR *pszUserType)
+IFACEMETHODIMP QAxServerBase::GetUserType(DWORD dwFormOfType, LPOLESTR *pszUserType)
 {
     if (!pszUserType)
         return E_POINTER;
@@ -3201,7 +3211,7 @@ HRESULT WINAPI QAxServerBase::GetUserType(DWORD dwFormOfType, LPOLESTR *pszUserT
 /*
     Returns the status flags registered for this control.
 */
-HRESULT WINAPI QAxServerBase::GetMiscStatus(DWORD dwAspect, DWORD *pdwStatus)
+IFACEMETHODIMP QAxServerBase::GetMiscStatus(DWORD dwAspect, DWORD *pdwStatus)
 {
     return OleRegGetMiscStatus(qAxFactory()->classID(class_name), dwAspect, pdwStatus);
 }
@@ -3209,7 +3219,7 @@ HRESULT WINAPI QAxServerBase::GetMiscStatus(DWORD dwAspect, DWORD *pdwStatus)
 /*
     Stores the provided advise sink.
 */
-HRESULT WINAPI QAxServerBase::Advise(IAdviseSink* pAdvSink, DWORD* pdwConnection)
+IFACEMETHODIMP QAxServerBase::Advise(IAdviseSink *pAdvSink, DWORD *pdwConnection)
 {
     if (!pAdvSink || !pdwConnection)
         return E_POINTER;
@@ -3224,7 +3234,7 @@ HRESULT WINAPI QAxServerBase::Advise(IAdviseSink* pAdvSink, DWORD* pdwConnection
 /*
     Closes the control.
 */
-HRESULT WINAPI QAxServerBase::Close(DWORD dwSaveOption)
+IFACEMETHODIMP QAxServerBase::Close(DWORD dwSaveOption)
 {
     if (dwSaveOption != OLECLOSE_NOSAVE && m_spClientSite)
         m_spClientSite->SaveObject();
@@ -3376,8 +3386,9 @@ HRESULT QAxServerBase::internalActivate()
 /*
     Executes the "verb" \a iVerb.
 */
-HRESULT WINAPI QAxServerBase::DoVerb(LONG iVerb, LPMSG /*lpmsg*/, IOleClientSite* /*pActiveSite*/, LONG /*lindex*/,
-                               HWND /*hwndParent*/, LPCRECT /*prcPosRect*/)
+IFACEMETHODIMP QAxServerBase::DoVerb(LONG iVerb, LPMSG /* lpmsg */,
+                                     IOleClientSite * /* pActiveSite */, LONG /* lindex */,
+                                     HWND /* hwndParent */, LPCRECT /* lprcPosRect */)
 {
     HRESULT hr = E_NOTIMPL;
     switch (iVerb)
@@ -3421,7 +3432,7 @@ HRESULT WINAPI QAxServerBase::DoVerb(LONG iVerb, LPMSG /*lpmsg*/, IOleClientSite
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::EnumAdvise(IEnumSTATDATA** /*ppenumAdvise*/)
+IFACEMETHODIMP QAxServerBase::EnumAdvise(IEnumSTATDATA ** /* ppenumAdvise */)
 {
     return E_NOTIMPL;
 }
@@ -3429,7 +3440,7 @@ HRESULT WINAPI QAxServerBase::EnumAdvise(IEnumSTATDATA** /*ppenumAdvise*/)
 /*
     Returns an enumerator for the verbs registered for this class.
 */
-HRESULT WINAPI QAxServerBase::EnumVerbs(IEnumOLEVERB** ppEnumOleVerb)
+IFACEMETHODIMP QAxServerBase::EnumVerbs(IEnumOLEVERB **ppEnumOleVerb)
 {
     if (!ppEnumOleVerb)
         return E_POINTER;
@@ -3439,7 +3450,7 @@ HRESULT WINAPI QAxServerBase::EnumVerbs(IEnumOLEVERB** ppEnumOleVerb)
 /*
     Returns the current client site..
 */
-HRESULT WINAPI QAxServerBase::GetClientSite(IOleClientSite** ppClientSite)
+IFACEMETHODIMP QAxServerBase::GetClientSite(IOleClientSite **ppClientSite)
 {
     if (!ppClientSite)
         return E_POINTER;
@@ -3452,7 +3463,8 @@ HRESULT WINAPI QAxServerBase::GetClientSite(IOleClientSite** ppClientSite)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::GetClipboardData(DWORD, IDataObject**)
+IFACEMETHODIMP QAxServerBase::GetClipboardData(DWORD /* dwReserved */,
+                                               IDataObject ** /* ppDataObject */)
 {
     return E_NOTIMPL;
 }
@@ -3460,7 +3472,7 @@ HRESULT WINAPI QAxServerBase::GetClipboardData(DWORD, IDataObject**)
 /*
     Returns the current extent.
 */
-HRESULT WINAPI QAxServerBase::GetExtent(DWORD dwDrawAspect, SIZEL* psizel)
+IFACEMETHODIMP QAxServerBase::GetExtent(DWORD dwDrawAspect, SIZEL *psizel)
 {
     if (dwDrawAspect != DVASPECT_CONTENT || !isWidget || !qt.widget)
         return E_FAIL;
@@ -3474,7 +3486,8 @@ HRESULT WINAPI QAxServerBase::GetExtent(DWORD dwDrawAspect, SIZEL* psizel)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::GetMoniker(DWORD, DWORD, IMoniker** )
+IFACEMETHODIMP QAxServerBase::GetMoniker(DWORD /* dwAssign */, DWORD /* dwWhichMoniker */,
+                                         IMoniker ** /* ppmk */)
 {
     return E_NOTIMPL;
 }
@@ -3482,7 +3495,7 @@ HRESULT WINAPI QAxServerBase::GetMoniker(DWORD, DWORD, IMoniker** )
 /*
     Returns the CLSID of this class.
 */
-HRESULT WINAPI QAxServerBase::GetUserClassID(CLSID* pClsid)
+IFACEMETHODIMP QAxServerBase::GetUserClassID(CLSID *pClsid)
 {
     if (!pClsid)
         return E_POINTER;
@@ -3493,7 +3506,8 @@ HRESULT WINAPI QAxServerBase::GetUserClassID(CLSID* pClsid)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::InitFromData(IDataObject*, BOOL, DWORD)
+IFACEMETHODIMP QAxServerBase::InitFromData(IDataObject * /* pDataObject */, BOOL /* fCreation */,
+                                           DWORD /* dwReserved */)
 {
     return E_NOTIMPL;
 }
@@ -3501,7 +3515,7 @@ HRESULT WINAPI QAxServerBase::InitFromData(IDataObject*, BOOL, DWORD)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::IsUpToDate()
+IFACEMETHODIMP QAxServerBase::IsUpToDate()
 {
     return S_OK;
 }
@@ -3509,7 +3523,7 @@ HRESULT WINAPI QAxServerBase::IsUpToDate()
 /*
     Stores the client site.
 */
-HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
+IFACEMETHODIMP QAxServerBase::SetClientSite(IOleClientSite *pClientSite)
 {
     // release all client site interfaces
     m_spInPlaceSiteWindowless.Reset();
@@ -3528,7 +3542,7 @@ HRESULT WINAPI QAxServerBase::SetClientSite(IOleClientSite* pClientSite)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::SetColorScheme(LOGPALETTE*)
+IFACEMETHODIMP QAxServerBase::SetColorScheme(LOGPALETTE * /* pLogpal */)
 {
     return E_NOTIMPL;
 }
@@ -3544,7 +3558,7 @@ bool qt_sendSpontaneousEvent(QObject *o, QEvent *e)
 /*
     Tries to set the size of the control.
 */
-HRESULT WINAPI QAxServerBase::SetExtent(DWORD dwDrawAspect, SIZEL* psizel)
+IFACEMETHODIMP QAxServerBase::SetExtent(DWORD dwDrawAspect, SIZEL *psizel)
 {
     if (dwDrawAspect != DVASPECT_CONTENT)
         return DV_E_DVASPECT;
@@ -3570,7 +3584,8 @@ HRESULT WINAPI QAxServerBase::SetExtent(DWORD dwDrawAspect, SIZEL* psizel)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::SetHostNames(LPCOLESTR /* szContainerApp */, LPCOLESTR /* szContainerObj */)
+IFACEMETHODIMP QAxServerBase::SetHostNames(LPCOLESTR /* szContainerApp */,
+                                           LPCOLESTR /* szContainerObj */)
 {
     return S_OK;
 }
@@ -3578,7 +3593,7 @@ HRESULT WINAPI QAxServerBase::SetHostNames(LPCOLESTR /* szContainerApp */, LPCOL
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::SetMoniker(DWORD, IMoniker*)
+IFACEMETHODIMP QAxServerBase::SetMoniker(DWORD /* dwWhichMoniker */, IMoniker * /* pmk */)
 {
     return E_NOTIMPL;
 }
@@ -3586,7 +3601,7 @@ HRESULT WINAPI QAxServerBase::SetMoniker(DWORD, IMoniker*)
 /*
     Disconnects an advise sink.
 */
-HRESULT WINAPI QAxServerBase::Unadvise(DWORD dwConnection)
+IFACEMETHODIMP QAxServerBase::Unadvise(DWORD dwConnection)
 {
     for (qsizetype i = 0; i < adviseSinks.size(); ++i) {
         STATDATA entry = adviseSinks.at(i);
@@ -3602,7 +3617,7 @@ HRESULT WINAPI QAxServerBase::Unadvise(DWORD dwConnection)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::Update()
+IFACEMETHODIMP QAxServerBase::Update()
 {
     return S_OK;
 }
@@ -3611,7 +3626,7 @@ HRESULT WINAPI QAxServerBase::Update()
 /*
     Calls IViewObject::Draw after setting up the parameters.
 */
-HRESULT WINAPI QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
+IFACEMETHODIMP QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmedium)
 {
     if (!pmedium)
         return E_POINTER;
@@ -3678,8 +3693,8 @@ HRESULT WINAPI QAxServerBase::GetData(FORMATETC *pformatetcIn, STGMEDIUM *pmediu
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::DAdvise(FORMATETC *pformatetc, DWORD advf,
-                                      IAdviseSink *pAdvSink, DWORD *pdwConnection)
+IFACEMETHODIMP QAxServerBase::DAdvise(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink,
+                                      DWORD *pdwConnection)
 {
     if (pformatetc->dwAspect != DVASPECT_CONTENT)
         return E_FAIL;
@@ -3697,7 +3712,7 @@ HRESULT WINAPI QAxServerBase::DAdvise(FORMATETC *pformatetc, DWORD advf,
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::DUnadvise(DWORD dwConnection)
+IFACEMETHODIMP QAxServerBase::DUnadvise(DWORD dwConnection)
 {
     return Unadvise(dwConnection);
 }
@@ -3705,7 +3720,7 @@ HRESULT WINAPI QAxServerBase::DUnadvise(DWORD dwConnection)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::EnumDAdvise(IEnumSTATDATA ** /*ppenumAdvise*/)
+IFACEMETHODIMP QAxServerBase::EnumDAdvise(IEnumSTATDATA ** /* ppenumAdvise */)
 {
     return E_NOTIMPL;
 }
@@ -3713,7 +3728,7 @@ HRESULT WINAPI QAxServerBase::EnumDAdvise(IEnumSTATDATA ** /*ppenumAdvise*/)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::GetDataHere(FORMATETC* /* pformatetc */, STGMEDIUM* /* pmedium */)
+IFACEMETHODIMP QAxServerBase::GetDataHere(FORMATETC * /* pformatetc */, STGMEDIUM * /* pmedium */)
 {
     return E_NOTIMPL;
 }
@@ -3721,7 +3736,7 @@ HRESULT WINAPI QAxServerBase::GetDataHere(FORMATETC* /* pformatetc */, STGMEDIUM
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::QueryGetData(FORMATETC* /* pformatetc */)
+IFACEMETHODIMP QAxServerBase::QueryGetData(FORMATETC * /* pformatetc */)
 {
     return E_NOTIMPL;
 }
@@ -3729,7 +3744,8 @@ HRESULT WINAPI QAxServerBase::QueryGetData(FORMATETC* /* pformatetc */)
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::GetCanonicalFormatEtc(FORMATETC* /* pformatectIn */,FORMATETC* /* pformatetcOut */)
+IFACEMETHODIMP QAxServerBase::GetCanonicalFormatEtc(FORMATETC * /* pformatectIn */,
+                                                    FORMATETC * /* pformatetcOut */)
 {
     return E_NOTIMPL;
 }
@@ -3737,7 +3753,8 @@ HRESULT WINAPI QAxServerBase::GetCanonicalFormatEtc(FORMATETC* /* pformatectIn *
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::SetData(FORMATETC* /* pformatetc */, STGMEDIUM* /* pmedium */, BOOL /* fRelease */)
+IFACEMETHODIMP QAxServerBase::SetData(FORMATETC * /* pformatetc */, STGMEDIUM * /* pmedium */,
+                                      BOOL /* fRelease */)
 {
     return E_NOTIMPL;
 }
@@ -3745,7 +3762,8 @@ HRESULT WINAPI QAxServerBase::SetData(FORMATETC* /* pformatetc */, STGMEDIUM* /*
 /*
     Not implemented.
 */
-HRESULT WINAPI QAxServerBase::EnumFormatEtc(DWORD /* dwDirection */, IEnumFORMATETC** /* ppenumFormatEtc */)
+IFACEMETHODIMP QAxServerBase::EnumFormatEtc(DWORD /* dwDirection */,
+                                            IEnumFORMATETC ** /* ppenumFormatEtc */)
 {
     return E_NOTIMPL;
 }

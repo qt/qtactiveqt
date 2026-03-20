@@ -90,146 +90,144 @@ public:
     void revokeActiveObject();
 
     // IUnknown
-    unsigned long WINAPI AddRef() override;
-    unsigned long WINAPI Release() override;
-    HRESULT WINAPI QueryInterface(REFIID iid, void **iface) override;
+    IFACEMETHOD_(ULONG, AddRef)() override;
+    IFACEMETHOD_(ULONG, Release)() override;
+    IFACEMETHOD(QueryInterface)(REFIID riid, void **ppvObject) override;
     HRESULT InternalQueryInterface(REFIID iid, void **iface);
 
     // IAxServerBase
-    IUnknown *ClientSite() const override;
+    IFACEMETHOD_(IUnknown *, ClientSite)() const override;
 
-    void EmitPropertyChanged(const char *) override;
-    bool EmitRequestPropertyChange(const char *) override;
-    QObject *GetQObject() const override;
+    IFACEMETHOD_(void, EmitPropertyChanged)(const char *property) override;
+    IFACEMETHOD_(bool, EmitRequestPropertyChange)(const char *property) override;
+    IFACEMETHOD_(QObject *, GetQObject)() const override;
     void ensureMetaData();
     bool isPropertyExposed(int index);
 
-    void ReportError(int code, const QString &src, const QString &desc,
-                     const QString &context) override;
+    IFACEMETHOD_(void, ReportError)(int code, const QString &src, const QString &desc,
+                                    const QString &context) override;
 
     // IDispatch
-    STDMETHOD(GetTypeInfoCount)(UINT *pctinfo) override;
-    STDMETHOD(GetTypeInfo)(UINT itinfo, LCID lcid, ITypeInfo **pptinfo) override;
-    STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid,
-                             DISPID *rgdispid) override;
-    STDMETHOD(Invoke)(DISPID dispidMember, REFIID riid, LCID lcid, WORD wFlags,
-                      DISPPARAMS *pdispparams, VARIANT *pvarResult, EXCEPINFO *pexcepinfo,
-                      UINT *puArgErr) override;
+    IFACEMETHOD(GetTypeInfoCount)(UINT *pctinfo) override;
+    IFACEMETHOD(GetTypeInfo)(UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo) override;
+    IFACEMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR *rgszNames, UINT cNames, LCID lcid,
+                               DISPID *rgDispId) override;
+    IFACEMETHOD(Invoke)(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags,
+                        DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo,
+                        UINT *puArgErr) override;
 
     // IProvideClassInfo
-    STDMETHOD(GetClassInfo)(ITypeInfo **pptinfo) override;
+    IFACEMETHOD(GetClassInfo)(ITypeInfo **ppTI) override;
 
     // IProvideClassInfo2
-    STDMETHOD(GetGUID)(DWORD dwGuidKind, GUID *pGUID) override;
+    IFACEMETHOD(GetGUID)(DWORD dwGuidKind, GUID *pGUID) override;
 
     // IOleObject
-    STDMETHOD(Advise)(IAdviseSink *pAdvSink, DWORD *pdwConnection) override;
-    STDMETHOD(Close)(DWORD dwSaveOption) override;
-    STDMETHOD(DoVerb)(LONG iVerb, LPMSG lpmsg, IOleClientSite *pActiveSite, LONG lindex,
-                      HWND hwndParent, LPCRECT lprcPosRect) override;
-    STDMETHOD(EnumAdvise)(IEnumSTATDATA **ppenumAdvise) override;
-    STDMETHOD(EnumVerbs)(IEnumOLEVERB **ppEnumOleVerb) override;
-    STDMETHOD(GetClientSite)(IOleClientSite **ppClientSite) override;
-    STDMETHOD(GetClipboardData)(DWORD dwReserved, IDataObject **ppDataObject) override;
-    STDMETHOD(GetExtent)(DWORD dwDrawAspect, SIZEL *psizel) override;
-    STDMETHOD(GetMiscStatus)(DWORD dwAspect, DWORD *pdwStatus) override;
-    STDMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker **ppmk) override;
-    STDMETHOD(GetUserClassID)(CLSID *pClsid) override;
-    STDMETHOD(GetUserType)(DWORD dwFormOfType, LPOLESTR *pszUserType) override;
-    STDMETHOD(InitFromData)(IDataObject *pDataObject, BOOL fCreation, DWORD dwReserved) override;
-    STDMETHOD(IsUpToDate)() override;
-    STDMETHOD(SetClientSite)(IOleClientSite *pClientSite) override;
-    STDMETHOD(SetColorScheme)(LOGPALETTE *pLogPal) override;
-    STDMETHOD(SetExtent)(DWORD dwDrawAspect, SIZEL *psizel) override;
-    STDMETHOD(SetHostNames)(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj) override;
-    STDMETHOD(SetMoniker)(DWORD dwWhichMoniker, IMoniker *ppmk) override;
-    STDMETHOD(Unadvise)(DWORD dwConnection) override;
-    STDMETHOD(Update)() override;
+    IFACEMETHOD(Advise)(IAdviseSink *pAdvSink, DWORD *pdwConnection) override;
+    IFACEMETHOD(Close)(DWORD dwSaveOption) override;
+    IFACEMETHOD(DoVerb)(LONG iVerb, LPMSG lpmsg, IOleClientSite *pActiveSite, LONG lindex,
+                        HWND hwndParent, LPCRECT lprcPosRect) override;
+    IFACEMETHOD(EnumAdvise)(IEnumSTATDATA **ppenumAdvise) override;
+    IFACEMETHOD(EnumVerbs)(IEnumOLEVERB **ppEnumOleVerb) override;
+    IFACEMETHOD(GetClientSite)(IOleClientSite **ppClientSite) override;
+    IFACEMETHOD(GetClipboardData)(DWORD dwReserved, IDataObject **ppDataObject) override;
+    IFACEMETHOD(GetExtent)(DWORD dwDrawAspect, SIZEL *psizel) override;
+    IFACEMETHOD(GetMiscStatus)(DWORD dwAspect, DWORD *pdwStatus) override;
+    IFACEMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker **ppmk) override;
+    IFACEMETHOD(GetUserClassID)(CLSID *pClsid) override;
+    IFACEMETHOD(GetUserType)(DWORD dwFormOfType, LPOLESTR *pszUserType) override;
+    IFACEMETHOD(InitFromData)(IDataObject *pDataObject, BOOL fCreation, DWORD dwReserved) override;
+    IFACEMETHOD(IsUpToDate)() override;
+    IFACEMETHOD(SetClientSite)(IOleClientSite *pClientSite) override;
+    IFACEMETHOD(SetColorScheme)(LOGPALETTE *pLogpal) override;
+    IFACEMETHOD(SetExtent)(DWORD dwDrawAspect, SIZEL *psizel) override;
+    IFACEMETHOD(SetHostNames)(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj) override;
+    IFACEMETHOD(SetMoniker)(DWORD dwWhichMoniker, IMoniker *pmk) override;
+    IFACEMETHOD(Unadvise)(DWORD dwConnection) override;
+    IFACEMETHOD(Update)() override;
 
     // IViewObject
-    STDMETHOD(Draw)(DWORD dwAspect, LONG lIndex, void *pvAspect, DVTARGETDEVICE *ptd,
-                    HDC hicTargetDevice, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds,
-                    BOOL(__stdcall *pfnContinue)(ULONG_PTR), ULONG_PTR dwContinue) override;
-    STDMETHOD(GetColorSet)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
-                           HDC hicTargetDev, LOGPALETTE **ppColorSet) override;
-    STDMETHOD(Freeze)(DWORD dwAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze) override;
-    STDMETHOD(Unfreeze)(DWORD dwFreeze) override;
-    STDMETHOD(SetAdvise)(DWORD aspects, DWORD advf, IAdviseSink *pAdvSink) override;
-    STDMETHOD(GetAdvise)(DWORD *aspects, DWORD *advf, IAdviseSink **pAdvSink) override;
+    IFACEMETHOD(Draw)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
+                      HDC hdcTargetDev, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds,
+                      BOOL(STDMETHODCALLTYPE *pfnContinue)(ULONG_PTR),
+                      ULONG_PTR dwContinue) override;
+    IFACEMETHOD(GetColorSet)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
+                             HDC hicTargetDev, LOGPALETTE **ppColorSet) override;
+    IFACEMETHOD(Freeze)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze) override;
+    IFACEMETHOD(Unfreeze)(DWORD dwFreeze) override;
+    IFACEMETHOD(SetAdvise)(DWORD aspects, DWORD advf, IAdviseSink *pAdvSink) override;
+    IFACEMETHOD(GetAdvise)(DWORD *pAspects, DWORD *pAdvf, IAdviseSink **ppAdvSink) override;
 
     // IViewObject2
-    STDMETHOD(GetExtent)(DWORD dwAspect, LONG lindex, DVTARGETDEVICE *ptd,
-                         LPSIZEL lpsizel) override;
+    IFACEMETHOD(GetExtent)(DWORD dwDrawAspect, LONG lindex, DVTARGETDEVICE *ptd,
+                           LPSIZEL lpsizel) override;
 
     // IOleControl
-    STDMETHOD(FreezeEvents)(BOOL) override;
-    STDMETHOD(GetControlInfo)(LPCONTROLINFO) override;
-    STDMETHOD(OnAmbientPropertyChange)(DISPID) override;
-    STDMETHOD(OnMnemonic)(LPMSG) override;
+    IFACEMETHOD(FreezeEvents)(BOOL bFreeze) override;
+    IFACEMETHOD(GetControlInfo)(CONTROLINFO *pCI) override;
+    IFACEMETHOD(OnAmbientPropertyChange)(DISPID dispID) override;
+    IFACEMETHOD(OnMnemonic)(MSG *pMsg) override;
 
     // IOleWindow
-    STDMETHOD(GetWindow)(HWND *pHwnd) override;
-    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
+    IFACEMETHOD(GetWindow)(HWND *phwnd) override;
+    IFACEMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
 
     // IOleInPlaceObject
-    STDMETHOD(InPlaceDeactivate)() override;
-    STDMETHOD(UIDeactivate)() override;
-    STDMETHOD(SetObjectRects)(LPCRECT lprcPosRect, LPCRECT lprcClipRect) override;
-    STDMETHOD(ReactivateAndUndo)() override;
+    IFACEMETHOD(InPlaceDeactivate)() override;
+    IFACEMETHOD(UIDeactivate)() override;
+    IFACEMETHOD(SetObjectRects)(LPCRECT lprcPosRect, LPCRECT lprcClipRect) override;
+    IFACEMETHOD(ReactivateAndUndo)() override;
 
     // IOleInPlaceActiveObject
-    STDMETHOD(TranslateAccelerator)(MSG *pMsg) override;
-    STDMETHOD(OnFrameWindowActivate)(BOOL) override;
-    STDMETHOD(OnDocWindowActivate)(BOOL fActivate) override;
-    STDMETHOD(ResizeBorder)(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow,
-                            BOOL fFrameWindow) override;
-    STDMETHOD(EnableModeless)(BOOL) override;
+    IFACEMETHOD(TranslateAccelerator)(LPMSG lpmsg) override;
+    IFACEMETHOD(OnFrameWindowActivate)(BOOL fActivate) override;
+    IFACEMETHOD(OnDocWindowActivate)(BOOL fActivate) override;
+    IFACEMETHOD(ResizeBorder)(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow,
+                              BOOL fFrameWindow) override;
+    IFACEMETHOD(EnableModeless)(BOOL fEnable) override;
 
     // IConnectionPointContainer
-    STDMETHOD(EnumConnectionPoints)(IEnumConnectionPoints **) override;
-    STDMETHOD(FindConnectionPoint)(REFIID, IConnectionPoint **) override;
+    IFACEMETHOD(EnumConnectionPoints)(IEnumConnectionPoints **ppEnum) override;
+    IFACEMETHOD(FindConnectionPoint)(REFIID riid, IConnectionPoint **ppCP) override;
 
     // IPersist
-    STDMETHOD(GetClassID)(GUID *clsid) override;
+    IFACEMETHOD(GetClassID)(CLSID *pClassID) override;
 
     // IPersistStreamInit
-    STDMETHOD(InitNew)(VOID) override;
-    STDMETHOD(IsDirty)() override;
-    STDMETHOD(Load)(IStream *pStm) override;
-    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
-    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
+    IFACEMETHOD(InitNew)() override;
+    IFACEMETHOD(IsDirty)() override;
+    IFACEMETHOD(Load)(LPSTREAM pStm) override;
+    IFACEMETHOD(Save)(LPSTREAM pStm, BOOL fClearDirty) override;
+    IFACEMETHOD(GetSizeMax)(ULARGE_INTEGER *pCbSize) override;
 
     // IPersistPropertyBag
-    STDMETHOD(Load)(IPropertyBag *, IErrorLog *) override;
-    STDMETHOD(Save)(IPropertyBag *, BOOL, BOOL) override;
+    IFACEMETHOD(Load)(IPropertyBag *pPropBag, IErrorLog *pErrorLog) override;
+    IFACEMETHOD(Save)(IPropertyBag *pPropBag, BOOL fClearDirty, BOOL fSaveAllProperties) override;
 
     // IPersistStorage
-    STDMETHOD(InitNew)(IStorage *pStg) override;
-    STDMETHOD(Load)(IStorage *pStg) override;
-    STDMETHOD(Save)(IStorage *pStg, BOOL fSameAsLoad) override;
-    STDMETHOD(SaveCompleted)(IStorage *pStgNew) override;
-    STDMETHOD(HandsOffStorage)() override;
+    IFACEMETHOD(InitNew)(IStorage *pStg) override;
+    IFACEMETHOD(Load)(IStorage *pStg) override;
+    IFACEMETHOD(Save)(IStorage *pStgSave, BOOL fSameAsLoad) override;
+    IFACEMETHOD(SaveCompleted)(IStorage *pStgNew) override;
+    IFACEMETHOD(HandsOffStorage)() override;
 
     // IPersistFile
-    STDMETHOD(SaveCompleted)(LPCOLESTR fileName) override;
-    STDMETHOD(GetCurFile)(LPOLESTR *currentFile) override;
-    STDMETHOD(Load)(LPCOLESTR fileName, DWORD mode) override;
-    STDMETHOD(Save)(LPCOLESTR fileName, BOOL fRemember) override;
+    IFACEMETHOD(SaveCompleted)(LPCOLESTR pszFileName) override;
+    IFACEMETHOD(GetCurFile)(LPOLESTR *ppszFileName) override;
+    IFACEMETHOD(Load)(LPCOLESTR pszFileName, DWORD dwMode) override;
+    IFACEMETHOD(Save)(LPCOLESTR pszFileName, BOOL fRemember) override;
 
     // IDataObject
-    STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium) override;
-    STDMETHOD(GetDataHere)(FORMATETC * /* pformatetc */, STGMEDIUM * /* pmedium */) override;
-    STDMETHOD(QueryGetData)(FORMATETC * /* pformatetc */) override;
-    STDMETHOD(GetCanonicalFormatEtc)(FORMATETC * /* pformatectIn */,
-                                     FORMATETC * /* pformatetcOut */) override;
-    STDMETHOD(SetData)(FORMATETC * /* pformatetc */, STGMEDIUM * /* pmedium */,
-                       BOOL /* fRelease */) override;
-    STDMETHOD(EnumFormatEtc)(DWORD /* dwDirection */,
-                             IEnumFORMATETC ** /* ppenumFormatEtc */) override;
-    STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink,
-                       DWORD *pdwConnection) override;
-    STDMETHOD(DUnadvise)(DWORD dwConnection) override;
-    STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise) override;
+    IFACEMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium) override;
+    IFACEMETHOD(GetDataHere)(FORMATETC *pformatetc, STGMEDIUM *pmedium) override;
+    IFACEMETHOD(QueryGetData)(FORMATETC *pformatetc) override;
+    IFACEMETHOD(GetCanonicalFormatEtc)(FORMATETC *pformatectIn, FORMATETC *pformatetcOut) override;
+    IFACEMETHOD(SetData)(FORMATETC *pformatetc, STGMEDIUM *pmedium, BOOL fRelease) override;
+    IFACEMETHOD(EnumFormatEtc)(DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc) override;
+    IFACEMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink,
+                         DWORD *pdwConnection) override;
+    IFACEMETHOD(DUnadvise)(DWORD dwConnection) override;
+    IFACEMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise) override;
 
     // QObject
     int qt_metacall(QMetaObject::Call, int index, void **argv) override;
