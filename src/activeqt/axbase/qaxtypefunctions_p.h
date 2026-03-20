@@ -25,18 +25,6 @@
 #include <QtCore/qvariant.h>
 
 QT_BEGIN_NAMESPACE
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wnon-virtual-dtor") // gcc complains about IAxServerBase inheriting IUnknown with non virtual destructor.
-
-extern GUID IID_IAxServerBase;
-struct IAxServerBase : public IUnknown
-{
-    virtual IUnknown *clientSite() const = 0;
-    virtual void emitPropertyChanged(const char*) = 0;
-    virtual bool emitRequestPropertyChange(const char*) = 0;
-    virtual QObject *qObject() const = 0;
-    virtual void reportError(int code, const QString &src, const QString &desc, const QString &context) = 0;
-};
 
 #define HIMETRIC_PER_INCH   2540
 #define MAP_PIX_TO_LOGHIM(x,ppli)   ((HIMETRIC_PER_INCH*(x) + ((ppli)>>1)) / (ppli))
@@ -61,7 +49,6 @@ extern void clearVARIANT(VARIANT *var);
 #define QAX_INPROC_SERVER  (0x51540001)
 #define QAX_OUTPROC_SERVER (0x51540002)
 
-QT_WARNING_POP
 QT_END_NAMESPACE
 
 #endif // QAXTYPEFUNCTIONS_P_H

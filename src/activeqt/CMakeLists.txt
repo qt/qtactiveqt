@@ -23,6 +23,7 @@ qt_internal_add_module(ActiveQt
         container/qaxscript.h
         container/qaxselect.h
         container/qaxwidget.h container/qaxwidget_p.h
+        control/iaxserverbase_p.h
         control/qaxaggregated.h
         control/qaxbindable.h
         control/qaxfactory.h

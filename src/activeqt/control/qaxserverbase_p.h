@@ -30,8 +30,9 @@
 #include <QtCore/QString>
 #include <QtCore/QUuid>
 
-#include <QtAxBase/private/qaxtypefunctions_p.h>
 #include <QtCore/private/qcomptr_p.h>
+
+#include "iaxserverbase_p.h"
 
 QT_BEGIN_NAMESPACE
 

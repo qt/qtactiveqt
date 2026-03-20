@@ -37,6 +37,7 @@
 #include "qaxaggregated.h"
 
 #include "../shared/qaxtypes_p.h"
+#include <QtAxBase/private/qaxtypefunctions_p.h>
 #include <QtAxBase/private/qaxutils_p.h>
 #include <QtCore/private/qcomobject_p.h>
 

@@ -10,6 +10,7 @@ qt_internal_add_module(AxServer
     QMAKE_MODULE_CONFIG idcidl force_import_plugins
     SOURCES
         ../shared/qaxtypes.cpp ../shared/qaxtypes_p.h
+        iaxserverbase.cpp iaxserverbase_p.h
         qaxaggregated.cpp qaxaggregated.h
         qaxbindable.cpp qaxbindable.h
         qaxfactory.cpp qaxfactory.h
