@@ -15,7 +15,7 @@ qt_internal_add_module(AxServer
         qaxfactory.cpp qaxfactory.h
         qaxmain.cpp
         qaxserver.cpp
-        qaxserverbase.cpp
+        qaxserverbase.cpp qaxserverbase_p.h
         qaxserverdll.cpp
         qaxservermain.cpp
         qclassfactory_p.h

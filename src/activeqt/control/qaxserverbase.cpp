@@ -3,6 +3,8 @@
 // Qt-Security score:significant reason:default
 
 
+#include "qaxserverbase_p.h"
+
 #include <qabstracteventdispatcher.h>
 #include <qapplication.h>
 #include <qbuffer.h>
@@ -12,8 +14,6 @@
 #include <qeventloop.h>
 #include <qfile.h>
 #include <qpointer.h>
-#include <qhash.h>
-#include <qmap.h>
 #include <qmenubar.h>
 #include <qmenu.h>
 #include <qmetaobject.h>
@@ -22,7 +22,6 @@
 #include <qsizegrip.h>
 #include <qstatusbar.h>
 #include <qwhatsthis.h>
-#include <ocidl.h>
 #include <olectl.h>
 #include <private/qcoreapplication_p.h>
 #include <qwindow.h>
@@ -30,7 +29,6 @@
 #include <qpa/qplatformnativeinterface.h>
 #include <qabstractnativeeventfilter.h>
 
-#include <qlist.h>
 #include <private/qguiapplication_p.h>
 #include <private/qthread_p.h>
 
@@ -40,9 +38,7 @@
 
 #include "../shared/qaxtypes_p.h"
 #include <QtAxBase/private/qaxutils_p.h>
-#include <QtAxBase/private/qaxtypefunctions_p.h>
 #include <QtCore/private/qcomobject_p.h>
-#include <QtCore/private/qcomptr_p.h>
 
 #include "qclassfactory_p.h"
 
@@ -87,299 +83,6 @@ struct QAxExceptInfo
 
 
 bool qt_sendSpontaneousEvent(QObject*, QEvent*);
-
-/*
-    \class QAxServerBase
-    \brief The QAxServerBase class is an ActiveX control hosting a QWidget.
-
-    \internal
-*/
-class QAxServerBase :
-    public QObject,
-    public IAxServerBase,
-    public IDispatch,
-    public IOleObject,
-    public IOleControl,
-    public IViewObject2,
-    public IOleInPlaceObject,
-    public IOleInPlaceActiveObject,
-    public IProvideClassInfo2,
-    public IConnectionPointContainer,
-    public IPersistStream,
-    public IPersistStreamInit,
-    public IPersistStorage,
-    public IPersistPropertyBag,
-    public IPersistFile,
-    public IDataObject
-{
-public:
-    using ConnectionPoints = QMap<QUuid,ComPtr<IConnectionPoint>>;
-
-    QAxServerBase(const QString &classname, IUnknown *outerUnknown);
-    QAxServerBase(QObject *o);
-
-    void init();
-
-    ~QAxServerBase() override;
-
-// Window creation
-    HWND create(HWND hWndParent, RECT& rcPos);
-    HMENU createPopup(QMenu *popup, HMENU oldMenu = nullptr);
-    void createMenu(QMenuBar *menuBar);
-    void removeMenu();
-
-    static LRESULT QT_WIN_CALLBACK ActiveXProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-// Object registration with OLE
-    void registerActiveObject(IUnknown *object);
-    void revokeActiveObject();
-
-// IUnknown
-    unsigned long WINAPI AddRef() override
-    {
-        if (m_outerUnknown)
-            return m_outerUnknown->AddRef();
-
-        return InterlockedIncrement(&ref);
-    }
-    unsigned long WINAPI Release() override
-    {
-        if (m_outerUnknown)
-            return m_outerUnknown->Release();
-
-        LONG refCount = InterlockedDecrement(&ref);
-        if (!refCount)
-            delete this;
-
-        return refCount;
-    }
-    HRESULT WINAPI QueryInterface(REFIID iid, void **iface) override;
-    HRESULT InternalQueryInterface(REFIID iid, void **iface);
-
-// IAxServerBase
-    IUnknown *clientSite() const override
-    {
-        return m_spClientSite.Get();
-    }
-
-    void emitPropertyChanged(const char *) override;
-    bool emitRequestPropertyChange(const char *) override;
-    QObject *qObject() const override
-    {
-        return theObject;
-    }
-    void ensureMetaData();
-    bool isPropertyExposed(int index);
-
-    void reportError(int code, const QString &src, const QString &desc,
-                     const QString &context) override
-    {
-        exception = std::make_unique<QAxExceptInfo>(code, src, desc, context);
-    }
-
-// IDispatch
-    STDMETHOD(GetTypeInfoCount)(UINT* pctinfo) override;
-    STDMETHOD(GetTypeInfo)(UINT itinfo, LCID lcid, ITypeInfo** pptinfo) override;
-    STDMETHOD(GetIDsOfNames)(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgdispid) override;
-    STDMETHOD(Invoke)(DISPID dispidMember, REFIID riid,
-                LCID lcid, WORD wFlags, DISPPARAMS* pdispparams, VARIANT* pvarResult,
-                EXCEPINFO* pexcepinfo, UINT* puArgErr) override;
-
-// IProvideClassInfo
-    STDMETHOD(GetClassInfo)(ITypeInfo** pptinfo) override;
-
-// IProvideClassInfo2
-    STDMETHOD(GetGUID)(DWORD dwGuidKind, GUID* pGUID) override;
-
-// IOleObject
-    STDMETHOD(Advise)(IAdviseSink* pAdvSink, DWORD* pdwConnection) override;
-    STDMETHOD(Close)(DWORD dwSaveOption) override;
-    STDMETHOD(DoVerb)(LONG iVerb, LPMSG lpmsg, IOleClientSite* pActiveSite, LONG lindex, HWND hwndParent, LPCRECT lprcPosRect) override;
-    STDMETHOD(EnumAdvise)(IEnumSTATDATA** ppenumAdvise) override;
-    STDMETHOD(EnumVerbs)(IEnumOLEVERB** ppEnumOleVerb) override;
-    STDMETHOD(GetClientSite)(IOleClientSite** ppClientSite) override;
-    STDMETHOD(GetClipboardData)(DWORD dwReserved, IDataObject** ppDataObject) override;
-    STDMETHOD(GetExtent)(DWORD dwDrawAspect, SIZEL* psizel) override;
-    STDMETHOD(GetMiscStatus)(DWORD dwAspect, DWORD *pdwStatus) override;
-    STDMETHOD(GetMoniker)(DWORD dwAssign, DWORD dwWhichMoniker, IMoniker** ppmk) override;
-    STDMETHOD(GetUserClassID)(CLSID* pClsid) override;
-    STDMETHOD(GetUserType)(DWORD dwFormOfType, LPOLESTR *pszUserType) override;
-    STDMETHOD(InitFromData)(IDataObject* pDataObject, BOOL fCreation, DWORD dwReserved) override;
-    STDMETHOD(IsUpToDate)() override;
-    STDMETHOD(SetClientSite)(IOleClientSite* pClientSite) override;
-    STDMETHOD(SetColorScheme)(LOGPALETTE* pLogPal) override;
-    STDMETHOD(SetExtent)(DWORD dwDrawAspect, SIZEL* psizel) override;
-    STDMETHOD(SetHostNames)(LPCOLESTR szContainerApp, LPCOLESTR szContainerObj) override;
-    STDMETHOD(SetMoniker)(DWORD dwWhichMoniker, IMoniker* ppmk) override;
-    STDMETHOD(Unadvise)(DWORD dwConnection) override;
-    STDMETHOD(Update)() override;
-
-// IViewObject
-    STDMETHOD(Draw)(DWORD dwAspect, LONG lIndex, void *pvAspect, DVTARGETDEVICE *ptd,
-                    HDC hicTargetDevice, HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds,
-                    BOOL(__stdcall*pfnContinue)(ULONG_PTR), ULONG_PTR dwContinue) override;
-    STDMETHOD(GetColorSet)(DWORD dwDrawAspect, LONG lindex, void *pvAspect, DVTARGETDEVICE *ptd,
-                    HDC hicTargetDev, LOGPALETTE **ppColorSet) override;
-    STDMETHOD(Freeze)(DWORD dwAspect, LONG lindex, void *pvAspect, DWORD *pdwFreeze) override;
-    STDMETHOD(Unfreeze)(DWORD dwFreeze) override;
-    STDMETHOD(SetAdvise)(DWORD aspects, DWORD advf, IAdviseSink *pAdvSink) override;
-    STDMETHOD(GetAdvise)(DWORD *aspects, DWORD *advf, IAdviseSink **pAdvSink) override;
-
-// IViewObject2
-    STDMETHOD(GetExtent)(DWORD dwAspect, LONG lindex, DVTARGETDEVICE *ptd, LPSIZEL lpsizel) override;
-
-// IOleControl
-    STDMETHOD(FreezeEvents)(BOOL) override;
-    STDMETHOD(GetControlInfo)(LPCONTROLINFO) override;
-    STDMETHOD(OnAmbientPropertyChange)(DISPID) override;
-    STDMETHOD(OnMnemonic)(LPMSG) override;
-
-// IOleWindow
-    STDMETHOD(GetWindow)(HWND *pHwnd) override;
-    STDMETHOD(ContextSensitiveHelp)(BOOL fEnterMode) override;
-
-// IOleInPlaceObject
-    STDMETHOD(InPlaceDeactivate)() override;
-    STDMETHOD(UIDeactivate)() override;
-    STDMETHOD(SetObjectRects)(LPCRECT lprcPosRect, LPCRECT lprcClipRect) override;
-    STDMETHOD(ReactivateAndUndo)() override;
-
-// IOleInPlaceActiveObject
-    STDMETHOD(TranslateAccelerator)(MSG *pMsg) override;
-    STDMETHOD(OnFrameWindowActivate)(BOOL) override;
-    STDMETHOD(OnDocWindowActivate)(BOOL fActivate) override;
-    STDMETHOD(ResizeBorder)(LPCRECT prcBorder, IOleInPlaceUIWindow *pUIWindow, BOOL fFrameWindow) override;
-    STDMETHOD(EnableModeless)(BOOL) override;
-
-// IConnectionPointContainer
-    STDMETHOD(EnumConnectionPoints)(IEnumConnectionPoints**) override;
-    STDMETHOD(FindConnectionPoint)(REFIID, IConnectionPoint**) override;
-
-// IPersist
-    STDMETHOD(GetClassID)(GUID*clsid) override
-    {
-        *clsid = qAxFactory()->classID(class_name);
-        return S_OK;
-    }
-
-// IPersistStreamInit
-    STDMETHOD(InitNew)(VOID) override;
-    STDMETHOD(IsDirty)() override;
-    STDMETHOD(Load)(IStream *pStm) override;
-    STDMETHOD(Save)(IStream *pStm, BOOL fClearDirty) override;
-    STDMETHOD(GetSizeMax)(ULARGE_INTEGER *pcbSize) override;
-
-// IPersistPropertyBag
-    STDMETHOD(Load)(IPropertyBag *, IErrorLog *) override;
-    STDMETHOD(Save)(IPropertyBag *, BOOL, BOOL) override;
-
-// IPersistStorage
-    STDMETHOD(InitNew)(IStorage *pStg) override;
-    STDMETHOD(Load)(IStorage *pStg) override;
-    STDMETHOD(Save)(IStorage *pStg, BOOL fSameAsLoad) override;
-    STDMETHOD(SaveCompleted)(IStorage *pStgNew) override;
-    STDMETHOD(HandsOffStorage)() override;
-
-// IPersistFile
-    STDMETHOD(SaveCompleted)(LPCOLESTR fileName) override;
-    STDMETHOD(GetCurFile)(LPOLESTR *currentFile) override;
-    STDMETHOD(Load)(LPCOLESTR fileName, DWORD mode) override;
-    STDMETHOD(Save)(LPCOLESTR fileName, BOOL fRemember) override;
-
-// IDataObject
-    STDMETHOD(GetData)(FORMATETC *pformatetcIn, STGMEDIUM *pmedium) override;
-    STDMETHOD(GetDataHere)(FORMATETC* /* pformatetc */, STGMEDIUM* /* pmedium */) override;
-    STDMETHOD(QueryGetData)(FORMATETC* /* pformatetc */) override;
-    STDMETHOD(GetCanonicalFormatEtc)(FORMATETC* /* pformatectIn */,FORMATETC* /* pformatetcOut */) override;
-    STDMETHOD(SetData)(FORMATETC* /* pformatetc */, STGMEDIUM* /* pmedium */, BOOL /* fRelease */) override;
-    STDMETHOD(EnumFormatEtc)(DWORD /* dwDirection */, IEnumFORMATETC** /* ppenumFormatEtc */) override;
-    STDMETHOD(DAdvise)(FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection) override;
-    STDMETHOD(DUnadvise)(DWORD dwConnection) override;
-    STDMETHOD(EnumDAdvise)(IEnumSTATDATA **ppenumAdvise) override;
-
-// QObject
-    int qt_metacall(QMetaObject::Call, int index, void **argv) override;
-
-    bool eventFilter(QObject *o, QEvent *e) override;
-
-    RECT rcPosRect() const
-    {
-        RECT result = {0, 0, 1, 1};
-        if (qt.widget)
-            result = qaxContentRect(QSize(1, 1) + qaxNativeWidgetSize(qt.widget));
-        return result;
-    }
-
-private:
-    void update();
-    void resize(const QSize &newSize);
-    void updateGeometry();
-    void updateMask();
-    bool internalCreate();
-    void internalBind();
-    void internalConnect();
-    HRESULT internalActivate();
-
-    friend class QAxBindable;
-    friend class QAxPropertyPage;
-    QAxAggregated *aggregatedObject = nullptr;
-    ConnectionPoints points;
-
-    union {
-        QWidget *widget;
-        QObject *object;
-    } qt;
-    QPointer<QObject> theObject;
-    unsigned isWidget           :1;
-    unsigned ownObject          :1;
-    unsigned initNewCalled      :1;
-    unsigned dirtyflag          :1;
-    unsigned hasStockEvents     :1;
-    unsigned stayTopLevel       :1;
-    unsigned isInPlaceActive    :1;
-    unsigned isUIActive         :1;
-    unsigned wasUIActive        :1;
-    unsigned inDesignMode       :1;
-    unsigned canTakeFocus       :1;
-    short freezeEvents = 0;
-
-    HWND m_hWnd = nullptr;
-
-    HMENU hmenuShared = nullptr;
-    HOLEMENU holemenu = nullptr;
-    HWND hwndMenuOwner = nullptr;
-    QMap<HMENU, QMenu*> menuMap;
-    QMap<UINT, QAction*> actionMap;
-    QPointer<QMenuBar> menuBar;
-    QPointer<QStatusBar> statusBar;
-    QPointer<QMenu> currentPopup;
-    std::unique_ptr<QAxExceptInfo> exception;
-
-    CRITICAL_SECTION refCountSection;
-    CRITICAL_SECTION createWindowSection;
-
-    LONG ref = 0;
-    unsigned long ole_ref = 0;
-
-    QString class_name;
-    QString currentFileName;
-
-    QHash<long, int> indexCache;
-    QHash<int,DISPID> signalCache;
-
-    IUnknown *m_outerUnknown = nullptr;
-    ComPtr<IAdviseSink> m_spAdviseSink;
-    QList<STATDATA> adviseSinks;
-    ComPtr<IOleClientSite> m_spClientSite;
-    ComPtr<IOleInPlaceSite> m_spInPlaceSite;
-    ComPtr<IOleInPlaceSiteWindowless> m_spInPlaceSiteWindowless;
-    ComPtr<IOleInPlaceFrame> m_spInPlaceFrame;
-    ComPtr<ITypeInfo> m_spTypeInfo;
-    ComPtr<IStorage> m_spStorage;
-    QSize m_currentExtent; // device independent pixels.
-
-    DWORD m_nextAdviseConnection = 0;
-};
 
 static inline QAxServerBase *axServerBaseFromWindow(HWND hWnd)
 {
@@ -950,6 +653,25 @@ void QAxServerBase::revokeActiveObject()
     ole_ref = 0;
 }
 
+unsigned long QAxServerBase::AddRef()
+{
+    if (m_outerUnknown)
+        return m_outerUnknown->AddRef();
+
+    return InterlockedIncrement(&ref);
+}
+unsigned long QAxServerBase::Release()
+{
+    if (m_outerUnknown)
+        return m_outerUnknown->Release();
+
+    LONG refCount = InterlockedDecrement(&ref);
+    if (!refCount)
+        delete this;
+
+    return refCount;
+}
+
 /* \internal
     QueryInterface implementation.
 */
@@ -1025,6 +747,11 @@ HRESULT QAxServerBase::InternalQueryInterface(REFIID iid, void **iface)
 
     AddRef();
     return S_OK;
+}
+
+IUnknown *QAxServerBase::clientSite() const
+{
+    return m_spClientSite.Get();
 }
 
 /*! \internal
@@ -1537,6 +1264,11 @@ void QAxServerBase::removeMenu()
 extern bool ignoreSlots(const char *test);
 extern bool ignoreProps(const char *test);
 
+QObject *QAxServerBase::qObject() const
+{
+    return theObject;
+}
+
 /*! \internal
     Makes sure the type info is loaded
 */
@@ -1575,6 +1307,11 @@ bool QAxServerBase::isPropertyExposed(int index)
     return result;
 }
 
+void QAxServerBase::reportError(int code, const QString &src, const QString &desc,
+                                const QString &context)
+{
+    exception = std::make_unique<QAxExceptInfo>(code, src, desc, context);
+}
 
 /*!
     \internal
@@ -2459,6 +2196,13 @@ HRESULT WINAPI QAxServerBase::FindConnectionPoint(REFIID iid, IConnectionPoint *
         return S_OK;
     }
     return CONNECT_E_NOCONNECTION;
+}
+
+//**** IPersist
+HRESULT WINAPI QAxServerBase::GetClassID(GUID *clsid)
+{
+    *clsid = qAxFactory()->classID(class_name);
+    return S_OK;
 }
 
 //**** IPersistStream
@@ -4192,6 +3936,14 @@ bool QAxServerBase::eventFilter(QObject *o, QEvent *e)
         break;
     }
     return QObject::eventFilter(o, e);
+}
+
+RECT QAxServerBase::rcPosRect() const
+{
+    RECT result = { 0, 0, 1, 1 };
+    if (qt.widget)
+        result = qaxContentRect(QSize(1, 1) + qaxNativeWidgetSize(qt.widget));
+    return result;
 }
 
 QT_END_NAMESPACE

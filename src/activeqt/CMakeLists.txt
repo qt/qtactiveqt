@@ -26,6 +26,7 @@ qt_internal_add_module(ActiveQt
         control/qaxaggregated.h
         control/qaxbindable.h
         control/qaxfactory.h
+        control/qaxserverbase_p.h
         control/qclassfactory_p.h
         shared/qaxtypes_p.h
     NO_GENERATE_CPP_EXPORTS
