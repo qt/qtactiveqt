@@ -49,6 +49,8 @@ IFACEMETHODIMP QAxSignalVec::Next(ULONG cConnections, LPCONNECTIONPOINT *ppCP, U
 IFACEMETHODIMP QAxSignalVec::Skip(ULONG cConnections)
 {
     const qsizetype pointCount = m_points.size();
+    if (m_currentPointIndex + cConnections > pointCount)
+        return S_FALSE;
 
     while (cConnections > 0) {
         if (m_currentPointIndex == pointCount)
