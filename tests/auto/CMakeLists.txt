@@ -18,3 +18,5 @@ if(NOT GCC)
     add_subdirectory(qaxscript)
     add_subdirectory(qaxscriptmanager)
 endif()
+
+add_subdirectory(unit)
