@@ -262,7 +262,7 @@ public:
         }
     }
 
-    void addSignal(DISPID memid, const char *name)
+    void addSignal(DISPID memid, const QByteArray &name)
     {
         QByteArray signalname = name;
         int pi = signalname.indexOf('(');
@@ -275,15 +275,15 @@ public:
             ++i;
         }
 
-        sigs.insert(memid, signalname);
+        sigs.insert(memid, signalname.nullTerminated());
         const DISPID id = propsigs.key(signalname, -1);
         if (id != -1)
             propsigs.remove(id);
     }
-    void addProperty(DISPID propid, const char *name, const char *signal)
+    void addProperty(DISPID propid, const QByteArray &name, const QByteArray &signal)
     {
-        props.insert(propid, name);
-        propsigs.insert(propid, signal);
+        props.insert(propid, name.nullTerminated());
+        propsigs.insert(propid, signal.nullTerminated());
     }
 
     // IDispatch
@@ -327,7 +327,7 @@ public:
         // get the signal information from the metaobject
         index = -1;
         if (signalHasReceivers(qobject, signame)) {
-            index = meta->indexOfSignal(signame);
+            index = meta->indexOfSignal(signame.constData());
             Q_ASSERT(index != -1);
             const QMetaMethod signal = meta->method(index);
             Q_ASSERT(signal.methodType() == QMetaMethod::Signal);
@@ -443,18 +443,19 @@ public:
         if (signame.isEmpty())
             return S_OK;
 
-        const int index = meta->indexOfSignal(signame);
+        const int index = meta->indexOfSignal(signame.constData());
         if (index == -1) // bindable but not marked as bindable in typelib
             return S_OK;
 
         // get the signal information from the metaobject
         if (signalHasReceivers(qobject, signame)) {
             // setup parameters
-            QVariant var = qobject->property(propname);
+            QVariant var = qobject->property(propname.constData());
             if (!var.isValid())
                 return S_OK;
 
-            const QMetaProperty metaProp = meta->property(meta->indexOfProperty(propname));
+            const QMetaProperty metaProp = meta->property(meta->indexOfProperty(
+                    propname.constData()));
             void *argv[] = {nullptr, var.data()};
             if (metaProp.metaType().id() == QMetaType::QVariant)
                 argv[1] = &var;
@@ -474,7 +475,12 @@ public:
         if (propname.isEmpty())
             return S_OK;
 
-        return combase->propertyWritable(propname) ? S_OK : S_FALSE;
+        return combase->propertyWritable(propname.constData()) ? S_OK : S_FALSE;
+    }
+
+    static bool signalHasReceivers(QObject *qobject, const QByteArray &signalName)
+    {
+        return signalHasReceivers(qobject, signalName.nullTerminated().constData());
     }
 
     static bool signalHasReceivers(QObject *qobject, const char *signalName)
@@ -488,6 +494,7 @@ public:
     IID ciid = IID_NULL;
     ULONG cookie = 0;
 
+    // class invariant: all QByteArrays stored in this class' members are null-terminated
     QMap<DISPID, QByteArray> sigs;
     QMap<DISPID, QByteArray> propsigs;
     QMap<DISPID, QByteArray> props;
@@ -543,14 +550,14 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     if (!typeinfo)
         return propname;
 
-
+    // qaxTypeInfoName uses toLatin1 for the return value so it is null terminated
     const QByteArray propnameI = qaxTypeInfoName(typeinfo.Get(), dispID);
     if (!propnameI.isEmpty())
         propname = propnameI;
 
     QByteArray propsignal(propname + "Changed(");
     const QMetaObject *mo = combase->qObject()->metaObject();
-    int index = mo->indexOfProperty(propname);
+    int index = mo->indexOfProperty(propname.constData());
     const QMetaProperty prop = mo->property(index);
     propsignal += prop.typeName();
     propsignal += ')';
