@@ -64,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent)
     layout->setContentsMargins(0, 0, 0, 0);
 
     connect(m_mdiArea, &QMdiArea::subWindowActivated, this, &MainWindow::updateGUI);
-    connect(actionFileExit, &QAction::triggered, QCoreApplication::quit);
+    connect(actionFileExit, &QAction::triggered, qApp, &QCoreApplication::quit);
 }
 
 MainWindow::~MainWindow()
