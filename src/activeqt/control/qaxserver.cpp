@@ -51,11 +51,16 @@ extern QAxFactory *qax_instantiate();
 QAxFactory *qAxFactory()
 {
     if (!qax_factory) {
-        bool hadQApp = qApp != nullptr;
-        qax_factory = qax_instantiate();
-        // QAxFactory created a QApplication
-        if (!hadQApp && qApp)
+        // QAxFactory is a QObject; Qt requires QCoreApplication to exist first.
+        // In the in-process DLL case (qAxIsServer set by DllMain), COM may call into us
+        // via DllGetClassObject on the COM apartment thread before the host application
+        // creates QApplication. Create one here so the factory QObject is not instantiated
+        // before QCoreApplication, which Qt does not support.
+        if (!qApp && qAxIsServer) {
+            new QApplication(__argc, __argv);
             qax_ownQApp = true;
+        }
+        qax_factory = qax_instantiate();
 
         // register all types with metatype system as pointers
         QStringList keys(qax_factory->featureList());
