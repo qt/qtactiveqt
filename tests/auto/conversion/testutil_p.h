@@ -15,11 +15,10 @@
 // We mean it.
 //
 
-#include <qtcore/qt_windows.h>
-#include <qtcore/private/qcomobject_p.h>
-#include <qtcore/qtglobal>
+#include <QtCore/qt_windows.h>
+#include <QtCore/private/qcomobject_p.h>
+#include <QtCore/qtglobal>
 #include <QtCore/private/qcomptr_p.h>
-#include <atomic>
 
 template <typename T>
 ULONG refCount(const ComPtr<T> &p)
