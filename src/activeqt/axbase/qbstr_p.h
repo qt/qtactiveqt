@@ -22,6 +22,8 @@
 #include <utility>
 #include <oaidl.h>
 
+QT_BEGIN_NAMESPACE
+
 class QBStr
 {
 public:
@@ -117,5 +119,7 @@ private:
 
     BSTR m_str = nullptr;
 };
+
+QT_END_NAMESPACE
 
 #endif
