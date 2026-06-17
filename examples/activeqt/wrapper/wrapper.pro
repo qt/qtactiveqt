@@ -1,5 +1,3 @@
-include(../shared.pri)
-
 TEMPLATE = lib
 TARGET   = wrapperax
 
