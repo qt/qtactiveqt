@@ -386,6 +386,7 @@ QAxSelect::SandboxingLevel QAxSelect::sandboxingLevel() const
     return SandboxingNone;
 }
 
+/*! \internal */
 void QAxSelect::onActiveXListCurrentChanged(const QModelIndex &index)
 {
     const QString newClsid = d->clsidAt(index);
@@ -393,12 +394,14 @@ void QAxSelect::onActiveXListCurrentChanged(const QModelIndex &index)
     d->setOkButtonEnabled(!newClsid.isEmpty());
 }
 
+/*! \internal */
 void QAxSelect::onActiveXListActivated()
 {
     if (!clsid().isEmpty())
         d->okButton()->animateClick();
 }
 
+/*! \internal */
 void QAxSelect::onFilterLineEditChanged(const QString &text)
 {
     d->filterModel->setFilterFixedString(text);
