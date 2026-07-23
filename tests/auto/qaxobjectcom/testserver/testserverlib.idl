@@ -4,6 +4,12 @@
 import "oaidl.idl";
 import "ocidl.idl";
 
+typedef enum TestEnum
+{
+    TestEnumFirst = 0,
+    TestEnumSecond = 1
+} TestEnum;
+
 [
     object,
     dual,
@@ -15,6 +21,8 @@ interface IComServer : IUnknown
 {
     HRESULT SetObserver([in] IUnknown *observer);
     HRESULT VariantIn([in] VARIANT arg);
+    HRESULT GetTestEnumValue([out, retval] TestEnum *value);
+    HRESULT EnumIn([in] TestEnum value);
 };
 
 [

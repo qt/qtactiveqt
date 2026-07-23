@@ -71,6 +71,27 @@ private slots:
         QCOMPARE_EQ(items[1], ComVariant{ QBStr{ L"BC" } });
     }
 
+    void comObject_receivesEnum_whenCalledWithGeneratedEnumType()
+    {
+        // Arrange
+        ComServerLib::TestServer server;
+        const ComPtr<Receiver> observer = makeComObject<Receiver>();
+        server.SetObserver(observer.Get());
+
+        // Act
+        // dumpcpp qualifies enum parameter types with the type library's
+        // namespace (e.g. "ComServerLib::TestEnum"), while the enumerator
+        // itself is registered in the meta object under its unqualified
+        // name. Fetch the value through the generated getter instead of
+        // spelling out the generated enum type, then pass it back in so
+        // this only depends on the method names, not on dumpcpp's naming.
+        const auto value = server.GetTestEnumValue();
+        server.EnumIn(value);
+
+        // Assert
+        QCOMPARE_EQ(observer->lastEnum, TestEnumSecond);
+    }
+
     void comObject_receivesVariantContainingUnsignedCharArray_whenCalledWithQVariantByteArray()
     {
         // Arrange
