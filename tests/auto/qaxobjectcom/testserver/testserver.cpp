@@ -78,6 +78,17 @@ HRESULT TestServer::VariantIn(VARIANT v)
     return m_receiver->VariantIn(v);
 }
 
+HRESULT TestServer::GetTestEnumValue(TestEnum *value)
+{
+    *value = TestEnumSecond;
+    return S_OK;
+}
+
+HRESULT TestServer::EnumIn(TestEnum value)
+{
+    return m_receiver->EnumIn(value);
+}
+
 struct Factory : IClassFactory
 {
     ULONG __stdcall AddRef() override { return 2; }

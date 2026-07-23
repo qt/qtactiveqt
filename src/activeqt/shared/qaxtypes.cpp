@@ -627,6 +627,14 @@ bool QVariantToVARIANT(const QVariant &var, VARIANT &arg, const QByteArray &type
         break;
 
     default:
+        if (qvar.metaType().flags().testFlag(QMetaType::IsEnumeration)) {
+            // A COM enum has no dedicated QMetaType::Type id of its own, so it
+            // ends up here with an id() >= QMetaType::User. It must not be
+            // mistaken for a QAxObject-wrapping container below: pack the
+            // underlying integer value instead.
+            QVARIANT_TO_VARIANT_POD(long, qvar.toInt(), out, VT_I4, lVal, plVal)
+            break;
+        }
         if (qvar.metaType().id() >= QMetaType::User) {
             QByteArray subType = qvar.typeName();
 #ifdef QAX_SERVER

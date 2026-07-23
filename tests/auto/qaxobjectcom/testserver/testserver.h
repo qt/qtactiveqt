@@ -19,6 +19,8 @@ public:
     HRESULT __stdcall QueryInterface(IID const &id, void **result) override;
     HRESULT __stdcall SetObserver(IUnknown *observer) override;
     HRESULT __stdcall VariantIn(VARIANT v) override;
+    HRESULT __stdcall GetTestEnumValue(TestEnum *value) override;
+    HRESULT __stdcall EnumIn(TestEnum value) override;
 
 private:
     ComPtr<IUnknown> m_unkDisp;
@@ -35,7 +37,16 @@ struct Receiver : public QComObject<IComServer>
         return S_OK;
     }
 
+    HRESULT GetTestEnumValue(TestEnum *value) override { return E_NOTIMPL; }
+
+    HRESULT EnumIn(TestEnum value) override
+    {
+        lastEnum = value;
+        return S_OK;
+    }
+
     ComVariant lastArg{};
+    TestEnum lastEnum = TestEnumFirst;
 };
 
 #endif
