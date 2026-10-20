@@ -1,6 +1,11 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
+# These files are installed, or copied in non-prefix builds, next to this file.
+set(QT_AX_SERVER_RC_FILE "${CMAKE_CURRENT_LIST_DIR}/qaxserver.rc")
+set(QT_AX_SERVER_DEF_FILE "${CMAKE_CURRENT_LIST_DIR}/qaxserver.def")
+set(QT_AX_SERVER_ICON_FILE "${CMAKE_CURRENT_LIST_DIR}/qaxserver.ico")
+
 # Adds an ActiveX server executable, generates an IDL file and links the produced .tbl to the
 # executable.
 # Arguments: See qt6_target_idl

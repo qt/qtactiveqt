@@ -36,6 +36,10 @@ qt_internal_add_module(AxServer
         Qt::Widgets
         shell32
     NO_GENERATE_CPP_EXPORTS
+    EXTRA_CMAKE_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/qaxserver.def"
+        "${CMAKE_CURRENT_SOURCE_DIR}/qaxserver.ico"
+        "${CMAKE_CURRENT_SOURCE_DIR}/qaxserver.rc"
     QT_LICENSE_ID QT_COMMERCIAL_OR_BSD3
 )
 

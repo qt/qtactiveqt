@@ -53,11 +53,29 @@
     \snippet doc_src_qaxserver.pro 1
 
     The files \c qaxserver.rc and \c qaxserver.def are part of the
-    framework and can be used from their usual location (specify a
-    path in the \c .pro file), or copied into the project directory.
+    framework and can be used from their usual location, or copied
+    into the project directory. \c qaxserver.rc references the toolbox
+    icon \c qaxserver.ico, which is located in the same directory.
     You can modify these files as long as it includes any file as the
     type library entry, ie. you can add version information or specify
-    a different toolbox icon.
+    a different toolbox icon. Copy the files into the project directory
+    before modifying them; do not edit the installed copies.
+
+    The files are installed into the \c Qt6AxServer CMake package
+    directory, \c{lib/cmake/Qt6AxServer} by default. In a \c .pro file,
+    specify them as \c{$$[QT_INSTALL_LIBS]/cmake/Qt6AxServer/qaxserver.rc}
+    and \c{$$[QT_INSTALL_LIBS]/cmake/Qt6AxServer/qaxserver.def}. In a CMake
+    project, \c{find_package(Qt6 COMPONENTS AxServer)} sets the variables
+    \c QT_AX_SERVER_RC_FILE, \c QT_AX_SERVER_DEF_FILE and
+    \c QT_AX_SERVER_ICON_FILE to the full paths of the files:
+
+    \badcode
+    qt_add_axserver_library(myserver
+        myserver.cpp
+        ${QT_AX_SERVER_DEF_FILE}
+        ${QT_AX_SERVER_RC_FILE}
+    )
+    \endcode
 
     Using the \c axserver module will cause the \c qmake tool to add the
     required build steps to the build system:
